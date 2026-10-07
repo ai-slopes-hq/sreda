@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Module anatomy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.an-mod{position:absolute;left:0;top:0;width:240px;height:112px;background:#1b1b18;border:1px solid #2e2d28;border-radius:3px;box-sizing:border-box;transform-origin:0 0}
+.an-head{height:24px;line-height:24px;padding:0 8px;font-size:11px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid #2a2924}
+.an-jack{position:absolute;width:9px;height:9px;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210}
+.an-plabel{position:absolute;font-size:9px;line-height:10px;color:#8f897c;letter-spacing:.04em}
+.an-field{position:absolute;font-size:9px;line-height:11px}
+.an-cell{position:absolute;width:48px;height:56px}
+.an-clabel{position:absolute;left:0;right:0;top:35px;text-align:center;font-size:9px;line-height:10px;color:#8f897c}
+.an-cval{position:absolute;left:0;right:0;top:45px;text-align:center;font-size:9px;line-height:10px;color:#e9e4d8}
+.an-opt{position:absolute;left:5px;top:7px;width:38px;height:20px;background:#121210;border:1px solid #3a3933;border-radius:2px;color:#e9e4d8;font:500 9px 'IBM Plex Mono',monospace;padding:0;text-align:center;line-height:18px;box-sizing:border-box}
+.k-track,.k-arc,.k-ring{fill:none;stroke-linecap:round}
+.k-track{stroke:#34332d;stroke-width:2.5}
+.k-arc{stroke:#e9e4d8;stroke-width:2.5}
+.k-ring{stroke:#6cb4ee;stroke-width:2;stroke-opacity:.45}
+.k-ptr{stroke:#e9e4d8;stroke-width:1.5;stroke-linecap:round}
+.k-tick{fill:#6cb4ee}
+.an-cable{fill:none;stroke-width:3.5;stroke-opacity:.8}
+.an-badge{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#e9e4d8;color:#121210;font-size:11px;font-weight:600;line-height:22px;text-align:center}
+.an-item{display:flex;gap:14px;align-items:flex-start}
+.an-num{flex:none;width:22px;height:22px;border-radius:50%;background:#e9e4d8;color:#121210;font-size:11px;font-weight:600;line-height:22px;text-align:center}
+.an-t{font-size:11px;font-weight:600;letter-spacing:.1em;margin-bottom:3px}
+.an-d{font-size:11px;line-height:16px;color:#b9b3a6}
+.an-sw{display:flex;align-items:center;gap:10px;font-size:11px;color:#b9b3a6}
+.an-sw i{display:block;width:12px;height:12px;border-radius:50%;box-sizing:border-box}
+</style>
+</helmet>
+<div style="position: relative; width: 1200px; height: 760px; overflow: hidden; background: #121210; color: #e9e4d8; font-family: 'IBM Plex Mono', ui-monospace, monospace">
+<div style="position: absolute; left: 80px; top: 56px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 0; margin-top: 10px; font-size: 28px; font-weight: 600; letter-spacing: .04em">Module anatomy</h1>
+<div style="margin-top: 6px; font-size: 12px; color: #8f897c">LPG with two stacked audio cables, a clock at ×2 and its decay modulated · shown at 220 %</div>
+</div>
+
+<svg width="1200" height="760" style="position: absolute; left: 0; top: 0; overflow: visible">
+<path class="an-cable" d="M-10 150 C146.1 150 146.1 263.8 302.2 263.8" stroke="#6cb4ee"></path>
+<path class="an-cable" d="M-10 236 C43.8 236 43.8 285.8 97.6 285.8" stroke="#e9e4d8"></path>
+<path class="an-cable" d="M-10 300 C43.8 300 43.8 285.8 97.6 285.8" stroke="#e9e4d8"></path>
+<path class="an-cable" d="M-10 470 C43.8 470 43.8 400.2 97.6 400.2" stroke="#f5a524"></path>
+<path class="an-cable" d="M590.4 285.8 C640.2 285.8 640.2 340 690 340" stroke="#e9e4d8"></path>
+</svg>
+<div style="position: absolute; left: 12px; top: 128px; font-size: 10px; color: #6cb4ee">SLOPE › OUT</div>
+<div style="position: absolute; left: 12px; top: 216px; font-size: 10px; color: #8f897c">OSC › OUT</div>
+<div style="position: absolute; left: 12px; top: 306px; font-size: 10px; color: #8f897c">NOISE › WHT</div>
+<div style="position: absolute; left: 12px; top: 476px; font-size: 10px; color: #f5a524">PULSE › OUT</div>
+
+<div style="position: absolute; left: 80px; top: 200px; width: 528px; height: 246px">
+<div class="an-mod" style="transform: scale(2.2)">
+<div class="an-head">LPG</div>
+<div class="an-jack" style="left: 3.5px; top: 34.5px; border-color: #e9e4d8; background: #e9e4d8"></div>
+<div class="an-plabel" style="left: 15px; top: 28px">IN</div>
+<div class="an-jack" style="left: 3.5px; top: 60.5px; border-color: #6cb4ee; border-style: dashed"></div>
+<div class="an-plabel" style="left: 15px; top: 54px">CV</div>
+<div class="an-field" style="left: 15px; top: 65px; color: #5d594f">1.00</div>
+<div class="an-jack" style="left: 3.5px; top: 86.5px; border-color: #f5a524; background: #f5a524"></div>
+<div class="an-plabel" style="left: 15px; top: 80px">PING</div>
+<div class="an-field" style="left: 15px; top: 91px; color: #f5a524">×2</div>
+<div class="an-jack" style="left: 227.5px; top: 34.5px; border-color: #e9e4d8; background: #e9e4d8"></div>
+<div class="an-plabel" style="right: 15px; top: 28px; text-align: right">OUT</div>
+<div style="position: absolute; right: 15px; top: 41px; width: 14px; height: 2px; border-radius: 1px; background: #e9e4d8"></div>
+<div class="an-cell" style="left: 48px; top: 24px">
+<svg width="48" height="34" viewBox="0 0 48 34" style="display: block; overflow: visible">
+<path class="k-track" d="M16.22 24.78 A11 11 0 1 1 31.78 24.78"></path>
+<path class="k-arc" d="M16.22 24.78 A11 11 0 1 1 31.78 24.78"></path>
+<line class="k-ptr" x1="24" y1="17" x2="29.66" y2="22.66"></line>
+</svg>
+<div class="an-jack" style="left: 0.5px; top: 0.5px; border-color: #6cb4ee"></div>
+<div class="an-clabel">LVL</div>
+<div class="an-cval">1.00</div>
+</div>
+<div class="an-cell" style="left: 96px; top: 24px">
+<svg width="48" height="34" viewBox="0 0 48 34" style="display: block; overflow: visible">
+<path class="k-track" d="M16.22 24.78 A11 11 0 1 1 31.78 24.78"></path>
+<path class="k-ring" d="M13.39 27.61 A15 15 0 1 1 36.00 26.01"></path>
+<path class="k-arc" d="M16.22 24.78 A11 11 0 0 1 22.68 6.08"></path>
+<line class="k-ptr" x1="24" y1="17" x2="23.04" y2="9.06"></line>
+<circle class="k-tick" cx="36.14" cy="8.18" r="2.2"></circle>
+</svg>
+<div class="an-jack" style="left: 0.5px; top: 0.5px; border-color: #6cb4ee; background: #6cb4ee"></div>
+<div class="an-clabel">DEC</div>
+<div class="an-cval">1.07s</div>
+</div>
+<div class="an-cell" style="left: 144px; top: 24px">
+<div class="an-opt">BOTH ▾</div>
+<div class="an-clabel">MODE</div>
+</div>
+</div>
+</div>
+
+<div class="an-badge" style="left: 190px; top: 222px">1</div>
+<div class="an-badge" style="left: 158px; top: 276px">2</div>
+<div class="an-badge" style="left: 62px; top: 343px">3</div>
+<div class="an-badge" style="left: 180px; top: 358px">4</div>
+<div class="an-badge" style="left: 165px; top: 416px">5</div>
+<div class="an-badge" style="left: 398px; top: 246px">6</div>
+<div class="an-badge" style="left: 512px; top: 258px">7</div>
+<div class="an-badge" style="left: 624px; top: 258px">8</div>
+
+<div style="position: absolute; left: 80px; top: 540px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .1em; color: #8f897c">CABLE AND JACK COLOUR = ROLE</div>
+<div class="an-sw"><i style="background: #e9e4d8"></i>AUDIO · nominal ±1 · stacked cables sum</div>
+<div class="an-sw"><i style="background: #6cb4ee"></i>MOD · ±1 or 0…1 · attenuverter on the input</div>
+<div class="an-sw"><i style="background: #9ad18b"></i>PITCH · +1 = one octave up · attenuverter on the input</div>
+<div class="an-sw"><i style="background: #f5a524"></i>TRIGGER · fires rising above 0.5 · ratio on the input · anything periodic is a clock</div>
+<div class="an-sw"><i style="border: 1.5px dashed #8f897c"></i>DASHED RING · input is normalled; a cable replaces the normal</div>
+<div class="an-sw"><i style="background: linear-gradient(90deg, #e9e4d8 40%, #f5a524 60%)"></i>TWO-COLOUR CABLE · joins two different roles (here OSC audio → PING)</div>
+</div>
+
+<div style="position: absolute; left: 720px; top: 112px; width: 420px; display: flex; flex-direction: column; gap: 20px">
+<div class="an-item"><div class="an-num">1</div><div><div class="an-t">NAME</div><div class="an-d">Drag anywhere on the module to move it. Hover and press R to randomise its knobs.</div></div></div>
+<div class="an-item"><div class="an-num">2</div><div><div class="an-t">INPUT · STACKED</div><div class="an-d">Any number of cables; audio and CV sum, triggers merge. Drag from it to pick up the newest cable, or into empty space to add a module.</div></div></div>
+<div class="an-item"><div class="an-num">3</div><div><div class="an-t">NORMAL</div><div class="an-d">Dashed ring: pre-wired inside the module (here CV ← the ping envelope) until a real cable goes in. Hover names the source.</div></div></div>
+<div class="an-item"><div class="an-num">4</div><div><div class="an-t">ATTENUVERTER</div><div class="an-d">Under every CV input label, −1…+1. Drag, wheel, double-click resets. Dim while at its default.</div></div></div>
+<div class="an-item"><div class="an-num">5</div><div><div class="an-t">RATIO</div><div class="an-d">Under every trigger input label, ÷16…×8, applied after the merge. A clock at ×2 here doubles it for this input only.</div></div></div>
+<div class="an-item"><div class="an-num">6</div><div><div class="an-t">KNOB + MOD JACK</div><div class="an-d">Drag (Shift = fine), wheel, double-click resets. Patch the corner jack to modulate: the ring is its attenuverter (Alt-drag), the dot is where the knob is now.</div></div></div>
+<div class="an-item"><div class="an-num">7</div><div><div class="an-t">OPTION</div><div class="an-d">Two values: click toggles. More (▾): click opens a list. Wheel steps. Waves, scales and stage modes are drawn as glyphs. No mod jack.</div></div></div>
+<div class="an-item"><div class="an-num">8</div><div><div class="an-t">OUTPUT + LEVEL</div><div class="an-d">Any number of cables. Click to hear only this output. The bar is its held peak.</div></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

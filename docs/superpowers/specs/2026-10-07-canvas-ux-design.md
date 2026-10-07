@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 10 (WIRES editor) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 10 (WIRES editor) · Status: approved
 
 ## Why
 
@@ -135,8 +135,8 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
   show `▾` and open a small list anchored under the cell on click — not a window: the current value is highlighted,
   a click picks, Esc or a click elsewhere closes. The wheel steps any option without opening the list.
 - Options that are shapes are drawn, not named: WAVE options (OSC, COMPLEX's modulator) show the waveform as a small
-  glyph; SCALE (QUANT) shows its 12 semitones from the root as a strip (scale degrees tall, the rest short);  The cell shows the current value's glyph; the list shows glyph
-  and name for every value. SLOPE's SHP knob shows its rise curve (log … lin … exp, modulation included) in place
+  glyph; SCALE (QUANT, STAGES) shows its 12 semitones from the root as a strip (scale degrees tall, the rest
+  short). The cell shows the current value's glyph; the list shows glyph and name for every value. SLOPE's SHP knob shows its rise curve (log … lin … exp, modulation included) in place
   of a number.
 
 ## 5. Groups (frames)
@@ -326,7 +326,7 @@ Size is `HP × U`.
   dashed; touching a pad turns the current euclid pattern into a grid (MODE → GRID) and toggles that pad. Pads
   past LEN are dimmed. Each clock rise advances one step; a hit raises GATE for half the last clock interval; an
   accented hit also fires ACC (§ rests and ties for TIE).
-- **DICE** (button, or a rise on the DICE input): STAGES writes a line from GEN in its SCALE and ROOT into its 8
+- **DICE** (button, or a rise on the DICE input): STAGES writes a line from GEN in its SCALE and ROOT into its 16
   voltages (v = (semitone − 12) / 12, so 0…24 semitones span −1…+1), with slides for 303 / MOTIF; RHYTHM writes
   303-style gates (DENS hits, euclid-spread, random rotation), long notes (a note holds into the rest after it as
   a TIE, with the old SREDA's DENS-dependent odds) and accents (30 % of hits), and switches to GRID. The

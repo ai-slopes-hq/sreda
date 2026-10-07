@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Sequencer variants</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.v-panel{position:absolute;width:500px}
+.v-title{font-size:13px;font-weight:600;letter-spacing:.06em;color:#e9e4d8}
+.v-sub{font-size:11px;color:#8f897c;margin-top:4px}
+.v-notes{margin-top:14px;font-size:11px;line-height:17px;color:#b9b3a6}
+.v-notes b{color:#e9e4d8;font-weight:600}
+.m{position:relative;margin-top:14px;background:#1b1b18;border:1px solid #2e2d28;border-radius:3px;box-sizing:border-box}
+.m-head{height:24px;line-height:24px;padding:0 8px;font-size:11px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid #2a2924}
+.a{position:absolute}
+.jack{position:absolute;width:9px;height:9px;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210}
+.lbl{position:absolute;font-size:9px;line-height:10px;color:#8f897c;letter-spacing:.04em;white-space:nowrap}
+.fld{position:absolute;font-size:10px;line-height:11px;color:#77716a}
+.txt{position:absolute;font-size:9px;line-height:10px;text-align:center;white-space:nowrap}
+.opt{position:absolute;height:20px;background:#121210;border:1px solid #3a3933;border-radius:2px;color:#e9e4d8;font-size:9px;line-height:18px;text-align:center;box-sizing:border-box}
+.k-track,.k-arc{fill:none;stroke-linecap:round}
+.k-track{stroke:#34332d;stroke-width:2.5}
+.k-arc{stroke:#e9e4d8;stroke-width:2.5}
+.k-ptr{stroke:#e9e4d8;stroke-width:1.5;stroke-linecap:round}
+.g-line{fill:none;stroke:#e9e4d8;stroke-width:1.3;stroke-linejoin:round}
+.g-on{fill:#e9e4d8}.g-off{fill:#5d594f}
+.disp{position:absolute;background:#121210;border:1px solid #2a2924;border-radius:2px;overflow:hidden}
+.c-fill{fill:#e9e4d8;fill-opacity:.1}
+.c-line{fill:none;stroke:#e9e4d8;stroke-width:2;stroke-linejoin:round}
+.reco{position:absolute;width:480px;border:1px solid #3a3933;border-radius:4px;padding:20px 22px;box-sizing:border-box;background:#161614}
+</style>
+</helmet>
+<div style="position: relative; width: 1660px; height: 1280px; overflow: hidden; background: #121210; color: #e9e4d8; font-family: 'IBM Plex Mono', ui-monospace, monospace">
+<div style="position: absolute; left: 40px; top: 36px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 0; margin-top: 10px; font-size: 28px; font-weight: 600; letter-spacing: .04em">STAGES и RHYTHM: варианты панелей</h1>
+<div style="margin-top: 6px; font-size: 12px; color: #8f897c">Один паттерн во всех вариантах: ACID, до минор, текущая стадия 3, текущий шаг 6. Размеры реальные.</div>
+</div>
+
+<sc-for list="{{panels}}" as="P" hint-placeholder-count="5">
+<div class="v-panel" style="{{P.pos}}">
+<div class="v-title">{{P.title}}</div>
+<div class="v-sub">{{P.sub}}</div>
+<div class="m" style="{{P.size}}">
+<div class="m-head">{{P.name}}</div>
+<sc-for list="{{P.jacks}}" as="j">
+<div class="jack" style="{{j.style}}"></div>
+<div class="lbl" style="{{j.lstyle}}">{{j.label}}</div>
+<div class="fld" style="{{j.fstyle}}">{{j.field}}</div>
+</sc-for>
+
+<sc-if value="{{P.isStA}}" hint-placeholder-val="{{false}}">
+<sc-for list="{{P.stA}}" as="c">
+<div class="a" style="{{c.colStyle}}"></div>
+<div class="txt" style="{{c.numStyle}}">{{c.num}}</div>
+<div class="a" style="{{c.trackStyle}}"></div>
+<div class="a" style="{{c.fillStyle}}"></div>
+<div class="txt" style="{{c.noteStyle}}">{{c.note}}</div>
+<svg class="a" style="{{c.knobPos}}" width="48" height="34" viewBox="0 0 48 34"><path class="k-track" d="{{c.kTrack}}"></path><path class="k-arc" d="{{c.kArc}}"></path><line class="k-ptr" x1="24" y1="17" x2="{{c.kx}}" y2="{{c.ky}}"></line></svg>
+<div class="txt" style="{{c.timeStyle}}">{{c.time}}</div>
+<div class="a" style="{{c.dotStyle}}"></div>
+<svg class="a" style="{{c.glPos}}" width="16" height="10"><path class="g-line" d="{{c.gl}}"></path></svg>
+</sc-for>
+</sc-if>
+
+<sc-if value="{{P.isStB}}" hint-placeholder-val="{{false}}">
+<div class="disp" style="left: 52px; top: 32px; width: 376px; height: 176px">
+<sc-for list="{{P.stB.cols}}" as="c">
+<div class="a" style="{{c.hl}}"></div>
+<div class="a" style="{{c.sep}}"></div>
+<div class="txt" style="{{c.noteStyle}}">{{c.note}}</div>
+<div class="a" style="{{c.dotStyle}}"></div>
+</sc-for>
+<svg class="a" style="left: 0; top: 0" width="376" height="176"><path class="c-fill" d="{{P.stB.fill}}"></path><path class="c-line" d="{{P.stB.line}}"></path></svg>
+</div>
+<div class="txt" style="left: 52px; width: 376px; top: 216px; color: #77716a; text-align: left">тянуть уровень = нота · тянуть край = время · точка = импульс · клик по стыку = слайд</div>
+</sc-if>
+
+<sc-if value="{{P.isStC}}" hint-placeholder-val="{{false}}">
+<sc-for list="{{P.stC}}" as="c">
+<div class="a" style="{{c.colStyle}}"></div>
+<svg class="a" style="{{c.knobPos}}" width="48" height="34" viewBox="0 0 48 34"><path class="k-track" d="{{c.kTrack}}"></path><path class="k-arc" d="{{c.kArc}}"></path><line class="k-ptr" x1="24" y1="17" x2="{{c.kx}}" y2="{{c.ky}}"></line></svg>
+<div class="txt" style="{{c.noteStyle}}">{{c.note}}</div>
+<div class="opt" style="{{c.timeStyle}}">{{c.time}}</div>
+<div class="a" style="{{c.dotStyle}}"></div>
+<svg class="a" style="{{c.glPos}}" width="16" height="10"><path class="g-line" d="{{c.gl}}"></path></svg>
+</sc-for>
+</sc-if>
+
+<sc-if value="{{P.isRhA}}" hint-placeholder-val="{{false}}">
+<svg class="a" style="left: 0; top: 0" width="480" height="336"><circle cx="210" cy="180" r="104" fill="none" stroke="#2a2924" stroke-width="1"></circle><line x1="210" y1="180" x2="{{P.rhA.px}}" y2="{{P.rhA.py}}" stroke="#f5a524" stroke-width="1.5"></line></svg>
+<sc-for list="{{P.rhA.dots}}" as="d">
+<div class="a" style="{{d.style}}"></div>
+<div class="a" style="{{d.acc}}"></div>
+</sc-for>
+<div class="txt" style="left: 170px; width: 80px; top: 170px; font-size: 16px; line-height: 18px; color: #e9e4d8">8 / 16</div>
+<div class="txt" style="left: 204px; width: 12px; top: 52px; color: #8f897c">1</div>
+</sc-if>
+
+<sc-if value="{{P.isRhB}}" hint-placeholder-val="{{false}}">
+<sc-for list="{{P.rhB}}" as="d">
+<div class="a" style="{{d.pad}}"></div>
+<div class="txt" style="{{d.numStyle}}">{{d.num}}</div>
+<div class="a" style="{{d.acc}}"></div>
+</sc-for>
+</sc-if>
+
+<sc-for list="{{P.knobs}}" as="k">
+<svg class="a" style="{{k.pos}}" width="48" height="34" viewBox="0 0 48 34"><path class="k-track" d="{{k.track}}"></path><path class="k-arc" d="{{k.arc}}"></path><line class="k-ptr" x1="24" y1="17" x2="{{k.px}}" y2="{{k.py}}"></line></svg>
+<div class="txt" style="{{k.lstyle}}">{{k.label}}</div>
+<div class="txt" style="{{k.vstyle}}">{{k.value}}</div>
+</sc-for>
+<sc-for list="{{P.opts}}" as="o">
+<div class="opt" style="{{o.style}}">{{o.text}}</div>
+<div class="txt" style="{{o.lstyle}}">{{o.label}}</div>
+</sc-for>
+<sc-if value="{{P.hasScale}}" hint-placeholder-val="{{false}}">
+<div class="opt" style="{{P.scalePos}}"><svg width="24" height="12" style="display: inline-block; vertical-align: middle"><path class="g-on" d="{{P.scaleOn}}"></path><path class="g-off" d="{{P.scaleOff}}"></path></svg><span style="font-size: 8px; margin-left: 2px">▾</span></div>
+<div class="txt" style="{{P.scaleLbl}}">SCALE</div>
+</sc-if>
+</div>
+<div class="v-notes">
+<sc-for list="{{P.notes}}" as="n">
+<div style="margin-bottom: 6px"><b>{{n.k}}</b> {{n.t}}</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+
+<div class="reco" style="left: 1120px; top: 700px">
+<div class="v-title">Моя рекомендация</div>
+<div class="v-notes">
+<div style="margin-bottom: 8px"><b>STAGES — B, контур.</b> Это единственный вариант, где мелодию видно как мелодию: высота, длительность и слайды в одной картинке, и правится она прямо на ней. Двадцать четыре ручки и тридцать два переключателя исчезают.</div>
+<div style="margin-bottom: 8px"><b>RHYTHM — B, пэды.</b> Барабанная сетка понятна без объяснений, акцент виден под пэдом, а модуль становится 2U. Евклид в пэдах остаётся: пунктирные пэды считаются сами, клик переводит в GRID.</div>
+<div style="margin-bottom: 8px"><b>Общий язык:</b> янтарь — где мы сейчас (стадия, шаг), светлое — что включено, пунктир — вычисляется само.</div>
+<div><b>Что теряем в B:</b> у восьми напряжений стадий больше нет своих mod-гнёзд. Модулировать мелодию можно через ADDR и DICE, а точечную модуляцию одной ноты — вернуть позже, если понадобится.</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1660,"height":1280}}'>
+var NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+var V = [-1, -1, 0, -0.75, -0.42, -1, -0.17, -0.58], T = [0.25, 0.25, 0.5, 0.25, 0.25, 0.125, 0.25, 0.5];
+var PU = [1, 1, 1, 0, 1, 1, 1, 1], GL = [0, 0, 1, 0, 0, 1, 0, 0], CUR = 2;
+var GATES = 'x.xx..x.x.xx..x.', ACC = '...A.......A..A.', STEP = 5;
+var C = { text: '#e9e4d8', muted: '#8f897c', amber: '#f5a524', mod: '#6cb4ee', trig: '#f5a524', audio: '#e9e4d8' };
+
+function note(v) { var s = Math.round(v * 12 + 12); return NOTES[s % 12] + (2 + Math.floor(s / 12)); }
+function ang(k) { return (-135 + 270 * k) * Math.PI / 180; }
+function arc(k0, k1, r) {
+  if (k1 - k0 < 0.002) return '';
+  var a0 = ang(k0), a1 = ang(k1), large = (k1 - k0) * 270 > 180 ? 1 : 0;
+  return 'M' + (24 + r * Math.sin(a0)).toFixed(2) + ' ' + (17 - r * Math.cos(a0)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + (24 + r * Math.sin(a1)).toFixed(2) + ' ' + (17 - r * Math.cos(a1)).toFixed(2);
+}
+function knob(k, x, y, label, value) {
+  var a = ang(k);
+  return { pos: 'left:' + x + 'px;top:' + y + 'px;', track: arc(0, 1, 11), arc: arc(0, k, 11), px: (24 + 8 * Math.sin(a)).toFixed(2), py: (17 - 8 * Math.cos(a)).toFixed(2),
+    label: label, value: value, lstyle: 'left:' + x + 'px;width:48px;top:' + (y + 35) + 'px;color:#8f897c;', vstyle: 'left:' + x + 'px;width:48px;top:' + (y + 45) + 'px;color:#e9e4d8;' };
+}
+function opt(x, y, w, text, label) { return { style: 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;', text: text, label: label, lstyle: 'left:' + x + 'px;width:' + w + 'px;top:' + (y + 28) + 'px;color:#8f897c;' }; }
+function jacks(ins, outs, w) {
+  var r = [];
+  ins.forEach(function (p, i) {
+    var y = 39 + i * 26, col = C[p[1]];
+    r.push({ style: 'left:3.5px;top:' + (y - 4.5) + 'px;border-color:' + col + ';' + (p[2] ? 'background:' + col + ';' : '') + (p[3] ? 'border-style:dashed;' : ''),
+      lstyle: 'left:15px;top:' + (y - 11) + 'px;', label: p[0], fstyle: 'left:15px;top:' + y + 'px;', field: p[1] === 'trig' ? (p[4] || '1') : p[1] === 'mod' ? '1.00' : '' });
+  });
+  outs.forEach(function (p, i) {
+    var y = 39 + i * 26, col = C[p[1]];
+    r.push({ style: 'left:' + (w - 12.5) + 'px;top:' + (y - 4.5) + 'px;border-color:' + col + ';' + (p[2] ? 'background:' + col + ';' : ''),
+      lstyle: 'right:15px;top:' + (y - 11) + 'px;text-align:right;', label: p[0], fstyle: 'display:none;', field: '' });
+  });
+  return r;
+}
+function glideD(on) { return on ? 'M0 9 L5 9 L11 1 L16 1' : 'M0 9 L8 9 L8 1 L16 1'; }
+function dot(x, y, on, amber) { return 'left:' + x + 'px;top:' + y + 'px;width:8px;height:8px;border-radius:50%;box-sizing:border-box;border:1.5px solid ' + (amber ? C.amber : '#8f897c') + ';' + (on ? 'background:' + (amber ? C.amber : C.text) + ';border-color:' + (amber ? C.amber : C.text) + ';' : ''); }
+
+var ST_INS = [['ADV', 'trig', 1], ['RST', 'trig'], ['ADDR', 'mod'], ['DICE', 'trig']], ST_OUTS = [['CV', 'mod', 1], ['PLS', 'trig', 1], ['EOC', 'trig']];
+var RH_INS = [['CLK', 'trig', 1, 0, '×4'], ['RST', 'trig'], ['DICE', 'trig']], RH_OUTS = [['GATE', 'trig', 1], ['ACC', 'trig', 1], ['EOC', 'trig']];
+
+function stFooter(y) {
+  return {
+    knobs: [knob(7 / 7, 52, y, 'LEN', '8'), knob(0, 196, y, 'ROOT', 'C')],
+    opts: [opt(112, y + 7, 72, '303 ▾', 'GEN'), opt(316, y + 7, 52, 'DICE', '')],
+    scalePos: 'left:252px;top:' + (y + 7) + 'px;width:52px;', scaleLbl: 'left:252px;width:52px;top:' + (y + 35) + 'px;color:#8f897c;'
+  };
+}
+
+class Component extends DCLogic {
+  renderVals() {
+    var total = T.reduce(function (a, b) { return a + b; }, 0);
+    // A · columns
+    var stA = V.map(function (v, i) {
+      var cx = 48 + i * 48 + 24, cur = i === CUR, mid = 104, h = Math.abs(v) * 58, tk = Math.log(T[i] / 0.01) / Math.log(400), ka = ang(tk);
+      return {
+        colStyle: 'left:' + (cx - 24) + 'px;top:24px;width:48px;height:228px;' + (cur ? 'background:rgba(245,165,36,.06);' : ''),
+        numStyle: 'left:' + (cx - 24) + 'px;width:48px;top:30px;color:' + (cur ? C.amber : C.muted) + ';', num: '' + (i + 1),
+        trackStyle: 'left:' + (cx - 6) + 'px;top:46px;width:12px;height:116px;border:1px solid #3a3933;border-radius:2px;box-sizing:border-box;background:#121210;',
+        fillStyle: 'left:' + (cx - 4) + 'px;top:' + (v >= 0 ? mid - h : mid) + 'px;width:8px;height:' + Math.max(1, h) + 'px;background:' + (cur ? C.amber : C.text) + ';',
+        noteStyle: 'left:' + (cx - 24) + 'px;width:48px;top:166px;color:' + (cur ? C.amber : C.text) + ';', note: note(v),
+        knobPos: 'left:' + (cx - 24) + 'px;top:178px;', kTrack: arc(0, 1, 9), kArc: arc(0, tk, 9), kx: (24 + 6 * Math.sin(ka)).toFixed(2), ky: (17 - 6 * Math.cos(ka)).toFixed(2),
+        timeStyle: 'left:' + (cx - 24) + 'px;width:48px;top:210px;color:#8f897c;', time: Math.round(T[i] * 1000) + 'ms',
+        dotStyle: dot(cx - 13, 230, PU[i], false), glPos: 'left:' + (cx + 1) + 'px;top:229px;', gl: glideD(GL[i])
+      };
+    });
+    // B · contour
+    var W = 376, H = 176, mid = 92, amp = 62, x = 0, cols = [], line = '', prevY = null;
+    V.forEach(function (v, i) {
+      var w = T[i] / total * W, y = mid - v * amp, cur = i === CUR;
+      if (prevY === null) line = 'M0 ' + y.toFixed(1);
+      else if (GL[i]) line += ' L' + (x + Math.min(16, w / 2)).toFixed(1) + ' ' + y.toFixed(1);
+      else line += ' L' + x.toFixed(1) + ' ' + y.toFixed(1);
+      line += ' L' + (x + w).toFixed(1) + ' ' + y.toFixed(1);
+      cols.push({
+        hl: 'left:' + x + 'px;top:0;width:' + w + 'px;height:' + H + 'px;' + (cur ? 'background:rgba(245,165,36,.10);' : ''),
+        sep: 'left:' + x + 'px;top:0;width:1px;height:' + H + 'px;background:#24231f;',
+        noteStyle: 'left:' + x + 'px;width:' + w + 'px;top:' + (y - 16) + 'px;color:' + (cur ? C.amber : C.text) + ';', note: note(v),
+        dotStyle: dot(x + w / 2 - 4, 158, PU[i], cur)
+      });
+      x += w; prevY = y;
+    });
+    var stB = { cols: cols, line: line, fill: line + ' L' + W + ' ' + H + ' L0 ' + H + ' Z' };
+    // C · grouped, 2U
+    var stC = V.map(function (v, i) {
+      var cx = 48 + i * 48 + 24, cur = i === CUR, k = (v + 1) / 2, a = ang(k);
+      return {
+        colStyle: 'left:' + (cx - 24) + 'px;top:24px;width:48px;height:120px;' + (cur ? 'background:rgba(245,165,36,.06);' : '') + (i ? 'border-left:1px solid #24231f;' : ''),
+        knobPos: 'left:' + (cx - 24) + 'px;top:30px;', kTrack: arc(0, 1, 11), kArc: arc(Math.min(0.5, k), Math.max(0.5, k), 11), kx: (24 + 8 * Math.sin(a)).toFixed(2), ky: (17 - 8 * Math.cos(a)).toFixed(2),
+        noteStyle: 'left:' + (cx - 24) + 'px;width:48px;top:66px;color:' + (cur ? C.amber : C.text) + ';', note: note(v),
+        timeStyle: 'left:' + (cx - 20) + 'px;top:82px;width:40px;color:#8f897c;', time: Math.round(T[i] * 1000),
+        dotStyle: dot(cx - 13, 112, PU[i], cur), glPos: 'left:' + (cx + 1) + 'px;top:111px;', gl: glideD(GL[i])
+      };
+    });
+    // RHYTHM A · ring
+    var dots = [];
+    for (var s = 0; s < 16; s++) {
+      var an = -Math.PI / 2 + s / 16 * 2 * Math.PI, hit = GATES[s] === 'x', cur2 = s === STEP, r = 104, sz = hit ? 14 : 9;
+      var dx = 210 + r * Math.cos(an), dy = 180 + r * Math.sin(an), ax = 210 + 124 * Math.cos(an), ay = 180 + 124 * Math.sin(an);
+      dots.push({
+        style: 'left:' + (dx - sz / 2) + 'px;top:' + (dy - sz / 2) + 'px;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;box-sizing:border-box;' +
+          (hit ? 'background:' + C.text + ';' : 'background:#121210;border:1.5px solid #5d594f;') + (cur2 ? 'box-shadow:0 0 0 2px #1b1b18,0 0 0 3.5px ' + C.amber + ';' : ''),
+        acc: ACC[s] === 'A' ? 'left:' + (ax - 3.5) + 'px;top:' + (ay - 3.5) + 'px;width:7px;height:7px;border-radius:50%;background:' + C.amber + ';' : 'display:none;'
+      });
+    }
+    var pa = -Math.PI / 2 + STEP / 16 * 2 * Math.PI;
+    var rhA = { dots: dots, px: (210 + 80 * Math.cos(pa)).toFixed(1), py: (180 + 80 * Math.sin(pa)).toFixed(1) };
+    // RHYTHM B · pads, 2U
+    var rhB = [];
+    for (var s2 = 0; s2 < 16; s2++) {
+      var row = Math.floor(s2 / 8), col = s2 % 8, px = 50 + col * 48, py = 32 + row * 58, hit2 = GATES[s2] === 'x', cur3 = s2 === STEP;
+      rhB.push({
+        pad: 'left:' + px + 'px;top:' + py + 'px;width:44px;height:40px;border-radius:3px;box-sizing:border-box;' + (hit2 ? 'background:' + C.text + ';' : 'background:#121210;border:1px solid #3a3933;') + (cur3 ? 'box-shadow:0 0 0 2px ' + C.amber + ';' : ''),
+        numStyle: 'left:' + (px + 3) + 'px;top:' + (py + 3) + 'px;color:' + (hit2 ? '#121210' : '#5d594f') + ';', num: '' + (s2 + 1),
+        acc: 'left:' + px + 'px;top:' + (py + 44) + 'px;width:44px;height:5px;border-radius:2px;' + (ACC[s2] === 'A' ? 'background:' + C.amber + ';' : 'background:#24231f;')
+      });
+    }
+    var f3 = stFooter(268), f2 = stFooter(156);
+    var scaleMask = [0, 2, 3, 5, 7, 8, 10], on = '', off = '';
+    for (var q = 0; q < 12; q++) { var rr = scaleMask.indexOf(q) >= 0 ? 'M' + q * 2 + ' 1 h1.4 v10 h-1.4 Z' : 'M' + q * 2 + ' 8 h1.4 v3 h-1.4 Z'; if (scaleMask.indexOf(q) >= 0) on += rr; else off += rr; }
+    function panel(x, y, o) {
+      return Object.assign({ stA: stA, stB: stB, stC: stC, rhA: rhA, rhB: rhB, scaleOn: on, scaleOff: off, pos: 'left:' + x + 'px;top:' + y + 'px;', isStA: false, isStB: false, isStC: false, isRhA: false, isRhB: false, hasScale: false, knobs: [], opts: [], scalePos: '', scaleLbl: '' }, o);
+    }
+    var panels = [
+      panel(40, 150, Object.assign({ title: 'STAGES · A — колонки', sub: 'Buchla 248: каждая стадия — вертикальная полоса. 10 HP × 3U', name: 'STAGES', size: 'width:480px;height:336px;', isStA: true, hasScale: true,
+        jacks: jacks(ST_INS, ST_OUTS, 480),
+        notes: [{ k: 'Как:', t: 'фейдер = нота (подписана), ручка = время, точка = импульс, глиф = слайд. Текущая стадия — янтарная колонка.' },
+                { k: '+', t: 'всё про одну стадию в одной колонке; мелодия читается как график уровней.' },
+                { k: '−', t: 'время видно только числами; по-прежнему 8 ручек времени.' }] }, f3)),
+      panel(580, 150, Object.assign({ title: 'STAGES · B — контур', sub: 'Мелодия как линия: высота = нота, ширина = время. 10 HP × 3U', name: 'STAGES', size: 'width:480px;height:336px;', isStB: true, hasScale: true,
+        jacks: jacks(ST_INS, ST_OUTS, 480),
+        notes: [{ k: 'Как:', t: 'тянуть ступень вверх-вниз — нота (прилипает к ладу), тянуть край — время, точка снизу — импульс, клик по стыку — слайд (наклон).' },
+                { k: '+', t: 'мелодия, ритм стадий и слайды — одна картинка; ни одной лишней ручки.' },
+                { k: '−', t: 'нет mod-гнезда на каждую ноту (модуляция мелодии — через ADDR и DICE).' }] }, f3)),
+      panel(1120, 150, Object.assign({ title: 'STAGES · C — компакт', sub: 'Как сейчас, но сгруппировано по стадиям. 10 HP × 2U', name: 'STAGES', size: 'width:480px;height:224px;', isStC: true, hasScale: true,
+        jacks: jacks(ST_INS, ST_OUTS, 480),
+        notes: [{ k: 'Как:', t: 'в колонке: ручка ноты (подписана), поле времени, точка импульса и глиф слайда.' },
+                { k: '+', t: 'вдвое меньше места, привычные ручки, у каждой ноты есть mod-гнездо.' },
+                { k: '−', t: 'мелодию не видно — это всё ещё ряд ручек.' }] }, f2)),
+      panel(40, 700, { title: 'RHYTHM · A — круг', sub: 'Евклид как геометрия: точки по кругу. 10 HP × 3U', name: 'RHYTHM', size: 'width:480px;height:336px;', isRhA: true,
+        jacks: jacks(RH_INS, RH_OUTS, 480),
+        knobs: [knob(1, 336, 40, 'LEN', '16'), knob(0.47, 384, 40, 'HITS', '8'), knob(0, 336, 104, 'ROT', '0'), knob(0.47, 384, 104, 'DENS', '8')],
+        opts: [opt(340, 176, 88, 'GRID', 'MODE'), opt(340, 222, 88, 'DICE', '')],
+        notes: [{ k: 'Как:', t: 'крупная точка — удар, янтарная снаружи — акцент, стрелка — текущий шаг. Клик по точке — удар, Shift-клик — акцент.' },
+                { k: '+', t: 'евклид понятен с одного взгляда: ROT вращает, HITS раскладывает удары по кругу.' },
+                { k: '−', t: 'в GRID пэды удобнее; 16 точек по кругу — мелкие мишени.' }] }),
+      panel(580, 700, { title: 'RHYTHM · B — пэды', sub: 'Драм-машина: два ряда по 8, акцент под пэдом. 10 HP × 2U', name: 'RHYTHM', size: 'width:480px;height:224px;', isRhB: true,
+        jacks: jacks(RH_INS, RH_OUTS, 480),
+        knobs: [knob(1, 52, 150, 'LEN', '16'), knob(0.47, 100, 150, 'HITS', '8'), knob(0, 148, 150, 'ROT', '0'), knob(0.47, 196, 150, 'DENS', '8')],
+        opts: [opt(256, 157, 64, 'GRID', 'MODE'), opt(332, 157, 52, 'DICE', '')],
+        notes: [{ k: 'Как:', t: 'клик по пэду — удар, клик по полоске под ним — акцент. Янтарная рамка — текущий шаг. В EUCLID пэды пунктирные и считаются сами; клик переводит в GRID.' },
+                { k: '+', t: 'понятно без объяснений, крупные мишени, 2U вместо 3U.' },
+                { k: '−', t: 'геометрию евклида видно хуже, чем на круге.' }] })
+    ];
+    return { panels: panels, stA: stA, stB: stB, stC: stC, rhA: rhA, rhB: rhB, scaleOn: on, scaleOff: off };
+  }
+}
+</script>
+</body>
+</html>
