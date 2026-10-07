@@ -29,8 +29,8 @@ of a creative tool; nothing of its UI is ported.
   scratch and is gone).
 - **Plan 2 written:** `docs/superpowers/plans/2026-10-07-2-modules.md` (10 tasks; stops after SCOPE, *Pulse*,
   *Acid*, *Drone* and the last task). In progress on branch `plan-2-modules` (ledger:
-  `.superpowers/sdd/2026-10-07-2-modules/progress.md`). Task 1 (state / trace readouts, SCOPE) done.
-  **Next:** user checkpoint (OSC into SCOPE), then Task 2 (SLOPE, NOISE).
+  `.superpowers/sdd/2026-10-07-2-modules/progress.md`). Tasks 1–3 done (SCOPE; SLOPE, NOISE; LPG).
+  **Next:** user checkpoint (build *Pulse* by hand), then Task 4 (FILTER, MIX, master clamp).
 
 ## The road (vertical slices: something to hear at every stage)
 

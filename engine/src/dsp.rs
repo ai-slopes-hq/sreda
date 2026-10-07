@@ -143,7 +143,7 @@ pub mod bench {
     impl Bench {
         /// Runs a DSP over whole blocks and, from a fresh instance, one sample at a time with the same inputs; the
         /// outputs must be identical (the engine runs any module per sample inside a feedback loop). `inputs` holds one
-        /// signal per input (all connected), each `blocks · BLOCK` long.
+        /// signal per input, each `blocks · BLOCK` long; an empty one is an unpatched input.
         pub fn blockwise_equals_per_sample(
             make: impl Fn() -> Box<dyn Dsp>,
             inputs: &[Vec<f32>],
@@ -154,12 +154,14 @@ pub mod bench {
         ) {
             let run = |per_sample: bool| {
                 let mut b = Bench::new(48_000.0, inputs.len(), par, fixed, outputs);
-                b.connected_in = vec![true; inputs.len()];
+                b.connected_in = inputs.iter().map(|s| !s.is_empty()).collect();
                 let mut dsp = make();
                 let mut res = vec![Vec::new(); outputs];
                 for blk in 0..blocks {
                     for (j, sig) in inputs.iter().enumerate() {
-                        b.inp[j].copy_from_slice(&sig[blk * BLOCK..(blk + 1) * BLOCK]);
+                        if !sig.is_empty() {
+                            b.inp[j].copy_from_slice(&sig[blk * BLOCK..(blk + 1) * BLOCK]);
+                        }
                     }
                     let mut io = Io {
                         inp: &b.inp,
