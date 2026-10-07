@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 4 (module sizes, frame tools, replace, insert, cable focus) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 5 (prototype review: ROUTE rows, hover focus, landing highlight, no capture on move) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -116,9 +116,10 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - **Insert into a cable:** drag a module that has no cables over a cable; within 8 screen px the cable highlights;
   dropping splits it: source → the module's first input of the source's role (else its first input), the module's
   first output of the target's role (else its first output) → the old target. One undo step.
-- **Cable focus:** hovering or selecting a module or a frame header shows its cables (a frame: all cables touching
-  anything inside it) at full strength and slightly thicker, and dims every other cable to 25 %. With nothing hovered
-  or selected all cables are drawn normally.
+- **Cable focus:** hovering a module or a frame header shows its cables (a frame: all cables touching anything inside
+  it) at full strength and slightly thicker, and dims every other cable to 20 %. Selection does not focus: with
+  nothing hovered all cables are drawn normally.
+- Popups (module search, option lists) close when the canvas pans or zooms.
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
   attenuverters and ratios are left alone. One undo step.
@@ -137,12 +138,15 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 ## 5. Groups (frames)
 
 - A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
-  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. Drag an edge or corner to resize (minimum 160 × 96);
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, ROUTE, M) show while the header is hovered, and stay visible
+  while ROUTE or M is on. Drag an edge or corner to resize (minimum 352 × 96);
   drag the header to move the frame and everything inside it; click the header to select it.
-- **Membership is containment.** Every module and frame has a `parent` (a frame or none). After any drop — move,
-  resize, add from search, duplicate, ⌘G — parents are recomputed: an object's parent is the innermost frame that
-  contains its centre, never itself or one of its descendants. Dropping into a frame attaches; dragging out
-  detaches; resizing a frame over an object attaches it. Frames nest to any depth.
+- **Membership is containment.** Every module and frame has a `parent` (a frame or none): the innermost frame that
+  contains its centre, never itself or one of its descendants. It is recomputed only for what an action touched:
+  a move re-parents the moved objects (dropping into a frame attaches, dragging out detaches) — a moved frame never
+  captures what it lands on; a resize re-parents everything (growing a frame over an object attaches it); an added,
+  duplicated or ⌘G-framed object gets its parent on creation. Frames nest to any depth.
+- While a module or frame is dragged, the frame it would land in is highlighted.
 - **⌘G** wraps the selection in a new frame fitted around it (16 px padding, header above), nested in the
   selection's innermost common parent. **⇧⌘G** removes the selected frame; its children move to its parent.
   **Backspace** on a selected frame deletes it and everything inside it (one undo step).
@@ -164,15 +168,17 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   - **STACK:** packs the frame's direct children (modules, and child frames as single blocks) flush, Tetris-style:
     children are taken in reading order (rows by position, then x) and each goes to the lowest free spot across the
     frame's width; the width stays, the height fits the result. One action, one undo step.
-  - **ROUTE:** a frame mode (`layout: 'route'`), toggled. Turning it on packs like STACK with 32 px channels between
-    children. Cables with both ends inside the frame are then drawn orthogonally through the channels — out of the
-    source into the channel on its right, up to the channel above the target, across, down the channel on the
-    target's left, into the jack (into a knob's mod jack: straight down from the channel above) — with rounded
-    corners and one 4 px lane per cable. Routes follow the modules live. Turning ROUTE off returns to curves and
-    keeps the layout.
+  - **ROUTE:** a frame mode (`layout: 'route'`), toggled. A ROUTE frame manages its own layout: its direct children
+    sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the
+    left padding is a trunk). Anything dropped into, moved within or taken out of it re-packs it, so the channels
+    always run through. Cables between two direct children are drawn orthogonally and never cross a module: out of
+    the source into the channel on its right, up into the channel above its row, along the trunk to the channel
+    above the target's row (same row: straight across), down the channel on the target's left into the jack (a
+    knob's mod jack: straight down from the channel above) — rounded corners, one 4 px lane per cable. Turning ROUTE
+    off returns to curves and keeps the layout.
   - **MUTE (M):** the frame fades out over 50 ms: cables leaving the frame and OUT modules inside it go silent; clocks
-    and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 %. Muting a
-    frame mutes its children.
+    and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 % (its own
+    header stays as is). Muting a frame mutes its children.
 
 ## 6. Session and seeds
 
