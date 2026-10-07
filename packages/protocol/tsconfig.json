@@ -1,5 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": ["node"] },
+  // DOM only for the WebAssembly types (the protocol runs in Node and in the AudioWorklet, never touches the DOM)
+  "compilerOptions": { "lib": ["ES2023", "DOM"], "types": ["node"] },
   "include": ["src"]
 }
