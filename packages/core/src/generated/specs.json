@@ -1,0 +1,124 @@
+[
+  {
+    "type": "osc",
+    "label": "OSC",
+    "desc": "oscillator",
+    "size": [
+      5,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "pitch",
+        "label": "PTCH",
+        "role": "pitch"
+      },
+      {
+        "id": "fm",
+        "label": "FM",
+        "role": "audio"
+      },
+      {
+        "id": "sync",
+        "label": "SYNC",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "freq",
+        "label": "FREQ",
+        "min": 0.1,
+        "max": 20000.0,
+        "def": 110.0,
+        "taper": "exp",
+        "unit": "hz",
+        "randomRange": [
+          40.0,
+          880.0
+        ],
+        "modDepth": 0.25
+      },
+      {
+        "kind": "option",
+        "id": "wave",
+        "label": "WAVE",
+        "options": [
+          "SIN",
+          "TRI",
+          "SAW",
+          "SQR"
+        ],
+        "def": 0,
+        "glyph": "wave"
+      },
+      {
+        "kind": "knob",
+        "id": "pw",
+        "label": "PW",
+        "min": 0.05,
+        "max": 0.95,
+        "def": 0.5,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "fmi",
+        "label": "FM",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
+  },
+  {
+    "type": "out",
+    "label": "OUT",
+    "desc": "to speakers",
+    "size": [
+      3,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "l",
+        "label": "L",
+        "role": "audio"
+      },
+      {
+        "id": "r",
+        "label": "R",
+        "role": "audio"
+      }
+    ],
+    "outputs": [],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "level",
+        "label": "LVL",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.7,
+        "taper": "lin"
+      }
+    ],
+    "normals": [
+      {
+        "kind": "internal",
+        "input": "r",
+        "internal": "L"
+      }
+    ]
+  }
+]

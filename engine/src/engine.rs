@@ -13,7 +13,13 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(sample_rate: f64, _seed: u32) -> Self {
-        Engine { sample_rate, master: Master::new(sample_rate), tone_hz: 0.0, phase: 0.0, out: [[0.0; BLOCK]; 2] }
+        Engine {
+            sample_rate,
+            master: Master::new(sample_rate),
+            tone_hz: 0.0,
+            phase: 0.0,
+            out: [[0.0; BLOCK]; 2],
+        }
     }
 
     /// A sine at 0.2 for checking the audio path; 0 turns it off.
@@ -24,7 +30,11 @@ impl Engine {
     pub fn process(&mut self) -> (&[f32; BLOCK], &[f32; BLOCK]) {
         let inc = self.tone_hz / self.sample_rate;
         for i in 0..BLOCK {
-            let v = if self.tone_hz > 0.0 { (std::f64::consts::TAU * self.phase).sin() * 0.2 } else { 0.0 };
+            let v = if self.tone_hz > 0.0 {
+                (std::f64::consts::TAU * self.phase).sin() * 0.2
+            } else {
+                0.0
+            };
             self.phase = (self.phase + inc).fract();
             self.out[0][i] = v as f32;
             self.out[1][i] = v as f32;
@@ -53,7 +63,9 @@ mod tests {
         }
         // skip the first 0.1 s (the DC blocker settles)
         let start = (0.1 * sample_rate) as usize;
-        (start + 1..samples.len()).filter(|&i| samples[i - 1] < 0.0 && samples[i] >= 0.0).collect()
+        (start + 1..samples.len())
+            .filter(|&i| samples[i - 1] < 0.0 && samples[i] >= 0.0)
+            .collect()
     }
 
     fn assert_period(sample_rate: f64) {
@@ -61,7 +73,12 @@ mod tests {
         assert!(c.len() > 50, "the tone sounds");
         let period = sample_rate / 220.0;
         for w in c.windows(2) {
-            assert!(((w[1] - w[0]) as f64 - period).abs() <= 1.0, "period {} vs {}", w[1] - w[0], period);
+            assert!(
+                ((w[1] - w[0]) as f64 - period).abs() <= 1.0,
+                "period {} vs {}",
+                w[1] - w[0],
+                period
+            );
         }
     }
 

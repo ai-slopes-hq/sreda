@@ -6,3 +6,11 @@ publish = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[bin]]
+name = "export-specs"
+path = "src/bin/export_specs.rs"

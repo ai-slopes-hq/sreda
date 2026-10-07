@@ -108,7 +108,11 @@ mod tests {
     fn a_loud_input_stays_within_one() {
         let mut m = Master::new(SR);
         let out = run(&mut m, 0.1, |i| if i % 100 < 50 { 10.0 } else { -10.0 });
-        assert!(out.iter().all(|x| x.abs() <= 1.0), "peak {}", out.iter().fold(0.0f32, |a, x| a.max(x.abs())));
+        assert!(
+            out.iter().all(|x| x.abs() <= 1.0),
+            "peak {}",
+            out.iter().fold(0.0f32, |a, x| a.max(x.abs()))
+        );
     }
 
     #[test]
@@ -129,12 +133,28 @@ mod tests {
     fn fade_in_ramps_over_its_time() {
         let mut m = Master::new(SR);
         m.fade_in(200.0);
-        let sine = |i: usize| (2.0 * std::f64::consts::PI * 1000.0 * i as f64 / SR).sin() as f32 * 0.5;
+        let sine =
+            |i: usize| (2.0 * std::f64::consts::PI * 1000.0 * i as f64 / SR).sin() as f32 * 0.5;
         let out = run(&mut m, 0.4, sine);
-        let peak = |from: f64, to: f64| out[(from * SR) as usize..(to * SR) as usize].iter().fold(0.0f32, |a, x| a.max(x.abs()));
-        assert!(peak(0.0, 0.003) < 0.02, "starts silent: {}", peak(0.0, 0.003));
-        assert!((peak(0.09, 0.11) - 0.25).abs() < 0.03, "half way at 100 ms: {}", peak(0.09, 0.11));
+        let peak = |from: f64, to: f64| {
+            out[(from * SR) as usize..(to * SR) as usize]
+                .iter()
+                .fold(0.0f32, |a, x| a.max(x.abs()))
+        };
+        assert!(
+            peak(0.0, 0.003) < 0.02,
+            "starts silent: {}",
+            peak(0.0, 0.003)
+        );
+        assert!(
+            (peak(0.09, 0.11) - 0.25).abs() < 0.03,
+            "half way at 100 ms: {}",
+            peak(0.09, 0.11)
+        );
         let full_at = 0.2 + BLOCK as f64 / SR;
-        assert!((peak(full_at, full_at + 0.01) - 0.5).abs() < 0.01, "full after 200 ms + 1 block");
+        assert!(
+            (peak(full_at, full_at + 0.01) - 0.5).abs() < 0.01,
+            "full after 200 ms + 1 block"
+        );
     }
 }
