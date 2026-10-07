@@ -21,16 +21,9 @@ pub fn spec() -> ModuleSpec {
     }
 }
 
+#[derive(Default)]
 pub struct Fold {
     folder: Folder,
-}
-
-impl Default for Fold {
-    fn default() -> Self {
-        Fold {
-            folder: Folder::new(),
-        }
-    }
 }
 
 impl Dsp for Fold {
