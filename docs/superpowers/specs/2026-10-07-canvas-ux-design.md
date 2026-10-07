@@ -215,6 +215,9 @@ right over 45 % of the window (W or the WIRES button; W or Esc closes); the canv
   moving an end, or `+ new wire` — the port under the pointer (or picked with ↑ / ↓) gets an amber ring on the
   canvas and its module an amber outline; once one end is fixed, a dashed amber preview wire runs from it to that
   candidate, so you see where the wire will land before you click.
+  If that candidate (or a wire row picked with ↑ / ↓) is outside the visible part of the canvas — the part not
+  covered by WIRES — and stays the candidate for 250 ms, the view glides (220 ms, ease-out) to centre its module;
+  zoom is unchanged.
   Selecting a module or frame on the canvas highlights its rows and scrolls the first into view; **SELECTION**
   keeps only the wires touching the selection; the filter field matches module and port names.
 - **Keys** while it is open: ↑ / ↓ move between wire rows, Backspace removes the selected wire, Enter opens the port
