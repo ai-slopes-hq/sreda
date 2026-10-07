@@ -1,0 +1,70 @@
+# SREDA 2 — roadmap and where we are
+
+**Start here in a new session.** Read this file, then the plan it points to; continue at the first unchecked step.
+Update the **Status** section at the end of every task (and commit it with the task).
+
+SREDA 2 is a canvas for sketching rhythmic / techno and ambient / drone patches — "nothing, just play" — with a
+Serge / Buchla / Eurorack feel: small atomic modules (Bitwig Grid-like), a professional look (no toys, no eye
+candy), clock-unbound (anything periodic can clock anything). It replaces `../sreda`, which grew into a DAW instead
+of a creative tool; nothing of its UI is ported.
+
+## Documents
+
+| What | Where |
+|---|---|
+| The design (approved, revision 14) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
+| Plan 1 (being executed) | `docs/superpowers/plans/2026-10-07-1-foundation.md` |
+| Ideas for later | `docs/backlog.md` |
+| The clickable prototype and its headless checks | `docs/prototype/` (see its README; live artifact linked there) |
+| Repo rules for Claude | `CLAUDE.md` |
+
+## Status
+
+- **2026-10-07** — design done: spec revision 14, prototype boards (Main canvas, Panel system, Sound pack, Panel
+  density), Plan 1 rewritten sound-first. **No code yet.**
+- **Next:** execute Plan 1 from Task 1, natively (in-session, no subagents), stopping at the user checkpoints.
+
+## The road (vertical slices: something to hear at every stage)
+
+| Stage | Plan | Ends with | State |
+|---|---|---|---|
+| **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | not started |
+| **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | not started |
+| **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (written when Plan 1 lands) | the 24 first-build modules | — |
+| **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 | the first build complete | — |
+| **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | its own plan | spec §7a | — |
+
+**Plan 2 order** (chosen so real patches come together early): SCOPE (see signals) → LPG, SLOPE, NOISE (*Pulse*) →
+FILTER, MIX → RHYTHM, STAGES, QUANT with generators and DICE (*Acid*) → FOLD, COMPLEX, DELAY (*Drone*) →
+UNCERTAINTY, S&H, CHANCE, SHIFT, COMPARE, FOLLOW, SWITCH, SPREAD, ATT, A×B+C. Each module's behaviour table lives in
+git history of Plan 1 (`git show 2dd91ab:docs/superpowers/plans/2026-10-07-1-foundation.md`, "Tasks 10–14") — reuse
+it when writing Plan 2.
+
+## Working agreements
+
+- **Language.** The user writes Russian; answer in Russian. Docs, code, commits and UI copy are English.
+- **Execution:** native (Claude implements in the session), TDD per the plan, commit per task. Stop at each
+  checkpoint so the user can run `pnpm dev` and listen before going on. Don't spawn subagents unless asked.
+- **Results early.** The user does not want to build for ages before hearing anything: keep every plan sliced so
+  each task ends in something audible or visible.
+- **Commits** end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- **Spec first.** A design change goes into the spec (bump its revision line), then the plan, then code; the
+  prototype is updated when the change is visual or interactive.
+- **The prototype.** Edit the boards in `docs/prototype/`, run its checks (`node docs/prototype/check/main.js
+  docs/prototype/Main.dc.html`, `frames.js`, `holes.js <board>`), then republish the artifact (README says how).
+  Say plainly that the checks run in Node and the page itself was not seen in a browser.
+
+## Decisions worth knowing (details in the spec)
+
+- Electron (macOS, one user), Rust → WASM engine and DSP in an AudioWorklet (raw C-ABI exports, no wasm-bindgen),
+  TypeScript core, SolidJS UI; device sample rate; "balanced" quality (polyBLEP, ADAA + 2× on nonlinear stages).
+- Panel grammar with "air + quiet": HP 56, lanes 32, header 32 (1U 144 / 2U 272 / 3U 400); values appear on hover,
+  edit, modulation or when not default; port labels on one line, ≤ 5 characters.
+- Keys: `/` (or double-click) opens the picker, ⌘O on PROJECTS; **G** frames / unframes (⌘G, ⇧⌘G too); no M / G / P
+  picker keys.
+- Frames: STACK uses WIRE FIX's rows without channels and turns FIX off; frames fit their content with equal
+  margins; repeated presses change nothing.
+- LPG has the VCA folded in; SCOPE has thru outputs (`THR A`, `THR B`); STAGES is a 16-stage contour, RHYTHM 16
+  pads with OFF / ON / TIE.
+- Sound pack: one SAMPLER (ONE / LOOP / SLICE; slices equal or by hits; breaks follow the clock by re-triggering
+  slices) + a separate GRAINS (FILE / LIVE + FREEZE); REVERB has an Elektron-style room display.
