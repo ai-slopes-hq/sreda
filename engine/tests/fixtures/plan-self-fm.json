@@ -1,0 +1,121 @@
+{
+  "seq": 2,
+  "nodes": [
+    {
+      "id": "m1",
+      "type": "osc",
+      "knobs": [0.5737361772421502, 0.5000000000000001, 0],
+      "fixed": [2],
+      "inputs": [
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": true
+            }
+          ],
+          "normal": null,
+          "kind": "sum",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "trigger",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 0.25,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        }
+      ],
+      "connectedOut": [true]
+    },
+    {
+      "id": "m2",
+      "type": "out",
+      "knobs": [0.7],
+      "fixed": [],
+      "inputs": [
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "sum",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": "internal",
+          "kind": "sum",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        }
+      ],
+      "connectedOut": []
+    }
+  ],
+  "steps": [
+    {
+      "loop": [0]
+    },
+    {
+      "node": 1
+    }
+  ],
+  "layout": {
+    "size": 7,
+    "nodes": [
+      {
+        "knobs": 1,
+        "trigs": 4,
+        "outs": 5
+      },
+      {
+        "knobs": 6,
+        "trigs": 7,
+        "outs": 7
+      }
+    ]
+  }
+}
