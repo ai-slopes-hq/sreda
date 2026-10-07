@@ -27,7 +27,8 @@ of a creative tool; nothing of its UI is ported.
   panels, patching gestures. Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md`
   ("From the Plan 1 review"). Rulings made during Plan 1 are in the git history of the commits (the ledger was
   scratch and is gone).
-- **Next:** write Plan 2 — the modules one by one, starting with SCOPE (see "Plan 2 order" below).
+- **Plan 2 written:** `docs/superpowers/plans/2026-10-07-2-modules.md` (10 tasks; stops after SCOPE, *Pulse*,
+  *Acid*, *Drone* and the last task). **Next:** execute it from Task 1, natively, on a branch.
 
 ## The road (vertical slices: something to hear at every stage)
 
@@ -35,7 +36,7 @@ of a creative tool; nothing of its UI is ported.
 |---|---|---|---|
 | **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | done, merged |
 | **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | done, merged |
-| **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (written when Plan 1 lands) | the 24 first-build modules | — |
+| **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (`2026-10-07-2-modules.md`) | the 24 first-build modules | — |
 | **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 | the first build complete | — |
 | **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | its own plan | spec §7a | — |
 
