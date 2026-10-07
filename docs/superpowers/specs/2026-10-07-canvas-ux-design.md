@@ -190,21 +190,23 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
   launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
-- **NEW** (top-right button, the only chrome besides the listen bar) clears the canvas. It is an undo step.
+- Top right: **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the canvas; an undo
+  step). With the listen bar these are the only chrome.
 - **Library = a folder on disk.** The first save or open asks for a library folder once (File System Access API;
   the handle is kept in IndexedDB and permission re-asked by the browser when needed). Inside it:
   `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
   as path prefixes. Files are the document JSON (`version`, `modules`, `cables`, `groups`); a group file holds one
   top frame with everything inside it.
-- **Save:** ⌘S with exactly one frame selected saves that group — a name field appears (`acid/303 voice`: a slash
+- **Save:** a frame's header has a SAVE tool, and ⌘S with exactly one frame selected does the same: it saves that group — a name field appears (`acid/303 voice`: a slash
   makes subfolders); it stores the frame, everything inside it, the cables between those, its clock and tint, not
   cables from outside. ⌘S with anything else saves the project (straight away if it already has a name, else a
   name field); ⇧⌘S is save-as. The project's path shows next to SREDA at the top left, with `●` while there are
   unsaved changes. Factory entries are read-only: saving one asks for a new name.
 - **One picker** for modules, groups and projects: the module search (§4) gets tabs ALL · MODULES · GROUPS ·
   PROJECTS (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows
-  its folder and kind. ⌘O opens it on PROJECTS in the middle of the screen. Opened from a jack, it offers modules
-  and groups (no projects); in REPLACE mode, modules only.
+  its folder and kind. IDE-style keys open it at the pointer: **/** (or a double-click on empty canvas) on ALL,
+  **M** on MODULES, **G** on GROUPS, **P** on PROJECTS (⌘O = P, in the middle of the screen). Opened from a jack, it
+  offers modules and groups (no projects); in REPLACE mode, modules only.
   - A **group** lands with its frame's top-left at the drop point, with fresh ids; opened from a trigger output, the
     cable goes into the group's CLK in.
   - A **project** replaces the canvas (one undo step) and fits it in view.

@@ -10,7 +10,8 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Look anywhere** (2026-10-07): hover a jack or cable → a small scope of that signal. Pairs with click-to-listen.
 - **Keyboard touch plates** (2026-10-07): a PLATES module turns computer keys into Buchla-style touch plates: gate +
   per-key voltage + "pressure" from hold time.
-- **MUTATE** (2026-10-07): M over a module or frame nudges its knobs ±10 % from where they are (R scrambles, M varies).
+- **MUTATE** (2026-10-07): ⇧R over a module or frame nudges its knobs ±10 % from where they are (R scrambles, ⇧R
+  varies). M now opens the module picker.
 - **Knob lock** (2026-10-07): Alt-click pins a knob so R / MUTATE leave it alone.
 - **⌘D on a frame** (2026-10-07): duplicate a whole frame with its inner cables and clock (a second voice in one move).
 - **Frame snapshots A/B + MORPH** (2026-10-07): store two states of a frame's knobs and morph between them from the
