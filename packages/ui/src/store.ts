@@ -3,13 +3,17 @@
 import {
   compile,
   History,
+  inputPorts,
+  setAtt,
   setParam,
+  setRatio,
   type Doc,
   type KnobParam,
   type Merge,
   type Plan,
   type Specs,
 } from '@sreda/core';
+import { createSignal } from 'solid-js';
 import { createStore, reconcile } from 'solid-js/store';
 import type { AudioHost } from './audio/host';
 import { scheduleSave } from './autosave';
@@ -43,6 +47,8 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
   let host: AudioHost | null = null;
   let seq = 0;
   let plan: Plan = compile(initial, specs, seq);
+  // reactive: panels re-register their live readouts when a new plan moves the offsets
+  const [layout, setLayout] = createSignal(plan.layout);
 
   const nodeOf = (id: string): number | null => {
     const i = state.doc.modules.findIndex((m) => m.id === id);
@@ -62,6 +68,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
   function send(): void {
     plan = compile(state.doc, specs, ++seq);
     setSeq(seq);
+    setLayout(plan.layout);
     host?.post({ t: 'plan', plan });
     sendListen(); // a new plan clears listening in the engine
   }
@@ -69,6 +76,22 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
   function show(doc: Doc): void {
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: false }));
     scheduleSave(doc);
+    // selection and listening follow what still exists
+    const ids = new Set(doc.modules.map((m) => m.id));
+    if (state.sel.some((id) => !ids.has(id)))
+      setState(
+        'sel',
+        state.sel.filter((id) => ids.has(id)),
+      );
+    if (state.listen && !ids.has(state.listen.id)) setState('listen', null);
+  }
+
+  /** an input's index in the plan (inputs, then mod jacks) */
+  function inputIndex(id: string, port: string): { node: number; input: number } | null {
+    const node = nodeOf(id);
+    if (node === null) return null;
+    const input = inputPorts(specs[state.doc.modules[node]!.type]!).findIndex((p) => p.id === port);
+    return input < 0 ? null : { node, input };
   }
 
   return {
@@ -120,8 +143,36 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
         value: doc.modules[node]!.params[param]!,
       });
     },
+    /** an attenuverter drag: the document and an att message, no new plan */
+    att(id: string, port: string, v: number | null, merge: Merge): void {
+      const doc = setAtt(history.current, id, port, v);
+      history.commit(doc, merge);
+      show(doc);
+      const at = inputIndex(id, port);
+      const spec = specs[doc.modules.find((m) => m.id === id)!.type]!;
+      const knob = spec.params.find((p) => '@' + p.id === port);
+      const def = knob?.kind === 'knob' ? (knob.modDepth ?? 1) : 1;
+      if (at) host?.post({ t: 'att', ...at, value: v ?? def });
+    },
+    /** a ratio drag: the document and a ratio message */
+    ratio(id: string, port: string, r: number, merge: Merge): void {
+      const doc = setRatio(history.current, id, port, r);
+      history.commit(doc, merge);
+      show(doc);
+      const at = inputIndex(id, port);
+      if (at) host?.post({ t: 'ratio', ...at, value: r });
+    },
+    /** show a document while a gesture is under way (no undo step, no save, no plan) */
+    preview(doc: Doc): void {
+      setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: false }));
+    },
+    current: (): Doc => history.current,
+    setListen(l: { id: string; port: string } | null): void {
+      setState('listen', l);
+      sendListen();
+    },
     nodeOf,
-    layout: () => plan.layout,
+    layout,
     readout: (i: number): number => host?.readouts[i] ?? 0,
   };
 }

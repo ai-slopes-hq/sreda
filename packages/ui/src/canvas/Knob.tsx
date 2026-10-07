@@ -19,15 +19,19 @@ export interface KnobProps {
   /** readout offset of the knob's modulated position, when audio runs */
   readout?: number | undefined;
   set(knob: number, merge: Merge): void;
+  /** Alt-drag on a modulated knob sets its mod jack's attenuverter (−1…+1, 0.01 a pixel) */
+  setDepth?(value: number, merge: Merge): void;
   edit(on: boolean): void;
 }
 
-/** A knob: vertical drag (200 px = full range, Shift ×0.1), wheel 1 % a notch, double-click resets. */
+/** A knob: vertical drag (200 px = full range, Shift ×0.1), wheel 1 % a notch, double-click resets;
+ *  Alt-drag on a modulated knob sets the modulation depth. */
 export function Knob(props: KnobProps): JSX.Element {
   const [, setDragging] = createSignal(false);
   let start = 0;
   let k0 = 0;
   let key = '';
+  let depth = false;
   const p = () => props.param;
   const a = () => ang(props.value);
 
@@ -36,13 +40,18 @@ export function Knob(props: KnobProps): JSX.Element {
     e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     start = e.clientY;
-    k0 = props.value;
-    key = `knob:${p().id}:${++strokes}`;
+    depth = e.altKey && props.modulated;
+    k0 = depth ? props.depth : props.value;
+    key = `${depth ? 'depth' : 'knob'}:${p().id}:${++strokes}`;
     setDragging(true);
     props.edit(true);
   }
   function move(e: PointerEvent): void {
     if (!key) return;
+    if (depth) {
+      props.setDepth?.(Math.min(1, Math.max(-1, k0 + (start - e.clientY) * 0.01)), { key, stroke: true });
+      return;
+    }
     const dk = ((start - e.clientY) / 200) * (e.shiftKey ? 0.1 : 1);
     props.set(Math.min(1, Math.max(0, k0 + dk)), { key, stroke: true });
   }

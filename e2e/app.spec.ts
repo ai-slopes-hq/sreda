@@ -109,3 +109,118 @@ test('a corrupt autosave is kept as a backup, the starter patch opens, a notice 
   expect(keys.some((k) => k.startsWith('backup-'))).toBe(true);
   await again.app.close();
 });
+
+type Mod = {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  params: Record<string, number>;
+  atts: Record<string, number>;
+};
+type Cable = { from: [string, string]; to: [string, string] };
+const fullDoc = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as { __sreda: { doc(): { modules: Mod[]; cables: Cable[] } } }).__sreda.doc(),
+  );
+const jack = (page: Page, module: string, port: string, nth = 0) =>
+  page.locator(`[data-type=${module}]`).nth(nth).locator(`[data-jack="${port}"]`);
+async function center(page: Page, l: ReturnType<typeof jack>): Promise<{ x: number; y: number }> {
+  const b = (await l.boundingBox())!;
+  return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+}
+async function drag(page: Page, a: { x: number; y: number }, b: { x: number; y: number }): Promise<void> {
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i++)
+    await page.mouse.move(a.x + ((b.x - a.x) * i) / 10, a.y + ((b.y - a.y) * i) / 10);
+  await page.mouse.up();
+}
+
+test('patching: add wired from a jack, stack a cable, pull it out, delete and undo', async () => {
+  const { app, page } = await launch();
+  // drag from OSC OUT into empty space → picker → OUT → placed with its L at the drop point and wired
+  const out = await center(page, jack(page, 'osc', 'out'));
+  const drop = { x: out.x + 120, y: out.y + 300 };
+  await drag(page, out, drop);
+  await expect(page.locator('.sr-picker')).toBeVisible();
+  await page.keyboard.type('out');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-type=out]')).toHaveCount(2);
+  const l2 = await center(page, jack(page, 'out', 'l', 1));
+  expect(Math.abs(l2.x - drop.x)).toBeLessThan(8);
+  expect(Math.abs(l2.y - drop.y)).toBeLessThan(8);
+  let d = await fullDoc(page);
+  const second = d.modules[2]!.id;
+  expect(d.cables).toContainEqual({ from: ['m1', 'out'], to: [second, 'l'] });
+
+  // drag from OSC OUT onto the new OUT's R: a second cable from the same output
+  await drag(page, out, await center(page, jack(page, 'out', 'r', 1)));
+  d = await fullDoc(page);
+  expect(d.cables).toContainEqual({ from: ['m1', 'out'], to: [second, 'r'] });
+
+  // drag from that R into empty space removes the cable
+  await drag(page, await center(page, jack(page, 'out', 'r', 1)), { x: 1300, y: 900 });
+  d = await fullDoc(page);
+  expect(d.cables.some((c) => c.to[0] === second && c.to[1] === 'r')).toBe(false);
+
+  // box-select both OUTs, Backspace deletes them, ⌘Z brings them back
+  const a = (await page.locator('[data-type=out]').nth(0).boundingBox())!;
+  const b = (await page.locator('[data-type=out]').nth(1).boundingBox())!;
+  await drag(
+    page,
+    { x: Math.min(a.x, b.x) - 20, y: Math.min(a.y, b.y) - 20 },
+    { x: Math.max(a.x + a.width, b.x + b.width) + 20, y: Math.max(a.y + a.height, b.y + b.height) + 20 },
+  );
+  await page.keyboard.press('Backspace');
+  await expect(page.locator('[data-type=out]')).toHaveCount(0);
+  await page.keyboard.press('Meta+z');
+  await expect(page.locator('[data-type=out]')).toHaveCount(2);
+  await app.close();
+});
+
+test('listen: click an output, the bar names it, Esc ends it', async () => {
+  const { app, page } = await launch();
+  await page.mouse.click(1300, 900); // start audio
+  await jack(page, 'osc', 'out').click();
+  await expect(page.getByText('LISTENING · OSC › OUT')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('LISTENING · OSC › OUT')).toBeHidden();
+  await app.close();
+});
+
+test('an input value is dragged: PTCH att down 50 px is 0.5; / opens the picker, Esc closes it', async () => {
+  const { app, page } = await launch();
+  await page.locator('[data-type=osc] .sr-head').hover();
+  const f = await center(page, page.locator('[data-type=osc] [data-field=pitch]'));
+  await drag(page, f, { x: f.x, y: f.y + 50 });
+  expect((await fullDoc(page)).modules[0]!.atts['pitch']).toBeCloseTo(0.5, 2);
+  await page.mouse.move(900, 600);
+  await page.keyboard.press('/');
+  await expect(page.locator('.sr-picker')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.sr-picker')).toBeHidden();
+  await app.close();
+});
+
+test('moving a module by its face is one undo step', async () => {
+  const { app, page } = await launch();
+  const h = await center(page, page.locator('[data-type=out] .sr-head'));
+  const x0 = (await fullDoc(page)).modules[1]!.x;
+  await drag(page, h, { x: h.x + 160, y: h.y + 80 });
+  expect((await fullDoc(page)).modules[1]!.x).toBe(x0 + 160);
+  await page.keyboard.press('Meta+z');
+  expect((await fullDoc(page)).modules[1]!.x).toBe(x0);
+  await app.close();
+});
+
+test('a module added while audio runs shows its output level', async () => {
+  const { app, page } = await launch();
+  await page.mouse.click(1300, 900); // start audio
+  await page.mouse.dblclick(900, 700);
+  await page.keyboard.type('osc');
+  await page.keyboard.press('Enter');
+  const bar = page.locator('[data-type=osc]').nth(1).locator('.sr-lvl');
+  await expect.poll(async () => (await bar.boundingBox())?.width ?? 0, { timeout: 2000 }).toBeGreaterThan(5);
+  await app.close();
+});

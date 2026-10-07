@@ -6,6 +6,7 @@ import {
   type ModuleSpec,
   type NodeReadouts,
   type OptionParam,
+  type Role,
 } from '@sreda/core';
 import { createMemo, For, Show, type JSX } from 'solid-js';
 import { track } from '../live';
@@ -14,11 +15,19 @@ import { Jack } from './Jack';
 import { Knob } from './Knob';
 import { Option } from './Option';
 
+export type FieldKind = 'att' | 'ratio';
+
 export interface PanelActions {
   knob(param: string, knob: number, merge: Merge): void;
   option(param: string, value: number): void;
   hover(on: boolean): void;
   edit(on: boolean): void;
+  /** the attenuverter of a knob's mod jack (Alt-drag on the knob) */
+  depth?(param: string, value: number, merge: Merge): void;
+  jackDown?(port: string, dir: 'in' | 'out', role: Role, e: PointerEvent): void;
+  fieldDown?(port: string, kind: FieldKind, e: PointerEvent): void;
+  fieldReset?(port: string, kind: FieldKind): void;
+  moduleDown?(e: PointerEvent): void;
 }
 
 export interface PanelProps {
@@ -27,8 +36,11 @@ export interface PanelProps {
   name: string;
   /** hovered, selected alone or being edited: values show */
   loud: boolean;
+  selected?: boolean;
   cabledIn(port: string): boolean;
   cabledOut(port: string): boolean;
+  /** the output being listened to */
+  listening?: string | null;
   act: PanelActions;
   /** where this module's readouts are, once audio runs */
   readouts?: NodeReadouts | undefined;
@@ -49,11 +61,13 @@ export function Panel(props: PanelProps): JSX.Element {
   return (
     <div
       class="sr-mod"
+      classList={{ sel: !!props.selected }}
       data-module={props.mod.id}
       data-type={props.mod.type}
       style={{ left: props.mod.x + 'px', top: props.mod.y + 'px', width: L().w + 'px', height: L().h + 'px' }}
       onMouseEnter={() => props.act.hover(true)}
       onMouseLeave={() => props.act.hover(false)}
+      onPointerDown={(e) => props.act.moduleDown?.(e)}
     >
       <Show when={props.spec.inputs.length}>
         <div class="sr-col" style={{ left: '0' }} />
@@ -66,7 +80,8 @@ export function Panel(props: PanelProps): JSX.Element {
       <For each={props.spec.inputs}>
         {(port) => {
           const j = () => L().jacks[port.id]!;
-          const field = port.role === 'trigger' ? 'ratio' : port.role === 'audio' ? null : 'att';
+          const field: FieldKind | null =
+            port.role === 'trigger' ? 'ratio' : port.role === 'audio' ? null : 'att';
           const value = () =>
             field === 'ratio' ? (props.mod.ratios[port.id] ?? 1) : (props.mod.atts[port.id] ?? 1);
           const text = () => (field === 'ratio' ? fmtRat(value()) : fmtAtt(value()));
@@ -81,6 +96,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 y={j().y}
                 filled={props.cabledIn(port.id)}
                 normalled={normalled(port.id)}
+                onPointerDown={(e) => props.act.jackDown?.(port.id, 'in', port.role, e)}
                 ref={(el) => {
                   if (port.role === 'trigger')
                     track(el, 'flash', () => props.readouts && props.readouts.trigs + trigIndex(port.id));
@@ -90,17 +106,21 @@ export function Panel(props: PanelProps): JSX.Element {
                 {port.label}
               </div>
               <Show when={field}>
-                <div
-                  class="sr-field"
-                  data-field={port.id}
-                  style={{
-                    left: j().x + 11 + 'px',
-                    top: j().y + 1 + 'px',
-                    color: value() === 1 ? '#5d594f' : undefined,
-                  }}
-                >
-                  {show() ? text() : ''}
-                </div>
+                {(kind) => (
+                  <div
+                    class="sr-field"
+                    data-field={port.id}
+                    style={{
+                      left: j().x + 11 + 'px',
+                      top: j().y + 1 + 'px',
+                      color: value() === 1 ? '#5d594f' : undefined,
+                    }}
+                    onPointerDown={(e) => props.act.fieldDown?.(port.id, kind(), e)}
+                    onDblClick={() => props.act.fieldReset?.(port.id, kind())}
+                  >
+                    {show() ? text() : ''}
+                  </div>
+                )}
               </Show>
             </>
           );
@@ -119,6 +139,8 @@ export function Panel(props: PanelProps): JSX.Element {
                 x={j().x}
                 y={j().y}
                 filled={props.cabledOut(port.id)}
+                listening={props.listening === port.id}
+                onPointerDown={(e) => props.act.jackDown?.(port.id, 'out', port.role, e)}
               />
               <div
                 class="sr-plabel"
@@ -156,6 +178,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 loud={props.loud}
                 readout={props.readouts ? props.readouts.knobs + i() : undefined}
                 set={(k, merge) => props.act.knob(p.id, k, merge)}
+                setDepth={(v, merge) => props.act.depth?.(p.id, v, merge)}
                 edit={(on) => props.act.edit(on)}
               />
               <Jack
@@ -166,6 +189,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 y={mj().y}
                 filled={props.cabledIn('@' + p.id)}
                 mod
+                onPointerDown={(e) => props.act.jackDown?.('@' + p.id, 'in', 'mod', e)}
               />
             </>
           );

@@ -13,6 +13,8 @@ export interface JackProps {
   /** dashed: an unpatched input reading its normal */
   normalled?: boolean;
   mod?: boolean;
+  /** this output is being listened to */
+  listening?: boolean;
   ref?: (el: HTMLDivElement) => void;
   onPointerDown?: (e: PointerEvent) => void;
 }
@@ -25,13 +27,17 @@ export function Jack(props: JackProps): JSX.Element {
       data-jack={props.port}
       data-dir={props.dir}
       data-mod={props.mod ? '' : undefined}
-      onPointerDown={(e) => props.onPointerDown?.(e)}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        props.onPointerDown?.(e);
+      }}
       style={{
         left: props.x - 5.5 + 'px',
         top: props.y - 5.5 + 'px',
         'border-color': ROLE[props.role],
         'border-style': props.normalled ? 'dashed' : 'solid',
         background: props.filled ? ROLE[props.role] : '#121210',
+        'box-shadow': props.listening ? `0 0 0 2px #121210, 0 0 0 3.5px ${ROLE[props.role]}` : undefined,
       }}
     />
   );
