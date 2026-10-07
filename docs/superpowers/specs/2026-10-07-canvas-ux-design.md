@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 11 (panel grammar, VCA folded into LPG) · Status: approved
+Date: 2026-10-07 · Revision 12 (technology: Electron, Rust → WASM engine, SolidJS) · Status: approved
 
 ## Why
 
@@ -21,8 +21,8 @@ only so you can come back to it. The instrument it chases is a Serge / Buchla / 
 
 ## Out of scope (first build)
 
-Timeline, arrangement, transport, recording, audio export, multiple open canvases, MIDI and hardware controllers,
-touch, polyphony, stereo cables, group macros and collapsing, reverb. Later ideas are kept in
+Timeline, arrangement, transport, recording, audio export, multiple open canvases, MIDI and hardware controllers
+(next after the first build, through Web MIDI), touch, polyphony, stereo cables, group macros and collapsing, reverb. Later ideas are kept in
 `docs/backlog.md`.
 
 ## 1. Canvas
@@ -385,30 +385,47 @@ follow the same rules (§2, §3).
   on SAMPLES.
 - Stereo outputs are two mono outputs (cables stay mono).
 
-## 8. Architecture
+## 8. Technology and architecture
 
-Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by ESLint.
+Decided 2026-10-07 for one user on one Mac.
 
-- **core** — the document and its edits. The document is immutable JSON:
-  `modules: { id, type, x, y, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks as
-  `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
-  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'route', muted, clock: { on: boolean, bpm: number } }[]`; modules also carry
-  `parent` (a group id or null). A group's jacks are addressed as
-  `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new document; undo is a history of documents grouped per
-  gesture. Module specs (ports with roles, params with ranges, tapers, `randomRange`, `modDepth`, normals) are data
-  in core. `compile` (document → plan) lives in core so the UI never imports the engine; it resolves normals into
-  ordinary bindings and compiles each group into a hidden clock node.
-- **protocol** — UI ↔ engine messages and the SharedArrayBuffer layout for live readouts (modulated knob positions,
-  trigger events, output levels, scope traces). One reader per buffer.
-- **engine** — the worklet runs the plan. A muted frame's outgoing bindings and OUT modules get a 50 ms gain ramp
-  (compile marks them; a mute toggle is a message, not a re-plan). Cycles are allowed: a cycle's back edge is read one sample late. The engine
-  prepares every input before a module runs: sums stacked cables and applies the attenuverter (CV), or merges,
-  ratios and re-emits 1 ms triggers (trigger inputs), so DSP code sees one clean buffer per input. A knob,
-  attenuverter or ratio change is a message (no re-plan); a module, cable or group change sends a new plan. Removed
-  modules and cables fade over 10 ms.
-- **ui** — Preact + signals. Modules are DOM elements on a layer panned and zoomed by a CSS transform; cables are
-  SVG; per-frame readouts are drawn imperatively in requestAnimationFrame.
-- The app is served with COOP/COEP headers (SharedArrayBuffer). Chromium first.
+- **Platform: Electron** (macOS). The main process owns the window, the library folder (Node `fs`, reached from the
+  renderer over IPC: list, read, write), and sets COOP/COEP so the renderer is cross-origin isolated
+  (SharedArrayBuffer). MIDI and controllers come later through Web MIDI, which Electron's Chromium has.
+- **Languages.** **Rust** for the engine and the DSP of every module, built to **WASM** and run inside an
+  AudioWorklet in the renderer; each module's spec (ports, params, ranges, tapers, `randomRange`, `modDepth`,
+  normals, size, display) lives next to its DSP in Rust and is exported to `specs.json` for TypeScript.
+  **TypeScript** for the document, edits, frames, undo, `compile` (document → plan) and the UI. The boundary is the
+  plan (JSON) and a small set of messages. The same Rust crate builds natively for its tests, and could later run as
+  a native audio engine (Rust + cpal) for lower latency and more outputs without rewriting DSP.
+- **Packages:** `core` (TS: document, edits, frames, undo, compile, panel layout; specs from the generated
+  `specs.json`), `protocol` (TS: plan wire format, messages, readout layout, the WASM engine loader), `ui`
+  (SolidJS), `app` (Electron main and preload, renderer entry; electron-vite), `engine/` (Rust crate:
+  engine, modules, specs; `export-specs` binary). Boundaries `core ← protocol`, `core ← ui`, `protocol ← ui`; the UI
+  never touches engine internals, only messages.
+- **The document** is immutable JSON:
+  `modules: { id, type, x, y, parent, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks
+  as `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
+  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'route', muted, clock: { on, bpm } }[]`.
+  A group's jacks are `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new
+  document; undo is a history of documents grouped per gesture. `compile` resolves normals into ordinary bindings,
+  compiles each group into a hidden clock node, marks muted bindings, orders the graph and lays out the readouts.
+- **The engine** (Rust, in the AudioWorklet): the worklet glue (a few lines of TS) receives the WASM module compiled
+  on the main thread, forwards messages, calls `process` per block and copies the readouts into a SharedArrayBuffer
+  the UI reads once per frame. Cycles are allowed: a cycle's back edge is read one sample late, and only the nodes of
+  a cycle run per sample. The engine prepares every input before a module runs (sums stacked cables and applies the
+  attenuverter, or merges, ratios and re-emits 1 ms triggers), so DSP code sees one clean buffer per input. A knob,
+  attenuverter, ratio, mute or listen change is a message; a module, cable or group change sends a new plan. Removed
+  modules and re-routed inputs fade over 10 ms; a mute ramps over 50 ms.
+- **Sound:** the device's sample rate (44.1 / 48 / 96 kHz; every module works at any); blocks of 128; f32 buffers,
+  f64 state (filters, phases, envelopes); polyBLEP oscillators; nonlinear stages (FOLD, COMPLEX's timbre, DRIVE
+  later) use first-order ADAA with 2× oversampling; a tiny offset keeps filters and feedback paths out of denormals
+  (WASM has no flush-to-zero); knob changes glide 10 ms.
+- **UI:** SolidJS. Modules are DOM elements on a layer panned and zoomed by a CSS transform; cables are one SVG
+  layer, and only the paths of wires touching moved modules are recomputed. Each new document is applied to the
+  Solid store with `reconcile`, so an edit re-renders only what changed. Everything that moves every frame (flashes,
+  levels, modulation dots, SCOPE, contour, pads) bypasses Solid: one `requestAnimationFrame` loop reads the readout
+  buffer and writes the registered elements' styles directly. Sized for patches of 50–200 modules.
 
 ## 9. Errors and safety
 
@@ -418,11 +435,15 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
 
 ## 10. Testing
 
-- **core:** edits (stacking, frames and parent recomputation), undo grouping, compile including cycles, normals and group clocks.
-- **engine (Node):** each module's DSP is deterministic with a seeded RNG; trigger detection, merging and ratios;
-  attenuverters; a DSP gives the same samples per block or per sample; a GC-count test over a minute of audio.
-- **ui:** component tests (happy-dom).
-- **e2e (Playwright):** drag from a jack → search → placed and wired; stack two cables on one input; click to listen
+- **core (Vitest):** edits (stacking, frames and parent recomputation), undo grouping, compile including cycles,
+  normals and group clocks; every module spec fits its size under the panel grammar.
+- **engine (cargo test, native):** each module's DSP is deterministic with a seeded RNG; trigger detection, merging
+  and ratios; attenuverters; a DSP gives the same samples per block or per sample; no allocation inside `process`
+  (a counting global allocator); a real-time budget benchmark.
+- **end to end (Vitest + the WASM engine in Node):** TypeScript compiles factory patches and the WASM engine renders
+  them; `pnpm render <name>` writes a WAV to listen to.
+- **ui:** component tests (Solid testing library, happy-dom).
+- **e2e (Playwright driving Electron):** drag from a jack → search → placed and wired; stack two cables on one input; click to listen
   and back; R randomises and undo restores; box-select by dragging; magnets snap flush; ⌘G frames the selection,
   own clock ticks, CLK out drives a member, a nested frame inherits its parent's clock at ÷2; dragging a module out
   of a frame detaches it; STACK packs a frame; WIRE FIX draws orthogonal cables; MUTE silences a frame's outgoing
