@@ -364,7 +364,7 @@ body{margin:0;background:#121210}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
 var ROLE = { audio: '#e9e4d8', mod: '#6cb4ee', pitch: '#9ad18b', trigger: '#f5a524' };
-var G = 16, HEAD = 24, ROW = 26, CW = 48, CH = 56, GUT = 48, GHEAD = 28, GPAD = 16, HP = 48, U = 112;
+var G = 16, HEAD = 24, ROW = 26, CW = 48, CH = 56, GUT = 48, GHEAD = 28, GPAD = 16, HP = 48, U = 112, LANE = 28, TOP = 26, LANES = { 1: 3, 2: 7, 3: 11 };
 var TINTS = [["rgba(233,228,216,0.035)", "#8f897c"], ["rgba(217,119,87,0.09)", "#d97757"], ["rgba(240,200,110,0.08)", "#d8b25e"], ["rgba(154,209,139,0.08)", "#8fbf80"], ["rgba(110,200,190,0.08)", "#62b3a8"], ["rgba(108,180,238,0.09)", "#6cb4ee"], ["rgba(196,140,220,0.09)", "#b98ad0"]];
 var NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 var SCALES = [[0,1,2,3,4,5,6,7,8,9,10,11],[0,2,4,5,7,9,11],[0,2,3,5,7,8,10],[0,2,3,5,7,9,10],[0,1,3,5,7,8,10],[0,3,5,7,10],[0,2,4,7,9],[0,2,4,6,8,10]];
@@ -401,16 +401,15 @@ var SPECS = {
     ins: [P('trig', 'trigger'), P('in', 'audio')], outs: [P('out', 'mod'), P('eor', 'trigger'), P('eoc', 'trigger')],
     params: [K('rise', 'RISE', 0.0005, 20, 0.01, { exp: 1, unit: 's', rr: [0.002, 1] }), K('fall', 'FALL', 0.0005, 20, 0.3, { exp: 1, unit: 's', rr: [0.02, 2] }), Object.assign(K('shape', 'SHP', -1, 1, 0), { glyph: 'curve' }), O('cycle', 'CYC', ['OFF', 'ON'])],
     normals: [{ input: 'trig', own: 'eoc', when: { param: 'cycle', value: 1 } }] },
-  lpg: { label: 'LPG', desc: 'low-pass gate', cols: 3,
+  lpg: { label: 'LPG', desc: 'low-pass gate and VCA', cols: 3,
     ins: [P('in', 'audio'), P('cv', 'mod'), P('ping', 'trigger')], outs: [P('out', 'audio')],
     params: [K('level', 'LVL', 0, 1, 1), K('decay', 'DEC', 0.05, 4, 0.4, { exp: 1, unit: 's', rr: [0.08, 1.5] }), O('mode', 'MODE', ['VCA', 'LP', 'BOTH'], 2)],
-    normals: [{ input: 'cv', internal: 'ping envelope' }] },
-  vca: { label: 'VCA', desc: 'amplifier', cols: 1, ins: [P('in', 'audio')], outs: [P('out', 'audio')], params: [K('level', 'LVL', 0, 1, 1)] },
+    normals: [{ input: 'cv', internal: 'ping envelope, or 1 with PING unpatched' }] },
   filter: { label: 'FILTER', desc: 'state-variable filter: LP, BP, HP at once', cols: 2,
     ins: [P('in', 'audio')], outs: [P('lp', 'audio'), P('bp', 'audio'), P('hp', 'audio')],
     params: [K('cutoff', 'CUT', 20, 20000, 1000, { exp: 1, unit: 'hz', rr: [100, 8000], md: 0.25 }), K('res', 'RES', 0, 1, 0.2)] },
   fold: { label: 'FOLD', desc: 'wavefolder', cols: 2, ins: [P('in', 'audio')], outs: [P('out', 'audio')], params: [K('fold', 'FOLD', 0, 1, 0.3), K('sym', 'SYM', -1, 1, 0)] },
-  stages: { label: 'STAGES', desc: '16 stages drawn as a contour: note, time, pulse, slide · generative', display: { rows: 4, kind: 'contour' },
+  stages: { label: 'STAGES', desc: '16 stages drawn as a contour: note, time, pulse, slide · generative', display: { lanes: 8, kind: 'contour' },
     ins: [P('adv', 'trigger'), P('reset', 'trigger', 'RST'), P('addr', 'mod'), P('dice', 'trigger')], outs: [P('cv', 'mod'), P('pulse', 'trigger', 'PLS'), P('eoc', 'trigger')],
     params: range(16, function (i) { return hide(K('v' + i, '' + i, -1, 1, 0)); })
       .concat(range(16, function (i) { return hide(K('t' + i, 'T' + i, 0.01, 4, 0.25, { exp: 1, unit: 's' })); }))
@@ -419,7 +418,7 @@ var SPECS = {
       .concat([K('length', 'LEN', 1, 16, 16, { step: 1 }), O('gen', 'GEN', ['303', 'MOTIF', 'WALK', 'TURING', 'ARP', 'PHRASE', 'PEDAL']),
         Object.assign(O('scale', 'SCALE', ['CHR', 'MAJ', 'MIN', 'DOR', 'PHR', 'PMIN', 'PMAJ', 'WHL'], 2), { glyph: 'scale' }), K('root', 'ROOT', 0, 11, 0, { step: 1, unit: 'note' }), A('dice', 'DICE')]),
     normals: [{ input: 'adv', internal: 'stage timer' }] },
-  rhythm: { label: 'RHYTHM', desc: '16 pads: euclid or grid, accents · generative', display: { rows: 2, kind: 'pads' },
+  rhythm: { label: 'RHYTHM', desc: '16 pads: euclid or grid, accents · generative', display: { lanes: 4, kind: 'pads' },
     ins: [P('clk', 'trigger'), P('reset', 'trigger', 'RST'), P('dice', 'trigger')], outs: [P('gate', 'trigger'), P('acc', 'trigger'), P('eoc', 'trigger')],
     params: range(16, function (i) { return hide(O('g' + i, '' + i, ['○', '●', '—'])); })
       .concat(range(16, function (i) { return hide(O('a' + i, '', ['·', 'A'])); }))
@@ -456,14 +455,14 @@ var SPECS = {
     normals: [{ input: 'b1', value: 1 }, { input: 'b2', value: 1 }, { input: 'c2', own: 'out1', ifUnpatched: true }] },
   delay: { label: 'DELAY', desc: 'echo', cols: 3, ins: [P('in', 'audio')], outs: [P('out', 'audio')],
     params: [K('time', 'TIME', 0.001, 2, 0.3, { exp: 1, unit: 's', rr: [0.05, 1] }), K('feedback', 'FB', 0, 0.95, 0.4), K('mix', 'MIX', 0, 1, 0.3)] },
-  scope: { label: 'SCOPE', desc: 'oscilloscope with thru outputs', cols: 4, display: { rows: 2, kind: 'scope' },
+  scope: { label: 'SCOPE', desc: 'oscilloscope with thru outputs', cols: 4, display: { lanes: 4, kind: 'scope' },
     ins: [P('a', 'audio'), P('b', 'audio'), P('trig', 'trigger')], outs: [P('thruA', 'audio', 'THRU A'), P('thruB', 'audio', 'THRU B')],
     params: [K('time', 'TIME', 0.001, 10, 2, { exp: 1, unit: 's', rr: [0.3, 4] }), K('ga', 'GA', 0.1, 10, 1, { exp: 1 }), K('gb', 'GB', 0.1, 10, 1, { exp: 1 }), O('mode', 'MODE', ['A·B', 'XY'])] },
   out: { label: 'OUT', desc: 'to speakers', cols: 1, ins: [P('l', 'audio'), P('r', 'audio')], outs: [], params: [K('level', 'LVL', 0, 1, 0.7)],
     normals: [{ input: 'r', internal: 'L' }] }
 };
 
-var SIZES = { osc: [6, 1], complex: [7, 1], noise: [3, 1], uncertainty: [4, 1], slope: [6, 1], lpg: [5, 1], vca: [3, 1], filter: [4, 1], fold: [4, 1], stages: [10, 3], compare: [3, 1], sah: [2, 1], quant: [4, 1], mix: [4, 2], att: [6, 2], abc: [5, 2], delay: [5, 1], scope: [6, 2], out: [3, 1], rhythm: [10, 2], chance: [3, 1], shift: [4, 1], follow: [6, 1], 'switch': [4, 2], spread: [4, 2] };
+var SIZES = { osc: [5, 1], complex: [6, 1], noise: [3, 1], uncertainty: [4, 1], slope: [5, 1], lpg: [4, 1], filter: [4, 1], fold: [4, 1], stages: [10, 3], compare: [3, 1], sah: [2, 1], quant: [3, 1], mix: [4, 2], att: [6, 2], abc: [5, 2], delay: [5, 1], scope: [6, 2], out: [3, 1], rhythm: [10, 2], chance: [3, 1], shift: [3, 1], follow: [6, 1], 'switch': [4, 2], spread: [4, 2] };
 Object.keys(SIZES).forEach(function (t) { SPECS[t].size = SIZES[t]; });
 
 function fromK(p, k) { k = clamp(k, 0, 1); var v = p.exp ? p.min * Math.pow(p.max / p.min, k) : p.min + (p.max - p.min) * k; if (p.step) v = Math.round(v / p.step) * p.step; return v; }
@@ -514,23 +513,30 @@ function fmtAtt(v) { return (v < 0 ? '−' : '') + Math.abs(v).toFixed(2); }
 function fmtRat(r) { return r === 1 ? '1' : r < 0 ? '÷' + (-r) : '×' + r; }
 
 var LAY = {};
+// The panel grammar: IN column | control area | OUT column; lanes of 28 px under the 24 px header; in the control
+// area, top to bottom: display (whole lanes) → knob rows (2 lanes each) → mode strip (the bottom lane: options and
+// toggles from the left, actions from the right). One jack per lane, in spec order.
 function lay(type) {
   if (LAY[type]) return LAY[type];
-  var s = SPECS[type], vis = s.params.filter(function (p) { return !p.hidden; }), n = vis.length;
-  var cols = s.display ? s.size[0] - 2 : n ? Math.min(s.size[0] - 2, n) : 0, drows = s.display ? s.display.rows : 0;
-  var rows = drows + (cols ? Math.ceil(n / cols) : 0);
-  var w = s.size[0] * HP;
-  var h = s.size[1] * U;
-  var jacks = {}, cells = {}, x0 = (w - cols * CW) / 2;
-  s.ins.forEach(function (p, i) { jacks[p.id] = { x: 8, y: HEAD + ROW / 2 + 2 + i * ROW, role: p.role, dir: 'in', label: p.label }; });
-  s.outs.forEach(function (p, i) { jacks[p.id] = { x: w - 8, y: HEAD + ROW / 2 + 2 + i * ROW, role: p.role, dir: 'out', label: p.label }; });
-  vis.forEach(function (p, j) {
-    var cx = x0 + (j % cols) * CW, cy = HEAD + (drows + Math.floor(j / cols)) * CH;
-    cells[p.id] = { x: cx, y: cy };
-    if (p.kind === 'k') jacks['@' + p.id] = { x: cx + 5, y: cy + 5, role: 'mod', dir: 'in', label: p.label, param: p };
+  var s = SPECS[type], vis = s.params.filter(function (p) { return !p.hidden; });
+  var knobs = vis.filter(function (p) { return p.kind === 'k'; }), modes = vis.filter(function (p) { return p.kind !== 'k'; });
+  var C = s.size[0] - 2, w = s.size[0] * HP, h = s.size[1] * U, lanes = LANES[s.size[1]], dl = s.display ? s.display.lanes : 0;
+  var jacks = {}, cells = {};
+  s.ins.forEach(function (p, i) { jacks[p.id] = { x: 10, y: TOP + i * LANE + 14, role: p.role, dir: 'in', label: p.label }; });
+  s.outs.forEach(function (p, i) { jacks[p.id] = { x: w - 10, y: TOP + i * LANE + 14, role: p.role, dir: 'out', label: p.label }; });
+  knobs.forEach(function (p, j) {
+    var cx = HP + (j % C) * HP, cy = TOP + (dl + Math.floor(j / C) * 2) * LANE;
+    cells[p.id] = { x: cx, y: cy, w: HP, mode: false };
+    jacks['@' + p.id] = { x: cx + 5, y: cy + 5, role: 'mod', dir: 'in', label: p.label, param: p };
   });
-  var disp = drows ? { x: x0 + 2, y: HEAD + 6, w: cols * CW - 4, h: drows * CH - 10 } : null;
-  return (LAY[type] = { w: w, h: h, jacks: jacks, cells: cells, disp: disp });
+  var left = 0, right = 0, my = TOP + (lanes - 1) * LANE;
+  modes.forEach(function (p) {
+    var hp = p.kind === 'o' && p.opts.length > 2 && !p.glyph ? 2 : 1, x;   // a ▾ list with words takes 2 HP
+    if (p.kind === 'a') { right += hp; x = HP + (C - right) * HP; } else { x = HP + left * HP; left += hp; }
+    cells[p.id] = { x: x, y: my, w: hp * HP, mode: true };
+  });
+  var disp = dl ? { x: HP + 2, y: TOP + 2, w: C * HP - 4, h: dl * LANE - 4 } : null;
+  return (LAY[type] = { w: w, h: h, jacks: jacks, cells: cells, disp: disp, lanes: lanes, knobRows: Math.ceil(knobs.length / Math.max(1, C)), modeHP: left + right });
 }
 function portsIn(type) {
   var s = SPECS[type];
@@ -723,7 +729,7 @@ var SEEDS = [
     var st = S.add('stages', 528, 96, S.notes({ gen: 0, scale: 2 }, [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], [3, 6, 11, 14]));
     var os = S.add('osc', 0, 480, { freq: 110, wave: 2 });
     var fl = S.add('filter', 336, 480, { cutoff: 260, res: 0.82 });
-    var va = S.add('vca', 576, 480, { level: 0 });
+    var va = S.add('lpg', 576, 480, { level: 0, mode: 0 });
     var dl = S.add('delay', 768, 480, { time: 0.35, feedback: 0.35, mix: 0.2 });
     var o = S.add('out', 1056, 480, {});
     var ef = S.add('slope', 0, 640, { rise: 0.002, fall: 0.25 });
@@ -751,7 +757,7 @@ var FACTORY_GROUPS = [
   { name: '303 voice', build: function (S) {
     var rh = S.add('rhythm', 0, 64, { mode: 1 }); S.grid(rh, 'x.x-..x.x.xx-.x.', '...........A..A.');
     var st = S.add('stages', 528, 64, S.notes({ scale: 2 }, [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], [3, 6, 11, 14]));
-    var os = S.add('osc', 0, 448, { freq: 110, wave: 2 }), fl = S.add('filter', 336, 448, { cutoff: 260, res: 0.82 }), va = S.add('vca', 576, 448, { level: 0 });
+    var os = S.add('osc', 0, 448, { freq: 110, wave: 2 }), fl = S.add('filter', 336, 448, { cutoff: 260, res: 0.82 }), va = S.add('lpg', 576, 448, { level: 0, mode: 0 });
     var ef = S.add('slope', 0, 608, { rise: 0.002, fall: 0.25 }), ea = S.add('slope', 336, 608, { rise: 0.002, fall: 0.2 }), ec = S.add('slope', 672, 608, { rise: 0.002, fall: 0.12 });
     var g = S.frame([rh, st, os, fl, va, ef, ea, ec], '303 VOICE', { bpm: 128, tint: 2 });
     S.w(g, 'clkOut', rh, 'clk'); S.rat(rh, 'clk', 4);
@@ -773,7 +779,7 @@ var FACTORY_GROUPS = [
     S.w(un, 'quant', q, 'in'); S.w(q, 'out', os, 'pitch'); S.w(os, 'out', lp, 'in');
   } },
   { name: 'vca-lpg', build: function (S) {
-    var sl = S.add('slope', 0, 0, { rise: 0.005, fall: 0.3 }), va = S.add('vca', 336, 0, { level: 0 }), lp = S.add('lpg', 528, 0, { decay: 0.3 });
+    var sl = S.add('slope', 0, 0, { rise: 0.005, fall: 0.3 }), va = S.add('lpg', 336, 0, { level: 0, mode: 0 }), lp = S.add('lpg', 528, 0, { decay: 0.3 });
     var g = S.frame([sl, va, lp], 'VCA-LPG', { tint: 3 });
     S.w(g, 'clkOut', sl, 'trig'); S.w(g, 'clkOut', lp, 'ping'); S.w(sl, 'out', va, '@level'); S.w(va, 'out', lp, 'in');
   } }
@@ -817,7 +823,7 @@ function mergeInto(doc, src, dx, dy) {
   src.cables.forEach(function (c) { if (map[c.f[0]] && map[c.t[0]]) doc.cables.push({ f: [map[c.f[0]], c.f[1]], t: [map[c.t[0]], c.t[1]] }); });
   return map;
 }
-var LIB_KEY = 'sreda2-proto-lib';
+var LIB_KEY = 'sreda2-proto-lib-v2';
 function loadLib() { try { var l = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); return Array.isArray(l) ? l.filter(function (e) { return e && e.path && validDoc(e.doc); }) : []; } catch (err) { return []; } }
 function saveLib(lib) { try { localStorage.setItem(LIB_KEY, JSON.stringify(lib)); } catch (err) { /* storage unavailable */ } }
 function fullLib(user) {
@@ -1009,10 +1015,9 @@ Sim.prototype.step = function (doc, dt, now) {
       }
       case 'lpg': {
         if (T('ping')) st.vac = 1; else st.vac *= Math.pow(0.001, dt / Pv.decay);
-        var c = cabs('cv') ? clamp(V('cv'), 0, 1) : st.vac, g = Pv.level * c;
+        var c = cabs('cv') ? clamp(V('cv'), 0, 1) : cabs('ping') ? st.vac : 1, g = Pv.level * c;
         set('out', V('in') * g, A('in') * g * (Pv.mode === 1 ? 0.8 : 1)); break;
       }
-      case 'vca': set('out', V('in') * Pv.level, A('in') * Pv.level); break;
       case 'filter': { var fc = clamp(Math.log(Pv.cutoff / 20) / Math.log(1000), 0.05, 1), ai3 = A('in'), vi = V('in'); set('lp', vi, ai3 * fc); set('bp', vi, ai3 * (0.4 + Pv.res * 0.4)); set('hp', vi, ai3 * clamp(1.2 - fc, 0.2, 1)); break; }
       case 'fold': set('out', Math.sin(V('in') * (1 + Pv.fold * 4) + Pv.sym), A('in')); break;
       case 'stages': {
@@ -1438,7 +1443,7 @@ function relayoutRoutes(doc, gids) {
   gids.forEach(function (gid) { var g = findGrp(doc, gid); if (g && g.layout === 'route') doc = layoutRows(doc, gid); });
   return doc;
 }
-var SAVE_KEY = 'sreda2-proto-v9';
+var SAVE_KEY = 'sreda2-proto-v10';
 function validDoc(d) {
   if (!d || !Array.isArray(d.mods) || !Array.isArray(d.cables) || !Array.isArray(d.groups) || typeof d.next !== 'number') return false;
   var ids = {};
@@ -1472,7 +1477,7 @@ function allPorts(doc, dir) {
   return out;
 }
 // processors whose sound input must be patched to make sense (SLOPE's IN, for one, is optional)
-var NEEDS_INPUT = { filter: 'in', vca: 'in', lpg: 'in', fold: 'in', delay: 'in', follow: 'in', out: 'l' };
+var NEEDS_INPUT = { filter: 'in', lpg: 'in', fold: 'in', delay: 'in', follow: 'in', out: 'l' };
 function wireProblems(doc) {
   var res = [], reach = {}, changed = true;
   doc.mods.forEach(function (m) { if (m.type === 'out') reach[m.id] = 1; });
@@ -2211,16 +2216,18 @@ class Component extends DCLogic {
   // ── view model ──
   cellVals(m, p, connIn) {
     var c = lay(m.type).cells[p.id], self = this, id = m.id;
-    var base = { style: 'left:' + c.x + 'px;top:' + c.y + 'px;', label: p.label, isKnob: p.kind === 'k', isOpt: p.kind === 'o', labelStyle: '' };
+    var base = { style: 'left:' + c.x + 'px;top:' + c.y + 'px;' + (c.mode ? 'width:' + c.w + 'px;height:28px;' : ''), label: c.mode ? '' : p.label, isKnob: p.kind === 'k', isOpt: p.kind === 'o', labelStyle: '' };
+    var btn = c.mode ? 'left:3px;top:4px;width:' + (c.w - 6) + 'px;' : '';
     var cur = (this.sim.cur[id] || 0) + 1, num = +p.id.replace(/^\D+/, '');
     var active = (m.type === 'stages' && /^[vtpg]\d$/.test(p.id) && num === cur) || (m.type === 'rhythm' && /^[ga]\d+$/.test(p.id) && num === cur);
     if (p.kind === 'a') {
-      return Object.assign(base, { isKnob: false, isOpt: true, hasGlyph: false, noGlyph: true, caret: '', hasVG: false, noVG: true, vg: '', optText: p.label, optAria: p.label, optKey: '', optPopup: 'false', optStyle: '',
+      return Object.assign(base, { isKnob: false, isOpt: true, hasGlyph: false, noGlyph: true, caret: '', hasVG: false, noVG: true, vg: '', optText: p.label, optAria: p.label, optKey: '', optPopup: 'false', optStyle: btn,
         label: '', value: '', cycle: function () { self.act(id, p.id); }, gWave: '', gOn: '', gOff: '', gw: 0,
         key: '', track: '', ring: '', arc: '', px: 24, py: 17, tx: 0, ty: 0, tickOp: 0, jackKey: '', jackStyle: 'display:none', jackTitle: '', down: null, dbl: null, jackDown: null });
     }
     if (p.kind === 'o') {
-      var ov = m.p[p.id], optStyle = active ? 'border-color:#f5a524;' : '';
+      var ov = m.p[p.id], optStyle = btn + (active ? 'border-color:#f5a524;' : ''), toggle = p.opts.length === 2 && p.opts[0] === 'OFF' && p.opts[1] === 'ON';
+      if (toggle && ov === 1) optStyle += 'background:#e9e4d8;color:#121210;border-color:#e9e4d8;';
       if (m.type === 'rhythm' && /^g\d+$/.test(p.id)) {
         var rp = function (q) { return Math.round(fromK(param('rhythm', q), m.p[q])); }, len = rp('length');
         if (m.p.mode === 0) ov = euclid(len, rp('hits'), rp('rot'))[num - 1] ? 1 : 0;
@@ -2228,7 +2235,7 @@ class Component extends DCLogic {
         else if (m.p.mode === 0) optStyle += 'border-style:dashed;';
       }
       var many = p.opts.length > 2, gl = glyph(p, ov, false);
-      return Object.assign(base, gl, { optStyle: optStyle, hasGlyph: !!p.glyph, noGlyph: !p.glyph, caret: many ? '▾' : '', hasVG: false, noVG: true, vg: '', optText: p.opts[ov] + (many ? ' ▾' : ''), optAria: (p.label || 'pulse') + ' ' + p.opts[ov], optKey: id + '|' + p.id, optPopup: many ? 'listbox' : 'false',
+      return Object.assign(base, gl, { optStyle: optStyle, hasGlyph: !!p.glyph, noGlyph: !p.glyph, caret: many ? '▾' : '', hasVG: false, noVG: true, vg: '', optText: toggle ? p.label : p.opts[ov] + (many ? ' ▾' : ''), optAria: (p.label || 'pulse') + ' ' + p.opts[ov], optKey: id + '|' + p.id, optPopup: many ? 'listbox' : 'false',
         value: '', cycle: function (e) { self.cycle(e, id, p.id); },
         labelStyle: active ? 'color:#f5a524;' : '',
         key: '', track: '', ring: '', arc: '', px: 24, py: 17, tx: 0, ty: 0, tickOp: 0, jackKey: '', jackStyle: 'display:none', jackTitle: '', down: null, dbl: null, jackDown: null });
@@ -2268,10 +2275,10 @@ class Component extends DCLogic {
           key: key + '|in', label: p.label,
           title: p.label + (n ? ' ← ' + nsrc + ' (normal)' : '') + (connIn[key] ? ' · drag to pick up a cable' : ''),
           style: jackStyle(j, col, connIn[key], (self.sim.flash[key] || 0) > now, false, !!n),
-          labelStyle: 'left:15px;top:' + (j.y - 11) + 'px;' + (m.type === 'switch' && p.id === 'in' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
+          labelStyle: 'left:19px;top:' + (j.y - 10) + 'px;' + (m.type === 'switch' && p.id === 'in' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
           down: function (e) { self.jackDown(e, id, p.id, 'in', p.role); },
           hasField: !!field, fieldKey: id + '|' + p.id + '|' + field, fieldText: ftext,
-          fieldStyle: 'left:15px;top:' + (j.y) + 'px;color:' + (fdef ? '#5d594f' : col) + ';',
+          fieldStyle: 'left:19px;top:' + (j.y + 1) + 'px;color:' + (fdef ? '#5d594f' : col) + ';',
           fieldTitle: field === 'att' ? 'attenuverter · drag, wheel, double-click resets' : 'ratio ÷16…×8 · drag, wheel, double-click resets',
           fieldDown: function (e) { self.fieldDown(e, id, p.id, field); },
           fieldDbl: function (e) { self.fieldReset(e, id, p.id, field); }
@@ -2281,8 +2288,8 @@ class Component extends DCLogic {
         var j = L.jacks[p.id], key = id + '|' + p.id, lst = listen && listen.id === id && listen.port === p.id;
         return { key: key + '|out', label: p.label, title: p.label + ' · click to listen',
           style: jackStyle(j, ROLE[p.role], connOut[key], false, lst, false),
-          labelStyle: 'right:15px;top:' + (j.y - 11) + 'px;text-align:right;' + (m.type === 'spread' && p.id === 'out' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
-          lvlStyle: 'right:15px;top:' + (j.y + 2) + 'px;width:' + Math.round((self.sim.peak[key] || 0) * 22) + 'px;background:' + ROLE[p.role] + ';',
+          labelStyle: 'right:19px;top:' + (j.y - 10) + 'px;text-align:right;' + (m.type === 'spread' && p.id === 'out' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
+          lvlStyle: 'right:19px;top:' + (j.y + 3) + 'px;width:' + Math.round((self.sim.peak[key] || 0) * 22) + 'px;background:' + ROLE[p.role] + ';',
           down: function (e) { self.jackDown(e, id, p.id, 'out', p.role); } };
       }),
       cells: s.params.filter(function (p) { return !p.hidden; }).map(function (p) { return self.cellVals(m, p, connIn); }),

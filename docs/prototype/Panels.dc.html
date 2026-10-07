@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Panel system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.p-mod{position:absolute;background:#1b1b18;border:1px solid #2e2d28;border-radius:3px;box-sizing:border-box;transform-origin:0 0}
+.p-head{position:absolute;left:0;right:0;top:0;height:24px;border-bottom:1px solid #2a2924;display:flex;justify-content:space-between;align-items:center;padding:0 8px;box-sizing:border-box}
+.p-name{font-size:11px;font-weight:600;letter-spacing:.08em;color:#e9e4d8}
+.p-size{font-size:9px;color:#5d594f}
+.a{position:absolute}
+.jack{position:absolute;width:9px;height:9px;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210}
+.lbl{position:absolute;font-size:9px;line-height:10px;color:#8f897c;letter-spacing:.04em;white-space:nowrap}
+.fld{position:absolute;font-size:9px;line-height:10px;color:#77716a;white-space:nowrap}
+.txt{position:absolute;font-size:9px;line-height:10px;text-align:center;white-space:nowrap}
+.opt{position:absolute;height:20px;background:#121210;border:1px solid #3a3933;border-radius:2px;color:#e9e4d8;font-size:9px;line-height:18px;text-align:center;box-sizing:border-box;white-space:nowrap}
+.opt.on{background:#e9e4d8;color:#121210;border-color:#e9e4d8}
+.k-track,.k-arc{fill:none;stroke-linecap:round}
+.k-track{stroke:#34332d;stroke-width:2.5}
+.k-arc{stroke:#e9e4d8;stroke-width:2.5}
+.k-ptr{stroke:#e9e4d8;stroke-width:1.5;stroke-linecap:round}
+.disp{position:absolute;background:#121210;border:1px solid #2a2924;border-radius:2px;overflow:hidden}
+.grid{fill:none;stroke:#f5a524;stroke-opacity:.2;stroke-width:1}
+.cols{fill:none;stroke:#f5a524;stroke-opacity:.45;stroke-width:1;stroke-dasharray:3 3}
+.g-line{fill:none;stroke:#e9e4d8;stroke-width:1.3;stroke-linejoin:round}
+.g-on{fill:#e9e4d8}.g-off{fill:#5d594f}
+.d-a{fill:none;stroke:#e9e4d8;stroke-width:1.2}.d-b{fill:none;stroke:#6cb4ee;stroke-width:1.2}
+.d-fill{fill:#e9e4d8;fill-opacity:.1}.d-line{fill:none;stroke:#e9e4d8;stroke-width:2;stroke-linejoin:round}
+.d-cur{fill:#f5a524;fill-opacity:.12}.d-on{fill:#e9e4d8}.d-off{fill:none;stroke:#3a3933}.d-acc{fill:#f5a524}.d-ring{fill:none;stroke:#f5a524;stroke-width:2}
+.d-dot{fill:#e9e4d8}
+.row-title{position:absolute;font-size:11px;font-weight:600;letter-spacing:.1em;color:#8f897c}
+.badge{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:#f5a524;color:#121210;font-size:10px;font-weight:600;line-height:20px;text-align:center}
+.rule{display:flex;gap:12px;margin-bottom:12px}
+.rule .n{flex:none;width:20px;height:20px;border-radius:50%;background:#f5a524;color:#121210;font-size:10px;font-weight:600;line-height:20px;text-align:center}
+.rule b{color:#e9e4d8;font-weight:600}
+</style>
+</helmet>
+<div style="position: relative; width: 1720px; height: 1560px; overflow: hidden; background: #121210; color: #e9e4d8; font-family: 'IBM Plex Mono', ui-monospace, monospace">
+<div style="position: absolute; left: 40px; top: 36px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 0; margin-top: 10px; font-size: 28px; font-weight: 600; letter-spacing: .04em">Система панелей</h1>
+<div style="margin-top: 6px; font-size: 12px; color: #8f897c">Одна грамматика для всех модулей. Все панели ниже построены одной и той же функцией раскладки; янтарная сетка — дорожки и колонки.</div>
+</div>
+
+<sc-for list="{{mods}}" as="M" hint-placeholder-count="12">
+<div class="p-mod" style="{{M.style}}">
+<div class="p-head"><span class="p-name">{{M.name}}</span><span class="p-size">{{M.size}}</span></div>
+<sc-if value="{{M.hasDisp}}" hint-placeholder-val="{{false}}">
+<div class="disp" style="{{M.dispStyle}}">
+<svg width="{{M.dw}}" height="{{M.dh}}" style="display: block">
+<path class="d-cur" d="{{M.dCur}}"></path>
+<path class="d-fill" d="{{M.dFill}}"></path>
+<path class="d-line" d="{{M.dLine}}"></path>
+<path class="d-a" d="{{M.dA}}"></path>
+<path class="d-b" d="{{M.dB}}"></path>
+<path class="d-off" d="{{M.dOff}}"></path>
+<path class="d-on" d="{{M.dOn}}"></path>
+<path class="d-acc" d="{{M.dAcc}}"></path>
+<path class="d-dot" d="{{M.dDot}}"></path>
+<path class="d-ring" d="{{M.dRing}}"></path>
+</svg>
+</div>
+</sc-if>
+<sc-for list="{{M.jacks}}" as="j">
+<div class="jack" style="{{j.style}}"></div>
+<div class="lbl" style="{{j.lstyle}}">{{j.label}}</div>
+<div class="fld" style="{{j.fstyle}}">{{j.field}}</div>
+<div class="a" style="{{j.lvl}}"></div>
+</sc-for>
+<sc-for list="{{M.knobs}}" as="k">
+<svg class="a" style="{{k.pos}}" width="48" height="34" viewBox="0 0 48 34"><path class="k-track" d="{{k.track}}"></path><path class="k-arc" d="{{k.arc}}"></path><line class="k-ptr" x1="24" y1="17" x2="{{k.px}}" y2="{{k.py}}"></line></svg>
+<div class="jack" style="{{k.jack}}"></div>
+<div class="txt" style="{{k.lstyle}}">{{k.label}}</div>
+</sc-for>
+<sc-for list="{{M.modes}}" as="o">
+<div class="opt {{o.cls}}" style="{{o.style}}"><sc-if value="{{o.hasGlyph}}" hint-placeholder-val="{{false}}"><svg width="24" height="12" style="display: inline-block; vertical-align: middle"><path class="g-line" d="{{o.gLine}}"></path><path class="g-on" d="{{o.gOn}}"></path><path class="g-off" d="{{o.gOff}}"></path></svg> ▾</sc-if>{{o.text}}</div>
+</sc-for>
+<svg class="a" style="left: 0; top: 0; pointer-events: none" width="{{M.w}}" height="{{M.h}}"><path class="grid" d="{{M.grid}}"></path><path class="cols" d="{{M.cols}}"></path></svg>
+</div>
+</sc-for>
+
+<sc-for list="{{badges}}" as="b">
+<div class="badge" style="{{b.style}}">{{b.n}}</div>
+</sc-for>
+<sc-for list="{{rowTitles}}" as="r">
+<div class="row-title" style="{{r.style}}">{{r.text}}</div>
+</sc-for>
+
+<div style="position: absolute; left: 600px; top: 140px; width: 1060px; font-size: 12px; line-height: 18px; color: #b9b3a6">
+<div class="rule"><div class="n">1</div><div><b>Сетка.</b> Ширина — в HP (48 px), высота — в дорожках по 28 px под заголовком 24 px. 1U = 3 дорожки, 2U = 7, 3U = 11. Всё на панели стоит на дорожках и колонках HP.</div></div>
+<div class="rule"><div class="n">2</div><div><b>Три колонки, всегда.</b> Слева колонка входов (1 HP), справа колонка выходов (1 HP), между ними зона управления. Ширина модуля = 2 + число колонок управления. Порты — только в крайних колонках (кроме mod-гнёзд в углу ручек).</div></div>
+<div class="rule"><div class="n">3</div><div><b>Одно гнездо — одна дорожка.</b> Сверху вниз по важности: звук → клок и триггеры → CV. Подпись и значение (аттенювертор или ÷/×) живут в той же дорожке. Под подписью выхода — его уровень.</div></div>
+<div class="rule"><div class="n">4</div><div><b>Зона управления сверху вниз, всегда в этом порядке:</b> ЭКРАН (если есть; на всю ширину зоны, целое число дорожек) → РЯДЫ РУЧЕК (каждый — 2 дорожки, ручки слева направо по важности) → ПОЛОСА РЕЖИМОВ (нижняя дорожка).</div></div>
+<div class="rule"><div class="n">5</div><div><b>Полоса режимов.</b> Всё, что не крутится: опции (▾ — список, глифы вместо слов), переключатели (светлые, когда включены) — слева; действия (DICE, TAP) — прижаты вправо. Кнопка шириной 1 HP; 2 HP — только у списка ▾ со словами (MODE, GEN).</div></div>
+<div class="rule"><div class="n">6</div><div><b>Экраны одного вида.</b> Врезка #121210 с тонкой рамкой; светлое — что включено, янтарь — где мы сейчас, пунктир — вычисляется само, штриховка — пауза. Экран можно редактировать прямо (рисовать, кликать), но он не заменяет ручки, которые нужно модулировать.</div></div>
+<div class="rule"><div class="n">7</div><div><b>Размер следует из содержимого.</b> Колонок управления = max(ручек в ряду, ширина экрана); высота = наименьшая из 1U/2U/3U, в которую входят гнёзда и зона управления. Большие модули — это те же правила с большим экраном, а не другой дизайн.</div></div>
+<div class="rule"><div class="n">8</div><div><b>Шрифт.</b> Имя модуля 11 px полужирным, подписи 9 px приглушённым, значения 9–10 px. Никаких других размеров на панели.</div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1720,"height":1560}}'>
+var HP = 48, U = 112, HEAD = 24, LANE = 28, TOP = 26;
+var ROLE = { audio: '#e9e4d8', mod: '#6cb4ee', pitch: '#9ad18b', trigger: '#f5a524' };
+var LANES = { 1: 3, 2: 7, 3: 11 };
+function laneTop(i) { return TOP + i * LANE; }
+function ang(k) { return (-135 + 270 * k) * Math.PI / 180; }
+function arc(k0, k1, r) {
+  if (k1 - k0 < 0.002) return '';
+  var a0 = ang(k0), a1 = ang(k1), large = (k1 - k0) * 270 > 180 ? 1 : 0;
+  return 'M' + (24 + r * Math.sin(a0)).toFixed(2) + ' ' + (17 - r * Math.cos(a0)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + (24 + r * Math.sin(a1)).toFixed(2) + ' ' + (17 - r * Math.cos(a1)).toFixed(2);
+}
+function circ(x, y, r) { return 'M' + (x - r) + ' ' + y + ' a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0 a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0 '; }
+function rect(x, y, w, h) { return 'M' + x + ' ' + y + ' h' + w + ' v' + h + ' h' + (-w) + ' Z '; }
+var WAVES = { sin: function (w) { var d = ''; for (var i = 0; i <= 24; i++) d += (i ? 'L' : 'M') + (i / 24 * w).toFixed(1) + ' ' + (6 - 5 * Math.sin(i / 24 * 2 * Math.PI)).toFixed(1); return d; },
+  saw: function (w) { return 'M0 11 L' + w / 2 + ' 1 V11 L' + w + ' 1'; } };
+function scaleGlyph() { var mask = [0, 2, 3, 5, 7, 8, 10], on = '', off = ''; for (var q = 0; q < 12; q++) { var r = mask.indexOf(q) >= 0 ? rect(q * 2, 1, 1.4, 10) : rect(q * 2, 8, 1.4, 3); if (mask.indexOf(q) >= 0) on += r; else off += r; } return { on: on, off: off }; }
+
+// The one layout function: every panel on this board comes out of it.
+function panel(def, x, y, scale) {
+  var w = def.size[0] * HP, h = def.size[1] * U, C = def.size[0] - 2, lanes = LANES[def.size[1]], dl = def.display ? def.display.lanes : 0, r = { name: def.name, size: def.size[0] + '×' + def.size[1] + 'U', w: w, h: h };
+  r.style = 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;' + (scale ? 'transform:scale(' + scale + ');' : '');
+  r.jacks = [];
+  def.ins.forEach(function (p, i) {
+    var t = laneTop(i), col = ROLE[p[1]];
+    r.jacks.push({ style: 'left:5.5px;top:' + (t + 9.5) + 'px;border-color:' + col + ';' + (p[3] ? 'background:' + col + ';' : ''), label: p[0], lstyle: 'left:19px;top:' + (t + 4) + 'px;',
+      field: p[1] === 'trigger' ? (p[2] || '1') : p[1] === 'mod' || p[1] === 'pitch' ? '1.00' : '', fstyle: 'left:19px;top:' + (t + 15) + 'px;' + (p[2] ? 'color:' + col + ';' : ''), lvl: 'display:none;' });
+  });
+  def.outs.forEach(function (p, i) {
+    var t = laneTop(i), col = ROLE[p[1]];
+    r.jacks.push({ style: 'left:' + (w - 14.5) + 'px;top:' + (t + 9.5) + 'px;border-color:' + col + ';background:' + col + ';', label: p[0], lstyle: 'right:19px;top:' + (t + 4) + 'px;text-align:right;',
+      field: '', fstyle: 'display:none;', lvl: 'right:19px;top:' + (t + 17) + 'px;width:' + (8 + (i * 7) % 14) + 'px;height:2px;border-radius:1px;background:' + col + ';' });
+  });
+  // knobs: rows of C after the display
+  r.knobs = (def.knobs || []).map(function (k, j) {
+    var cx = HP + (j % C) * HP, cy = laneTop(dl + Math.floor(j / C) * 2), a = ang(k[1]);
+    return { pos: 'left:' + cx + 'px;top:' + cy + 'px;', track: arc(0, 1, 11), arc: arc(0, k[1], 11), px: (24 + 8 * Math.sin(a)).toFixed(2), py: (17 - 8 * Math.cos(a)).toFixed(2),
+      jack: 'left:' + (cx + 0.5) + 'px;top:' + (cy + 0.5) + 'px;border-color:#6cb4ee;width:8px;height:8px;', label: k[0], lstyle: 'left:' + cx + 'px;width:48px;top:' + (cy + 36) + 'px;color:#8f897c;' };
+  });
+  // mode strip: the bottom lane; options from the left, actions from the right
+  var left = 0, right = 0, mt = laneTop(lanes - 1) + 4, sg = scaleGlyph();
+  r.modes = (def.modes || []).map(function (o) {
+    var bw = o.hp * HP - 6, bx;
+    if (o.right) { right += o.hp; bx = HP + (C - right) * HP + 3; } else { bx = HP + left * HP + 3; left += o.hp; }
+    var g = o.glyph;
+    return { style: 'left:' + bx + 'px;top:' + mt + 'px;width:' + bw + 'px;', cls: o.on ? 'on' : '', text: g ? '' : o.t, hasGlyph: !!g,
+      gLine: g === 'sin' || g === 'saw' ? WAVES[g](24) : '', gOn: g === 'scale' ? sg.on : '', gOff: g === 'scale' ? sg.off : '' };
+  });
+  // display: full control width, whole lanes, at the top
+  r.hasDisp = !!def.display;
+  var dw = C * HP - 4, dh = dl * LANE - 4;
+  Object.assign(r, { dispStyle: 'left:' + (HP + 2) + 'px;top:' + (laneTop(0) + 2) + 'px;width:' + dw + 'px;height:' + dh + 'px;', dw: dw, dh: dh, dCur: '', dFill: '', dLine: '', dA: '', dB: '', dOff: '', dOn: '', dAcc: '', dDot: '', dRing: '' });
+  if (def.display && def.display.kind === 'scope') {
+    var a = '', b = '';
+    for (var i = 0; i <= 80; i++) { var xx = i / 80 * dw; a += (i ? 'L' : 'M') + xx.toFixed(1) + ' ' + (dh / 2 - Math.sin(i / 80 * 6 * Math.PI) * dh * 0.32).toFixed(1); b += (i ? 'L' : 'M') + xx.toFixed(1) + ' ' + (dh * 0.85 - ((i % 27) / 27) * dh * 0.55).toFixed(1); }
+    r.dA = a; r.dB = b;
+  }
+  if (def.display && def.display.kind === 'pads') {
+    var G = 'x.x-..x.x.xx-.x.', A = '...........A..A.', pw = (dw - 7 * 4) / 8, ph = (dh - 16) / 2;
+    for (var s = 0; s < 16; s++) {
+      var px = (s % 8) * (pw + 4), py = Math.floor(s / 8) * (ph + 14);
+      if (G[s] === '.') r.dOff += rect(px + 0.5, py + 0.5, pw - 1, ph - 1); else r.dOn += rect(px - (G[s] === '-' ? 4 : 0), py, pw + (G[s] === '-' ? 4 : 0), ph);
+      r.dAcc += A[s] === 'A' ? rect(px, py + ph + 4, pw, 5) : '';
+      if (s === 5) r.dRing = rect(px - 1, py - 1, pw + 2, ph + 2);
+    }
+  }
+  if (def.display && def.display.kind === 'contour') {
+    var N = [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], SL = [3, 6, 11, 14], sw = dw / 16, mid = dh / 2 - 4, amp = dh / 2 - 26, line = '';
+    N.forEach(function (st, i) {
+      var y2 = mid - ((st - 12) / 12) * amp, x0 = i * sw;
+      line += i ? (SL.indexOf(i + 1) >= 0 ? ' L' + (x0 + sw / 2).toFixed(1) + ' ' + y2.toFixed(1) : ' L' + x0.toFixed(1) + ' ' + y2.toFixed(1)) : 'M0 ' + y2.toFixed(1);
+      line += ' L' + (x0 + sw).toFixed(1) + ' ' + y2.toFixed(1);
+      r.dDot += circ(x0 + sw / 2, dh - 10, 2.6);
+    });
+    r.dLine = line; r.dFill = line + ' L' + dw + ' ' + dh + ' L0 ' + dh + ' Z'; r.dCur = rect(5 * sw, 0, sw, dh);
+  }
+  // the grid: lanes and HP columns, and the three column borders
+  var grid = '';
+  for (var l = 0; l <= lanes; l++) grid += 'M0 ' + laneTop(l) + ' H' + w + ' ';
+  for (var c = 1; c < def.size[0]; c++) grid += 'M' + c * HP + ' ' + HEAD + ' V' + h + ' ';
+  r.grid = grid; r.cols = 'M' + HP + ' ' + HEAD + ' V' + h + ' M' + (w - HP) + ' ' + HEAD + ' V' + h;
+  return r;
+}
+
+var DEFS = {
+  anatomy: { name: 'MODULE', size: [6, 2], ins: [['IN', 'audio', '', 1], ['CLK', 'trigger', '÷2', 1], ['CV', 'mod']], outs: [['OUT', 'audio'], ['EOC', 'trigger']], display: { kind: 'scope', lanes: 2 },
+    knobs: [['FREQ', 0.45], ['RES', 0.3], ['AMT', 0.6], ['MIX', 0.5]], modes: [{ t: 'MODE ▾', hp: 2 }, { t: 'CYC', hp: 1, on: true }, { t: 'DICE', hp: 1, right: true }] },
+  noise: { name: 'NOISE', size: [3, 1], ins: [], outs: [['WHT', 'audio'], ['PNK', 'audio']], knobs: [['LVL', 0.8]] },
+  filter: { name: 'FILTER', size: [4, 1], ins: [['IN', 'audio', '', 1]], outs: [['LP', 'audio'], ['BP', 'audio'], ['HP', 'audio']], knobs: [['CUT', 0.55], ['RES', 0.3]] },
+  lpg: { name: 'LPG', size: [4, 1], ins: [['IN', 'audio', '', 1], ['CV', 'mod'], ['PING', 'trigger', '1', 1]], outs: [['OUT', 'audio']], knobs: [['LVL', 1], ['DEC', 0.45]], modes: [{ t: 'BOTH ▾', hp: 2 }] },
+  slope: { name: 'SLOPE', size: [5, 1], ins: [['TRIG', 'trigger', '1', 1], ['IN', 'audio']], outs: [['OUT', 'mod'], ['EOR', 'trigger'], ['EOC', 'trigger']], knobs: [['RISE', 0.2], ['FALL', 0.5], ['SHP', 0.5]], modes: [{ t: 'CYC', hp: 1, on: true }] },
+  osc: { name: 'OSC', size: [5, 1], ins: [['PTCH', 'pitch', '', 1], ['FM', 'audio'], ['SYNC', 'trigger']], outs: [['OUT', 'audio']], knobs: [['FREQ', 0.45], ['PW', 0.5], ['FM', 0]], modes: [{ glyph: 'saw', hp: 1 }] },
+  complex: { name: 'COMPLEX', size: [6, 1], ins: [['PTCH', 'pitch'], ['FM', 'audio']], outs: [['OUT', 'audio'], ['MOD', 'audio']], knobs: [['FREQ', 0.4], ['RAT', 0.5], ['IDX', 0.2], ['TMB', 0]], modes: [{ glyph: 'sin', hp: 1 }] },
+  scope: { name: 'SCOPE', size: [6, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['TRIG', 'trigger']], outs: [['THRU A', 'audio'], ['THRU B', 'audio']], display: { kind: 'scope', lanes: 4 }, knobs: [['TIME', 0.5], ['GA', 0.5], ['GB', 0.5]], modes: [{ t: 'A·B', hp: 1 }] },
+  rhythm: { name: 'RHYTHM', size: [10, 2], ins: [['CLK', 'trigger', '×4', 1], ['RST', 'trigger'], ['DICE', 'trigger']], outs: [['GATE', 'trigger'], ['ACC', 'trigger'], ['EOC', 'trigger']], display: { kind: 'pads', lanes: 4 },
+    knobs: [['LEN', 1], ['HITS', 0.47], ['ROT', 0], ['DENS', 0.47]], modes: [{ t: 'GRID', hp: 1 }, { t: 'DICE', hp: 1, right: true }] },
+  mix: { name: 'MIX', size: [4, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['C', 'audio'], ['D', 'audio']], outs: [['OUT', 'audio']], knobs: [['A', 0.8], ['B', 0.8], ['C', 0.8], ['D', 0.8]] },
+  att: { name: 'ATT', size: [6, 2], ins: [['IN1', 'audio'], ['IN2', 'audio'], ['IN3', 'audio'], ['IN4', 'audio']], outs: [['OUT1', 'mod'], ['OUT2', 'mod'], ['OUT3', 'mod'], ['OUT4', 'mod']],
+    knobs: [['ATT1', 1], ['ATT2', 0.5], ['ATT3', 0.75], ['ATT4', 0.25], ['OFS1', 0.5], ['OFS2', 0.5], ['OFS3', 0.5], ['OFS4', 0.5]] },
+  stages: { name: 'STAGES', size: [10, 3], ins: [['ADV', 'trigger', '1', 1], ['RST', 'trigger'], ['ADDR', 'mod'], ['DICE', 'trigger']], outs: [['CV', 'mod'], ['PLS', 'trigger'], ['EOC', 'trigger']], display: { kind: 'contour', lanes: 8 },
+    knobs: [['LEN', 1], ['ROOT', 0]], modes: [{ t: '303 ▾', hp: 2 }, { glyph: 'scale', hp: 1 }, { t: 'DICE', hp: 1, right: true }] }
+};
+
+class Component extends DCLogic {
+  renderVals() {
+    var mods = [], S = 1.75, ax = 40, ay = 140;
+    var an = panel(DEFS.anatomy, ax, ay, S); mods.push(an);
+    // badges on the anatomy: grid, columns, lane, display, knob row, mode strip, actions, header
+    function B(n, x, y) { return { n: '' + n, style: 'left:' + (ax + x * S) + 'px;top:' + (ay + y * S) + 'px;' }; }
+    var badges = [B(8, 150, 12), B(2, 24, 210), B(2, 264, 210), B(3, 34, 54), B(6, 150, 44), B(4, 150, 108), B(5, 80, 196), B(5, 222, 196), B(1, 290, 150)];
+    var y1 = 600, y2 = 790, y3 = 1090, gap = 40, x = 40, rowTitles = [];
+    rowTitles.push({ text: '1U — один ряд ручек и полоса режимов', style: 'left:40px;top:' + (y1 - 28) + 'px;' });
+    ['noise', 'filter', 'lpg', 'slope', 'osc', 'complex'].forEach(function (k) { var d = DEFS[k]; mods.push(panel(d, x, y1)); x += d.size[0] * HP + gap; });
+    rowTitles.push({ text: '2U — экран или два ряда ручек, та же полоса режимов внизу', style: 'left:40px;top:' + (y2 - 28) + 'px;' });
+    x = 40; ['scope', 'rhythm', 'mix', 'att'].forEach(function (k) { var d = DEFS[k]; mods.push(panel(d, x, y2)); x += d.size[0] * HP + gap; });
+    rowTitles.push({ text: '3U — большой экран, тот же ряд ручек, та же полоса режимов', style: 'left:40px;top:' + (y3 - 28) + 'px;' });
+    mods.push(panel(DEFS.stages, 40, y3));
+    return { mods: mods, badges: badges, rowTitles: rowTitles };
+  }
+}
+</script>
+</body>
+</html>

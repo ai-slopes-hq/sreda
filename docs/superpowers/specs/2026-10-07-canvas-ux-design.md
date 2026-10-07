@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 10 (WIRES editor) · Status: approved
+Date: 2026-10-07 · Revision 11 (panel grammar, VCA folded into LPG) · Status: approved
 
 ## Why
 
@@ -42,9 +42,28 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
 
 - A module is a compact block: name on top, inputs on the left edge, outputs on the right edge, parameters on the
   face between them.
-- **Sizes are quantised:** width N × HP (HP = 48 px: one input column, the knob columns, one output column), height
-  1U, 2U or 3U (U = 112 px; 2U is exactly two 1U). Each module's size is fixed in its spec (§7) and its panel is
-  designed for it. Placement on the canvas stays free (16 px grid, magnets); the sizes make STACK pack cleanly.
+- **Sizes are quantised:** width N × HP (HP = 48 px), height 1U, 2U or 3U (U = 112 px; 2U is exactly two 1U). Each
+  module's size is fixed in its spec (§7). Placement on the canvas stays free (16 px grid, magnets); the sizes make
+  STACK pack cleanly.
+- **Panel grammar — one layout for every module, small or large** (board *Panel system* in the prototype):
+  1. Under a 24 px header (the name), the panel is cut into **lanes of 28 px**: 1U = 3 lanes, 2U = 7, 3U = 11.
+  2. **Three columns, always:** the IN column (1 HP) on the left, the OUT column (1 HP) on the right, the control
+     area (N − 2 HP) between them. Ports live only in the side columns (knob mod jacks excepted).
+  3. **One jack per lane**, top down in spec order: sound, then clocks and triggers, then CV. A jack's label and its
+     value (attenuverter or ratio) share its lane; an output's level bar sits under its label.
+  4. **The control area, top to bottom, always in this order:** the DISPLAY (if any; the full width of the control
+     area, a whole number of lanes) → KNOB ROWS (2 lanes each, knobs left to right by importance) → the MODE STRIP
+     (the bottom lane).
+  5. **The mode strip** holds everything that does not turn: options, with `▾` for a list and glyphs instead of words
+     where they are shapes; OFF/ON options are toggles labelled with their name and lit when on; actions (DICE, TAP)
+     are pushed to the right. A button is 1 HP wide; a `▾` list with words (MODE, GEN) takes 2 HP.
+  6. **Displays share one look:** a #121210 inset with a thin border; light = on, amber = where we are now, dashed =
+     computed, hatched = rest. A display may be edited directly, but it never replaces a knob that must be
+     modulated.
+  7. **Size follows content:** control columns = max(knobs per row, the display's width); height = the smallest of
+     1U / 2U / 3U that holds the jacks and the control area. Large modules are the same grammar with a larger
+     display, not a different design.
+  8. **Type:** the module name 11 px semibold, labels 9 px muted, values 9–10 px; no other sizes on a panel.
 - Every parameter is on the face as a small knob or a value field you drag. A module whose parameters do not fit is
   split into two modules; there is never a popup or side panel.
 - Every knob has its own mod jack (top-left of the knob). Its attenuverter (§3) is drawn as a ring around the knob:
@@ -203,7 +222,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     it, each listed under the innermost frame holding both ends;
   - **UNGROUPED**: wires between modules that are in no frame;
   - **BETWEEN GROUPS**: wires that cross a frame's border — how the parts of the patch talk to each other;
-  - **PROBLEMS**: sound that reaches no OUT; a processor with its sound input empty (FILTER, VCA, LPG, FOLD, DELAY,
+  - **PROBLEMS**: sound that reaches no OUT; a processor with its sound input empty (FILTER, LPG, FOLD, DELAY,
     FOLLOW, OUT's L — optional inputs such as SLOPE's IN are not problems); a RHYTHM with no clock. Listed dimmed as
     information: feedback loops and muted frames. Clicking a problem selects that module and frames it in view.
 - **A wire row:** `SOURCE › PORT  →  DEST › PORT   value   ✕`, a role-coloured dot at each end (two colours for a
@@ -258,7 +277,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
 - **FACTORY** (read-only, shipped with the app, listed under `FACTORY/`): projects — the ones below — and groups —
   *303 voice* (the ACID voice without delay and out, own clock 128 BPM), *complex vco* (COMPLEX → FOLD → LPG pinged
   by a cycling SLOPE, UNCERTAINTY on the fold), *bleep-bloop* (own clock 120 BPM at ×4 → CHANCE → UNCERTAINTY
-  quantised → QUANT → OSC → LPG), *vca-lpg* (CLK in pings an LPG and a SLOPE on a VCA's level).
+  quantised → QUANT → OSC → LPG), *vca-lpg* (two LPGs: the first in VCA mode with a SLOPE on its level, the second pinged; CLK in fires both).
 - Factory projects are built only from the first modules and fade in over 200 ms:
   - **Pulse:** an OSC square at 2 Hz pings an LPG on a 50 Hz sine (kick); the same clock, ×2 on the input, pings a
     second LPG on NOISE (hats); MIX → OUT.
@@ -274,7 +293,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     ×4 on its CLK; GATE advances STAGES (16 notes in C minor with four slides; pitch moves only on notes, as on a
     TB-303) and
     fires the filter and amp SLOPEs; ACC fires a third SLOPE stacked on the same CUTOFF mod jack; STAGES → OSC (saw)
-    → FILTER (LP, high res) → VCA → DELAY → OUT.
+    → FILTER (LP, high res) → LPG in VCA mode → DELAY → OUT.
 
 ## 7. First modules
 
@@ -289,8 +308,7 @@ Size is `HP × U`.
 | | **NOISE** | — | level | white (audio), pink (audio) | — |
 | | **UNCERTAINTY** — Buchla 266 style | trig (trigger) | rate, levels (2–16) | smooth (mod bi), stepped (mod bi), quant (mod bi) | trig ← internal clock at `rate` |
 | Shaping | **SLOPE** — Serge DUSG / Maths | trig (trigger), in (audio, slew) | rise, fall, shape (log…lin…exp), cycle OFF/ON | out (mod uni), eor (trigger), eoc (trigger) | trig ← eoc, when cycle is ON |
-| | **LPG** | in (audio), cv (mod), ping (trigger) | level, decay (vactrol-like), mode VCA/LP/BOTH | out (audio) | cv ← internal ping envelope |
-| | **VCA** | in (audio) | level | out (audio) | — |
+| | **LPG** — low-pass gate and VCA in one | in (audio), cv (mod), ping (trigger) | level, decay (vactrol-like), mode VCA/LP/BOTH | out (audio) | cv ← the ping envelope while PING is patched, else 1 (so with nothing patched LPG is a plain VCA on LEVEL) |
 | | **FILTER** — state-variable, all outputs at once | in (audio) | cutoff, res | lp, bp, hp (audio) | — |
 | | **FOLD** | in (audio) | fold, symmetry | out (audio) | — |
 | Time & logic | **STAGES** — Buchla 248 style, generative, drawn as a contour | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage), dice (trigger) | per stage 1–16 (in the contour, not as knobs): voltage, time, pulse ON/OFF, slide (80 ms into the stage); LEN 1–16; GEN 303/MOTIF/WALK/TURING/ARP/PHRASE/PEDAL; SCALE; ROOT; DICE button | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
@@ -310,8 +328,11 @@ Size is `HP × U`.
 | | **SCOPE** — with thru, like a Mordax DATA | a, b (audio), trig (trigger) | time (1 ms–10 s per screen), gain a, gain b, mode A·B / XY | thruA, thruB (audio: the inputs unchanged; gains affect the display only) | — |
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
-- Sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1, LPG 5×1, VCA 3×1, FILTER 4×1,
-  FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1, RHYTHM 10×2, CHANCE 3×1, SHIFT 4×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2.
+- Sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 4×1,
+  STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 3×1, COMPARE 3×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2, S&H 2×1, QUANT 3×1,
+  MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1 (24 modules).
+- Displays in lanes: STAGES' contour 8 (then LEN and ROOT, then GEN ▾ · SCALE ▾ · DICE), RHYTHM's pads 4 (then LEN,
+  HITS, ROT, DENS, then MODE · DICE), SCOPE 4 (then TIME, GA, GB, then MODE).
 - **STAGES panel = a contour.** A display shows the LEN stages as one line: a step's height is its note (named above
   it), a sloped joint is a slide, dots along the bottom are pulses, the current stage is amber. While ADV is
   unpatched (free-running on its own timer) step widths follow stage times; while ADV is patched (timed from
@@ -340,7 +361,7 @@ Size is `HP × U`.
   passed in. The button is an undo step; the input changes the patch without one.
 - Action cells (DICE) are buttons on the face; they hold no value.
 - SCOPE syncs its sweep on a TRIG rise when TRIG is patched, else on A's rising zero crossing, else runs free.
-  Its display area takes the space of 4 × 2 knob cells.
+
 - Several OUT modules sum. After them the master stage is fixed: 5 Hz DC blocker, soft limiter, nothing non-finite
   reaches the device.
 

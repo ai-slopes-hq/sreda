@@ -1,9 +1,9 @@
-# SREDA 2 · Plan 1 — Foundation: document, engine, 25 modules
+# SREDA 2 · Plan 1 — Foundation: document, engine, 24 modules
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Everything below the UI: the patch document and its edits, frames, undo, compile, the audio engine and
-all 25 first-build modules, plus factory patches — tested in Node and audible through a WAV render script.
+all 24 first-build modules, plus factory patches — tested in Node and audible through a WAV render script.
 
 **Architecture:** pnpm monorepo. `core` owns the immutable document, edits, frame geometry, undo and
 `compile` (document → plan). `protocol` owns the UI ↔ engine messages and the readout buffer layout. `engine` owns
@@ -45,9 +45,13 @@ WIRES, the library folder and pickers for groups and projects, e2e. Both are wri
   nothing non-finite reaches the output; the listen path goes through it too. Several OUT modules sum before it.
 - Removed modules and re-routed inputs fade over 10 ms; a frame mute ramps over 50 ms; factory projects fade in
   over 200 ms.
-- Sizes HP = 48 px, U = 112 px. Module sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1,
-  LPG 5×1, VCA 3×1, FILTER 4×1, FOLD 4×1, STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 4×1, COMPARE 3×1, FOLLOW 6×1,
-  SWITCH 4×2, SPREAD 4×2, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1.
+- Sizes HP = 48 px, U = 112 px. Module sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1,
+  LPG 4×1, FILTER 4×1, FOLD 4×1, STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 3×1, COMPARE 3×1, FOLLOW 6×1,
+  SWITCH 4×2, SPREAD 4×2, S&H 2×1, QUANT 3×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1.
+- Panel grammar (spec §2): header 24 px; lanes 28 px (1U = 3, 2U = 7, 3U = 11); IN column 1 HP | control area
+  N − 2 HP | OUT column 1 HP; one jack per lane in spec order; control area = display (whole lanes) → knob rows
+  (2 lanes each) → mode strip (bottom lane; options from the left, actions from the right; 1 HP per button, 2 HP for
+  a `▾` list with words). Displays: STAGES 8 lanes, RHYTHM 4, SCOPE 4.
 - Frame geometry: header 28 px, padding 16 px, WIRE FIX channel 32 px, frame minimum 352 × 96, grid 16 px.
 - UI text and names are English; modules of the same type are numbered in names (`SLOPE 1`, `SLOPE 2`).
 
@@ -71,6 +75,7 @@ WIRES, the library folder and pickers for groups and projects, e2e. Both are wri
 package.json · pnpm-workspace.yaml · tsconfig.base.json · eslint.config.js · .prettierrc.json · .gitignore · vitest.config.ts
 packages/core/src/
   spec.ts        ModuleSpec, Port, Param (knob | option | action, hidden), Normal; toKnob / fromKnob; HP, U
+  panel.ts       layoutPanel: the panel grammar as positions (used by the conformance test now, the UI in plan 2)
   doc.ts         Doc, ModuleDoc, Cable, Frame types; emptyDoc; validateDoc
   rng.ts         mulberry32
   ops.ts         module / cable / value edits, randomize, replace, insert into cable, duplicate
@@ -91,13 +96,13 @@ packages/engine/src/
   testing.ts     render(), offline helpers
   index.ts
 modules/
-  <type>/spec.ts · <type>/dsp.ts · <type>/<type>.test.ts       (25 types)
+  <type>/spec.ts · <type>/dsp.ts · <type>/<type>.test.ts       (24 types)
   specs.ts (SPECS) · dsps.ts (DSPS) · generators.ts · factory.ts
   conformance.test.ts · factory.test.ts · gc.test.ts
 scripts/render.ts   pnpm render <factory name> [seconds] → <name>.wav
 ```
 
-Module type ids (folder names): `osc complex noise uncertainty slope lpg vca filter fold stages rhythm chance shift
+Module type ids (folder names): `osc complex noise uncertainty slope lpg filter fold stages rhythm chance shift
 compare follow switch spread sah quant mix att abc delay scope out`.
 
 ---
@@ -127,7 +132,7 @@ compare follow switch spread sah quant mix att abc delay scope out`.
 
 ### Task 2: Specs, knob mapping, document shape
 
-**Files:** Create `packages/core/src/{spec.ts,doc.ts,rng.ts}`; tests `spec.test.ts`, `doc.test.ts`.
+**Files:** Create `packages/core/src/{spec.ts,doc.ts,rng.ts,panel.ts}`; tests `spec.test.ts`, `doc.test.ts`, `panel.test.ts`.
 
 **Interfaces:**
 ```ts
@@ -147,7 +152,7 @@ export type Normal =
   | { input: string; internal: string }                                        // DSP-provided source, named for display
   | { input: string; value: number };                                          // constant
 export interface ModuleSpec { type: string; label: string; desc: string; size: [number, number];
-  inputs: Port[]; outputs: Port[]; params: Param[]; normals?: Normal[]; display?: { rows: number; kind: 'scope' | 'contour' | 'pads' } }
+  inputs: Port[]; outputs: Port[]; params: Param[]; normals?: Normal[]; display?: { lanes: number; kind: 'scope' | 'contour' | 'pads' } }
 export type Specs = Readonly<Record<string, ModuleSpec>>;
 export function toKnob(p: KnobParam, value: number): number;   // value → 0…1 (exp: log space)
 export function fromKnob(p: KnobParam, knob: number): number;  // 0…1 → value, clamped, snapped to step
@@ -165,6 +170,14 @@ export const emptyDoc: Doc;
 export function validateDoc(json: unknown, specs: Specs): Doc | null;
 // rng.ts
 export function mulberry32(seed: number): () => number;
+// panel.ts — port the prototype's lay(): positions relative to the module's top-left
+export const HEAD = 24, LANE = 28, LANES = { 1: 3, 2: 7, 3: 11 } as const;
+export interface PanelLayout { w: number; h: number; lanes: number;
+  jacks: Record<string, { x: number; y: number }>;            // ins at x 10, outs at x w − 10, y = 26 + 28·i + 14; mod jacks at a knob cell + (5, 5)
+  cells: Record<string, { x: number; y: number; w: number; mode: boolean }>;  // knob cells 48 × 56; mode-strip buttons 1 or 2 HP × 28
+  display: { x: number; y: number; w: number; h: number } | null;              // x 50, y 28, w (N−2)·48 − 4, h lanes·28 − 4
+  fits: boolean }   // jacks ≤ lanes, display + 2·knob rows + (mode strip ? 1 : 0) ≤ lanes, mode-strip HP ≤ N − 2
+export function layoutPanel(spec: ModuleSpec): PanelLayout;
 ```
 Module ids are `m<n>`, frame ids `g<n>`; a frame's jacks are `[frameId, 'clkIn']` and `[frameId, 'clkOut']`.
 
@@ -178,6 +191,8 @@ test('validateDoc rejects', ...);   // each → null: version 2 · unknown type 
                                     // missing module · parent naming a missing frame · cable to [frame, 'nope']
 test('validateDoc fills missing params with defaults and keeps atts / ratios', ...);
 test('mulberry32 repeats', () => { expect(mulberry32(7)()).toBe(mulberry32(7)()); });
+test('layoutPanel follows the grammar', ...);   // a 5×1 spec with 3 knobs + one 3-value option: knobs at x 48, 96, 144,
+                                                 // y 26; option button at the bottom lane (y 82), 2 HP; display null; fits
 ```
 - [ ] **Step 2:** `pnpm test -- packages/core` → FAIL. **Step 3:** Implement. **Step 4:** → PASS.
 - [ ] **Step 5:** Commit `feat(core): specs, knob mapping, document`.
@@ -406,7 +421,7 @@ path).
 - [ ] **Step 2:** → FAIL. **Step 3:** Implement. **Step 4:** → PASS.
 - [ ] **Step 5:** Commit `feat(engine): EngineCore`.
 
-### Tasks 9–13: The 25 modules
+### Tasks 9–13: The 24 modules
 
 Each module: `modules/<type>/spec.ts` (exports `spec: ModuleSpec`, values from the spec's §7 table and the
 prototype's `SPECS`: labels, ranges, defaults, `randomRange`, `modDepth`, normals, sizes), `modules/<type>/dsp.ts`
@@ -423,8 +438,7 @@ Behaviour:
 | noise | WHITE uniform ±1·level; PINK Paul Kellet filter ·level |
 | uncertainty | on a TRIG rise (else every 1/rate s): STEPPED = new uniform ±1, QUANT = STEPPED snapped to `levels` evenly spaced values in ±1; SMOOTH glides to a new random target every 1/rate s (one-pole, τ = 1/(2·rate)) |
 | slope | TRIG rise → rise from the current value over RISE, EOR at the top, fall over FALL, EOC at 0; shape s: `s>0: x^(1+2s)`, `s<0: 1−(1−x)^(1−2s)`; CYCLE ON and idle with TRIG unpatched → starts by itself (the own normal keeps it cycling); IN patched and idle → OUT slews toward IN with RISE / FALL as rates |
-| lpg | PING rise → vactrol env to 1 (2 ms), then `×0.001^(1/(decay·sr))` per sample; control `c` = CV (clamped 0…1) if patched, else the env (internal normal); `g = level·c`; VCA: `in·g`; LP: one-pole LP at `20·1000^g` Hz; BOTH: LP then `·g` |
-| vca | `in·level` |
+| lpg | PING rise → vactrol env to 1 (2 ms), then `×0.001^(1/(decay·sr))` per sample; control `c` = CV (clamped 0…1) if patched, else the env if PING is patched, else 1 — so with nothing patched it is a VCA on LEVEL; `g = level·c`; VCA: `in·g`; LP: one-pole LP at `20·1000^g` Hz; BOTH: LP then `·g` |
 | filter | TPT state-variable, `k = 2 − 1.96·res`; outputs LP, BP, HP |
 | fold | `y = sin(π/2·(g·x + sym))`, `g = 1 + 8·fold`, first-order ADAA |
 | stages | 16 stages (hidden params v1–16 volts, t1–16 s, p1–16 pulse, g1–16 slide); ADV rise (or, unpatched, the stage time elapsing) → next stage within LEN, PULSE if on, EOC on wrap; RESET → next ADV plays stage 1; ADDR patched → stage `⌊clamp(addr,0,0.999)·LEN⌋`, a change counts as an advance; a slide stage glides 80 ms from the previous output; DICE rise → `ctx.dice()`; `state[0]` = current stage |
@@ -449,10 +463,10 @@ Behaviour:
   frequency, FM patched replaces the modulator; NOISE repeats with the same seed, mean ≈ 0; UNCERTAINTY quant has at
   most `levels` distinct values, SMOOTH stays within ±1. FAIL → implement → PASS → commit `feat(modules): sources`.
 
-### Task 10: Shaping — slope, lpg, vca, filter, fold
+### Task 10: Shaping — slope, lpg, filter, fold
 - [ ] Tests: SLOPE rise 0.01 s reaches 1 at sample 480 ± 1 with EOR there; fall 0.1 s ends with EOC at ≈ 4800;
   CYCLE ON runs with nothing patched; a 2 kHz square into TRIG stays finite within 0…1; LPG ping env −60 dB at
-  DECAY; VCA level 0.5 halves; FILTER LP at 1 kHz attenuates 10 kHz by ≥ 30 dB and passes 100 Hz within 1 dB, HP the
+  DECAY; LPG with nothing patched and LEVEL 0.5 halves its input (a VCA); FILTER LP at 1 kHz attenuates 10 kHz by ≥ 30 dB and passes 100 Hz within 1 dB, HP the
   reverse, res 1 on noise finite for 2 s; FOLD with fold 0 is ≈ identity for |x| < 0.3. Commit `feat(modules): shaping`.
 
 ### Task 11: Sequencing — stages, rhythm, generators
@@ -498,9 +512,9 @@ complex vco, bleep-bloop, vca-lpg) with its `buildWith` helper: frames are creat
 first with `layoutRows`.
 
 - [ ] **Step 1: Failing tests:**
-  - conformance, for every type in `SPECS`: a `DSPS` entry exists; port and param ids are unique; the module fits
-    its size (`24 + max(inputs, outputs)·26 + 8 ≤ U·h` and the visible knobs fit `(HP·w − 96)/48` columns in the
-    rows left after the display); the same input processed per block and per sample gives identical output;
+  - conformance, for every type in `SPECS`: a `DSPS` entry exists; port and param ids are unique;
+    `layoutPanel(spec).fits` (the panel grammar holds at its size); the same input processed per block and per
+    sample gives identical output;
   - performance: the acid project runs a minute of audio in under 0.3 of real time;
   - GC: every factory project runs 60 s with readouts on and no garbage collection after a 1 s warm-up (copy the
     `PerformanceObserver` approach of `../sreda/modules/engine.test.ts`);
