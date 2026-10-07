@@ -343,3 +343,17 @@ test('STAGES: drawing on the contour sets the notes; ⌘Z undoes the stroke in o
   expect(await v()).toEqual(before);
   await app.close();
 });
+
+test('SWITCH: the current input label is amber', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(700, 600);
+  await page.keyboard.type('switch');
+  await page.keyboard.press('Enter');
+  await page.mouse.click(1300, 900); // start audio
+  const label = (port: string) => page.locator(`[data-type=switch] .sr-plabel[data-port=${port}]`);
+  await expect
+    .poll(() => label('in1').evaluate((el) => getComputedStyle(el).color), { timeout: 2000 })
+    .toBe('rgb(245, 165, 36)');
+  expect(await label('in2').evaluate((el) => getComputedStyle(el).color)).not.toBe('rgb(245, 165, 36)');
+  await app.close();
+});

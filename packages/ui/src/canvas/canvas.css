@@ -789,3 +789,20 @@
   background: #f5a524;
   border-color: #f5a524;
 }
+/* SWITCH / SPREAD: the current port's label (data-cur from the state readout) */
+.sr-mod[data-type='switch'][data-cur='0'] .sr-plabel[data-port='in1'],
+.sr-mod[data-type='spread'][data-cur='0'] .sr-plabel[data-port='out1'] {
+  color: #f5a524;
+}
+.sr-mod[data-type='switch'][data-cur='1'] .sr-plabel[data-port='in2'],
+.sr-mod[data-type='spread'][data-cur='1'] .sr-plabel[data-port='out2'] {
+  color: #f5a524;
+}
+.sr-mod[data-type='switch'][data-cur='2'] .sr-plabel[data-port='in3'],
+.sr-mod[data-type='spread'][data-cur='2'] .sr-plabel[data-port='out3'] {
+  color: #f5a524;
+}
+.sr-mod[data-type='switch'][data-cur='3'] .sr-plabel[data-port='in4'],
+.sr-mod[data-type='spread'][data-cur='3'] .sr-plabel[data-port='out4'] {
+  color: #f5a524;
+}

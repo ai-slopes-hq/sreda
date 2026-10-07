@@ -1,10 +1,12 @@
 //! One file per module: `spec()`, the DSP struct and its tests.
 
 pub mod chance;
+pub mod compare;
 pub mod complex;
 pub mod delay;
 pub mod filter;
 pub mod fold;
+pub mod follow;
 pub mod lpg;
 pub mod mix;
 pub mod noise;
@@ -17,4 +19,5 @@ pub mod scope;
 pub mod shift;
 pub mod slope;
 pub mod stages;
+pub mod switch;
 pub mod uncertainty;

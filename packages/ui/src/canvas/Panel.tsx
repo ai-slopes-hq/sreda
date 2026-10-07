@@ -114,6 +114,7 @@ export function Panel(props: PanelProps): JSX.Element {
       classList={{ sel: !!props.selected }}
       data-module={props.mod.id}
       data-type={props.mod.type}
+      ref={(el) => track(el, 'step', () => props.readouts?.state)}
       style={{ left: props.mod.x + 'px', top: props.mod.y + 'px', width: L().w + 'px', height: L().h + 'px' }}
       onMouseEnter={() => props.act.hover(true)}
       onMouseLeave={() => props.act.hover(false)}
@@ -224,7 +225,11 @@ export function Panel(props: PanelProps): JSX.Element {
                     );
                 }}
               />
-              <div class="sr-plabel" style={{ left: j().x + 11 + 'px', top: j().y - 10 + 'px' }}>
+              <div
+                class="sr-plabel"
+                data-port={port.id}
+                style={{ left: j().x + 11 + 'px', top: j().y - 10 + 'px' }}
+              >
                 {port.label}
               </div>
               <Show when={field}>
@@ -266,6 +271,7 @@ export function Panel(props: PanelProps): JSX.Element {
               />
               <div
                 class="sr-plabel"
+                data-port={port.id}
                 style={{ right: L().w - j().x + 11 + 'px', top: j().y - 10 + 'px', 'text-align': 'right' }}
               >
                 {port.label}

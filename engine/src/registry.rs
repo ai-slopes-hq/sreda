@@ -13,6 +13,9 @@ const MODULES: &[Entry] = &[
     ("chance", chance::spec, |sr| {
         Box::new(chance::Chance::new(sr))
     }),
+    ("compare", compare::spec, |_| {
+        Box::new(compare::Compare::default())
+    }),
     ("complex", complex::spec, |sr| {
         Box::new(complex::Complex::new(sr))
     }),
@@ -21,6 +24,9 @@ const MODULES: &[Entry] = &[
         Box::new(filter::Filter::new(sr))
     }),
     ("fold", fold::spec, |_| Box::new(fold::Fold::default())),
+    ("follow", follow::spec, |sr| {
+        Box::new(follow::Follow::new(sr))
+    }),
     ("lpg", lpg::spec, |sr| Box::new(lpg::Lpg::new(sr))),
     ("mix", mix::spec, |_| Box::new(mix::Mix)),
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),
@@ -34,8 +40,14 @@ const MODULES: &[Entry] = &[
     ("scope", scope::spec, |sr| Box::new(scope::Scope::new(sr))),
     ("shift", shift::spec, |sr| Box::new(shift::Shift::new(sr))),
     ("slope", slope::spec, |sr| Box::new(slope::Slope::new(sr))),
+    ("spread", switch::spread_spec, |sr| {
+        Box::new(switch::Switch::new(sr, true))
+    }),
     ("stages", stages::spec, |sr| {
         Box::new(stages::Stages::new(sr))
+    }),
+    ("switch", switch::switch_spec, |sr| {
+        Box::new(switch::Switch::new(sr, false))
     }),
     ("uncertainty", uncertainty::spec, |sr| {
         Box::new(uncertainty::Uncertainty::new(sr))

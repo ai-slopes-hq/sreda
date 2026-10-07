@@ -40,6 +40,41 @@
     "normals": []
   },
   {
+    "type": "compare",
+    "label": "COMPARE",
+    "desc": "signal to gate",
+    "size": [
+      3,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "GATE",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "thr",
+        "label": "THR",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "complex",
     "label": "COMPLEX",
     "desc": "modulator + carrier",
@@ -296,6 +331,75 @@
         "min": -1.0,
         "max": 1.0,
         "def": 0.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
+  },
+  {
+    "type": "follow",
+    "label": "FOLLOW",
+    "desc": "envelope follower: sound to CV and gate",
+    "size": [
+      6,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "env",
+        "label": "ENV",
+        "role": "mod"
+      },
+      {
+        "id": "gate",
+        "label": "GATE",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "atk",
+        "label": "ATK",
+        "min": 0.001,
+        "max": 1.0,
+        "def": 0.01,
+        "taper": "exp",
+        "unit": "s"
+      },
+      {
+        "kind": "knob",
+        "id": "rel",
+        "label": "REL",
+        "min": 0.01,
+        "max": 4.0,
+        "def": 0.2,
+        "taper": "exp",
+        "unit": "s"
+      },
+      {
+        "kind": "knob",
+        "id": "gain",
+        "label": "GAIN",
+        "min": 0.0,
+        "max": 2.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "thr",
+        "label": "THR",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.3,
         "taper": "lin"
       }
     ],
@@ -1405,6 +1509,82 @@
     ]
   },
   {
+    "type": "spread",
+    "label": "SPREAD",
+    "desc": "sequential switch 1 → 4",
+    "size": [
+      4,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      },
+      {
+        "id": "adv",
+        "label": "ADV",
+        "role": "trigger"
+      },
+      {
+        "id": "reset",
+        "label": "RST",
+        "role": "trigger"
+      },
+      {
+        "id": "addr",
+        "label": "ADDR",
+        "role": "mod"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out1",
+        "label": "OUT1",
+        "role": "audio"
+      },
+      {
+        "id": "out2",
+        "label": "OUT2",
+        "role": "audio"
+      },
+      {
+        "id": "out3",
+        "label": "OUT3",
+        "role": "audio"
+      },
+      {
+        "id": "out4",
+        "label": "OUT4",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "len",
+        "label": "LEN",
+        "min": 2.0,
+        "max": 4.0,
+        "def": 4.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "option",
+        "id": "mode",
+        "label": "MODE",
+        "options": [
+          "SEQ",
+          "RAND"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "stages",
     "label": "STAGES",
     "desc": "16 stages drawn as a contour: note, time, pulse, slide · generative",
@@ -2210,6 +2390,82 @@
       "lanes": 8,
       "kind": "contour"
     }
+  },
+  {
+    "type": "switch",
+    "label": "SWITCH",
+    "desc": "sequential switch 4 → 1",
+    "size": [
+      4,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "in1",
+        "label": "IN1",
+        "role": "audio"
+      },
+      {
+        "id": "in2",
+        "label": "IN2",
+        "role": "audio"
+      },
+      {
+        "id": "in3",
+        "label": "IN3",
+        "role": "audio"
+      },
+      {
+        "id": "in4",
+        "label": "IN4",
+        "role": "audio"
+      },
+      {
+        "id": "adv",
+        "label": "ADV",
+        "role": "trigger"
+      },
+      {
+        "id": "reset",
+        "label": "RST",
+        "role": "trigger"
+      },
+      {
+        "id": "addr",
+        "label": "ADDR",
+        "role": "mod"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "len",
+        "label": "LEN",
+        "min": 2.0,
+        "max": 4.0,
+        "def": 4.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "option",
+        "id": "mode",
+        "label": "MODE",
+        "options": [
+          "SEQ",
+          "RAND"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": []
   },
   {
     "type": "uncertainty",
