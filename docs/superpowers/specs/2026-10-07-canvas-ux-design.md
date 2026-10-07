@@ -210,7 +210,11 @@ right over 45 % of the window (W or the WIRES button; W or Esc closes); the canv
     then an input.
   - Normals are listed dimmed in their module's section (`STAGES › ADV  ← STAGE TIMER (normal)`): visible, not
     removable.
-- **Linked to the canvas:** hovering a row highlights that wire on the canvas exactly like hovering the wire.
+- **Linked to the canvas:** hovering a row highlights that wire on the canvas exactly like hovering the wire, and
+  outlines both its modules in amber (hovering a wire on the canvas outlines its modules too). In the port list —
+  moving an end, or `+ new wire` — the port under the pointer (or picked with ↑ / ↓) gets an amber ring on the
+  canvas and its module an amber outline; once one end is fixed, a dashed amber preview wire runs from it to that
+  candidate, so you see where the wire will land before you click.
   Selecting a module or frame on the canvas highlights its rows and scrolls the first into view; **SELECTION**
   keeps only the wires touching the selection; the filter field matches module and port names.
 - **Keys** while it is open: ↑ / ↓ move between wire rows, Backspace removes the selected wire, Enter opens the port
