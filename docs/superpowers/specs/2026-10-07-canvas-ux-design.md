@@ -91,7 +91,7 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - **Add, wired:** drag from any jack into empty space → a type-ahead search opens at the drop point, listing modules
   that have a port of the opposite direction; ports of the same role rank first; a knob's mod jack counts as an
   input of role mod. Enter places the module so the chosen port sits at the drop point and connects the dragged jack
-  to its first port of the opposite direction, preferring the same role. Esc cancels.
+  to its first port of the opposite direction, preferring the same role. Esc cancels. The list shows every match and scrolls (wheel, ↑/↓ keep the highlighted entry in view).
 - **Add, unwired:** double-click empty space → the same search; the module is placed unconnected.
 - **Wire:** drag from jack to jack (either direction). Dropping onto an occupied input adds a cable (stacking).
 - **Unwire / re-route:** drag from an input that has cables to pick up its most recent cable; drop it on another
@@ -177,7 +177,7 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - Seeds are built only from the first modules and fade in over 200 ms:
   - **Pulse:** an OSC square at 2 Hz pings an LPG on a 50 Hz sine (kick); the same clock, ×2 on the input, pings a
     second LPG on NOISE (hats); MIX → OUT.
-  - **Drone:** COMPLEX (modulator → carrier FM normal, low index) → FOLD → FILTER → DELAY → OUT; UNCERTAINTY's
+  - **Drone:** COMPLEX (modulator → carrier FM normal, low index) → FOLD → FILTER (LP) → DELAY → OUT; UNCERTAINTY's
     smooth output on the fold amount, a slow cycling SLOPE on the cutoff.
   - **Self-clocked:** a cycling SLOPE (its own normal) advances STAGES; STAGES' voltage → QUANT → OSC pitch; STAGES'
     pulse pings an LPG on that OSC; STAGES' voltage also feeds the SLOPE's fall, so the rhythm breathes.
@@ -201,7 +201,7 @@ Size is `HP × U`.
 | Shaping | **SLOPE** — Serge DUSG / Maths | trig (trigger), in (audio, slew) | rise, fall, shape (log…lin…exp), cycle OFF/ON | out (mod uni), eor (trigger), eoc (trigger) | trig ← eoc, when cycle is ON |
 | | **LPG** | in (audio), cv (mod), ping (trigger) | level, decay (vactrol-like), mode VCA/LP/BOTH | out (audio) | cv ← internal ping envelope |
 | | **VCA** | in (audio) | level | out (audio) | — |
-| | **FILTER** | in (audio) | cutoff, res, mode LP/BP/HP | out (audio) | — |
+| | **FILTER** — state-variable, all outputs at once | in (audio) | cutoff, res | lp, bp, hp (audio) | — |
 | | **FOLD** | in (audio) | fold, symmetry | out (audio) | — |
 | Time & logic | **STAGES** — Buchla 248 style | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage) | per stage 1–8: voltage, time, pulse ON/OFF; length; mode STEP/SLOPE | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
 | | **COMPARE** | in (audio) | threshold | out (trigger) | — |
@@ -211,10 +211,10 @@ Size is `HP × U`.
 | | **ATT** — Quadratt style, 4 channels | in1–in4 (audio) | per channel: attenuverter, offset | out1–out4 (mod bi) | inN ← +1; an unpatched outN adds into out(N+1) |
 | | **A×B+C** — Befaco style, 2 channels | a1, b1, c1, a2, b2, c2 (audio) | per channel: A gain, B gain (attenuverters), C offset | out1, out2 (audio) | bN ← +1; c2 ← out1, while out1 is unpatched |
 | FX & out | **DELAY** | in (audio) | time, feedback, mix | out (audio) | — |
-| | **SCOPE** | a, b (audio), trig (trigger) | time (1 ms–10 s per screen), gain a, gain b, mode A·B / XY | — | — |
+| | **SCOPE** — with thru, like a Mordax DATA | a, b (audio), trig (trigger) | time (1 ms–10 s per screen), gain a, gain b, mode A·B / XY | thruA, thruB (audio: the inputs unchanged; gains affect the display only) | — |
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
-- Sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1, LPG 5×1, VCA 3×1, FILTER 5×1,
+- Sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1, LPG 5×1, VCA 3×1, FILTER 4×1,
   FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1.
 - SCOPE syncs its sweep on a TRIG rise when TRIG is patched, else on A's rising zero crossing, else runs free.
   Its display area takes the space of 4 × 2 knob cells.
