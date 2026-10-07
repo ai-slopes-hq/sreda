@@ -1,4 +1,5 @@
 import {
+  fromKnob,
   layoutPanel,
   type KnobParam,
   type Merge,
@@ -14,6 +15,7 @@ import { fmtAtt, fmtRat, ROLE } from './glyphs';
 import { Jack } from './Jack';
 import { Knob } from './Knob';
 import { Option } from './Option';
+import { Pads } from './displays/Pads';
 import { Scope } from './displays/Scope';
 
 export type FieldKind = 'att' | 'ratio';
@@ -29,6 +31,12 @@ export interface PanelActions {
   fieldDown?(port: string, kind: FieldKind, e: PointerEvent): void;
   fieldReset?(port: string, kind: FieldKind): void;
   moduleDown?(e: PointerEvent): void;
+  /** an action button (DICE) */
+  action?(param: string): void;
+  /** a display edit: several params in one undo step */
+  editParams?(changes: Record<string, number>): void;
+  /** the module's DICE input fired (the patch changes, no undo step) */
+  diceInput?(): void;
 }
 
 export interface PanelProps {
@@ -54,6 +62,11 @@ export function Panel(props: PanelProps): JSX.Element {
   const L = createMemo(() => layoutPanel(props.spec));
   const knobs = () => props.spec.params.filter((p): p is KnobParam => p.kind === 'knob' && !p.hidden);
   const options = () => props.spec.params.filter((p): p is OptionParam => p.kind === 'option' && !p.hidden);
+  const actions = () => props.spec.params.filter((p) => p.kind === 'action');
+  const knobValue = (id: string) => {
+    const p = props.spec.params.find((x) => x.id === id);
+    return p?.kind === 'knob' ? fromKnob(p, props.mod.params[id] ?? 0) : 0;
+  };
   /** the normal an unpatched input reads now (an own normal only while its option condition holds) */
   const activeNormal = (port: string) =>
     props.cabledIn(port)
@@ -117,6 +130,38 @@ export function Panel(props: PanelProps): JSX.Element {
           <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} stroke={ROLE[g.role]} />}</For>
         </svg>
       </Show>
+      <Show when={props.spec.display?.kind === 'pads' && L().display}>
+        {(d) => (
+          <Pads
+            x={d().x}
+            y={d().y}
+            w={d().w}
+            h={d().h}
+            params={props.mod.params}
+            len={Math.round(knobValue('length'))}
+            hits={Math.round(knobValue('hits'))}
+            rot={Math.round(knobValue('rot'))}
+            state={props.readouts?.state}
+            edit={(c) => props.act.editParams?.(c)}
+          />
+        )}
+      </Show>
+      <For each={actions()}>
+        {(p) => {
+          const c = () => L().cells[p.id]!;
+          return (
+            <button
+              class="sr-action"
+              data-action={p.id}
+              style={{ left: c().x + 4 + 'px', top: c().y + 6 + 'px', width: c().w - 8 + 'px' }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.action?.(p.id)}
+            >
+              {p.label}
+            </button>
+          );
+        }}
+      </For>
       <Show when={props.spec.display?.kind === 'scope' && L().display}>
         {(d) => (
           <Scope
@@ -154,6 +199,13 @@ export function Panel(props: PanelProps): JSX.Element {
                 ref={(el) => {
                   if (port.role === 'trigger')
                     track(el, 'flash', () => props.readouts && props.readouts.trigs + trigIndex(port.id));
+                  if (port.id === 'dice')
+                    track(
+                      el,
+                      'watch',
+                      () => props.readouts && props.readouts.trigs + trigIndex(port.id),
+                      () => props.act.diceInput?.(),
+                    );
                 }}
               />
               <div class="sr-plabel" style={{ left: j().x + 11 + 'px', top: j().y - 10 + 'px' }}>

@@ -369,6 +369,479 @@
     ]
   },
   {
+    "type": "rhythm",
+    "label": "RHYTHM",
+    "desc": "16 pads: euclid or grid, accents · generative",
+    "size": [
+      10,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
+      },
+      {
+        "id": "reset",
+        "label": "RST",
+        "role": "trigger"
+      },
+      {
+        "id": "dice",
+        "label": "DICE",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "gate",
+        "label": "GATE",
+        "role": "trigger"
+      },
+      {
+        "id": "acc",
+        "label": "ACC",
+        "role": "trigger"
+      },
+      {
+        "id": "eoc",
+        "label": "EOC",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "option",
+        "id": "g1",
+        "label": "1",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g2",
+        "label": "2",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g3",
+        "label": "3",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g4",
+        "label": "4",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g5",
+        "label": "5",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g6",
+        "label": "6",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g7",
+        "label": "7",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g8",
+        "label": "8",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g9",
+        "label": "9",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g10",
+        "label": "10",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g11",
+        "label": "11",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g12",
+        "label": "12",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g13",
+        "label": "13",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g14",
+        "label": "14",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g15",
+        "label": "15",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "g16",
+        "label": "16",
+        "options": [
+          "○",
+          "●",
+          "—"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a1",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a2",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a3",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a4",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a5",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a6",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a7",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a8",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a9",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a10",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a11",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a12",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a13",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a14",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a15",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "a16",
+        "label": "",
+        "options": [
+          "·",
+          "A"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "length",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "knob",
+        "id": "hits",
+        "label": "HITS",
+        "min": 0.0,
+        "max": 16.0,
+        "def": 5.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "knob",
+        "id": "rot",
+        "label": "ROT",
+        "min": 0.0,
+        "max": 15.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "knob",
+        "id": "dens",
+        "label": "DENS",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 8.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "option",
+        "id": "mode",
+        "label": "MODE",
+        "options": [
+          "EUCLID",
+          "GRID"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "action",
+        "id": "dice",
+        "label": "DICE"
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 4,
+      "kind": "pads"
+    }
+  },
+  {
     "type": "scope",
     "label": "SCOPE",
     "desc": "oscilloscope with thru outputs",

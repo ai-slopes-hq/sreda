@@ -115,6 +115,12 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
       show(doc);
       send();
     },
+    /** a change made by the patch itself (a DICE input): shown, saved and played, but not an undo step */
+    replaceDoc(doc: Doc): void {
+      history.replace(doc);
+      show(doc);
+      send();
+    },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {
       this.commit(f(history.current), merge);

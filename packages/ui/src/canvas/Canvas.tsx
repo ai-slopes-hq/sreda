@@ -4,6 +4,7 @@ import {
   deleteObjects,
   layoutPanel,
   moveObjects,
+  mulberry32,
   nameOf,
   removeCable,
   RATIOS,
@@ -16,6 +17,7 @@ import {
 } from '@sreda/core';
 import { createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
+import { diceModule } from '../dice';
 import { Cables } from './Cables';
 import { ROLE } from './glyphs';
 import { Panel, type FieldKind } from './Panel';
@@ -389,6 +391,18 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   fieldReset: (port, kind) =>
                     kind === 'att' ? s.att(m.id, port, null, undefined) : s.ratio(m.id, port, 1, undefined),
                   moduleDown: (e) => moduleDown(m.id, e),
+                  action: (param) => {
+                    if (param === 'dice')
+                      s.edit((d) => diceModule(d, specs, m.id, mulberry32((Math.random() * 2 ** 32) >>> 0)));
+                  },
+                  editParams: (changes) =>
+                    s.edit((d) =>
+                      Object.entries(changes).reduce((acc, [k, v]) => setParam(acc, specs, m.id, k, v), d),
+                    ),
+                  diceInput: () =>
+                    s.replaceDoc(
+                      diceModule(s.current(), specs, m.id, mulberry32((Math.random() * 2 ** 32) >>> 0)),
+                    ),
                 }}
               />
             );

@@ -3,7 +3,7 @@
 import { createEffect, onCleanup } from 'solid-js';
 import { tracePaths } from './canvas/displays/trace';
 
-type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step';
+type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch';
 interface Entry {
   el: Element;
   kind: Kind;
@@ -12,6 +12,8 @@ interface Entry {
   until: number;
   /** a level bar's held peak */
   hold: number;
+  /** 'watch': called when the readout changes */
+  onChange: (() => void) | undefined;
 }
 
 const entries = new Set<Entry>();
@@ -28,8 +30,8 @@ export function setSeq(n: number): void {
 }
 
 /** level: a bar's width (22 px at full); meter: width in %; modDot: rotation of a knob's dot; flash: a trigger count changed. */
-export function register(el: Element, kind: Kind, offset: number): () => void {
-  const e: Entry = { el, kind, offset, last: NaN, until: 0, hold: 0 };
+export function register(el: Element, kind: Kind, offset: number, onChange?: () => void): () => void {
+  const e: Entry = { el, kind, offset, last: NaN, until: 0, hold: 0, onChange };
   entries.add(e);
   if (!running && typeof requestAnimationFrame === 'function') {
     running = true;
@@ -39,10 +41,15 @@ export function register(el: Element, kind: Kind, offset: number): () => void {
 }
 
 /** Register while `offset()` is defined, re-registering when it changes (a new plan, audio starting). */
-export function track(el: Element, kind: Kind, offset: () => number | undefined): void {
+export function track(
+  el: Element,
+  kind: Kind,
+  offset: () => number | undefined,
+  onChange?: () => void,
+): void {
   createEffect(() => {
     const off = offset();
-    if (off !== undefined) onCleanup(register(el, kind, off));
+    if (off !== undefined) onCleanup(register(el, kind, off, onChange));
   });
 }
 
@@ -90,6 +97,9 @@ function tick(now: number): void {
       }
       case 'step':
         e.el.setAttribute('data-cur', String(Math.round(v)));
+        break;
+      case 'watch':
+        if (v !== e.last && !Number.isNaN(e.last)) e.onChange?.();
         break;
     }
     e.last = v;

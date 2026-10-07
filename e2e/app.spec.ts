@@ -303,3 +303,20 @@ test('SLOPE: with CYCLE on its EOC → TRIG normal shows as a ghost cable and na
   await expect(slope.locator('[data-knob=shape] [data-value] svg path')).toHaveCount(1);
   await app.close();
 });
+
+test('RHYTHM: DICE changes the pads and ⌘Z restores them', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(700, 650);
+  await page.keyboard.type('rhythm');
+  await page.keyboard.press('Enter');
+  const rhythm = page.locator('[data-type=rhythm]');
+  await expect(rhythm.locator('.sr-pad')).toHaveCount(16);
+  const pads = async () => (await fullDoc(page)).modules.find((m) => m.type === 'rhythm')!.params;
+  const before = JSON.stringify(await pads());
+  await rhythm.locator('[data-action=dice]').click();
+  expect(JSON.stringify(await pads())).not.toBe(before);
+  expect((await pads())['mode']).toBe(1);
+  await page.keyboard.press('Meta+z');
+  expect(JSON.stringify(await pads())).toBe(before);
+  await app.close();
+});
