@@ -200,9 +200,12 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
 - **Frame tools** in the header:
   - **Tint** (a small swatch): click cycles the fill through neutral (≈ 4 % white) and six muted hues (≈ 8 %).
     Nested frames layer, so the hierarchy reads without extra lines.
-  - **STACK:** packs the frame's direct children (modules, and child frames as single blocks) flush, Tetris-style:
-    children are taken in reading order (rows by position, then x) and each goes to the lowest free spot across the
-    frame's width; the width stays, the height fits the result. One action, one undo step.
+  - **STACK:** packs the frame's direct children (modules, and child frames as single blocks) flush inside 16 px
+    padding, in the **same rows as WIRE FIX** (children in reading order: rows by position, then x; row breaks
+    chosen as WIRE FIX would, at about 1.6 × the side of a square of the children's area, at least the widest
+    child), rows top-aligned. STACK turns WIRE FIX off (a routed frame needs its channels). Switching STACK ↔ FIX
+    keeps every child in its row and order; pressing either again changes nothing. One action, one undo step.
+  - After STACK or FIX the frame fits its content: the same margin on all four sides (16 px or 32 px).
   - **WIRE FIX** (button `FIX`): a frame mode (`layout: 'route'`), toggled, **on by default** — ⌘G frames and
     factory frames start packed in rows with routed wires (innermost frames first). A WIRE FIX frame manages its own layout: its direct children
     sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the

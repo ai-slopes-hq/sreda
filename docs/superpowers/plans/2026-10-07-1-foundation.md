@@ -247,8 +247,11 @@ export function mergeInto(doc: Doc, src: Doc, dx: number, dy: number): { doc: Do
 ```
 - [ ] **Step 1: Failing tests:** dropped in → parent set, dragged out → null; a moved frame does not capture modules
   it lands on, a resize does; equal-area overlapping frames are never each other's parent; `createFrame` packs two
-  modules in one row with 32 px gaps under a 28 px header and a 32 px channel; `layoutRows` wraps at the inner width;
-  `stackFrame` leaves no gaps; `removeFrame` re-parents to the grandparent; `deleteObjects([frame])` removes its
+  modules in one row with 32 px gaps under a 28 px header and a 32 px channel; `layoutRows` wraps at
+  `max(widest, 1.6·√(Σ (w+32)(h+32)))`, never at the frame's current width; `stackFrame` uses the same rows with
+  no gaps and 16 px padding and sets `layout: 'free'`; after either, all four margins are equal; `layoutRows` and
+  `stackFrame` are idempotent, and `layoutRows(stackFrame(layoutRows(d)))` equals `layoutRows(d)` (Review Focus:
+  repeated STACK / FIX presses); `removeFrame` re-parents to the grandparent; `deleteObjects([frame])` removes its
   contents and a cable from its `clkOut` to an outside module, and `validateDoc` accepts the result;
   `extractGroup` + `mergeInto` twice gives unique ids. → FAIL → implement → PASS.
 - [ ] **Step 2:** Commit `feat(core): frames`.

@@ -1219,40 +1219,40 @@ function shiftObj(n, id, dx, dy) {
 // ROUTE keeps its frame in strict rows with 32 px channels, so every channel runs through: between rows, between
 // neighbours in a row, and a trunk down the frame's left side.
 var RGAP = 32;
-function layoutRows(doc, gid) {
+// FIX and STACK pack the same rows (breaks chosen with FIX's 32 px channels), so switching between them keeps every
+// module in its row and order; FIX keeps 32 px channels around and between, STACK packs flush inside 16 px.
+// Rows are top-aligned, so reading the result back gives the same order: pressing either again changes nothing.
+function packRows(doc, gid, gap, pad) {
   var n = clone(doc), g = findGrp(n, gid), order = readingOrder(n, gid);
   if (!order.length) return n;
-  var inner = g.w - 2 * RGAP;
-  order.forEach(function (k) { inner = Math.max(inner, k.r.w); });
-  var x = 0, y = g.y + GHEAD + RGAP, rowH = 0;
+  var inner = packWidth(order, RGAP), rows = [[]], used = 0;
   order.forEach(function (k) {
-    if (x > 0 && x + k.r.w > inner) { y += rowH + RGAP; x = 0; rowH = 0; }
-    shiftObj(n, k.id, g.x + RGAP + x - k.r.x, y - k.r.y);
-    x += k.r.w + RGAP; rowH = Math.max(rowH, k.r.h);
+    if (used > 0 && used + k.r.w > inner) { rows.push([]); used = 0; }
+    rows[rows.length - 1].push(k); used += k.r.w + RGAP;
   });
-  g.w = snapUp(Math.max(g.w, inner + 2 * RGAP));
-  g.h = snapUp(y + rowH + RGAP - g.y);
-  return n;
+  var y = g.y + GHEAD + pad;
+  rows.forEach(function (row) {
+    var x = g.x + pad, rowH = 0;
+    row.forEach(function (k) { shiftObj(n, k.id, x - k.r.x, y - k.r.y); x += k.r.w + gap; rowH = Math.max(rowH, k.r.h); });
+    y += rowH + gap;
+  });
+  return shrinkFrame(n, gid, pad);
 }
-function stackFrame(doc, gid, gap) {
-  var n = clone(doc), g = findGrp(n, gid), order = readingOrder(n, gid);
-  if (!order.length) return n;
-  var ox = g.x + GPAD, oy = g.y + GHEAD + GPAD, inner = g.w - 2 * GPAD;
-  order.forEach(function (k) { inner = Math.max(inner, k.r.w); });
-  var cols = Math.ceil(inner / G), sky = [], maxBottom = 0;
-  for (var i = 0; i < cols; i++) sky.push(0);
-  order.forEach(function (k) {
-    var span = Math.min(cols, Math.ceil((k.r.w + gap) / G)), bestX = 0, bestTop = 1e9;
-    for (var x = 0; x + Math.ceil(k.r.w / G) <= cols; x++) {
-      var top = 0; for (var j = x; j < Math.min(cols, x + span); j++) top = Math.max(top, sky[j]);
-      if (top < bestTop) { bestTop = top; bestX = x; }
-    }
-    shiftObj(n, k.id, ox + bestX * G - k.r.x, oy + bestTop - k.r.y);
-    for (var j2 = bestX; j2 < Math.min(cols, bestX + span); j2++) sky[j2] = bestTop + k.r.h + gap;
-    maxBottom = Math.max(maxBottom, bestTop + k.r.h);
-  });
-  g.w = snapUp(Math.max(g.w, inner + 2 * GPAD));
-  g.h = snapUp(GHEAD + GPAD + maxBottom + GPAD);
+function layoutRows(doc, gid) { return packRows(doc, gid, RGAP, RGAP); }
+function stackFrame(doc, gid, gap) { return packRows(doc, gid, gap, GPAD); }
+// the width a frame packs into depends only on what it holds (never on its current size, so repeated STACK / FIX
+// presses always give the same result): about 1.6 times the side of a square of the same area, at least the widest
+function packWidth(order, gap) {
+  var area = 0, widest = 0;
+  order.forEach(function (k) { area += (k.r.w + gap) * (k.r.h + gap); widest = Math.max(widest, k.r.w); });
+  return Math.max(widest, snapUp(Math.sqrt(area) * 1.6));
+}
+// fit a packed frame to its children: the same margin on the right and at the bottom as on the left and at the top
+function shrinkFrame(n, gid, pad) {
+  var g = findGrp(n, gid), x1 = 0, y1 = 0;
+  descendants(n, gid).forEach(function (id) { var r = objRect(n, id); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
+  g.w = Math.max(352, snapUp(x1 + pad - g.x));
+  g.h = y1 + pad - g.y;   // exact: the 28 px header is off the 8 px grid, snapping would add 4 px at the bottom
   return n;
 }
 
@@ -2087,7 +2087,7 @@ class Component extends DCLogic {
   frameEdit(gid, f) { var doc = clone(this.state.doc); f(findGrp(doc, gid), doc); this.commit(doc); this.focusRoot(); }
   frameTint(gid) { this.frameEdit(gid, function (g) { g.tint = ((g.tint || 0) + 1) % TINTS.length; }); }
   frameMute(gid) { this.frameEdit(gid, function (g) { g.muted = !g.muted; }); }
-  frameStack(gid) { this.commit(stackFrame(this.state.doc, gid, 0)); this.focusRoot(); }
+  frameStack(gid) { var doc = stackFrame(this.state.doc, gid, 0); findGrp(doc, gid).layout = 'free'; this.commit(doc); this.focusRoot(); }
   frameRoute(gid) {
     var g = findGrp(this.state.doc, gid);
     if (g.layout === 'route') this.frameEdit(gid, function (x) { x.layout = 'free'; });
