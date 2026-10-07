@@ -1,8 +1,11 @@
-//! The master stage every output passes through: a 5 Hz DC blocker, a soft limiter and a NaN guard.
+//! The master stage every output passes through: an input clamp (±16), a 5 Hz DC blocker, a soft limiter and a NaN
+//! guard.
 
 use crate::dsp::BLOCK;
 
 const DC_HZ: f64 = 5.0;
+/// The input is clamped here before the DC blocker.
+const INPUT_LIMIT: f64 = 16.0;
 
 pub struct Master {
     /// DC blocker pole: y = x − x₁ + pole·y₁
@@ -45,6 +48,8 @@ impl Master {
                     *s = 0.0;
                     continue;
                 }
+                // a runaway upstream must not charge the DC blocker for seconds
+                let x = x.clamp(-INPUT_LIMIT, INPUT_LIMIT);
                 let y = x - x1 + pole * y1;
                 x1 = x;
                 y1 = y;
@@ -127,6 +132,19 @@ mod tests {
         let after = run(&mut m, 0.05, |i| (i as f32 * 0.05).sin() * 0.3);
         assert!(after.iter().all(|x| x.is_finite()));
         assert!(after.iter().any(|x| x.abs() > 0.1), "recovers after NaN");
+    }
+
+    #[test]
+    fn it_recovers_quickly_after_a_runaway() {
+        let mut m = Master::new(SR);
+        run(&mut m, 1.0, |_| 1e30);
+        let after = run(&mut m, 0.6, |_| 0.0);
+        let at = (0.5 * SR) as usize;
+        assert!(
+            after[at..].iter().all(|x| x.abs() < 0.01),
+            "still {} after 0.5 s",
+            after[at]
+        );
     }
 
     #[test]

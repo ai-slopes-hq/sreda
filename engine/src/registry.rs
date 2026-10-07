@@ -10,7 +10,11 @@ type Entry = (&'static str, fn() -> ModuleSpec, Make);
 
 /// Every module, in type-id order.
 const MODULES: &[Entry] = &[
+    ("filter", filter::spec, |sr| {
+        Box::new(filter::Filter::new(sr))
+    }),
     ("lpg", lpg::spec, |sr| Box::new(lpg::Lpg::new(sr))),
+    ("mix", mix::spec, |_| Box::new(mix::Mix)),
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),
     ("osc", osc::spec, |sr| Box::new(osc::Osc::new(sr))),
     ("out", out::spec, |_| Box::new(out::Out)),

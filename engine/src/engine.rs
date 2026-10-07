@@ -1211,6 +1211,68 @@ mod tests {
     }
 
     #[test]
+    fn a_mix_fed_back_into_itself_stays_bounded_and_recovers() {
+        let mut e = Engine::new(SR, 1);
+        let mix = |looped: bool| {
+            let mut a = input(vec![src(0, false)], Kind::Sum);
+            if looped {
+                a.sources.push(src(1, true));
+            }
+            node(
+                "m",
+                "mix",
+                &[1.0, 1.0, 1.0, 1.0],
+                &[],
+                vec![
+                    a,
+                    none(Kind::Sum),
+                    none(Kind::Sum),
+                    none(Kind::Sum),
+                    none(Kind::Cv),
+                    none(Kind::Cv),
+                    none(Kind::Cv),
+                    none(Kind::Cv),
+                ],
+            )
+        };
+        let dc = || node("d", "dc", &[dcv(10.0)], &[], vec![none(Kind::Cv)]);
+        e.apply(plan(
+            1,
+            vec![dc(), mix(true), out("x", 1, 1.0)],
+            vec![
+                Step::Node { node: 0 },
+                Step::Loop { members: vec![1] },
+                Step::Node { node: 2 },
+            ],
+        ))
+        .unwrap();
+        for _ in 0..(SR as usize / BLOCK) {
+            let (l, r) = e.process();
+            assert!(l
+                .iter()
+                .chain(r.iter())
+                .all(|x| x.is_finite() && x.abs() <= 1.0));
+        }
+        // the loop cable removed and the DC source silenced
+        e.apply(plan(
+            2,
+            vec![
+                node("d", "dc", &[dcv(0.0)], &[], vec![none(Kind::Cv)]),
+                mix(false),
+                out("x", 1, 1.0),
+            ],
+            chain(3),
+        ))
+        .unwrap();
+        let after = run(&mut e, (0.6 * SR) as usize / BLOCK);
+        assert!(
+            peak(&after[(0.5 * SR) as usize..]) < 0.01,
+            "still {}",
+            peak(&after[(0.5 * SR) as usize..])
+        );
+    }
+
+    #[test]
     fn malformed_plans_are_refused() {
         let good = || plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2));
         let mut e = Engine::new(SR, 1);

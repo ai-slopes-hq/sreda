@@ -1,5 +1,65 @@
 [
   {
+    "type": "filter",
+    "label": "FILTER",
+    "desc": "state-variable filter: LP, BP, HP at once",
+    "size": [
+      4,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "lp",
+        "label": "LP",
+        "role": "audio"
+      },
+      {
+        "id": "bp",
+        "label": "BP",
+        "role": "audio"
+      },
+      {
+        "id": "hp",
+        "label": "HP",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "cutoff",
+        "label": "CUT",
+        "min": 20.0,
+        "max": 20000.0,
+        "def": 1000.0,
+        "taper": "exp",
+        "unit": "hz",
+        "randomRange": [
+          100.0,
+          8000.0
+        ],
+        "modDepth": 0.25
+      },
+      {
+        "kind": "knob",
+        "id": "res",
+        "label": "RES",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.2,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "lpg",
     "label": "LPG",
     "desc": "low-pass gate and VCA",
@@ -74,6 +134,83 @@
         "internal": "ping envelope, or 1 with PING unpatched"
       }
     ]
+  },
+  {
+    "type": "mix",
+    "label": "MIX",
+    "desc": "4 audio inputs",
+    "size": [
+      4,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "a",
+        "label": "A",
+        "role": "audio"
+      },
+      {
+        "id": "b",
+        "label": "B",
+        "role": "audio"
+      },
+      {
+        "id": "c",
+        "label": "C",
+        "role": "audio"
+      },
+      {
+        "id": "d",
+        "label": "D",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "la",
+        "label": "A",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "lb",
+        "label": "B",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "lc",
+        "label": "C",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "ld",
+        "label": "D",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
   },
   {
     "type": "noise",
