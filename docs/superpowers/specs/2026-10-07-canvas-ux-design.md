@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 2 (after the first prototype) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 3 (frames, nesting, magnets) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -26,8 +26,8 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 
 ## 1. Canvas
 
-- One infinite 2D canvas, panned (drag empty space, or trackpad scroll) and zoomed (pinch / ⌘-scroll, 25–200 %).
-  Modules snap to a 16 px grid.
+- One infinite 2D canvas. Pan: wheel / two-finger scroll, Space+drag, middle-button drag. Zoom: ⌘-scroll / pinch,
+  25–200 %. Modules snap to a 16 px grid.
 - Flat dark panels, monospace labels, no gradients, shadows or hardware imitation. UI text is English.
 - Colour tokens: background `#121210`, panel `#1b1b18`, text `#e9e4d8`, muted `#8f897c`, destructive `#e5484d`;
   port roles: audio `#e9e4d8`, mod `#6cb4ee`, pitch `#9ad18b`, trigger `#f5a524`. A cable takes its source role's
@@ -93,8 +93,14 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   reads `LISTENING · <module> › <port>`; clicking the bar, pressing Esc or clicking the same jack again returns to
   the main output. Listening ends by itself when the listened module is deleted. The listened signal passes through
   the master stage (§7).
-- **Edit:** drag a module anywhere on its face (not on a control) to move it; Shift-drag on empty space box-selects;
-  ⌘D duplicates the selection with the cables inside it; Backspace deletes the selection with its cables.
+- **Select:** click selects; Shift adds. Dragging on empty canvas (also the empty inside of a frame) draws a
+  selection box: it selects the modules it touches and the frames it fully encloses.
+- **Edit:** drag a module anywhere on its face (not on a control) to move it; ⌘D duplicates the selection with the
+  cables inside it; Backspace deletes the selection with its cables.
+- **Magnets:** while a module or selection is dragged, its bounding box snaps flush to nearby modules when an edge
+  comes within 10 screen px: side by side (edges touching, tops or bottoms aligned) or stacked (one under the
+  other, lefts or rights aligned). A thin guide line shows each active snap. Holding ⌘ while dragging turns magnets
+  off. Magnets only arrange; snapped modules do not stay linked.
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
   attenuverters and ratios are left alone. One undo step.
@@ -103,24 +109,29 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - Knobs: drag vertically (200 px = full range, Shift = ×0.1), wheel (1 % per notch, one step for stepped knobs),
   double-click resets. Options: click cycles.
 
-## 5. Groups
+## 5. Groups (frames)
 
-- Select modules and press ⌘G: a frame is drawn around them. ⌘G with a group and loose modules selected adds the
-  modules to it. ⇧⌘G with a group selected ungroups it (modules stay; cables to the frame's jacks are removed).
-  Shift-dragging a member out of the frame removes it from the group.
-- A module belongs to at most one group; groups do not nest. The frame fits its members plus 16 px padding and
-  follows them when they move.
-- The frame has a header strip: the name (`GROUP 1`, `GROUP 2`…; double-click to rename) and the clock controls.
-  Dragging the header moves the whole group; clicking it selects the group. Backspace on a selected group deletes
-  the frame and its members (one undo step).
-- **Shared clock, opt-in:** the header has a **CLK in** jack (trigger role, outside the frame at the header's left
-  end) and a **CLK out** jack (trigger role, inside the frame under the header). Members opt in by being patched
-  from CLK out with ordinary cables, which carry their own input ratios. CLK out may also be patched outside the
-  group.
-- What CLK out carries, highest priority first: a cable in CLK in; the group's own clock; nothing (the default).
+- A group is a **frame**: a rectangle of its own with a 28 px header strip carrying the name (`GROUP 1`,
+  `GROUP 2`…; double-click to rename) and the clock controls. Drag an edge or corner to resize (minimum 160 × 96);
+  drag the header to move the frame and everything inside it; click the header to select it.
+- **Membership is containment.** Every module and frame has a `parent` (a frame or none). After any drop — move,
+  resize, add from search, duplicate, ⌘G — parents are recomputed: an object's parent is the innermost frame that
+  contains its centre, never itself or one of its descendants. Dropping into a frame attaches; dragging out
+  detaches; resizing a frame over an object attaches it. Frames nest to any depth.
+- **⌘G** wraps the selection in a new frame fitted around it (16 px padding, header above), nested in the
+  selection's innermost common parent. **⇧⌘G** removes the selected frame; its children move to its parent.
+  **Backspace** on a selected frame deletes it and everything inside it (one undo step).
+- **Clock.** The header has a **CLK in** jack (trigger role, outside the frame at the header's left end) and a
+  **CLK out** jack (trigger role, inside the frame under the header). Members use the clock by being patched from
+  CLK out with ordinary cables, which carry their own input ratios; CLK out may also be patched outside the frame.
+- CLK in is a trigger input, so it has a ratio (÷16…×8). **A nested frame's CLK in is normalled to its parent's
+  CLK out** (dashed ring, faint ghost line from the parent's CLK out), so a child inherits its parent's clock through
+  its own ratio.
+- What CLK out carries, highest priority first: a cable in CLK in; the frame's own clock; the parent's clock (nested
+  frames only, through the ratio); nothing.
 - **Own clock:** `+ CLOCK` in the header turns it on and shows BPM (20–300, drag to change; one trigger per beat),
-  TAP (sets BPM from the last taps) and ✕ (turns it off). With a cable in CLK in, the own clock is dimmed and does
-  not run.
+  TAP (sets BPM from the last taps) and ✕ (turns it off). While a cable is in CLK in, the own clock is dimmed and
+  does not run.
 - CLK out flashes on each tick.
 
 ## 6. Session and seeds
@@ -180,7 +191,8 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
 - **core** — the document and its edits. The document is immutable JSON:
   `modules: { id, type, x, y, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks as
   `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
-  `groups: { id, name, members: string[], clock: { on: boolean, bpm: number } }[]`. A group's jacks are addressed as
+  `groups: { id, name, x, y, w, h, parent, ratio, clock: { on: boolean, bpm: number } }[]`; modules also carry
+  `parent` (a group id or null). A group's jacks are addressed as
   `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new document; undo is a history of documents grouped per
   gesture. Module specs (ports with roles, params with ranges, tapers, `randomRange`, `modDepth`, normals) are data
   in core. `compile` (document → plan) lives in core so the UI never imports the engine; it resolves normals into
@@ -204,10 +216,12 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
 
 ## 10. Testing
 
-- **core:** edits (stacking, groups), undo grouping, compile including cycles, normals and group clocks.
+- **core:** edits (stacking, frames and parent recomputation), undo grouping, compile including cycles, normals and group clocks.
 - **engine (Node):** each module's DSP is deterministic with a seeded RNG; trigger detection, merging and ratios;
   attenuverters; a DSP gives the same samples per block or per sample; a GC-count test over a minute of audio.
 - **ui:** component tests (happy-dom).
 - **e2e (Playwright):** drag from a jack → search → placed and wired; stack two cables on one input; click to listen
-  and back; R randomises and undo restores; ⌘G groups, own clock ticks, CLK out drives a member; NEW re-rolls and
+  and back; R randomises and undo restores; box-select by dragging; magnets snap flush; ⌘G frames the selection,
+  own clock ticks, CLK out drives a member, a nested frame inherits its parent's clock at ÷2; dragging a module out
+  of a frame detaches it; NEW re-rolls and
   undo restores; reload resumes the canvas.
