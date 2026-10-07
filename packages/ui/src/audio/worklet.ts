@@ -14,14 +14,18 @@ declare class AudioWorkletProcessor {
 
 interface Options {
   module: WebAssembly.Module;
+  /** the UI reads this once per frame */
+  readouts: SharedArrayBuffer;
 }
 
 class SredaProcessor extends AudioWorkletProcessor {
   private readonly engine: WasmEngine;
+  private readonly shared: Float32Array;
 
   constructor(options: { processorOptions: Options }) {
     super();
     this.engine = loadEngine(options.processorOptions.module, sampleRate, (Math.random() * 2 ** 32) >>> 0);
+    this.shared = new Float32Array(options.processorOptions.readouts);
     this.port.onmessage = (e: MessageEvent<ToEngine>) => this.receive(e.data);
   }
 
@@ -53,6 +57,8 @@ class SredaProcessor extends AudioWorkletProcessor {
     const block = this.engine.process();
     out[0]?.set(block.l);
     out[1]?.set(block.r);
+    const r = this.engine.readouts();
+    if (r.length <= this.shared.length) this.shared.set(r);
     return true;
   }
 }

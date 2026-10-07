@@ -23,10 +23,15 @@ export interface PlanNode {
   connectedOut: boolean[];
 }
 export type Step = { node: number } | { loop: number[] };
-/** Offsets into the readout buffer; index 0 holds the plan's seq. Counts follow the node's spec. */
+/** Offsets into the readout buffer; index 0 holds the plan's seq, 1 the master peak. Counts follow the node's spec. */
+export interface NodeReadouts {
+  knobs: number;
+  trigs: number;
+  outs: number;
+}
 export interface ReadoutLayout {
   size: number;
-  nodes: { knobs: number; trigs: number; outs: number }[];
+  nodes: NodeReadouts[];
 }
 export interface Plan {
   seq: number;

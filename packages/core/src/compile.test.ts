@@ -72,7 +72,7 @@ test('normals: own only with its option on and the input free; value and interna
   expect(patched.inputs[1]!.normal).toBeNull();
 });
 
-test('the readout layout is disjoint and starts after the seq slot', () => {
+test('the readout layout is disjoint and starts after the seq and master slots', () => {
   const { doc } = build(S, ['fx', 'src', 'sink']);
   const { layout } = compile(doc, S, 7);
   const used: number[] = [];
@@ -88,7 +88,7 @@ test('the readout layout is disjoint and starts after the seq slot', () => {
     for (let j = 0; j < c.outs; j++) used.push(n.outs + j);
   });
   expect(new Set(used).size).toBe(used.length);
-  expect(Math.min(...used)).toBe(1);
+  expect(Math.min(...used)).toBe(2);
   expect(Math.max(...used)).toBeLessThan(layout.size);
 });
 

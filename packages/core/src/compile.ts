@@ -61,7 +61,7 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
           if (pos.has(src.node) && pos.get(src.node)! >= pos.get(v)!) src.late = true;
   }
 
-  let off = 1;
+  let off = 2; // 0: seq, 1: the master peak
   const layout = doc.modules.map((_, i) => {
     const spec = specOf(i);
     const knobs = off;

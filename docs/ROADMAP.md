@@ -23,14 +23,15 @@ of a creative tool; nothing of its UI is ported.
 - **2026-10-07** — design done: spec revision 14, prototype boards (Main canvas, Panel system, Sound pack, Panel
   density), Plan 1 rewritten sound-first. **No code yet.**
 - **Plan 1 in progress** on branch `plan-1-sound-first` (ledger: `.superpowers/sdd/2026-10-07-1-foundation/progress.md`,
-  git-ignored). Task 1 (scaffold) and Task 2 (audio path, 220 Hz test tone) done.
-- **Next:** user checkpoint — `pnpm dev`, click, hear 220 Hz; then Task 3 (specs in Rust, OSC and OUT).
+  git-ignored). Tasks 1–6 done: scaffold, audio path, specs + OSC/OUT, document/compile, engine plays plans, the
+  canvas shows and plays the patch (knobs, WAVE list, levels, undo, autosave).
+- **Next:** user checkpoint — `pnpm dev`, click, turn FREQ / PW, change WAVE; then Task 7 (patching).
 
 ## The road (vertical slices: something to hear at every stage)
 
 | Stage | Plan | Ends with | State |
 |---|---|---|---|
-| **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | done, awaiting the listen |
+| **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | done, heard |
 | **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | not started |
 | **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (written when Plan 1 lands) | the 24 first-build modules | — |
 | **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 | the first build complete | — |

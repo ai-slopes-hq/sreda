@@ -104,17 +104,17 @@
     }
   ],
   "layout": {
-    "size": 7,
+    "size": 8,
     "nodes": [
       {
-        "knobs": 1,
-        "trigs": 4,
-        "outs": 5
+        "knobs": 2,
+        "trigs": 5,
+        "outs": 6
       },
       {
-        "knobs": 6,
-        "trigs": 7,
-        "outs": 7
+        "knobs": 7,
+        "trigs": 8,
+        "outs": 8
       }
     ]
   }

@@ -16,6 +16,10 @@ const TYPES: Record<string, string> = {
   '.woff2': 'font/woff2',
 };
 
+// e2e tests give every run its own user-data folder (IndexedDB autosave lives there).
+const userData = process.env['SREDA_USER_DATA'];
+if (userData) app.setPath('userData', userData);
+
 // The built renderer is served from app://sreda/ (a file:// page cannot be cross-origin isolated).
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },

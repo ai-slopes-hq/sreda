@@ -212,7 +212,7 @@ impl Engine {
             steps: Vec::new(),
             retiring: Vec::new(),
             outs: Vec::new(),
-            readouts: vec![0.0],
+            readouts: vec![0.0; 2],
             seq: 0,
             listen: None,
             out: [[0.0; BLOCK]; 2],
@@ -518,7 +518,7 @@ impl Engine {
         // buffers moved: the UI re-sends listen after a new plan
         self.listen = None;
         self.order = order;
-        self.readouts = vec![0.0; plan.layout.size.max(1)];
+        self.readouts = vec![0.0; plan.layout.size.max(2)];
         self.seq = plan.seq;
         Ok(())
     }
@@ -628,6 +628,7 @@ impl Engine {
         };
         let [l, r] = &mut self.out;
         self.master.process(l, r);
+        self.readouts[1] = self.out[0].iter().chain(self.out[1].iter()).fold(0.0f32, |a, x| a.max(x.abs()));
         self.write_readouts();
         (&self.out[0], &self.out[1])
     }
@@ -720,7 +721,7 @@ mod tests {
         }
     }
     fn plan(seq: u32, nodes: Vec<PlanNode>, steps: Vec<Step>) -> Plan {
-        let mut off = 1;
+        let mut off = 2;
         let layout = nodes
             .iter()
             .map(|n| {
@@ -914,6 +915,16 @@ mod tests {
     }
 
     #[test]
+    fn readout_one_holds_the_master_peak() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2))).unwrap();
+        run(&mut e, 20);
+        let (l, _) = e.process();
+        let want = peak(l);
+        assert!((e.readouts()[1] - want).abs() < 1e-6 && want > 0.5);
+    }
+
+    #[test]
     fn listen_replaces_the_output() {
         let mut e = Engine::new(SR, 1);
         e.apply(plan(1, vec![osc("o"), out("x", 0, 0.0)], chain(2)))
@@ -1102,6 +1113,7 @@ mod tests {
         run(&mut e, 1);
         let r = e.readouts();
         assert_eq!(r[0], 7.0);
+        assert_eq!(r[1], 0.0, "nothing reaches the speakers here");
         assert!((r[k] - 0.5).abs() < 1e-6);
         assert!((r[o] - 0.5).abs() < 1e-6);
     }
