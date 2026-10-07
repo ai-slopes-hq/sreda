@@ -30,8 +30,12 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   25–200 %. Modules snap to a 16 px grid.
 - Flat dark panels, monospace labels, no gradients, shadows or hardware imitation. UI text is English.
 - Colour tokens: background `#121210`, panel `#1b1b18`, text `#e9e4d8`, muted `#8f897c`, destructive `#e5484d`;
-  port roles: audio `#e9e4d8`, mod `#6cb4ee`, pitch `#9ad18b`, trigger `#f5a524`. A cable takes its source role's
-  colour.
+  port roles: audio `#e9e4d8`, mod `#6cb4ee`, pitch `#9ad18b`, trigger `#f5a524`.
+- **Colour means role, everywhere.** Jacks are drawn in their port's role colour, and the role is how an input reads
+  the stream (§3). A cable between two ports of the same role is that role's colour. A cable joining two different
+  roles (an LFO into an audio FM input, an envelope into a trigger input) changes colour along its length: the
+  source's colour for the first ~40 %, a blend in the middle, the input's colour for the last ~40 %. Ghost cables
+  (normals) use the same rule, dashed.
 
 ## 2. Modules
 
