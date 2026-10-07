@@ -11,10 +11,18 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Keyboard touch plates** (2026-10-07): a PLATES module turns computer keys into Buchla-style touch plates: gate +
   per-key voltage + "pressure" from hold time.
 
+- **MUTATE** (2026-10-07): M over a module or frame nudges its knobs ±10 % from where they are (R scrambles, M varies).
+- **Knob lock** (2026-10-07): Alt-click pins a knob so R / MUTATE leave it alone.
+- **⌘D on a frame** (2026-10-07): duplicate a whole frame with its inner cables and clock (a second voice in one move).
+- **Frame snapshots A/B + MORPH** (2026-10-07): store two states of a frame's knobs and morph between them from the
+  header (Buchla-style preset morph).
+- **Notes** (2026-10-07): Miro-like text stickies on the canvas.
+
 ## Deep backlog
 
-- **Panels in rows** (2026-10-07): modules get fixed heights (1U / 2U) and snap edge to edge into rows, like a Serge
-  boat or a Eurorack row, on the still-free canvas.
+- **Panels in rows / rails** (2026-10-07): a canvas-wide HP × U lattice with rails between rows, like a case.
+  Considered and rejected for now (it drifts towards a VCV clone); module sizes are quantised to HP × U instead and
+  placement stays free.
 - **Category tint on panels** (2026-10-07): a barely-there tint per family (sources, shapers, logic, FX), like
   Buchla's coloured panel sections.
 - **Group collapse and group snippets**: collapse a group to its header; save / load groups as reusable snippets.

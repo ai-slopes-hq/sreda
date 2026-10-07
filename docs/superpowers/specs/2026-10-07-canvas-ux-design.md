@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 3 (frames, nesting, magnets) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 4 (module sizes, frame tools, replace, insert, cable focus) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -37,6 +37,9 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 
 - A module is a compact block: name on top, inputs on the left edge, outputs on the right edge, parameters on the
   face between them.
+- **Sizes are quantised:** width N × HP (HP = 48 px: one input column, the knob columns, one output column), height
+  1U, 2U or 3U (U = 112 px; 2U is exactly two 1U). Each module's size is fixed in its spec (§7) and its panel is
+  designed for it. Placement on the canvas stays free (16 px grid, magnets); the sizes make STACK pack cleanly.
 - Every parameter is on the face as a small knob or a value field you drag. A module whose parameters do not fit is
   split into two modules; there is never a popup or side panel.
 - Every knob has its own mod jack (top-left of the knob). Its attenuverter (§3) is drawn as a ring around the knob:
@@ -100,7 +103,18 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - **Magnets:** while a module or selection is dragged, its bounding box snaps flush to nearby modules when an edge
   comes within 10 screen px: side by side (edges touching, tops or bottoms aligned) or stacked (one under the
   other, lefts or rights aligned). A thin guide line shows each active snap. Holding ⌘ while dragging turns magnets
-  off. Magnets only arrange; snapped modules do not stay linked.
+  off. Magnets only arrange; snapped modules do not stay linked. Inside a ROUTE frame magnets keep a 32 px gap instead
+  of a flush edge.
+- **Replace:** double-click a module's name → the search opens as `REPLACE <MODULE>`; Enter puts the new module in
+  the same place and frame. Cables move to the new module's port with the same id, else to its next unused port of
+  the same role; cables with no match are removed. Knobs with the same id keep their value (`freq` survives OSC →
+  COMPLEX); attenuverters and ratios move with their port. One undo step.
+- **Insert into a cable:** drag a module that has no cables over a cable; within 8 screen px the cable highlights;
+  dropping splits it: source → the module's first input of the source's role (else its first input), the module's
+  first output of the target's role (else its first output) → the old target. One undo step.
+- **Cable focus:** hovering or selecting a module or a frame header shows its cables (a frame: all cables touching
+  anything inside it) at full strength and slightly thicker, and dims every other cable to 25 %. With nothing hovered
+  or selected all cables are drawn normally.
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
   attenuverters and ratios are left alone. One undo step.
@@ -111,8 +125,8 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 
 ## 5. Groups (frames)
 
-- A group is a **frame**: a rectangle of its own with a 28 px header strip carrying the name (`GROUP 1`,
-  `GROUP 2`…; double-click to rename) and the clock controls. Drag an edge or corner to resize (minimum 160 × 96);
+- A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. Drag an edge or corner to resize (minimum 160 × 96);
   drag the header to move the frame and everything inside it; click the header to select it.
 - **Membership is containment.** Every module and frame has a `parent` (a frame or none). After any drop — move,
   resize, add from search, duplicate, ⌘G — parents are recomputed: an object's parent is the innermost frame that
@@ -133,6 +147,21 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   TAP (sets BPM from the last taps) and ✕ (turns it off). While a cable is in CLK in, the own clock is dimmed and
   does not run.
 - CLK out flashes on each tick.
+- **Frame tools** in the header:
+  - **Tint** (a small swatch): click cycles the fill through neutral (≈ 4 % white) and six muted hues (≈ 8 %).
+    Nested frames layer, so the hierarchy reads without extra lines.
+  - **STACK:** packs the frame's direct children (modules, and child frames as single blocks) flush, Tetris-style:
+    children are taken in reading order (rows by position, then x) and each goes to the lowest free spot across the
+    frame's width; the width stays, the height fits the result. One action, one undo step.
+  - **ROUTE:** a frame mode (`layout: 'route'`), toggled. Turning it on packs like STACK with 32 px channels between
+    children. Cables with both ends inside the frame are then drawn orthogonally through the channels — out of the
+    source into the channel on its right, up to the channel above the target, across, down the channel on the
+    target's left, into the jack (into a knob's mod jack: straight down from the channel above) — with rounded
+    corners and one 4 px lane per cable. Routes follow the modules live. Turning ROUTE off returns to curves and
+    keeps the layout.
+  - **MUTE (M):** the frame fades out over 50 ms: cables leaving the frame and OUT modules inside it go silent; clocks
+    and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 %. Muting a
+    frame mutes its children.
 
 ## 6. Session and seeds
 
@@ -157,6 +186,8 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 
 Ports are `name (role)`; normals are written `input ← source`.
 
+Size is `HP × U`.
+
 | Family | Module | Inputs | Knobs and options | Outputs | Normals |
 |---|---|---|---|---|---|
 | Sources | **OSC** | pitch (pitch), fm (audio, linear), sync (trigger) | freq, wave SIN/TRI/SAW/SQR, pw, fm index | out (audio) | — |
@@ -179,6 +210,8 @@ Ports are `name (role)`; normals are written `input ← source`.
 | | **SCOPE** | a, b (audio), trig (trigger) | time (1 ms–10 s per screen), gain a, gain b, mode A·B / XY | — | — |
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
+- Sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1, LPG 5×1, VCA 3×1, FILTER 5×1,
+  FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1.
 - SCOPE syncs its sweep on a TRIG rise when TRIG is patched, else on A's rising zero crossing, else runs free.
   Its display area takes the space of 4 × 2 knob cells.
 - Several OUT modules sum. After them the master stage is fixed: 5 Hz DC blocker, soft limiter, nothing non-finite
@@ -191,7 +224,7 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
 - **core** — the document and its edits. The document is immutable JSON:
   `modules: { id, type, x, y, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks as
   `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
-  `groups: { id, name, x, y, w, h, parent, ratio, clock: { on: boolean, bpm: number } }[]`; modules also carry
+  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'route', muted, clock: { on: boolean, bpm: number } }[]`; modules also carry
   `parent` (a group id or null). A group's jacks are addressed as
   `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new document; undo is a history of documents grouped per
   gesture. Module specs (ports with roles, params with ranges, tapers, `randomRange`, `modDepth`, normals) are data
@@ -199,7 +232,8 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
   ordinary bindings and compiles each group into a hidden clock node.
 - **protocol** — UI ↔ engine messages and the SharedArrayBuffer layout for live readouts (modulated knob positions,
   trigger events, output levels, scope traces). One reader per buffer.
-- **engine** — the worklet runs the plan. Cycles are allowed: a cycle's back edge is read one sample late. The engine
+- **engine** — the worklet runs the plan. A muted frame's outgoing bindings and OUT modules get a 50 ms gain ramp
+  (compile marks them; a mute toggle is a message, not a re-plan). Cycles are allowed: a cycle's back edge is read one sample late. The engine
   prepares every input before a module runs: sums stacked cables and applies the attenuverter (CV), or merges,
   ratios and re-emits 1 ms triggers (trigger inputs), so DSP code sees one clean buffer per input. A knob,
   attenuverter or ratio change is a message (no re-plan); a module, cable or group change sends a new plan. Removed
@@ -223,5 +257,6 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
 - **e2e (Playwright):** drag from a jack → search → placed and wired; stack two cables on one input; click to listen
   and back; R randomises and undo restores; box-select by dragging; magnets snap flush; ⌘G frames the selection,
   own clock ticks, CLK out drives a member, a nested frame inherits its parent's clock at ÷2; dragging a module out
-  of a frame detaches it; NEW re-rolls and
+  of a frame detaches it; STACK packs a frame; ROUTE draws orthogonal cables; MUTE silences a frame's outgoing
+  cables; replace keeps matching cables and knob values; dropping a free module on a cable inserts it; NEW re-rolls and
   undo restores; reload resumes the canvas.
