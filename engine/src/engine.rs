@@ -1273,6 +1273,41 @@ mod tests {
     }
 
     #[test]
+    fn a_delay_fed_back_into_itself_stays_finite() {
+        let mut e = Engine::new(SR, 1);
+        // DELAY at 0.95 feedback with its own output cabled into its input, fed by a saw
+        let delay = node(
+            "d",
+            "delay",
+            &[0.55, 1.0, 0.5],
+            &[],
+            vec![
+                input(vec![src(0, false), src(1, true)], Kind::Sum),
+                none(Kind::Cv),
+                none(Kind::Cv),
+                none(Kind::Cv),
+            ],
+        );
+        e.apply(plan(
+            1,
+            vec![osc("o"), delay, out("x", 1, 1.0)],
+            vec![
+                Step::Node { node: 0 },
+                Step::Loop { members: vec![1] },
+                Step::Node { node: 2 },
+            ],
+        ))
+        .unwrap();
+        for _ in 0..(5.0 * SR) as usize / BLOCK {
+            let (l, r) = e.process();
+            assert!(l
+                .iter()
+                .chain(r.iter())
+                .all(|x| x.is_finite() && x.abs() <= 1.0));
+        }
+    }
+
+    #[test]
     fn malformed_plans_are_refused() {
         let good = || plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2));
         let mut e = Engine::new(SR, 1);

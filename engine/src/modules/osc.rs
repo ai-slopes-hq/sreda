@@ -60,7 +60,7 @@ impl Osc {
 }
 
 /// PolyBLEP residual for a step at phase 0 of a ramp advancing `dt` per sample.
-fn blep(t: f64, dt: f64) -> f64 {
+pub(crate) fn blep(t: f64, dt: f64) -> f64 {
     if t < dt {
         let t = t / dt;
         t + t - t * t - 1.0
