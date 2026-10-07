@@ -63,7 +63,12 @@ impl TriggerInput {
 
     /// −16…−2 = ÷N, 1 = unity, 2…8 = ×N.
     pub fn set_ratio(&mut self, r: i32) {
-        self.ratio = r;
+        // −16…−2, 1, 2…8; 0 and −1 mean 1
+        self.ratio = if (-1..=0).contains(&r) {
+            1
+        } else {
+            r.clamp(-16, 8)
+        };
     }
 
     /// One sample: `values` holds each source's current sample. Returns the pulse train (0 or 1).
@@ -209,6 +214,29 @@ mod tests {
                 .count();
             assert_eq!(high, (0.001 * sr).round() as usize, "at {sr}");
         }
+    }
+
+    #[test]
+    fn a_ratio_out_of_range_is_clamped() {
+        let mut t = TriggerInput::new(SR, 1);
+        t.set_ratio(2_000_000_000);
+        let s = starts(&mut t, 3000, clicks(&[0, 1000]));
+        assert_eq!(
+            s,
+            [0, 1000, 1125, 1250, 1375, 1500, 1625, 1750, 1875],
+            "×8 at most"
+        );
+        let mut t = TriggerInput::new(SR, 1);
+        t.set_ratio(-1_000);
+        let s = starts(&mut t, 2000, clicks(&[100, 200, 300]));
+        assert_eq!(s, [100], "÷16 at most");
+        let mut t = TriggerInput::new(SR, 1);
+        t.set_ratio(0);
+        assert_eq!(
+            starts(&mut t, 2000, clicks(&[100, 200])),
+            [100, 200],
+            "0 and −1 mean 1"
+        );
     }
 
     #[test]

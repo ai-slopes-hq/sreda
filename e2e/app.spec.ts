@@ -110,7 +110,15 @@ test('a corrupt autosave is kept as a backup, the starter patch opens, a notice 
       }),
   );
   expect(keys.some((k) => k.startsWith('backup-'))).toBe(true);
+  await again.page.waitForTimeout(200);
   await again.app.close();
+  // the unreadable save was replaced: the next launch opens quietly
+  const third = await launch(first.dir);
+  await expect(third.page.locator('[data-type=osc]')).toBeVisible();
+  await expect(
+    third.page.getByText('AUTOSAVE WAS UNREADABLE — KEPT AS BACKUP, OPENED A NEW PATCH'),
+  ).toBeHidden();
+  await third.app.close();
 });
 
 type Mod = {
@@ -225,5 +233,40 @@ test('a module added while audio runs shows its output level', async () => {
   await page.keyboard.press('Enter');
   const bar = page.locator('[data-type=osc]').nth(1).locator('.sr-lvl');
   await expect.poll(async () => (await bar.boundingBox())?.width ?? 0, { timeout: 2000 }).toBeGreaterThan(5);
+  await app.close();
+});
+
+test('a wheel run on one knob is one undo step, and only that knob', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(900, 700);
+  await page.keyboard.type('osc');
+  await page.keyboard.press('Enter');
+  const knob = (n: number) => page.locator('[data-type=osc]').nth(n).locator('[data-knob=pw] .sr-knob');
+  const pw = async (n: number) =>
+    (await fullDoc(page)).modules.filter((m) => m.type === 'osc')[n]!.params['pw']!;
+  const [a0, b0] = [await pw(0), await pw(1)];
+  await knob(0).hover();
+  for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -10);
+  await knob(1).hover();
+  for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -10);
+  expect(await pw(0)).toBeGreaterThan(a0);
+  expect(await pw(1)).toBeGreaterThan(b0);
+  await page.keyboard.press('Meta+z');
+  expect(await pw(1)).toBeCloseTo(b0, 6);
+  expect(await pw(0)).toBeGreaterThan(a0);
+  await app.close();
+});
+
+test('a scroll that pans the canvas passes over knobs without turning them', async () => {
+  const { app, page } = await launch();
+  const before = await freq(page);
+  const view0 = await page.locator('.sr-layer').getAttribute('style');
+  await page.mouse.move(900, 700);
+  await page.mouse.wheel(0, 10);
+  const box = (await page.locator('[data-type=osc] [data-knob=freq] .sr-knob').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let i = 0; i < 5; i++) await page.mouse.wheel(0, 10);
+  expect(await freq(page)).toBeCloseTo(before, 6);
+  expect(await page.locator('.sr-layer').getAttribute('style')).not.toBe(view0);
   await app.close();
 });

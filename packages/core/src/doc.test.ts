@@ -55,3 +55,29 @@ test('the starter patch is OSC (saw, 110 Hz) into OUT', () => {
   expect(d.cables).toEqual([{ from: [d.modules[0]!.id, 'out'], to: [d.modules[1]!.id, 'l'] }]);
   expect(emptyDoc.modules).toEqual([]);
 });
+
+test('names of plain-object keys are not module types', () => {
+  for (const type of ['toString', 'constructor', '__proto__']) {
+    const d = good();
+    d.modules[0]!.type = type;
+    expect(() => validateDoc(d, TEST_SPECS)).not.toThrow();
+    expect(validateDoc(d, TEST_SPECS)).toBeNull();
+  }
+});
+
+test('nextId never hands out an id already in use', () => {
+  const d = good();
+  d.modules[1]!.id = 'm7';
+  d.cables[0]!.to[0] = 'm7';
+  d.nextId = 1;
+  expect(validateDoc(d, TEST_SPECS)!.nextId).toBe(8);
+});
+
+test('ratios outside the allowed set are dropped; attenuverters are clamped', () => {
+  const d = good();
+  d.modules[1]!.ratios = { clk: 2.5, other: 9 };
+  d.modules[1]!.atts = { cv: 3, x: -7 };
+  const v = validateDoc(d, TEST_SPECS)!;
+  expect(v.modules[1]!.ratios).toEqual({});
+  expect(v.modules[1]!.atts).toEqual({ cv: 1, x: -1 });
+});

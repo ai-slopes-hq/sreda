@@ -1,4 +1,4 @@
-import { inputPorts, toKnob, type Specs } from './spec';
+import { inputPorts, RATIOS, specOf, toKnob, type Specs } from './spec';
 
 export interface ModuleDoc {
   id: string;
@@ -76,7 +76,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
   const byId = new Map<string, ModuleDoc>();
   for (const m of modules) {
     if (!isObj(m) || typeof m['id'] !== 'string' || typeof m['type'] !== 'string') return null;
-    const spec = specs[m['type']];
+    const spec = specOf(specs, m['type']);
     if (!spec || byId.has(m['id']) || !isNum(m['x']) || !isNum(m['y']) || m['parent'] !== null) return null;
     const params = m['params'] ?? {};
     const atts = m['atts'] ?? {};
@@ -91,8 +91,9 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
       y: m['y'],
       parent: null,
       params: merged,
-      atts: { ...atts },
-      ratios: { ...ratios },
+      // attenuverters clamped to −1…+1; a ratio outside the allowed set falls back to its default (dropped)
+      atts: Object.fromEntries(Object.entries(atts).map(([k, v]) => [k, Math.min(1, Math.max(-1, v))])),
+      ratios: Object.fromEntries(Object.entries(ratios).filter(([, r]) => RATIOS.includes(r))),
     };
     byId.set(mod.id, mod);
     out.push(mod);
@@ -109,5 +110,13 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
     if (!inputPorts(specs[to.type]!).some((p) => p.id === t[1])) return null;
     outCables.push({ from: [f[0], f[1]], to: [t[0], t[1]] });
   }
-  return { version: 1, modules: out, cables: outCables, groups: [], nextId: json['nextId'] };
+  // never hand out an id that is in use
+  const highest = Math.max(0, ...out.map((m) => Number(/^m(\d+)$/.exec(m.id)?.[1] ?? 0)));
+  return {
+    version: 1,
+    modules: out,
+    cables: outCables,
+    groups: [],
+    nextId: Math.max(json['nextId'], highest + 1),
+  };
 }

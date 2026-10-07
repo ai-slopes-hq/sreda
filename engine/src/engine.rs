@@ -72,6 +72,8 @@ struct Slot {
 enum StepRt {
     Node(usize),
     Loop(Vec<usize>),
+    /// a removed slot fading out, placed after its sources and before the inputs that crossfade from it
+    Retire(usize),
 }
 
 pub struct Engine {
@@ -234,13 +236,41 @@ impl Engine {
                     node.id, node.type_
                 )))
             };
+            let fixed = spec
+                .params
+                .iter()
+                .filter(|p| {
+                    matches!(p, Param::Option(_)) || matches!(p, Param::Knob(k) if k.hidden)
+                })
+                .count();
             if node.knobs.len() != knobs
+                || node.fixed.len() != fixed
                 || node.inputs.len() != spec.inputs.len() + knobs
                 || node.connected_out.len() != spec.outputs.len()
             {
-                return bad("port or knob count");
+                return bad("port, knob or option count");
             }
             specs.push(spec);
+        }
+        // the readout layout: one entry per node, every slot inside the buffer
+        if plan.layout.nodes.len() != n || plan.layout.size < 2 {
+            return Err(PlanError::Invalid("readout layout".into()));
+        }
+        for (l, spec) in plan.layout.nodes.iter().zip(&specs) {
+            let knobs = visible_knobs(spec).len();
+            let trigs = spec
+                .inputs
+                .iter()
+                .filter(|p| p.role == crate::spec::Role::Trigger)
+                .count();
+            let size = plan.layout.size;
+            if l.knobs < 2
+                || l.knobs + knobs > size
+                || l.trigs + trigs > size
+                || l.outs + spec.outputs.len() > size
+            {
+                return Err(PlanError::Invalid("readout layout out of range".into()));
+            }
         }
         for (node, _) in plan.nodes.iter().zip(&specs) {
             for input in &node.inputs {
@@ -267,8 +297,8 @@ impl Engine {
                 Step::Node { node } => *node < n,
                 Step::Loop { members } => members.iter().all(|m| *m < n),
             };
-            if !ok || plan.layout.nodes.len() != n {
-                return Err(PlanError::Invalid("steps or layout out of range".into()));
+            if !ok {
+                return Err(PlanError::Invalid("steps out of range".into()));
             }
         }
 
@@ -507,7 +537,7 @@ impl Engine {
         }
 
         self.outs = outs;
-        self.steps = plan
+        let live: Vec<StepRt> = plan
             .steps
             .iter()
             .map(|st| match st {
@@ -515,12 +545,98 @@ impl Engine {
                 Step::Loop { members } => StepRt::Loop(members.iter().map(|m| order[*m]).collect()),
             })
             .collect();
+        self.steps = self.place_retiring(live);
         // buffers moved: the UI re-sends listen after a new plan
         self.listen = None;
         self.order = order;
         self.readouts = vec![0.0; plan.layout.size.max(2)];
         self.seq = plan.seq;
         Ok(())
+    }
+
+    /// Steps with the fading slots put in: each after the steps (or fading slots) that feed it, so whatever still
+    /// reads it during its fade (a crossfading input, another fading slot) gets this block's samples.
+    fn place_retiring(&self, live: Vec<StepRt>) -> Vec<StepRt> {
+        let step_of = |q: usize| {
+            live.iter().position(|st| match st {
+                StepRt::Node(p) => *p == q,
+                StepRt::Loop(m) => m.contains(&q),
+                StepRt::Retire(_) => false,
+            })
+        };
+        let n = self.retiring.len();
+        // (position among the live steps, depth among fading slots)
+        let mut at: Vec<(usize, usize)> = vec![(0, 0); n];
+        for _ in 0..=n {
+            for (k, &r) in self.retiring.iter().enumerate() {
+                let Some(slot) = self.pool[r].as_ref() else {
+                    continue;
+                };
+                let mut place = (0, 0);
+                for s in slot.inputs.iter().flat_map(|i| i.sources.iter()) {
+                    if s.slot == r {
+                        continue;
+                    }
+                    if let Some(i) = step_of(s.slot) {
+                        place.0 = place.0.max(i + 1);
+                    } else if let Some(j) = self.retiring.iter().position(|&q| q == s.slot) {
+                        place = (place.0.max(at[j].0), place.1.max(at[j].1 + 1));
+                    }
+                }
+                at[k] = place;
+            }
+        }
+        let mut fading: Vec<(usize, usize, usize)> = self
+            .retiring
+            .iter()
+            .enumerate()
+            .map(|(k, &r)| (at[k].0, at[k].1, r))
+            .collect();
+        fading.sort();
+        let mut steps = Vec::with_capacity(live.len() + n);
+        let mut f = fading.into_iter().peekable();
+        for (i, st) in live.into_iter().enumerate() {
+            while let Some(&(pos, _, r)) = f.peek() {
+                if pos > i {
+                    break;
+                }
+                steps.push(StepRt::Retire(r));
+                f.next();
+            }
+            steps.push(st);
+        }
+        steps.extend(f.map(|(_, _, r)| StepRt::Retire(r)));
+        steps
+    }
+
+    /// One block of a removed slot: it plays on, its contribution to the speakers ramping to silence over 10 ms.
+    fn retire_block(&mut self, p: usize) {
+        let fade_len = self.fade_len;
+        let Some(slot) = self.pool[p].as_mut() else {
+            return;
+        };
+        if slot.dead {
+            return;
+        }
+        let saved = self.ctx.master;
+        self.ctx.master = [[0.0; BLOCK]; 2];
+        for i in 0..BLOCK {
+            prepare(slot, &self.outs, i, fade_len);
+        }
+        run(slot, &mut self.outs, &mut self.ctx, 0, BLOCK);
+        guard(slot, &mut self.outs);
+        let mine = self.ctx.master;
+        self.ctx.master = saved;
+        for (ch, buf) in self.ctx.master.iter_mut().enumerate() {
+            for (i, x) in buf.iter_mut().enumerate() {
+                *x +=
+                    mine[ch][i] * slot.fade_left.saturating_sub(i as u32) as f32 / fade_len as f32;
+            }
+        }
+        slot.fade_left = slot.fade_left.saturating_sub(BLOCK as u32);
+        if slot.fade_left == 0 {
+            slot.dead = true;
+        }
     }
 
     fn slot_mut(&mut self, node: usize) -> Option<&mut Slot> {
@@ -588,39 +704,10 @@ impl Engine {
                         guard(self.pool[*p].as_mut().unwrap(), &mut self.outs);
                     }
                 }
+                StepRt::Retire(p) => self.retire_block(*p),
             }
         }
         self.steps = steps;
-
-        // removed nodes play on for 10 ms, their contribution to the speakers ramping to silence
-        for r in 0..self.retiring.len() {
-            let p = self.retiring[r];
-            let Some(slot) = self.pool[p].as_mut() else {
-                continue;
-            };
-            if slot.dead {
-                continue;
-            }
-            let saved = self.ctx.master;
-            self.ctx.master = [[0.0; BLOCK]; 2];
-            for i in 0..BLOCK {
-                prepare(slot, &self.outs, i, fade_len);
-            }
-            run(slot, &mut self.outs, &mut self.ctx, 0, BLOCK);
-            guard(slot, &mut self.outs);
-            let mine = self.ctx.master;
-            self.ctx.master = saved;
-            for (ch, buf) in self.ctx.master.iter_mut().enumerate() {
-                for (i, x) in buf.iter_mut().enumerate() {
-                    *x += mine[ch][i] * slot.fade_left.saturating_sub(i as u32) as f32
-                        / fade_len as f32;
-                }
-            }
-            slot.fade_left = slot.fade_left.saturating_sub(BLOCK as u32);
-            if slot.fade_left == 0 {
-                slot.dead = true;
-            }
-        }
 
         self.out = match self.listen {
             Some(b) => [self.outs[b], self.outs[b]],
@@ -628,7 +715,10 @@ impl Engine {
         };
         let [l, r] = &mut self.out;
         self.master.process(l, r);
-        self.readouts[1] = self.out[0].iter().chain(self.out[1].iter()).fold(0.0f32, |a, x| a.max(x.abs()));
+        self.readouts[1] = self.out[0]
+            .iter()
+            .chain(self.out[1].iter())
+            .fold(0.0f32, |a, x| a.max(x.abs()));
         self.write_readouts();
         (&self.out[0], &self.out[1])
     }
@@ -917,7 +1007,8 @@ mod tests {
     #[test]
     fn readout_one_holds_the_master_peak() {
         let mut e = Engine::new(SR, 1);
-        e.apply(plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2))).unwrap();
+        e.apply(plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2)))
+            .unwrap();
         run(&mut e, 20);
         let (l, _) = e.process();
         let want = peak(l);
@@ -1004,6 +1095,100 @@ mod tests {
             "gone after 10 ms + 1 block: {}",
             peak(&after[608..])
         );
+    }
+
+    /// the largest jump between neighbouring samples
+    fn max_step(s: &[f32]) -> f32 {
+        s.windows(2).fold(0.0, |a, w| a.max((w[1] - w[0]).abs()))
+    }
+    fn sine(id: &str) -> PlanNode {
+        let mut n = osc(id);
+        n.fixed = vec![0.0]; // SIN
+        n
+    }
+
+    #[test]
+    fn deleting_a_playing_source_does_not_click() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![sine("o"), out("x", 0, 1.0)], chain(2)))
+            .unwrap();
+        let before = run(&mut e, 40);
+        let normal = max_step(&before[2000..]);
+        e.apply(plan(
+            2,
+            vec![out("x", 0, 1.0)]
+                .into_iter()
+                .map(|mut n| {
+                    n.inputs[0].sources.clear();
+                    n
+                })
+                .collect(),
+            chain(1),
+        ))
+        .unwrap();
+        let mut joined = before[before.len() - 128..].to_vec();
+        joined.extend(run(&mut e, 10));
+        assert!(
+            max_step(&joined) < normal * 2.0 + 0.01,
+            "step {} vs {}",
+            max_step(&joined),
+            normal
+        );
+    }
+
+    #[test]
+    fn deleting_a_playing_out_does_not_click() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![sine("o"), out("x", 0, 1.0)], chain(2)))
+            .unwrap();
+        let before = run(&mut e, 40);
+        let normal = max_step(&before[2000..]);
+        e.apply(plan(2, vec![sine("o")], chain(1))).unwrap();
+        let mut joined = before[before.len() - 128..].to_vec();
+        joined.extend(run(&mut e, 10));
+        assert!(
+            max_step(&joined) < normal * 2.0 + 0.01,
+            "step {} vs {}",
+            max_step(&joined),
+            normal
+        );
+    }
+
+    #[test]
+    fn deleting_source_and_out_together_does_not_click() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![sine("o"), out("x", 0, 1.0)], chain(2)))
+            .unwrap();
+        let before = run(&mut e, 40);
+        let normal = max_step(&before[2000..]);
+        e.apply(plan(2, vec![], vec![])).unwrap();
+        let mut joined = before[before.len() - 128..].to_vec();
+        joined.extend(run(&mut e, 10));
+        assert!(
+            max_step(&joined) < normal * 2.0 + 0.01,
+            "step {} vs {}",
+            max_step(&joined),
+            normal
+        );
+    }
+
+    #[test]
+    fn malformed_plans_are_refused() {
+        let good = || plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2));
+        let mut e = Engine::new(SR, 1);
+        e.apply(good()).unwrap();
+        let mut no_fixed = good();
+        no_fixed.nodes[0].fixed.clear();
+        assert!(matches!(e.apply(no_fixed), Err(PlanError::Invalid(_))));
+        let mut small = good();
+        small.layout.size = 3;
+        assert!(matches!(e.apply(small), Err(PlanError::Invalid(_))));
+        let mut short = good();
+        short.layout.nodes.pop();
+        short.steps.clear();
+        assert!(matches!(e.apply(short), Err(PlanError::Invalid(_))));
+        // the old plan is still playing
+        assert!(peak(&run(&mut e, 10)) > 0.3);
     }
 
     #[test]

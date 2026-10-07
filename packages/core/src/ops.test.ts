@@ -88,3 +88,7 @@ test('same-type modules are numbered in names', () => {
     'FX',
   ]);
 });
+
+test('a plain-object key is not a module type', () => {
+  expect(() => addModule(emptyDoc, S, 'constructor', 0, 0)).toThrow(RuleError);
+});

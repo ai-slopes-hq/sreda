@@ -67,7 +67,6 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
 
   function send(): void {
     plan = compile(state.doc, specs, ++seq);
-    setSeq(seq);
     setLayout(plan.layout);
     host?.post({ t: 'plan', plan });
     sendListen(); // a new plan clears listening in the engine
@@ -100,6 +99,13 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
     /** after the first click: the engine starts playing the current document */
     attach(h: AudioHost): void {
       host = h;
+      // live readouts follow a plan's layout only once the engine has taken that plan
+      h.onMessage = (msg) => {
+        if (msg.code === 0) setSeq(msg.seq);
+        else
+          setState('notice', `THE ENGINE REFUSED THE PATCH (${msg.code}) — THE PREVIOUS ONE KEEPS PLAYING`);
+      };
+      h.onError = () => setState('notice', 'THE AUDIO ENGINE STOPPED — RESTART THE APP');
       setSource(h.readouts);
       setState('audio', true);
       send();

@@ -31,3 +31,22 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Category tint on panels** (2026-10-07): a barely-there tint per family (sources, shapers, logic, FX), like
   Buchla's coloured panel sections.
 - **Group collapse**: collapse a group to its header. (Saving and loading groups moved into the first build.)
+
+## From the Plan 1 review (deferred, 2026-10-07)
+
+- **Cables at 200 modules** (spec §8): `Cables.tsx` rebuilds every path on each move preview and calls `layoutPanel`
+  uncached; memoise layouts per type and recompute only the wires touching moved modules. Before Plan 3's benchmark.
+- **Plans on the audio thread:** `JSON.stringify` + a hand UTF-8 encoder run in the worklet, and position-only edits
+  send a plan; encode with `TextEncoder` on the main thread, transfer bytes, skip plans for moves.
+- **Meters:** level bars have no hold / 300 ms decay and sample one block in six; trigger flashes last 80 ms, not 120.
+- **Master after a runaway:** the DC blocker state can hold ~1e34 and pin the output near full scale for seconds once
+  the runaway stops (possible with Plan 2's MIX / ATT / A×B+C); clamp the master input to about ±16.
+- **Engine details:** a new slot's buffers are seeded from slot 0's; every plan clears listen (one block of the mix can
+  slip through while listening); through-zero FM uses the wrong polyBLEP sign; `alloc.rs` should also cover fades,
+  crossfades and trigger inputs.
+- **Autosave:** an edit in the last 500 ms before quitting is lost; each save opens a new IndexedDB connection.
+- **Small UI:** Shift mid-knob-drag jumps (re-base the drag); clicking one module of a multi-selection keeps the
+  selection; the cable gradient is 0→1, not spec §1's 40 / 20 / 40.
+- **Hardening:** the app:// path check uses `startsWith(root)` without a separator; no `will-navigate` /
+  `setWindowOpenHandler` guard; no production CSP; `package.json` uses `^` ranges, not exact pins; the WASM path is not
+  tested at 44.1 kHz any more (add `renderDoc(…, 44100)`).

@@ -19,7 +19,7 @@ export type FieldKind = 'att' | 'ratio';
 
 export interface PanelActions {
   knob(param: string, knob: number, merge: Merge): void;
-  option(param: string, value: number): void;
+  option(param: string, value: number, merge?: Merge): void;
   hover(on: boolean): void;
   edit(on: boolean): void;
   /** the attenuverter of a knob's mod jack (Alt-drag on the knob) */
@@ -177,6 +177,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 depth={props.mod.atts['@' + p.id] ?? p.modDepth ?? 1}
                 loud={props.loud}
                 readout={props.readouts ? props.readouts.knobs + i() : undefined}
+                scope={props.mod.id}
                 set={(k, merge) => props.act.knob(p.id, k, merge)}
                 setDepth={(v, merge) => props.act.depth?.(p.id, v, merge)}
                 edit={(on) => props.act.edit(on)}
@@ -207,7 +208,8 @@ export function Panel(props: PanelProps): JSX.Element {
               y={c().y}
               w={c().w}
               closeEpoch={props.closeEpoch ?? 0}
-              set={(v) => props.act.option(p.id, v)}
+              scope={props.mod.id}
+              set={(v, merge) => props.act.option(p.id, v, merge)}
             />
           );
         }}

@@ -1,6 +1,8 @@
 import type { OptionParam } from '@sreda/core';
 import { createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
+import type { Merge } from '@sreda/core';
 import { waveGlyph } from './glyphs';
+import { panning } from './wheel';
 
 export interface OptionProps {
   param: OptionParam;
@@ -10,7 +12,9 @@ export interface OptionProps {
   w: number;
   /** bumps when the canvas pans or zooms: an open list closes */
   closeEpoch: number;
-  set(value: number): void;
+  /** the module this option belongs to (wheel runs merge per module and option) */
+  scope: string;
+  set(value: number, merge?: Merge): void;
 }
 
 function Glyph(props: { param: OptionParam; value: number; w: number }): JSX.Element {
@@ -55,10 +59,11 @@ export function Option(props: OptionProps): JSX.Element {
     else setOpen(!open());
   }
   function wheel(e: WheelEvent): void {
+    if (panning()) return; // let a pan in progress go on
     e.preventDefault();
     e.stopPropagation();
     const n = p().options.length;
-    props.set((props.value + (e.deltaY < 0 ? 1 : n - 1)) % n);
+    props.set((props.value + (e.deltaY < 0 ? 1 : n - 1)) % n, { key: `wheel:${props.scope}:${p().id}` });
   }
 
   return (

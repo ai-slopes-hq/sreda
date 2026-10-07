@@ -33,10 +33,18 @@ export async function loadSaved(specs: Specs): Promise<{ doc: Doc; notice: strin
     const db = await open();
     const raw = await request<unknown>(db, 'readonly', (s) => s.get(KEY));
     if (raw === undefined) return { doc: starterDoc(specs), notice: null };
-    const doc = validateDoc(raw, specs);
+    let doc: Doc | null = null;
+    try {
+      doc = validateDoc(raw, specs);
+    } catch {
+      doc = null;
+    }
     if (doc) return { doc, notice: null };
+    // keep the unreadable save, and replace it so the next launch opens quietly
+    const starter = starterDoc(specs);
     await request(db, 'readwrite', (s) => s.put(raw, `backup-${new Date().toISOString()}`));
-    return { doc: starterDoc(specs), notice: CORRUPT_NOTICE };
+    await request(db, 'readwrite', (s) => s.put(starter, KEY));
+    return { doc: starter, notice: CORRUPT_NOTICE };
   } catch {
     return { doc: starterDoc(specs), notice: null };
   }
@@ -49,6 +57,8 @@ export function scheduleSave(doc: Doc): void {
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
-    void open().then((db) => request(db, 'readwrite', (s) => s.put(doc, KEY)));
+    open()
+      .then((db) => request(db, 'readwrite', (s) => s.put(doc, KEY)))
+      .catch(() => undefined); // no storage (tests) or a full disk: the canvas keeps playing
   }, 500);
 }

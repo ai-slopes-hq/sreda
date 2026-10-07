@@ -6,6 +6,7 @@ import {
   moveObjects,
   nameOf,
   removeCable,
+  RATIOS,
   RuleError,
   setParam,
   type Cable,
@@ -20,10 +21,10 @@ import { ROLE } from './glyphs';
 import { Panel, type FieldKind } from './Panel';
 import { placeFor, type End } from './patching';
 import { Picker } from './Picker';
+import { panned } from './wheel';
 import './canvas.css';
 
 const ZOOM = { min: 0.25, max: 2 };
-const RATIOS = [-16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8];
 /** pixels a pointer moves before a press becomes a drag */
 const SLOP = 4;
 
@@ -296,7 +297,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         y: e.clientY - ((e.clientY - v.y) * z) / v.z,
         z,
       });
-    } else s.setState('view', { x: v.x - e.deltaX, y: v.y - e.deltaY, z: v.z });
+    } else {
+      s.setState('view', { x: v.x - e.deltaX, y: v.y - e.deltaY, z: v.z });
+      panned();
+    }
     viewChanged();
   }
 
@@ -376,7 +380,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 closeEpoch={closeEpoch()}
                 act={{
                   knob: (param, k, merge) => s.knob(m.id, param, k, merge),
-                  option: (param, v) => s.edit((d) => setParam(d, specs, m.id, param, v)),
+                  option: (param, v, merge) => s.edit((d) => setParam(d, specs, m.id, param, v), merge),
                   hover: (on) => s.setState('hover', on ? m.id : st.hover === m.id ? null : st.hover),
                   edit: (on) => s.setState('editing', on ? m.id : null),
                   depth: (param, v, merge) => s.att(m.id, '@' + param, v, merge),

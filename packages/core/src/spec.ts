@@ -54,6 +54,16 @@ export interface ModuleSpec {
 }
 export type Specs = Record<string, ModuleSpec>;
 
+/** A spec by type, never a plain-object key such as `toString` or `constructor`. */
+export function specOf(specs: Specs, type: string): ModuleSpec | undefined {
+  return Object.hasOwn(specs, type) ? specs[type] : undefined;
+}
+
+/** The ratios a trigger input takes: ÷16 … ÷2, 1, ×2 … ×8. */
+export const RATIOS: readonly number[] = [
+  -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8,
+];
+
 export const SPECS: Specs = Object.fromEntries(
   (specsJson as unknown as ModuleSpec[]).map((s) => [s.type, s]),
 );

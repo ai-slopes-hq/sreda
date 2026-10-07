@@ -9,6 +9,8 @@ export class AudioHost {
   /** a view over the SharedArrayBuffer the worklet copies the engine's readouts into */
   readonly readouts: Float32Array;
   onMessage: ((msg: FromEngine) => void) | null = null;
+  /** the worklet died (a trap in the engine) */
+  onError: ((message: string) => void) | null = null;
 
   private constructor(
     private readonly context: AudioContext,
@@ -17,6 +19,7 @@ export class AudioHost {
   ) {
     this.readouts = readouts;
     node.port.onmessage = (e: MessageEvent<FromEngine>) => this.onMessage?.(e.data);
+    node.onprocessorerror = (e) => this.onError?.(String((e as ErrorEvent).message ?? e.type));
   }
 
   /** Call from a user gesture (autoplay rule). */

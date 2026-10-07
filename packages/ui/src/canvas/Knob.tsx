@@ -2,6 +2,7 @@ import { fromKnob, toKnob, type KnobParam, type Merge } from '@sreda/core';
 import { createSignal, Show, type JSX } from 'solid-js';
 import { track } from '../live';
 import { ang, arc, fmt } from './glyphs';
+import { panning } from './wheel';
 
 let strokes = 0;
 
@@ -11,6 +12,8 @@ export interface KnobProps {
   value: number;
   x: number;
   y: number;
+  /** the module this knob belongs to (wheel runs merge per module and knob) */
+  scope: string;
   /** a cable is in this knob's mod jack */
   modulated: boolean;
   /** the mod jack's attenuverter (drawn as a ring) */
@@ -62,12 +65,13 @@ export function Knob(props: KnobProps): JSX.Element {
     props.edit(false);
   }
   function wheel(e: WheelEvent): void {
+    if (panning()) return; // let a pan in progress go on
     e.preventDefault();
     e.stopPropagation();
     const pr = p();
     const notch = pr.step ? pr.step / (pr.max - pr.min) : 0.01;
     const dir = e.deltaY < 0 ? 1 : -1;
-    props.set(Math.min(1, Math.max(0, props.value + dir * notch)), { key: `wheel:${pr.id}` });
+    props.set(Math.min(1, Math.max(0, props.value + dir * notch)), { key: `wheel:${props.scope}:${pr.id}` });
   }
 
   return (

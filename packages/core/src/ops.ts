@@ -1,14 +1,11 @@
 // Edits: pure functions from a document to a new one. RuleError is for structural mistakes only.
 import { blankModule, type Cable, type Doc, type ModuleDoc } from './doc';
-import { inputPorts, type Specs } from './spec';
+import { inputPorts, RATIOS, specOf, type Specs } from './spec';
 
 export class RuleError extends Error {}
 
 const GRID = 8;
 const snap = (v: number): number => Math.round(v / GRID) * GRID;
-const RATIOS = new Set([
-  -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8,
-]);
 
 function mapModule(doc: Doc, id: string, f: (m: ModuleDoc) => ModuleDoc): Doc {
   if (!doc.modules.some((m) => m.id === id)) throw new RuleError(`no module ${id}`);
@@ -22,7 +19,7 @@ export function addModule(
   x: number,
   y: number,
 ): { doc: Doc; id: string } {
-  if (!specs[type]) throw new RuleError(`unknown module type ${type}`);
+  if (!specOf(specs, type)) throw new RuleError(`unknown module type ${type}`);
   const id = `m${doc.nextId}`;
   const m = blankModule(specs, type, id, snap(x), snap(y));
   return { doc: { ...doc, modules: [...doc.modules, m], nextId: doc.nextId + 1 }, id };
@@ -101,7 +98,7 @@ export function setAtt(doc: Doc, id: string, port: string, v: number | null): Do
 
 /** A trigger input's ratio: −16…−2 (÷), 1, 2…8 (×). */
 export function setRatio(doc: Doc, id: string, port: string, r: number): Doc {
-  if (!RATIOS.has(r)) throw new RuleError(`bad ratio ${r}`);
+  if (!RATIOS.includes(r)) throw new RuleError(`bad ratio ${r}`);
   return mapModule(doc, id, (m) => {
     const ratios = { ...m.ratios };
     if (r === 1) delete ratios[port];
