@@ -37,6 +37,10 @@ body{margin:0}
 .d-cur{fill:#f5a524;fill-opacity:.12}.d-on{fill:#e9e4d8}.d-off{fill:none;stroke:#3a3933}.d-acc{fill:#f5a524}.d-ring{fill:none;stroke:#f5a524;stroke-width:2}
 .d-dot{fill:#e9e4d8}
 .d-mark{fill:none;stroke:#8f897c;stroke-width:1}
+.room .d-line{stroke-width:1.2}
+.room .d-fill{fill-opacity:.28}
+.room .d-shade{fill:#121210;fill-opacity:.55}
+.room .d-ring{stroke-width:1.5;stroke-dasharray:3 2}
 .d-shade{fill:#121210;fill-opacity:.7}
 code{font-family:inherit;color:#e9e4d8}
 .row-title{position:absolute;font-size:11px;font-weight:600;letter-spacing:.1em;color:#8f897c}
@@ -57,7 +61,7 @@ code{font-family:inherit;color:#e9e4d8}
 <div class="p-mod" style="{{M.style}}">
 <div class="p-head"><span class="p-name">{{M.name}}</span><span class="p-size">{{M.size}}</span></div>
 <sc-if value="{{M.hasDisp}}" hint-placeholder-val="{{false}}">
-<div class="disp" style="{{M.dispStyle}}">
+<div class="disp {{M.dispCls}}" style="{{M.dispStyle}}">
 <div class="txt" style="{{M.dTagStyle}}">{{M.dTag}}</div>
 <svg width="{{M.dw}}" height="{{M.dh}}" style="display: block">
 <path class="d-cur" d="{{M.dCur}}"></path>
@@ -93,6 +97,12 @@ code{font-family:inherit;color:#e9e4d8}
 </div>
 </sc-for>
 
+<sc-for list="{{rooms}}" as="q">
+<div class="a" style="{{q.pos}}">
+<svg width="120" height="56" style="display: block" class="room"><path class="d-mark" d="{{q.back}}"></path><path class="d-fill" d="{{q.fill}}"></path><path class="d-shade" d="{{q.damp}}"></path><path class="d-line" d="{{q.edges}}"></path><path class="d-ring" d="{{q.pre}}"></path><path class="d-dot" d="{{q.dot}}"></path></svg>
+<div class="txt" style="left: 0; width: 120px; top: 58px; color: #8f897c">{{q.label}}</div>
+</div>
+</sc-for>
 <sc-for list="{{rowTitles}}" as="r">
 <div class="row-title" style="{{r.style}}">{{r.text}}</div>
 </sc-for>
@@ -203,7 +213,7 @@ var DEFS = {
   filter: { name: 'FILTER', size: [5, 1], ins: [['IN', 'audio', '', 1], ['PTCH', 'pitch']], outs: [['LP', 'audio'], ['BP', 'audio'], ['HP', 'audio']], knobs: [['CUT', 0.4], ['RES', 0.7], ['DRV', 0.3]], modes: [{ t: 'LADDER ▾', hp: 2 }] },
   drive: { name: 'DRIVE', size: [5, 1], ins: [['IN', 'audio', '', 1]], outs: [['OUT', 'audio']], knobs: [['GAIN', 0.6], ['TONE', 0.5], ['MIX', 1]], modes: [{ t: 'OD ▾', hp: 2 }] },
   delay: { name: 'DELAY', size: [6, 1], ins: [['IN', 'audio', '', 1], ['CLK', 'trigger', '1', 1]], outs: [['L', 'audio'], ['R', 'audio']], knobs: [['TIME', 0.5], ['FB', 0.55], ['MIX', 0.3], ['CHAR', 0.4]], modes: [{ t: 'TAPE ▾', hp: 2 }, { t: 'PING', hp: 1, on: true }] },
-  reverb: { name: 'REVERB', size: [6, 2], ins: [['IN', 'audio', '', 1]], outs: [['L', 'audio'], ['R', 'audio']], knobs: [['SIZE', 0.7], ['DECAY', 0.6], ['DAMP', 0.4], ['PRE', 0.1], ['MOD', 0.3], ['MIX', 0.35]], modes: [{ t: 'PLATE ▾', hp: 2 }, { t: 'FREEZE', hp: 1 }] },
+  reverb: { name: 'REVERB', size: [6, 2], ins: [['IN', 'audio', '', 1]], outs: [['L', 'audio'], ['R', 'audio']], display: { kind: 'room', lanes: 2, type: 'ROOM', fill: 0.62, size: 0.7, pre: 0.25, damp: 0.4 }, knobs: [['SIZE', 0.7], ['DECAY', 0.6], ['DAMP', 0.4], ['PRE', 0.1], ['MOD', 0.3], ['MIX', 0.35]], modes: [{ t: 'ROOM ▾', hp: 2 }, { t: 'FREEZE', hp: 1 }] },
   slice: { name: 'SAMPLER', size: [8, 2], ins: [['TRIG', 'trigger', '×2', 1], ['PTCH', 'pitch'], ['SLICE', 'mod'], ['START', 'mod']], outs: [['L', 'audio'], ['R', 'audio'], ['EOC', 'trigger']], display: { kind: 'slices', lanes: 4 },
     knobs: [['PITCH', 0.5], ['START', 0], ['LEN', 1], ['DEC', 1], ['LVL', 0.8], ['SLICES', 0.4]], modes: [{ t: 'SLICE ▾', hp: 2 }, { t: 'REV', hp: 1 }, { t: 'AUTO', hp: 1, on: true }, { t: 'LOAD', hp: 1, right: true }] },
   one: { name: 'SAMPLER', size: [8, 2], ins: [['TRIG', 'trigger', '1', 1], ['PTCH', 'pitch'], ['SLICE', 'mod'], ['START', 'mod']], outs: [['L', 'audio'], ['R', 'audio'], ['EOC', 'trigger']], display: { kind: 'one', lanes: 4 },
@@ -211,7 +221,25 @@ var DEFS = {
   grains: { name: 'GRAINS', size: [10, 2], ins: [['TRIG', 'trigger'], ['IN', 'audio', '', 1], ['POS', 'mod', '', 1], ['PTCH', 'pitch']], outs: [['L', 'audio'], ['R', 'audio']], display: { kind: 'grains', lanes: 4 },
     knobs: [['POS', 0.45], ['SIZE', 0.4], ['DENS', 0.6], ['SPRAY', 0.3], ['PITCH', 0.5], ['DETUNE', 0.2], ['REV%', 0.25], ['SPREAD', 0.7]], modes: [{ t: 'LIVE ▾', hp: 2 }, { t: 'FREEZE', hp: 1, on: true }, { t: 'LOAD', hp: 1, right: true }] }
 };
-function sampleDisplay(r, kind) {
+// REVERB's room: the shape is the TYPE, its size follows SIZE, it fills with the tail's level and settles at
+// DECAY; DAMP darkens the top of the fill; PRE is the line from the input dot to the wall; FREEZE turns it amber.
+function roomPaths(dw, dh, o) {
+  var cx = dw / 2 + 10, cy = dh / 2 + 3, sc = 0.55 + 0.45 * o.size, w, h, d;
+  if (o.type === 'PLATE') { w = 70 * sc; h = 6; d = 16 * sc; } else if (o.type === 'HALL') { w = 64 * sc; h = 30 * sc; d = 18 * sc; } else { w = 34 * sc; h = 34 * sc; d = 12 * sc; }
+  var x0 = cx - w / 2 - d / 2, y0 = cy - h / 2 + d / 2, P = function (x, y) { return x.toFixed(1) + ' ' + y.toFixed(1); };
+  var edges = 'M' + P(x0, y0) + ' h' + w.toFixed(1) + ' v' + h.toFixed(1) + ' h' + (-w).toFixed(1) + ' Z ' +
+    'M' + P(x0 + d, y0 - d) + ' h' + w.toFixed(1) + ' v' + h.toFixed(1) + ' ' +
+    'M' + P(x0, y0) + ' L' + P(x0 + d, y0 - d) + ' M' + P(x0 + w, y0) + ' L' + P(x0 + w + d, y0 - d) + ' M' + P(x0 + w, y0 + h) + ' L' + P(x0 + w + d, y0 + h - d);
+  var back = 'M' + P(x0 + d, y0 - d + h) + ' L' + P(x0, y0 + h) + ' M' + P(x0 + d, y0 - d) + ' V' + (y0 - d + h).toFixed(1) + ' H' + (x0 + d + w).toFixed(1);
+  var yl = y0 + h * (1 - o.fill);
+  var fill = 'M' + P(x0, yl) + ' L' + P(x0 + d, yl - d) + ' L' + P(x0 + w + d, yl - d) + ' L' + P(x0 + w + d, y0 + h - d) + ' L' + P(x0 + w, y0 + h) + ' L' + P(x0, y0 + h) + ' Z';
+  var dampH = Math.min(h * o.fill, 3 + 10 * o.damp);
+  var damp = 'M' + P(x0, yl) + ' L' + P(x0 + d, yl - d) + ' L' + P(x0 + w + d, yl - d) + ' L' + P(x0 + w + d, yl - d + dampH) + ' L' + P(x0 + w, yl + dampH) + ' L' + P(x0, yl + dampH) + ' Z';
+  var preLen = 4 + o.pre * (x0 - 16);
+  var pre = 'M8 ' + cy.toFixed(1) + ' H' + (8 + preLen).toFixed(1);
+  return { edges: edges, back: back, fill: fill, damp: damp, pre: pre, dot: 'M5 ' + cy.toFixed(1) + ' a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0' };
+}
+function sampleDisplay(r, kind, d) {
   var dw = r.dw, dh = r.dh, slicesAt = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
   r.dTag = ''; r.dTagStyle = 'display:none;'; r.dMark = ''; r.dShade = '';
   if (kind === 'slices') {
@@ -229,6 +257,11 @@ function sampleDisplay(r, kind) {
     r.dRing = 'M' + (0.21 * dw).toFixed(1) + ' 0 V' + dh;
     r.dTag = 'drums/kick 909.wav · ONE · 4 VOICES'; r.dTagStyle = 'left:6px;top:4px;text-align:left;color:#8f897c;';
   }
+  if (kind === 'room') {
+    var rp = roomPaths(dw, dh, d.display);
+    r.dLine = rp.edges; r.dMark = rp.back; r.dFill = rp.fill; r.dShade = rp.damp; r.dRing = rp.pre; r.dDot = rp.dot;
+    r.dTag = d.display.type + ' · 2.4 s'; r.dTagStyle = 'right:6px;top:4px;text-align:right;color:#8f897c;';
+  }
   if (kind === 'grains') {
     r.dFill = wave(dw, dh, 200, [0.05, 0.3, 0.33, 0.6, 0.62, 0.8], 11);
     var px = 0.45 * dw, acc = '', rr = 5;
@@ -242,14 +275,17 @@ function sampleDisplay(r, kind) {
 class Component extends DCLogic {
   renderVals() {
     var mods = [], rowTitles = [], x;
-    function put(k, px, py) { var d = DEFS[k], r = panel(d, px, py); if (d.display) sampleDisplay(r, d.display.kind); else { r.dTag = ''; r.dTagStyle = 'display:none;'; r.dMark = ''; r.dShade = ''; } r.grid = ''; r.cols = ''; mods.push(r); return d.size[0] * HP; }
+    function put(k, px, py) { var d = DEFS[k], r = panel(d, px, py); if (d.display) sampleDisplay(r, d.display.kind, d); else { r.dTag = ''; r.dTagStyle = 'display:none;'; r.dMark = ''; r.dShade = ''; } r.dispCls = d.display && d.display.kind === 'room' ? 'room' : ''; r.grid = ''; r.cols = ''; mods.push(r); return d.size[0] * HP; }
     rowTitles.push({ text: '1U — апгрейды и DRIVE', style: 'left:40px;top:142px;' });
     x = 40; ['filter', 'drive', 'delay'].forEach(function (k) { x += put(k, x, 170) + 40; });
     rowTitles.push({ text: '2U — REVERB и SAMPLER (SLICE, ONE)', style: 'left:40px;top:332px;' });
     x = 40; ['reverb', 'slice', 'one'].forEach(function (k) { x += put(k, x, 360) + 40; });
-    rowTitles.push({ text: '2U — GRAINS (LIVE, FREEZE)', style: 'left:40px;top:632px;' });
-    put('grains', 40, 660);
-    return { mods: mods, rowTitles: rowTitles };
+    rowTitles.push({ text: '2U — GRAINS (LIVE, FREEZE)', style: 'left:40px;top:732px;' });
+    put('grains', 40, 760);
+    var rooms = [['ROOM', 0.3, 0.5], ['PLATE', 0.8, 0.3], ['HALL', 0.55, 0.85]].map(function (t, i) {
+      return Object.assign(roomPaths(120, 56, { type: t[0], fill: t[1], size: t[2], pre: 0.3, damp: 0.4 }), { label: t[0], pos: 'left:' + (40 + i * 100) + 'px;top:604px;' });
+    });
+    return { mods: mods, rowTitles: rowTitles, rooms: rooms };
   }
 }
 </script>

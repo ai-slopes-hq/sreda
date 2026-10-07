@@ -375,7 +375,7 @@ Stereo outputs are two mono outputs (cables stay mono).
 | **FILTER** (upgrade) | 5×1 | in (audio), pitch (pitch: tracks the cutoff; COMB's tuning) | CUT, RES, DRV (gain into the nonlinear models) | MODEL ▾ SVF / LADDER / DIODE / SK / COMB / VOWEL, drawn as a response glyph | lp, bp, hp |
 | **DRIVE** | 5×1 | in (audio) | GAIN (to +24 dB), TONE, MIX | MODE ▾ SAT / OD / FUZZ | out |
 | **DELAY** (upgrade) | 6×1 | in (audio), clk (trigger) | TIME, FB, MIX, CHAR | TYPE ▾ DIGI / TAPE / SPRING · PING | l, r |
-| **REVERB** | 6×2 | in (audio) | SIZE, DECAY, DAMP, PRE, MOD, MIX | TYPE ▾ ROOM / PLATE / HALL · FREEZE | l, r |
+| **REVERB** | 6×2, display 2 lanes | in (audio) | SIZE, DECAY, DAMP, PRE, MOD, MIX | TYPE ▾ ROOM / PLATE / HALL · FREEZE | l, r |
 | **SAMPLER** | 8×2 | trig (trigger), pitch (pitch), slice (mod), start (mod) | PITCH (±24 st), START, LEN, DEC, LVL, SLICES (2–64; SENS while AUTO) | MODE ▾ ONE / LOOP / SLICE · REV · AUTO · LOAD (right) | l, r, eoc (trigger) |
 | **GRAINS** | 10×2 | trig (trigger), in (audio), pos (mod), pitch (pitch) | POS, SIZE (5 ms…1 s), DENS (1–200 /s), SPRAY, PITCH, DETUNE, REV %, SPREAD | SOURCE ▾ FILE / LIVE · FREEZE · LOAD (right) | l, r |
 
@@ -391,6 +391,10 @@ Stereo outputs are two mono outputs (cables stay mono).
   PING alternates repeats between L and R. With CLK patched, TIME snaps to divisions of its period (1/16 … 4).
 - **REVERB types:** ROOM a small FDN, HALL a large FDN with longer pre-delay and diffusion, PLATE a Dattorro plate;
   MOD slowly modulates the delay lines; FREEZE holds the tail forever (input muted, feedback 1).
+- **REVERB's display — the room** (Elektron-style): a wireframe shape for TYPE (ROOM a cube, HALL a wide deep box,
+  PLATE a flat slab) sized by SIZE, filling with the tail's live level and settling at DECAY; DAMP darkens the top of
+  the fill (the highs going first); PRE is the dashed line from the input dot to the wall; FREEZE turns the outline
+  amber and holds the level. It fills the two lanes the knobs leave free — the grammar is unchanged.
 - **SAMPLER modes.** ONE: TRIG plays START…LEN with DEC as an amplitude decay (full = off); up to 4 overlapping
   voices, a new trigger never cuts the last, the oldest is stolen. LOOP: TRIG restarts; it loops START…LEN. SLICE:
   the region is cut into SLICES equal slices, or by detected hits with AUTO (SENS = threshold); each TRIG plays the
