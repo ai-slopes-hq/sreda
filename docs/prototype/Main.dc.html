@@ -2567,6 +2567,7 @@ class Component extends DCLogic {
       brand: 'SREDA' + (st.project ? '  ·  ' + st.project.path.toUpperCase() + (st.doc !== this.projectDoc ? '  ●' : '') : ''),
       hasSave: !!st.saving, saveTitle: st.saving ? (st.saving.kind === 'group' ? 'SAVE GROUP AS' : 'SAVE PROJECT AS') : '', saveVal: st.saving ? st.saving.name : '',
       saveRef: this.saveRef, saveChange: this.saveChange, saveKey: this.saveKey,
+      pmRef: this.pmRef,
       hasCtag: hc != null, ctagStyle: hc != null && st.hoverCPos ? 'left:' + (st.hoverCPos.sx + 14) + 'px;top:' + (st.hoverCPos.sy + 14) + 'px;' : '',
       ctagText: hc != null ? nameOf(doc, doc.cables[hc].f[0]) + ' › ' + jackLocal(doc.cables[hc].f[0], doc.cables[hc].f[1], doc).label + '  →  ' + nameOf(doc, doc.cables[hc].t[0]) + ' › ' + jackLocal(doc.cables[hc].t[0], doc.cables[hc].t[1], doc).label : '',
       sideStyle: 'width:' + st.wires.width + 'px;',

@@ -1,0 +1,37 @@
+const { c, rv, R } = require("./holes.js");
+const ev = (o) => Object.assign({ button: 0, clientX: 400, clientY: 300, shiftKey: false, metaKey: false, ctrlKey: false, altKey: false,
+  stopPropagation() {}, preventDefault() {}, target: { closest: () => null }, currentTarget: { getBoundingClientRect: () => ({ left: 300, top: 200, right: 340, bottom: 220 }) } }, o);
+function step(label, f) { try { f(); rv(label); } catch (e) { console.log(label.padEnd(28), 'THREW:', e.stack.split('\n').slice(0, 3).join(' | ')); } }
+rv('default (Pulse)');
+const doc = () => c.state.doc, mod = (t) => doc().mods.find(m => m.type === t);
+step('module drag', () => { const m = doc().mods[0]; c.moduleDown(ev({}), m.id); c.move(ev({ clientX: 460, clientY: 340 })); c.up(ev({ clientX: 460, clientY: 340 })); });
+step('knob drag', () => { const m = mod('lpg'); c.knobDown(ev({}), m.id, 'decay'); c.move(ev({ clientY: 250 })); c.up(ev({})); });
+step('field drag (ratio)', () => { const m = mod('lpg'); c.fieldDown(ev({}), m.id, 'ping', 'rat'); c.move(ev({ clientY: 250 })); c.up(ev({})); });
+step('wire from jack to empty', () => { const m = mod('osc'); c.jackDown(ev({}), m.id, 'out', 'out', 'audio'); c.move(ev({ clientX: 900, clientY: 700 })); c.up(ev({ clientX: 900, clientY: 700 })); });
+step('search open (from jack)', () => {});
+step('pick a module in search', () => { const v = c.renderVals(); const it = v.searchItems.find(i => i.label === 'FILTER'); it.pick(); });
+step('double-click: search ALL', () => { c.dbl(ev({ target: { closest: () => null } })); });
+step('tab GROUPS + pick group', () => { c.setState({ search: Object.assign({}, c.state.search, { tab: 'GROUPS' }) }); const v = c.renderVals(); v.searchItems[0].pick(); });
+step('option list (MODE ▾)', () => { const m = mod('lpg'); c.cycle(ev({}), m.id, 'mode'); });
+step('pick option', () => { const v = c.renderVals(); v.menuItems[1].pick(); });
+step('listen', () => { const m = mod('osc'); c.toggleListen(m.id, 'out'); });
+step('select + ⌘G frame', () => { c.setState({ sel: doc().mods.slice(0, 2).map(m => m.id) }); c.group(); });
+step('frame tools', () => { const g = doc().groups[0]; c.frameStack(g.id); c.frameRoute(g.id); c.frameMute(g.id); c.frameTint(g.id); c.setClock(g.id, true); });
+step('save group bar', () => { const g = doc().groups[0]; c.setState({ saving: { kind: 'group', gid: g.id, name: 'test/g' } }); });
+step('save group done', () => { c.saveDone(); });
+step('WIRES open', () => { c.toggleWires(); });
+step('WIRES row hover/click', () => { const v = c.renderVals(); const r = v.w.sections[0].rows[0]; r.enter(); r.click(); });
+step('port list (rewire input)', () => { c.portMenu(null, 0, 't'); });
+step('port list pick', () => { const v = c.renderVals(); v.pm.items[1].pick(); });
+step('new wire 2 steps', () => { c.portMenu(null, null, 'f', {}); c.renderVals().pm.items[0].pick(); c.renderVals().pm.items[0].pick(); });
+step('sidebar resize', () => { c.drag = { kind: 'sgrip' }; c.move(ev({ clientX: 900, target: { closest: () => null } })); c.up(ev({})); });
+step('NEW (empty)', () => { c.newSeed(); });
+step('undo', () => { c.undo(); c.undo(); });
+step('open project ACID', () => { c.openPicker('PROJECTS'); const v = c.renderVals(); v.searchItems.find(i => /ACID/.test(i.label)).pick(); });
+step('STAGES draw notes', () => { const m = mod('stages'); const L = 0; c.dispDown(ev({ clientX: 520, clientY: 260 }), m.id); c.move(ev({ clientX: 560, clientY: 240 })); c.up(ev({})); });
+step('RHYTHM pad click', () => { const m = mod('rhythm'); c.dispDown(ev({ clientX: 120, clientY: 200 }), m.id); });
+step('DICE stages', () => { const m = mod('stages'); c.act(m.id, 'dice'); });
+step('replace module', () => { const m = mod('filter'); c.setState({ search: { sx: 0, sy: 0, cx: 0, cy: 0, from: null, replace: m.id, q: '', idx: 0 } }); c.renderVals().searchItems.find(i => i.label === 'FOLD').pick(); });
+step('randomize + fit', () => { c.randomize(doc().mods[0].id); c.fit(false); });
+step('delete selection', () => { c.setState({ sel: [doc().mods[0].id] }); c.deleteSel(); });
+step('keys: w / m / g / p / esc', () => { const k = (key, o) => c.key(ev(Object.assign({ key }, o || {}))); k('Escape'); k('w'); k('m'); k('Escape'); k('g'); k('Escape'); k('p'); k('Escape'); k('f'); });

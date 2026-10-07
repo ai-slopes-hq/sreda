@@ -13,3 +13,7 @@ Live: https://claude.ai/artifact/UMqXgzfCtvtFLkovmRvJgP (private to its owner).
 
 The files are Design-canvas artboards (`.dc.html`: `{{holes}}`, `sc-for`, `sc-if`); they are references, not code to
 ship.
+
+`check/` — headless checks for the boards (Node): `node docs/prototype/check/holes.js <board>.dc.html` checks that
+every `{{hole}}` in the template resolves (sc-for / sc-if aware); `node docs/prototype/check/main.js
+docs/prototype/Main.dc.html` also drives the canvas through 32 states and gestures. They do not render the page.
