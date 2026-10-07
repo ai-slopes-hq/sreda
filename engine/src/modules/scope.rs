@@ -86,11 +86,11 @@ impl Dsp for Scope {
             let rise = trig[i] > 0.5 && !self.trig_high;
             self.trig_high = trig[i] > 0.5;
             if self.pos.is_none() {
-                // sync: a TRIG rise when patched, else A rising through 0, else free after a sweep's length
+                // sync: a TRIG rise when patched, else A rising through (or from) 0, else free after a sweep's length
                 let sync = if trig_patched {
                     rise
                 } else {
-                    self.prev_a < 0.0 && a >= 0.0
+                    self.prev_a <= 0.0 && a > 0.0
                 };
                 self.waited += 1.0;
                 if sync || (!trig_patched && self.waited >= sweep) {
@@ -208,6 +208,29 @@ mod tests {
             (sweep_span(44_100.0) - 4409.0).abs() <= 2.0,
             "{}",
             sweep_span(44_100.0)
+        );
+    }
+
+    #[test]
+    fn a_unipolar_signal_rising_from_zero_syncs_the_sweep() {
+        // an envelope at 0 that rises at sample 1000: the sweep must start there, not after a free-run wait
+        let sr = 48_000.0;
+        let mut b = bench(sr, 0.01);
+        b.connected_in = vec![true, false, false];
+        let mut s = Scope::new(sr);
+        b.run(&mut s, 12, |blk, i, inp| {
+            let n = blk * BLOCK + i;
+            inp[0][i] = if n >= 1000 {
+                ((n - 1000) as f32 / 480.0).min(1.0)
+            } else {
+                0.0
+            };
+        });
+        let t = s.trace().unwrap();
+        assert!(
+            t[COLS + 128] > 0.4,
+            "the middle of the sweep shows the rise: {}",
+            t[COLS + 128]
         );
     }
 

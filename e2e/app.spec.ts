@@ -286,3 +286,20 @@ test('SCOPE shows the signal patched into A', async () => {
     .toBeGreaterThan(100);
   await app.close();
 });
+
+test('SLOPE: with CYCLE on its EOC → TRIG normal shows as a ghost cable and names its source', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(900, 600);
+  await page.keyboard.type('slope');
+  await page.keyboard.press('Enter');
+  const slope = page.locator('[data-type=slope]');
+  await expect(slope).toBeVisible();
+  await expect(slope.locator('path.ghost-normal')).toHaveCount(0);
+  await slope.locator('[data-option=cycle] button').click();
+  await expect(slope.locator('path.ghost-normal')).toHaveCount(1);
+  expect(await slope.locator('[data-jack=trig]').getAttribute('title')).toBe('TRIG ← EOC (normal)');
+  // the SHP knob draws its curve instead of a number
+  await slope.locator('.sr-head').hover();
+  await expect(slope.locator('[data-knob=shape] [data-value] svg path')).toHaveCount(1);
+  await app.close();
+});

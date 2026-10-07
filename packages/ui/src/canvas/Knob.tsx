@@ -1,7 +1,7 @@
 import { fromKnob, toKnob, type KnobParam, type Merge } from '@sreda/core';
 import { createSignal, Show, type JSX } from 'solid-js';
 import { track } from '../live';
-import { ang, arc, fmt } from './glyphs';
+import { ang, arc, curveGlyph, fmt } from './glyphs';
 import { panning } from './wheel';
 
 let strokes = 0;
@@ -117,7 +117,13 @@ export function Knob(props: KnobProps): JSX.Element {
       </div>
       <div class="sr-clabel">{p().label}</div>
       <div class="sr-cval" data-value style={{ color: props.modulated ? '#6cb4ee' : undefined }}>
-        {props.loud || props.modulated ? fmt(p(), fromKnob(p(), props.value)) : ''}
+        <Show when={props.loud || props.modulated}>
+          <Show when={p().glyph === 'curve'} fallback={fmt(p(), fromKnob(p(), props.value))}>
+            <svg class="g-svg" width="22" height="9">
+              <path class="g-wave" d={curveGlyph(fromKnob(p(), props.value))} />
+            </svg>
+          </Show>
+        </Show>
       </div>
     </div>
   );

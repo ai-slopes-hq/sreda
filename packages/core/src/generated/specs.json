@@ -1,5 +1,39 @@
 [
   {
+    "type": "noise",
+    "label": "NOISE",
+    "desc": "white and pink",
+    "size": [
+      3,
+      1
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "white",
+        "label": "WHT",
+        "role": "audio"
+      },
+      {
+        "id": "pink",
+        "label": "PNK",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "level",
+        "label": "LVL",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "osc",
     "label": "OSC",
     "desc": "oscillator",
@@ -207,5 +241,104 @@
       "lanes": 4,
       "kind": "scope"
     }
+  },
+  {
+    "type": "slope",
+    "label": "SLOPE",
+    "desc": "rise / fall, cycle, slew",
+    "size": [
+      5,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      },
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "mod"
+      },
+      {
+        "id": "eor",
+        "label": "EOR",
+        "role": "trigger"
+      },
+      {
+        "id": "eoc",
+        "label": "EOC",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "rise",
+        "label": "RISE",
+        "min": 0.0005,
+        "max": 20.0,
+        "def": 0.01,
+        "taper": "exp",
+        "unit": "s",
+        "randomRange": [
+          0.002,
+          1.0
+        ]
+      },
+      {
+        "kind": "knob",
+        "id": "fall",
+        "label": "FALL",
+        "min": 0.0005,
+        "max": 20.0,
+        "def": 0.3,
+        "taper": "exp",
+        "unit": "s",
+        "randomRange": [
+          0.02,
+          2.0
+        ]
+      },
+      {
+        "kind": "knob",
+        "id": "shape",
+        "label": "SHP",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin",
+        "glyph": "curve"
+      },
+      {
+        "kind": "option",
+        "id": "cycle",
+        "label": "CYC",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": [
+      {
+        "kind": "own",
+        "input": "trig",
+        "own": "eoc",
+        "when": {
+          "param": "cycle",
+          "value": 1
+        }
+      }
+    ]
   }
 ]

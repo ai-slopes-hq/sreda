@@ -10,7 +10,7 @@ import {
 } from '@sreda/core';
 import { createMemo, For, Show, type JSX } from 'solid-js';
 import { track } from '../live';
-import { fmtAtt, fmtRat } from './glyphs';
+import { fmtAtt, fmtRat, ROLE } from './glyphs';
 import { Jack } from './Jack';
 import { Knob } from './Knob';
 import { Option } from './Option';
@@ -54,8 +54,43 @@ export function Panel(props: PanelProps): JSX.Element {
   const L = createMemo(() => layoutPanel(props.spec));
   const knobs = () => props.spec.params.filter((p): p is KnobParam => p.kind === 'knob' && !p.hidden);
   const options = () => props.spec.params.filter((p): p is OptionParam => p.kind === 'option' && !p.hidden);
-  const normalled = (port: string) =>
-    !props.cabledIn(port) && props.spec.normals.some((n) => n.input === port);
+  /** the normal an unpatched input reads now (an own normal only while its option condition holds) */
+  const activeNormal = (port: string) =>
+    props.cabledIn(port)
+      ? undefined
+      : props.spec.normals.find(
+          (n) =>
+            n.input === port &&
+            (n.kind !== 'own' || !n.when || props.mod.params[n.when.param] === n.when.value),
+        );
+  const normalled = (port: string) => activeNormal(port) !== undefined;
+  const normalTitle = (port: string, label: string): string | undefined => {
+    const n = activeNormal(port);
+    if (!n) return undefined;
+    const source =
+      n.kind === 'own'
+        ? (props.spec.outputs.find((o) => o.id === n.own)?.label ?? n.own)
+        : n.kind === 'internal'
+          ? n.internal.toUpperCase()
+          : (n.value >= 0 ? '+' : '') + n.value;
+    return `${label} ← ${source} (normal)`;
+  };
+  /** own normals drawn as faint dashed loops under the panel, output → input */
+  const ghosts = () =>
+    props.spec.inputs.flatMap((port) => {
+      const n = activeNormal(port.id);
+      if (n?.kind !== 'own') return [];
+      const o = L().jacks[n.own];
+      const i = L().jacks[port.id];
+      if (!o || !i) return [];
+      const y = L().h + 14;
+      return [
+        {
+          role: port.role,
+          d: `M${o.x} ${o.y} C${o.x + 36} ${o.y} ${o.x + 36} ${y} ${o.x} ${y} L${i.x} ${y} C${i.x - 36} ${y} ${i.x - 36} ${i.y} ${i.x} ${i.y}`,
+        },
+      ];
+    });
   const trigIndex = (port: string) =>
     props.spec.inputs.filter((p) => p.role === 'trigger').findIndex((p) => p.id === port);
 
@@ -77,6 +112,11 @@ export function Panel(props: PanelProps): JSX.Element {
         <div class="sr-col" style={{ right: '0' }} />
       </Show>
       <div class="sr-head">{props.name}</div>
+      <Show when={ghosts().length}>
+        <svg class="sr-ghosts" width={L().w} height={L().h}>
+          <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} stroke={ROLE[g.role]} />}</For>
+        </svg>
+      </Show>
       <Show when={props.spec.display?.kind === 'scope' && L().display}>
         {(d) => (
           <Scope
@@ -109,6 +149,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 y={j().y}
                 filled={props.cabledIn(port.id)}
                 normalled={normalled(port.id)}
+                title={normalTitle(port.id, port.label)}
                 onPointerDown={(e) => props.act.jackDown?.(port.id, 'in', port.role, e)}
                 ref={(el) => {
                   if (port.role === 'trigger')

@@ -15,6 +15,7 @@ export interface JackProps {
   mod?: boolean;
   /** this output is being listened to */
   listening?: boolean;
+  title?: string | undefined;
   ref?: (el: HTMLDivElement) => void;
   onPointerDown?: (e: PointerEvent) => void;
 }
@@ -27,6 +28,7 @@ export function Jack(props: JackProps): JSX.Element {
       data-jack={props.port}
       data-dir={props.dir}
       data-mod={props.mod ? '' : undefined}
+      title={props.title}
       onPointerDown={(e) => {
         e.stopPropagation();
         props.onPointerDown?.(e);

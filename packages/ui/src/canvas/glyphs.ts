@@ -61,3 +61,14 @@ export function bez(a: { x: number; y: number }, b: { x: number; y: number }): s
   const dx = Math.max(40, Math.abs(b.x - a.x) * 0.5);
   return `M${a.x} ${a.y} C${a.x + dx} ${a.y} ${b.x - dx} ${b.y} ${b.x} ${b.y}`;
 }
+
+/** SLOPE's shape as the rise curve it gives (log … lin … exp), in a 22 × 9 box. */
+export function curveGlyph(shape: number): string {
+  let d = '';
+  for (let i = 0; i <= 16; i++) {
+    const x = i / 16;
+    const y = shape > 0 ? Math.pow(x, 1 + shape * 2) : shape < 0 ? 1 - Math.pow(1 - x, 1 - shape * 2) : x;
+    d += `${i ? 'L' : 'M'}${(1 + x * 20).toFixed(1)} ${(8 - y * 7).toFixed(1)}`;
+  }
+  return d;
+}

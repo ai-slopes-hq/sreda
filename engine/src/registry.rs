@@ -1,12 +1,18 @@
 //! Every module, by type id.
 
 use crate::dsp::Dsp;
-use crate::modules::{osc, out, scope};
+use crate::modules::{noise, osc, out, scope, slope};
 use crate::spec::ModuleSpec;
 
 /// Every module's spec, in type-id order (what `pnpm specs` exports).
 pub fn specs() -> Vec<ModuleSpec> {
-    vec![osc::spec(), out::spec(), scope::spec()]
+    vec![
+        noise::spec(),
+        osc::spec(),
+        out::spec(),
+        scope::spec(),
+        slope::spec(),
+    ]
 }
 
 /// One type's spec, including the engine's test-only modules under `cfg(test)`.
@@ -27,6 +33,8 @@ pub fn create(type_: &str, sample_rate: f64) -> Option<Box<dyn Dsp>> {
         "osc" => Some(Box::new(osc::Osc::new(sample_rate))),
         "out" => Some(Box::new(out::Out)),
         "scope" => Some(Box::new(scope::Scope::new(sample_rate))),
+        "slope" => Some(Box::new(slope::Slope::new(sample_rate))),
+        "noise" => Some(Box::new(noise::Noise::new())),
         _ => None,
     }
 }
