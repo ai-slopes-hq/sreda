@@ -174,7 +174,9 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   - **ROUTE:** a frame mode (`layout: 'route'`), toggled. A ROUTE frame manages its own layout: its direct children
     sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the
     left padding is a trunk). Anything dropped into, moved within or taken out of it re-packs it, so the channels
-    always run through. Cables between two direct children are drawn orthogonally and never cross a module: out of
+    always run through. Cables between two direct children are drawn orthogonally and never cross a module. A cable to
+    the next module to the right in the same row goes straight through the gap between them (one step at mid-gap if
+    the jacks are at different heights). Any other cable goes out of
     the source into the channel on its right, up into the channel above its row, along the trunk to the channel
     above the target's row (same row: straight across), down the channel on the target's left into the jack (a
     knob's mod jack: straight down from the channel above) — rounded corners, one 4 px lane per cable. Turning ROUTE
