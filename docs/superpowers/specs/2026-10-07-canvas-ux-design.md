@@ -225,7 +225,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     its own voice.
   - **Ratchet:** S&H (input normalled to noise), sampled on a SLOPE's EOC, sets that SLOPE's fall, so the rhythm
     drifts.
-  - **Acid:** a frame ACID with its own clock at 128 BPM; RHYTHM (GRID `x.xx..x.x.xx..x.`, accents on 4, 12, 15) at
+  - **Acid:** a frame ACID with its own clock at 128 BPM; RHYTHM (GRID `x.x-..x.x.xx-.x.`: `-` is a TIE; accents on 12 and 15) at
     ×4 on its CLK; GATE advances STAGES (16 notes in C minor with four slides; pitch moves only on notes, as on a
     TB-303) and
     fires the filter and amp SLOPEs; ACC fires a third SLOPE stacked on the same CUTOFF mod jack; STAGES → OSC (saw)
@@ -249,7 +249,7 @@ Size is `HP × U`.
 | | **FILTER** — state-variable, all outputs at once | in (audio) | cutoff, res | lp, bp, hp (audio) | — |
 | | **FOLD** | in (audio) | fold, symmetry | out (audio) | — |
 | Time & logic | **STAGES** — Buchla 248 style, generative, drawn as a contour | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage), dice (trigger) | per stage 1–16 (in the contour, not as knobs): voltage, time, pulse ON/OFF, slide (80 ms into the stage); LEN 1–16; GEN 303/MOTIF/WALK/TURING/ARP/PHRASE/PEDAL; SCALE; ROOT; DICE button | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
-| | **RHYTHM** — 16-step rhythm sequencer, generative, drawn as pads | clk (trigger), reset (trigger), dice (trigger) | 16 gate steps, 16 accent steps; LEN 1–16, HITS 0–16, ROT 0–15, DENS 1–16; MODE EUCLID/GRID; DICE button | gate (trigger), acc (trigger), eoc (trigger) | — |
+| | **RHYTHM** — 16-step rhythm sequencer, generative, drawn as pads | clk (trigger), reset (trigger), dice (trigger) | 16 steps OFF / ON / TIE, 16 accent steps; LEN 1–16, HITS 0–16, ROT 0–15, DENS 1–16; MODE EUCLID/GRID; DICE button | gate (trigger), acc (trigger), eoc (trigger) | — |
 | | **CHANCE** — Bernoulli gate | trig (trigger) | P (0…1) | a, b (trigger): each event goes to A with probability P, else to B | — |
 | | **SHIFT** | trig (trigger) | AMT (0…1 of the measured period), WHICH ALL/EVEN (EVEN = swing) | out (trigger) | — |
 | | **COMPARE** | in (audio) | threshold | out (trigger) | — |
@@ -275,15 +275,22 @@ Size is `HP × U`.
   click a joint toggles the slide into the next stage; drag a joint sideways changes the stage time (free-running
   only); click a dot toggles that stage's pulse. The per-stage values are params without knobs or mod jacks; R leaves
   them alone (DICE generates them).
-- **RHYTHM panel = 16 pads** in two rows of eight with an accent strip under each: click a pad toggles the step,
-  click the strip toggles the accent; the current step has an amber ring.
+- **RHYTHM panel = 16 pads** in two rows of eight with an accent strip under each: click a pad cycles OFF → ON →
+  TIE, click the strip toggles the accent; the current step has an amber ring. A TIE pad is drawn as the
+  continuation of the pad before it (a bridge to its left, a slightly darker tone).
+- **Rests and ties.** An OFF step is a rest: no GATE, so nothing downstream fires and STAGES (on ADV) keeps its note.
+  A TIE step continues a sounding step: GATE simply stays high into it — no new rise, so envelopes do not retrigger
+  and STAGES does not advance (the note is held, as a TB-303 tie); an accent on a TIE is ignored. A TIE after a rest
+  plays like ON. In STAGES a stage with its pulse off is a rest for patches voiced from PULSE; the contour shades
+  it (hatched) so rests read at a glance.
 - **RHYTHM:** in EUCLID the pattern is computed live from LEN, HITS and ROT (all modulatable) and the pads show it
   dashed; touching a pad turns the current euclid pattern into a grid (MODE → GRID) and toggles that pad. Pads
   past LEN are dimmed. Each clock rise advances one step; a hit raises GATE for half the last clock interval; an
-  accented hit also fires ACC.
+  accented hit also fires ACC (§ rests and ties for TIE).
 - **DICE** (button, or a rise on the DICE input): STAGES writes a line from GEN in its SCALE and ROOT into its 8
   voltages (v = (semitone − 12) / 12, so 0…24 semitones span −1…+1), with slides for 303 / MOTIF; RHYTHM writes
-  303-style gates (DENS hits, euclid-spread, random rotation) and accents (30 % of hits) and switches to GRID. The
+  303-style gates (DENS hits, euclid-spread, random rotation), long notes (a note holds into the rest after it as
+  a TIE, with the old SREDA's DENS-dependent odds) and accents (30 % of hits), and switches to GRID. The
   generators are ported from the old SREDA (`../sreda/design/mockup/reference-js/seqgen.js`, `sgDice`), with the RNG
   passed in. The button is an undo step; the input changes the patch without one.
 - Action cells (DICE) are buttons on the face; they hold no value.
