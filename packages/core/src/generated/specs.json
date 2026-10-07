@@ -1,5 +1,280 @@
 [
   {
+    "type": "abc",
+    "label": "A×B+C",
+    "desc": "multiply and add, 2 channels",
+    "size": [
+      5,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "a1",
+        "label": "A1",
+        "role": "audio"
+      },
+      {
+        "id": "b1",
+        "label": "B1",
+        "role": "audio"
+      },
+      {
+        "id": "c1",
+        "label": "C1",
+        "role": "audio"
+      },
+      {
+        "id": "a2",
+        "label": "A2",
+        "role": "audio"
+      },
+      {
+        "id": "b2",
+        "label": "B2",
+        "role": "audio"
+      },
+      {
+        "id": "c2",
+        "label": "C2",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out1",
+        "label": "OUT1",
+        "role": "audio"
+      },
+      {
+        "id": "out2",
+        "label": "OUT2",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "ga1",
+        "label": "A1",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "gb1",
+        "label": "B1",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "c1",
+        "label": "C1",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "ga2",
+        "label": "A2",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "gb2",
+        "label": "B2",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "c2",
+        "label": "C2",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": [
+      {
+        "kind": "value",
+        "input": "b1",
+        "value": 1.0
+      },
+      {
+        "kind": "value",
+        "input": "b2",
+        "value": 1.0
+      },
+      {
+        "kind": "internal",
+        "input": "c2",
+        "internal": "out1 while out1 is unpatched"
+      }
+    ]
+  },
+  {
+    "type": "att",
+    "label": "ATT",
+    "desc": "4× attenuverter + offset",
+    "size": [
+      6,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "in1",
+        "label": "IN1",
+        "role": "audio"
+      },
+      {
+        "id": "in2",
+        "label": "IN2",
+        "role": "audio"
+      },
+      {
+        "id": "in3",
+        "label": "IN3",
+        "role": "audio"
+      },
+      {
+        "id": "in4",
+        "label": "IN4",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out1",
+        "label": "OUT1",
+        "role": "mod"
+      },
+      {
+        "id": "out2",
+        "label": "OUT2",
+        "role": "mod"
+      },
+      {
+        "id": "out3",
+        "label": "OUT3",
+        "role": "mod"
+      },
+      {
+        "id": "out4",
+        "label": "OUT4",
+        "role": "mod"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "a1",
+        "label": "ATT1",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "a2",
+        "label": "ATT2",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "a3",
+        "label": "ATT3",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "a4",
+        "label": "ATT4",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "o1",
+        "label": "OFS1",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "o2",
+        "label": "OFS2",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "o3",
+        "label": "OFS3",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "o4",
+        "label": "OFS4",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      }
+    ],
+    "normals": [
+      {
+        "kind": "value",
+        "input": "in1",
+        "value": 1.0
+      },
+      {
+        "kind": "value",
+        "input": "in2",
+        "value": 1.0
+      },
+      {
+        "kind": "value",
+        "input": "in3",
+        "value": 1.0
+      },
+      {
+        "kind": "value",
+        "input": "in4",
+        "value": 1.0
+      }
+    ]
+  },
+  {
     "type": "chance",
     "label": "CHANCE",
     "desc": "bernoulli: each trigger to A or B",

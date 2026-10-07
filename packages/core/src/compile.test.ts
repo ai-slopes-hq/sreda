@@ -5,7 +5,7 @@ import { compile } from './compile';
 import { TRACE_LEN } from './plan';
 import { emptyDoc, starterDoc, type Doc } from './doc';
 import { addModule, connect, deleteObjects, removeCable, setAtt, setParam, setRatio } from './ops';
-import { SPECS, type Specs } from './spec';
+import { inputPorts, SPECS, type Specs } from './spec';
 import { TEST_SPECS as S } from './testspecs';
 
 function build(specs: Specs, types: string[]): { doc: Doc; ids: string[] } {
@@ -110,8 +110,38 @@ test('fixtures for the engine', () => {
     [osc, 'out'],
     ['m3', 'b'],
   );
+  // every module type at once: a saw and a square clock feed every input of every module
+  let all = addModule(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'osc', 0, 200).doc;
+  all = setParam(setParam(all, SPECS, 'm1', 'wave', 2), SPECS, 'm2', 'wave', 3);
+  for (const type of Object.keys(SPECS)) {
+    const added = addModule(all, SPECS, type, 400, 0);
+    all = added.doc;
+    for (const port of inputPorts(SPECS[type]!))
+      all = connect(
+        all,
+        SPECS,
+        [
+          port.id.startsWith('@') || SPECS[type]!.inputs.find((q) => q.id === port.id)?.role !== 'trigger'
+            ? 'm1'
+            : 'm2',
+          'out',
+        ],
+        [added.id, port.id],
+      );
+  }
+  const ids = (t: string) => all.modules.filter((m) => m.type === t).map((m) => m.id);
+  const filter = ids('filter')[0]!;
+  let allB = deleteObjects(all, ids('delay'));
+  allB = connect(
+    removeCable(allB, { from: ['m1', 'out'], to: [filter, 'in'] }),
+    SPECS,
+    [ids('noise')[0]!, 'white'],
+    [filter, 'in'],
+  );
   const plans = {
     starter: compile(starter, SPECS, 1),
+    'all-a': compile(all, SPECS, 5),
+    'all-b': compile(allB, SPECS, 6),
     'self-fm': compile(loop, SPECS, 2),
     'scope-a': compile(scoped, SPECS, 3),
     'scope-b': compile(rerouted, SPECS, 4),

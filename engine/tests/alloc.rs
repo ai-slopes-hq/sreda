@@ -75,3 +75,19 @@ fn fades_crossfades_triggers_and_scope_allocate_nothing() {
     }
     assert_eq!(allocs() - before, 0);
 }
+
+#[test]
+fn every_module_type_together_allocates_nothing() {
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(fixture("all-a")).unwrap();
+    for _ in 0..100 {
+        e.process();
+    }
+    // a module removed (it fades out) and an input re-routed (it crossfades) — inside the measured loop
+    e.apply(fixture("all-b")).unwrap();
+    let before = allocs();
+    for _ in 0..10_000 {
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+}

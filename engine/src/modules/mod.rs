@@ -1,5 +1,7 @@
 //! One file per module: `spec()`, the DSP struct and its tests.
 
+pub mod abc;
+pub mod att;
 pub mod chance;
 pub mod compare;
 pub mod complex;
