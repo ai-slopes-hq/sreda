@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 9 (wire hover, WIRE FIX on by default) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 10 (WIRES editor) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -13,6 +13,7 @@ only so you can come back to it. The instrument it chases is a Serge / Buchla / 
 
 - From opening the app to hearing sound: one click.
 - No modal windows, no inspector, no edit/play split: everything you change is on the canvas where you change it.
+  The one exception is the WIRES editor (§5a), a side view of the same wires that keeps the canvas live beside it.
 - Small atomic modules in the spirit of Bitwig Grid and Reaktor, with a west-coast module set: few features each,
   many of them, complex patches built from simple parts.
 - No global clock: anything periodic can clock anything. Groups may share a clock, opt-in.
@@ -188,14 +189,41 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
 
+## 5a. WIRES editor
+
+The patch seen through its wires — to understand it, set depths, rewire and find problems. It slides in from the
+right over 45 % of the window (W or the WIRES button; W or Esc closes); the canvas stays live on the left.
+
+- **Sections**, each collapsible with a wire count:
+  - one per frame (nested frames as indented subsections, `POLY › VOICE A`): the wires whose ends are both inside
+    it, each listed under the innermost frame holding both ends;
+  - **UNGROUPED**: wires between modules that are in no frame;
+  - **BETWEEN GROUPS**: wires that cross a frame's border — how the parts of the patch talk to each other;
+  - **PROBLEMS**: sound that reaches no OUT; a processor with its sound input empty (FILTER, VCA, LPG, FOLD, DELAY,
+    FOLLOW, OUT's L — optional inputs such as SLOPE's IN are not problems); a RHYTHM with no clock. Listed dimmed as
+    information: feedback loops and muted frames. Clicking a problem selects that module and frames it in view.
+- **A wire row:** `SOURCE › PORT  →  DEST › PORT   value   ✕`, a role-coloured dot at each end (two colours for a
+  cross-role wire). The value is the destination's attenuverter or ratio, dragged, wheeled and reset exactly as on
+  the module. Modules of the same type are numbered (`SLOPE 1`, `SLOPE 2`) everywhere names are shown.
+  - Clicking a port name opens a list of ports (same role first, with a filter) and moves that end of the wire —
+    across the whole canvas if needed. ✕ removes the wire. `+ new wire` (under BETWEEN GROUPS) picks an output,
+    then an input.
+  - Normals are listed dimmed in their module's section (`STAGES › ADV  ← STAGE TIMER (normal)`): visible, not
+    removable.
+- **Linked to the canvas:** hovering a row highlights that wire on the canvas exactly like hovering the wire.
+  Selecting a module or frame on the canvas highlights its rows and scrolls the first into view; **SELECTION**
+  keeps only the wires touching the selection; the filter field matches module and port names.
+- **Keys** while it is open: ↑ / ↓ move between wire rows, Backspace removes the selected wire, Enter opens the port
+  list for its input end.
+
 ## 6. Session, library and factory patches
 
 - The current canvas autosaves to IndexedDB 500 ms after the last edit. Opening the app resumes it; the very first
   launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
-- Top right: **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the canvas; an undo
-  step). With the listen bar these are the only chrome.
+- Top right: **WIRES** (§5a), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
+  canvas; an undo step). With the listen bar these are the only chrome.
 - **Library = a folder on disk.** The first save or open asks for a library folder once (File System Access API;
   the handle is kept in IndexedDB and permission re-asked by the browser when needed). Inside it:
   `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
@@ -366,4 +394,5 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
   of a frame detaches it; STACK packs a frame; WIRE FIX draws orthogonal cables; MUTE silences a frame's outgoing
   cables; replace keeps matching cables and knob values; dropping a free module on a cable inserts it; NEW clears and
   undo restores; reload resumes the canvas; ⌘S saves a frame as a group and the picker places it twice with fresh
-  ids; ⌘S / ⌘O round-trip a project through the library folder.
+  ids; ⌘S / ⌘O round-trip a project through the library folder; WIRES lists a frame's wires under it, rewires
+  an end from the port list, and shows a FILTER with an empty input under PROBLEMS.
