@@ -125,7 +125,9 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - **Undo:** ⌘Z / ⇧⌘Z for every edit. One drag is one step; a wheel run on one control merges into one step until a
   0.7 s pause.
 - Knobs: drag vertically (200 px = full range, Shift = ×0.1), wheel (1 % per notch, one step for stepped knobs),
-  double-click resets. Options: click cycles.
+  double-click resets. Options with two values toggle on click. Options with three or more (SCALE, WAVE, MODE…)
+  show `▾` and open a small list anchored under the cell on click — not a window: the current value is highlighted,
+  a click picks, Esc or a click elsewhere closes. The wheel steps any option without opening the list.
 
 ## 5. Groups (frames)
 
