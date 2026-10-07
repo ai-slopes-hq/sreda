@@ -84,7 +84,9 @@ body{margin:0;background:#121210}
 .sr-wires-btn{position:absolute;top:12px;right:156px;height:30px;padding:0 14px;background:#1b1b18;border:1px solid #3a3933;border-radius:3px;color:#e9e4d8;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;cursor:pointer}
 .sr-wires-btn:hover{border-color:#8f897c}
 .sr-wires-btn.on{background:#e9e4d8;color:#121210;border-color:#e9e4d8}
-.sr-wires{position:absolute;right:0;top:52px;bottom:36px;width:45%;min-width:440px;background:#161614;border-left:1px solid #2e2d28;display:flex;flex-direction:column;z-index:18;cursor:default}
+.sr-wires{position:absolute;right:0;top:0;bottom:0;background:#161614;border-left:1px solid #2e2d28;display:flex;flex-direction:column;z-index:18;cursor:default}
+.sr-sgrip{position:absolute;left:-4px;top:0;bottom:0;width:8px;cursor:ew-resize;z-index:1}
+.sr-sgrip:hover{background:rgba(233,228,216,.08)}
 .sr-whead{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #2e2d28}
 .sr-wtitle{font-size:11px;font-weight:600;letter-spacing:.14em;color:#e9e4d8;margin-right:4px}
 .sr-wq{flex:1;min-width:60px;background:#121210;border:1px solid #3a3933;color:#e9e4d8;font:500 11px 'IBM Plex Mono',monospace;padding:4px 6px;outline:none}
@@ -278,11 +280,11 @@ body{margin:0;background:#121210}
 </sc-if>
 <div class="sr-brand">{{brand}}</div>
 <sc-if value="{{hasListen}}" hint-placeholder-val="{{false}}">
-<button class="sr-listen" onPointerDown="{{stop}}" onClick="{{clearListen}}">{{listenText}}</button>
+<button class="sr-listen" style="{{listenStyle}}" onPointerDown="{{stop}}" onClick="{{clearListen}}">{{listenText}}</button>
 </sc-if>
-<button class="sr-wires-btn {{wiresCls}}" onPointerDown="{{stop}}" onClick="{{onWires}}" title="wires (W)">WIRES</button>
-<button class="sr-save-btn" onPointerDown="{{stop}}" onClick="{{onSaveProject}}" title="save project (⌘S)">SAVE</button>
-<button class="sr-new" onPointerDown="{{stop}}" onClick="{{onNew}}">NEW</button>
+<button class="sr-wires-btn {{wiresCls}}" style="{{wiresBtnStyle}}" onPointerDown="{{stop}}" onClick="{{onWires}}" title="wires (W)">WIRES</button>
+<button class="sr-save-btn" style="{{saveBtnStyle}}" onPointerDown="{{stop}}" onClick="{{onSaveProject}}" title="save project (⌘S)">SAVE</button>
+<button class="sr-new" style="{{newStyle}}" onPointerDown="{{stop}}" onClick="{{onNew}}">NEW</button>
 <sc-if value="{{hasSearch}}" hint-placeholder-val="{{false}}">
 <div class="sr-search" style="{{searchStyle}}" onPointerDown="{{stop}}" onDoubleClick="{{stop}}">
 <input ref="{{searchRef}}" value="{{searchQ}}" onChange="{{searchChange}}" onKeyDown="{{searchKey}}" placeholder="add module…" aria-label="Search modules">
@@ -314,9 +316,10 @@ body{margin:0;background:#121210}
 <div class="sr-save" onPointerDown="{{stop}}" onDoubleClick="{{stop}}"><span>{{saveTitle}}</span><input ref="{{saveRef}}" value="{{saveVal}}" onChange="{{saveChange}}" onKeyDown="{{saveKey}}" aria-label="Name"><span>↵</span></div>
 </sc-if>
 <sc-if value="{{w.open}}" hint-placeholder-val="{{false}}">
-<div class="sr-wires" onPointerDown="{{stop}}" onDoubleClick="{{stop}}">
+<div class="sr-wires" style="{{sideStyle}}" onPointerDown="{{stop}}" onDoubleClick="{{stop}}">
+<div class="sr-sgrip" onPointerDown="{{w.gripDown}}" title="drag to resize"></div>
 <div class="sr-whead">
-<span class="sr-wtitle">WIRES</span>
+<button class="sr-gbtn on" title="sidebar: WIRES">WIRES</button>
 <input class="sr-wq" value="{{w.q}}" onChange="{{w.qChange}}" onKeyDown="{{w.qKey}}" placeholder="filter by module or port…" aria-label="Filter wires">
 <button class="sr-gbtn {{w.selCls}}" onClick="{{w.toggleSel}}">SELECTION</button>
 <button class="sr-gbtn" onClick="{{w.close}}" aria-label="Close wires">✕</button>
@@ -351,8 +354,8 @@ body{margin:0;background:#121210}
 </div>
 </div>
 </sc-if>
-<div class="sr-hint">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · M G P MODULES GROUPS PROJECTS · W WIRES · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · ⌘G FRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
-<div class="sr-zoom" onPointerDown="{{stop}}">
+<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · M G P MODULES GROUPS PROJECTS · W WIRES · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · ⌘G FRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
+<div class="sr-zoom" style="{{zoomStyle}}" onPointerDown="{{stop}}">
 <button onClick="{{zoomOut}}" aria-label="Zoom out">−</button>
 <span>{{zoomText}}</span>
 <button onClick="{{zoomIn}}" aria-label="Zoom in">+</button>
@@ -1509,7 +1512,7 @@ function wireProblems(doc) {
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { doc: buildSeed(0, 1), seed: 0, view: { x: 48, y: 140, z: 0.8 }, sel: [], listen: null, search: null, hover: null, hoverG: null, rename: null, renameVal: '', menu: null, frame: 0, wires: { open: false, q: '', selOnly: false, closed: {} }, wireSel: null, pm: null, project: { path: 'FACTORY/pulse', factory: true }, saving: null, lib: [] };
+    this.state = { doc: buildSeed(0, 1), seed: 0, view: { x: 48, y: 140, z: 0.8 }, sel: [], listen: null, search: null, hover: null, hoverG: null, rename: null, renameVal: '', menu: null, frame: 0, wires: { open: false, q: '', selOnly: false, closed: {}, width: 440 }, wireSel: null, pm: null, project: { path: 'FACTORY/pulse', factory: true }, saving: null, lib: [] };
     this.past = []; this.future = []; this.lastKey = null; this.lastTime = 0; this.strokes = 0; this.taps = {};
     this.drag = null; this.ptr = { x: 0, y: 0 }; this.sim = new Sim(); this.space = false; this.guides = null;
     this.rootRef = (el) => {
@@ -1761,6 +1764,7 @@ class Component extends DCLogic {
     this.lastPtr = this.toCanvas(e);
     var d = this.drag;
     if (!d) {
+      if (e.target.closest && e.target.closest('.sr-wires, .sr-search, .sr-menu')) return;
       var doc0 = this.state.doc, hit = cableAt(doc0, cableGeoms(doc0), this.lastPtr, 6 / this.state.view.z);
       if (hit !== this.state.hoverC || (hit != null && this.state.hoverCPos && (Math.abs(this.state.hoverCPos.sx - this.lastPtr.sx) > 2 || Math.abs(this.state.hoverCPos.sy - this.lastPtr.sy) > 2)))
         this.setState({ hoverC: hit, hoverCPos: hit != null ? { sx: this.lastPtr.sx, sy: this.lastPtr.sy } : null });
@@ -1820,6 +1824,9 @@ class Component extends DCLogic {
         findGrp(kd, d.gid).clock.bpm = Math.round(clamp(d.v0 + ky / 2, 20, 300));
       }
       this.commit(kd, d.key);
+    } else if (d.kind === 'sgrip') {
+      var GR = this.root.getBoundingClientRect();
+      this.wiresSet({ width: Math.round(clamp(GR.right - e.clientX, 320, GR.width * 0.7)) });
     } else if (d.kind === 'cpaint') {
       var cm = findMod(this.state.doc, d.id), cL = lay('stages');
       this.paint(p.x - cm.x - cL.disp.x, p.y - cm.y - cL.disp.y);
@@ -2109,7 +2116,7 @@ class Component extends DCLogic {
   ensureVisible(id) {
     var doc = this.state.doc; if (!this.root || !(findMod(doc, id) || findGrp(doc, id))) return;
     var R = this.root.getBoundingClientRect(), v = this.state.view, r = objRect(doc, id);
-    var vx0 = 16, vy0 = 56, vx1 = (this.state.wires.open ? R.width * 0.55 : R.width) - 16, vy1 = R.height - 44;
+    var vx0 = 16, vy0 = 56, vx1 = R.width - (this.state.wires.open ? this.state.wires.width : 0) - 16, vy1 = R.height - 44;
     var sx = r.x * v.z + v.x, sy = r.y * v.z + v.y, sw = r.w * v.z, sh = r.h * v.z;
     if (sx >= vx0 && sy >= vy0 && sx + sw <= vx1 && sy + sh <= vy1) return;
     var tx = v.x + ((vx0 + vx1) / 2 - (sx + sw / 2)), ty = v.y + ((vy0 + vy1) / 2 - (sy + sh / 2));
@@ -2169,7 +2176,7 @@ class Component extends DCLogic {
       mergeInto(pd, src, 0, 0);
       this.commit(pd);
       this.projectDoc = null;
-      this.setState({ search: null, sel: [], project: { path: it.e.path, factory: it.e.factory } });
+      this.setState({ search: null, sel: [], project: { path: it.e.path, factory: it.e.factory }, wires: Object.assign({}, this.state.wires, { width: 440 }) });
       var self = this; setTimeout(function () { self.projectDoc = self.state.doc; self.fit(false); }, 0);
       this.focusRoot(); return;
     }
@@ -2360,9 +2367,16 @@ class Component extends DCLogic {
       rsBL: function (e) { self.resizeDown(e, id, 'BL'); }
     };
   }
+  // the wire to light up: the one under the pointer, else the wire row picked in WIRES
+  litCable(doc) {
+    var st = this.state;
+    if (st.hoverC != null && doc.cables[st.hoverC]) return st.hoverC;
+    if (st.wires.open && st.wireSel != null && doc.cables[st.wireSel]) return st.wireSel;
+    return null;
+  }
   peekVals(doc) {
-    var st = this.state, ids = {}, r = { hasPeek: false, peekStyle: '', peekPath: '', ids: ids };
-    if (st.hoverC != null && doc.cables[st.hoverC]) { ids[doc.cables[st.hoverC].f[0]] = 1; ids[doc.cables[st.hoverC].t[0]] = 1; }
+    var st = this.state, ids = {}, r = { hasPeek: false, peekStyle: '', peekPath: '', ids: ids }, lit = this.litCable(doc);
+    if (lit != null) { ids[doc.cables[lit].f[0]] = 1; ids[doc.cables[lit].t[0]] = 1; }
     var pm = st.pm; if (!pm) return r;
     var cand = this.pmItems()[pm.i], fixed = null;
     if (pm.add && pm.add.src) fixed = { id: pm.add.src.id, port: pm.add.src.port, out: true };
@@ -2437,7 +2451,8 @@ class Component extends DCLogic {
     return {
       open: W.open, q: W.q, selCls: W.selOnly ? 'on' : '', sections: sections,
       qChange: function (e) { self.wiresSet({ q: e.target.value }); }, qKey: function (e) { e.stopPropagation(); if (e.key === 'Escape') { self.wiresSet({ q: '' }); self.focusRoot(); } },
-      toggleSel: function () { self.wiresSet({ selOnly: !self.state.wires.selOnly }); }, close: function () { self.toggleWires(); }
+      toggleSel: function () { self.wiresSet({ selOnly: !self.state.wires.selOnly }); }, close: function () { self.toggleWires(); },
+      gripDown: function (e) { if (e.button !== 0) return; e.stopPropagation(); self.drag = { kind: 'sgrip' }; }
     };
   }
   pmVals() {
@@ -2473,7 +2488,8 @@ class Component extends DCLogic {
     var lifted = d && d.kind === 'wire' && d.moved && d.lifted ? d.lifted : null, skipped = false;
     var muted = dimSet(doc), focus = this.focusSet(doc), anyFocus = Object.keys(focus).length > 0, pk = this.peekVals(doc);
     this.peekIds = pk.ids;
-    var geoms = cableGeoms(doc), hc = st.hoverC != null && doc.cables[st.hoverC] ? st.hoverC : null;
+    var sideW = st.wires.open ? st.wires.width : 0;
+    var geoms = cableGeoms(doc), hc = this.litCable(doc);
     var cables = doc.cables.map(function (c, i) { return { c: c, i: i }; }).filter(function (x) {
       var c = x.c;
       if (!skipped && lifted && c.f[0] === lifted.f[0] && c.f[1] === lifted.f[1] && sameEnd(c, lifted.t)) { skipped = true; return false; }
@@ -2546,6 +2562,9 @@ class Component extends DCLogic {
       saveRef: this.saveRef, saveChange: this.saveChange, saveKey: this.saveKey,
       hasCtag: hc != null, ctagStyle: hc != null && st.hoverCPos ? 'left:' + (st.hoverCPos.sx + 14) + 'px;top:' + (st.hoverCPos.sy + 14) + 'px;' : '',
       ctagText: hc != null ? nameOf(doc, doc.cables[hc].f[0]) + ' › ' + jackLocal(doc.cables[hc].f[0], doc.cables[hc].f[1], doc).label + '  →  ' + nameOf(doc, doc.cables[hc].t[0]) + ' › ' + jackLocal(doc.cables[hc].t[0], doc.cables[hc].t[1], doc).label : '',
+      sideStyle: 'width:' + st.wires.width + 'px;',
+      listenStyle: 'left:calc((100% - ' + sideW + 'px) / 2);', wiresBtnStyle: 'right:' + (156 + sideW) + 'px;', saveBtnStyle: 'right:' + (82 + sideW) + 'px;',
+      newStyle: 'right:' + (16 + sideW) + 'px;', zoomStyle: 'right:' + (16 + sideW) + 'px;', hintStyle: 'right:' + (140 + sideW) + 'px;',
       wiresCls: st.wires.open ? 'on' : '', w: this.wiresVals(doc), pm: this.pmVals(), hasPeek: pk.hasPeek, peekStyle: pk.peekStyle, peekPath: pk.peekPath,
       hasListen: !!listenText, listenText: listenText, hasMenu: menuItems.length > 0, menuItems: menuItems, menuStyle: menuStyle,
       hasSearch: !!s, searchStyle: s ? 'left:' + s.sx + 'px;top:' + s.sy + 'px;' : '', searchQ: s ? s.q : '',

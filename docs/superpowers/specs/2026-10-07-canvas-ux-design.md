@@ -189,10 +189,14 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
 
-## 5a. WIRES editor
+## 5a. Sidebar and the WIRES editor
 
-The patch seen through its wires — to understand it, set depths, rewire and find problems. It slides in from the
-right over 45 % of the window (W or the WIRES button; W or Esc closes); the canvas stays live on the left.
+- **Sidebar:** a panel docked on the right, hidden by default (W or the WIRES button opens and closes it; Esc closes
+  it). It does not cover the canvas: the canvas, the top-right buttons, the zoom control and the hint line end at its
+  edge. It opens at a fixed width (440 px) with every new window and every opened project; within a session its
+  left edge can be dragged (320 px … 70 % of the window). A tab row at its top holds its functions; the first and,
+  for now, only one is WIRES.
+- **WIRES** — the patch seen through its wires: to understand it, set depths, rewire and find problems.
 
 - **Sections**, each collapsible with a wire count:
   - one per frame (nested frames as indented subsections, `POLY › VOICE A`): the wires whose ends are both inside
@@ -211,12 +215,14 @@ right over 45 % of the window (W or the WIRES button; W or Esc closes); the canv
   - Normals are listed dimmed in their module's section (`STAGES › ADV  ← STAGE TIMER (normal)`): visible, not
     removable.
 - **Linked to the canvas:** hovering a row highlights that wire on the canvas exactly like hovering the wire, and
-  outlines both its modules in amber (hovering a wire on the canvas outlines its modules too). In the port list —
+  outlines both its modules in amber (hovering a wire on the canvas outlines its modules too); a row picked with a
+  click or ↑ / ↓ keeps its wire lit and its modules outlined after the pointer leaves. Moving the pointer over the
+  sidebar never looks for wires on the canvas underneath. In the port list —
   moving an end, or `+ new wire` — the port under the pointer (or picked with ↑ / ↓) gets an amber ring on the
   canvas and its module an amber outline; once one end is fixed, a dashed amber preview wire runs from it to that
   candidate, so you see where the wire will land before you click.
   If that candidate (or a wire row picked with ↑ / ↓) is outside the visible part of the canvas — the part not
-  covered by WIRES — and stays the candidate for 250 ms, the view glides (220 ms, ease-out) to centre its module;
+  covered by the sidebar — and stays the candidate for 250 ms, the view glides (220 ms, ease-out) to centre its module;
   zoom is unchanged.
   Selecting a module or frame on the canvas highlights its rows and scrolls the first into view; **SELECTION**
   keeps only the wires touching the selection; the filter field matches module and port names.
@@ -229,7 +235,7 @@ right over 45 % of the window (W or the WIRES button; W or Esc closes); the canv
   launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
-- Top right: **WIRES** (§5a), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
+- Top right: **WIRES** (opens the sidebar, §5a), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
   canvas; an undo step). With the listen bar these are the only chrome.
 - **Library = a folder on disk.** The first save or open asks for a library folder once (File System Access API;
   the handle is kept in IndexedDB and permission re-asked by the browser when needed). Inside it:
