@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 12 (technology: Electron, Rust → WASM engine, SolidJS) · Status: approved
+Date: 2026-10-07 · Revision 13 (sound pack designed) · Status: approved
 
 ## Why
 
@@ -367,23 +367,54 @@ Size is `HP × U`.
 
 ## 7a. Second milestone: the sound pack
 
-Specified now, built right after the first build (its own plan). Atomic modules with character (filters are one
-FILTER with a MODEL choice); ports and sizes
-follow the same rules (§2, §3).
+Built right after the first build, with its own plan. Same panel grammar (§2); board *Sound pack* in the prototype.
+Stereo outputs are two mono outputs (cables stay mono).
 
-| Module | What it is | Controls | Ports |
-|---|---|---|---|
-| FILTER (upgrade) | one filter module with a choice of model, so there is still one FILTER: MODEL SVF / LADDER (Moog 24 dB) / DIODE (TB-303) / SK (Sallen-Key, MS-20) / COMB / VOWEL, shown as a glyph of the model's response | MODEL; cutoff and res are shared (COMB: frequency and ± feedback; VOWEL: vowel A-E-I-O-U and resonance); a pitch input for COMB tracking | the same outputs plus notch: lp, bp, hp, notch — each model fills them with its own responses (the mapping is decided in the sound-pack plan), so changing MODEL never breaks cables |
-| **SAMPLER** | plays a file from the library's `samples/` folder | start, end (dragged on its waveform display), pitch, mode ONE / LOOP / PING-PONG, reverse, level | trig, pitch → out L, out R |
-| **GRAINS** | granular player — its own instrument | position, size, density, spray, pitch, reverse %, source FILE / LIVE, FREEZE | in (live source), trig, pitch → out L, out R |
-| **REVERB** | algorithmic reverb | type ROOM / PLATE / HALL, size, decay, damp, pre-delay, mix | in → out L, out R |
-| DELAY (upgrade) | delay types | type DIGI / TAPE / SPRING, CHAR (DIGI: bit depth · TAPE: wow & flutter · SPRING: drip) | — |
-| **DRIVE** | saturation / overdrive / fuzz | mode SAT / OD / FUZZ, gain (to +24 dB), tone, mix | in → out |
+| Module | Size | Inputs | Knobs | Mode strip | Outputs |
+|---|---|---|---|---|---|
+| **FILTER** (upgrade) | 5×1 | in (audio), pitch (pitch: tracks the cutoff; COMB's tuning) | CUT, RES, DRV (gain into the nonlinear models) | MODEL ▾ SVF / LADDER / DIODE / SK / COMB / VOWEL, drawn as a response glyph | lp, bp, hp |
+| **DRIVE** | 5×1 | in (audio) | GAIN (to +24 dB), TONE, MIX | MODE ▾ SAT / OD / FUZZ | out |
+| **DELAY** (upgrade) | 6×1 | in (audio), clk (trigger) | TIME, FB, MIX, CHAR | TYPE ▾ DIGI / TAPE / SPRING · PING | l, r |
+| **REVERB** | 6×2 | in (audio) | SIZE, DECAY, DAMP, PRE, MOD, MIX | TYPE ▾ ROOM / PLATE / HALL · FREEZE | l, r |
+| **SAMPLER** | 8×2 | trig (trigger), pitch (pitch), slice (mod), start (mod) | PITCH (±24 st), START, LEN, DEC, LVL, SLICES (2–64; SENS while AUTO) | MODE ▾ ONE / LOOP / SLICE · REV · AUTO · LOAD (right) | l, r, eoc (trigger) |
+| **GRAINS** | 10×2 | trig (trigger), in (audio), pos (mod), pitch (pitch) | POS, SIZE (5 ms…1 s), DENS (1–200 /s), SPRAY, PITCH, DETUNE, REV %, SPREAD | SOURCE ▾ FILE / LIVE · FREEZE · LOAD (right) | l, r |
 
-- Samples live in the library folder (`samples/**`); the picker gains a SAMPLES tab (key **S**); an audio file dropped
-  on the canvas is copied into `samples/` and opens a SAMPLER with it. Clicking a SAMPLER's waveform opens the picker
-  on SAMPLES.
-- Stereo outputs are two mono outputs (cables stay mono).
+- **FILTER models.** One module, so changing MODEL never breaks cables; each model fills LP / BP / HP with its own
+  responses: SVF 12 dB; LADDER 24 dB lowpass with 2-pole band and the complementary highpass; DIODE the 18 dB TB-303
+  ladder; SK the MS-20's Sallen-Key pair; COMB tuned by CUT + PITCH, LP = positive feedback, BP = negative, HP = comb
+  minus dry; VOWEL formants morphing A-E-I-O-U on CUT, LP = all formants, BP = the first, HP = the upper ones.
+  DRV drives the nonlinear models (ADAA, 2× oversampling); NOTCH is dropped (four outputs do not fit 1U).
+- **DRIVE:** SAT a soft tape-like curve, OD an asymmetric tube-like one, FUZZ a hard clip with bias; TONE a tilt EQ
+  after the curve; output level compensated so GAIN changes character more than loudness; ADAA, 2× oversampling.
+- **DELAY types:** DIGI clean, CHAR = bit depth and sample-rate reduction; TAPE wow and flutter, saturation and
+  high-frequency loss on every repeat, CHAR = wear; SPRING a dispersive allpass chain (the chirp), CHAR = drip.
+  PING alternates repeats between L and R. With CLK patched, TIME snaps to divisions of its period (1/16 … 4).
+- **REVERB types:** ROOM a small FDN, HALL a large FDN with longer pre-delay and diffusion, PLATE a Dattorro plate;
+  MOD slowly modulates the delay lines; FREEZE holds the tail forever (input muted, feedback 1).
+- **SAMPLER modes.** ONE: TRIG plays START…LEN with DEC as an amplitude decay (full = off); up to 4 overlapping
+  voices, a new trigger never cuts the last, the oldest is stolen. LOOP: TRIG restarts; it loops START…LEN. SLICE:
+  the region is cut into SLICES equal slices, or by detected hits with AUTO (SENS = threshold); each TRIG plays the
+  next slice, or the one SLICE picks when patched — a break follows its clock by re-triggering, pitch independent.
+  REV plays backwards. 1 ms fades at every boundary. EOC fires at the end of a play-through or slice. Its display
+  shows the waveform, START / LEN markers (ONE / LOOP) or slice markers (SLICE), the playhead in amber and the file
+  name; clicking the waveform or LOAD opens the picker on SAMPLES for this module.
+- **GRAINS.** Grains (Hann window, up to 64 at once) spawn on TRIG rises, or at DENS per second when TRIG is
+  unpatched; each reads from POS (± SPRAY), lasts SIZE, plays at PITCH (± DETUNE), reversed with probability REV %,
+  panned within SPREAD. SOURCE FILE reads a library sample; LIVE records IN into an 8-second ring buffer, and FREEZE
+  stops the recording so the frozen piece of the patch can be explored. The display shows the source waveform,
+  POS and the live grains as amber dots; while LIVE, the region being written is shaded.
+- **Samples as a system.**
+  - Files live in the library folder under `samples/**`: WAV, AIFF, FLAC, MP3, OGG. A module stores the sample's
+    library path; on load the UI reads the file (IPC), decodes and resamples it to the engine's rate, and hands the
+    channels to the engine, which keeps them in a sample pool by id. Hit detection for AUTO runs once per load.
+  - The picker gains a SAMPLES tab and key **S**; moving through samples with ↑ / ↓ auditions each one through the
+    listen path.
+  - An audio file dropped on the canvas is copied into `samples/` and opens a SAMPLER with it; dropped on a SAMPLER
+    or GRAINS it replaces their sample.
+  - A missing file shows `MISSING · <name>` on the display, outputs silence, and is listed under PROBLEMS in WIRES.
+  - Saved groups and projects reference samples by path; they do not copy audio.
+- **Engine additions:** a sample pool (memory sized on load, not in `process`); per-module voices and grain pools
+  allocated on construction; the plan carries a module's sample id in its fixed values.
 
 ## 8. Technology and architecture
 
