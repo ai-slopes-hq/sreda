@@ -74,7 +74,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
   }
 
   function show(doc: Doc): void {
-    setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: false }));
+    setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
     scheduleSave(doc);
     // selection and listening follow what still exists
     const ids = new Set(doc.modules.map((m) => m.id));
@@ -164,7 +164,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
     },
     /** show a document while a gesture is under way (no undo step, no save, no plan) */
     preview(doc: Doc): void {
-      setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: false }));
+      setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
     },
     current: (): Doc => history.current,
     setListen(l: { id: string; port: string } | null): void {

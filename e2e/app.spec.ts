@@ -9,7 +9,7 @@ async function launch(
 ): Promise<{ app: ElectronApplication; page: Page; dir: string }> {
   const app = await electron.launch({
     args: ['packages/app'],
-    env: { ...process.env, SREDA_USER_DATA: dir },
+    env: { ...process.env, SREDA_USER_DATA: dir, SREDA_E2E: '1' },
   });
   const page = await app.firstWindow();
   await page.waitForFunction(() => '__sreda' in window);
@@ -59,7 +59,10 @@ test('the first launch shows OSC → OUT; a click starts audio', async () => {
 test('dragging FREQ down 100 px lowers it by half its range; ⌘Z restores it', async () => {
   const { app, page } = await launch();
   const before = await freq(page); // 110 Hz sits at 0.57, so a half-range move down stays inside the range
+  // the panel's element must survive the edit (a re-created panel would drop the knob's pointer capture)
+  await page.locator('[data-type=osc]').evaluate((el) => (el.dataset['mark'] = 'kept'));
   await dragKnob(page, 'osc', 'freq', 100);
+  await expect(page.locator('[data-type=osc][data-mark=kept]')).toHaveCount(1);
   expect(Math.abs(before - (await freq(page)) - 0.5)).toBeLessThan(0.01);
   await page.keyboard.press('Meta+z');
   expect(await freq(page)).toBeCloseTo(before, 6);

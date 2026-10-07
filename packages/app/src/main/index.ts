@@ -42,8 +42,13 @@ function serveRenderer(): void {
   });
 }
 
+// e2e runs keep the window hidden: a real mouse over a visible test window injects pointer events into the
+// synthetic drags (seen as flaky knob drags); hidden windows must not be throttled.
+const e2e = !!process.env['SREDA_E2E'];
+
 function createWindow(): void {
   const win = new BrowserWindow({
+    show: !e2e,
     width: 1440,
     height: 900,
     title: 'SREDA',
@@ -52,6 +57,7 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       sandbox: true,
+      backgroundThrottling: !e2e,
     },
   });
   const devUrl = process.env['ELECTRON_RENDERER_URL'];
