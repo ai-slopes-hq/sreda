@@ -181,7 +181,7 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
   `modules: { id, type, x, y, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks as
   `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
   `groups: { id, name, members: string[], clock: { on: boolean, bpm: number } }[]`. A group's jacks are addressed as
-  `[groupId, 'clk']`. Edits are pure functions returning a new document; undo is a history of documents grouped per
+  `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new document; undo is a history of documents grouped per
   gesture. Module specs (ports with roles, params with ranges, tapers, `randomRange`, `modDepth`, normals) are data
   in core. `compile` (document → plan) lives in core so the UI never imports the engine; it resolves normals into
   ordinary bindings and compiles each group into a hidden clock node.
