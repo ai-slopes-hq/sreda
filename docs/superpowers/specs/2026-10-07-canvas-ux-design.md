@@ -305,17 +305,13 @@ Size is `HP × U`.
 
 ## 7a. Second milestone: the sound pack
 
-Specified now, built right after the first build (its own plan). Atomic modules with character; ports and sizes
+Specified now, built right after the first build (its own plan). Atomic modules with character (filters are one
+FILTER with a MODEL choice); ports and sizes
 follow the same rules (§2, §3).
 
 | Module | What it is | Controls | Ports |
 |---|---|---|---|
-| FILTER (upgrade) | the SVF gains a notch output | — | + notch (audio) |
-| **LADDER** | Moog-style 24 dB lowpass | cutoff, res, drive | in → out |
-| **DIODE** | TB-303-style diode ladder, for acid | cutoff, res, env-mod input | in → out |
-| **SK** | Sallen-Key (MS-20-style), aggressive LP / HP | cutoff, res, mode LP/HP | in → out |
-| **COMB** | comb filter tuned by pitch | freq (+ pitch input), feedback ±, damp | in → out |
-| **VOWEL** | formant filter morphing A-E-I-O-U | vowel, shift, res | in → out |
+| FILTER (upgrade) | one filter module with a choice of model, so there is still one FILTER: MODEL SVF / LADDER (Moog 24 dB) / DIODE (TB-303) / SK (Sallen-Key, MS-20) / COMB / VOWEL, shown as a glyph of the model's response | MODEL; cutoff and res are shared (COMB: frequency and ± feedback; VOWEL: vowel A-E-I-O-U and resonance); a pitch input for COMB tracking | the same outputs plus notch: lp, bp, hp, notch — each model fills them with its own responses (the mapping is decided in the sound-pack plan), so changing MODEL never breaks cables |
 | **SAMPLER** | plays a file from the library's `samples/` folder | start, end (dragged on its waveform display), pitch, mode ONE / LOOP / PING-PONG, reverse, level | trig, pitch → out L, out R |
 | **GRAINS** | granular player — its own instrument | position, size, density, spray, pitch, reverse %, source FILE / LIVE, FREEZE | in (live source), trig, pitch → out L, out R |
 | **REVERB** | algorithmic reverb | type ROOM / PLATE / HALL, size, decay, damp, pre-delay, mix | in → out L, out R |
