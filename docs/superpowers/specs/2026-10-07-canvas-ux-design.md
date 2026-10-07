@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 5 (prototype review: ROUTE rows, hover focus, landing highlight, no capture on move) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 6 (rhythm, generative STAGES, CHANCE / SHIFT / FOLLOW / SWITCH / SPREAD, fit view, frame meter) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -123,6 +123,7 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
   attenuverters and ratios are left alone. One undo step.
+- **Fit:** F fits the whole patch in view, ⇧F the selection.
 - **Undo:** ⌘Z / ⇧⌘Z for every edit. One drag is one step; a wheel run on one control merges into one step until a
   0.7 s pause.
 - Knobs: drag vertically (200 px = full range, Shift = ×0.1), wheel (1 % per notch, one step for stepped knobs),
@@ -162,6 +163,8 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   TAP (sets BPM from the last taps) and ✕ (turns it off). While a cable is in CLK in, the own clock is dimmed and
   does not run.
 - CLK out flashes on each tick.
+- The header shows a small level meter: the peak of what leaves the frame (its outgoing audio cables and OUT
+  modules inside it), held and falling over 300 ms.
 - **Frame tools** in the header:
   - **Tint** (a small swatch): click cycles the fill through neutral (≈ 4 % white) and six muted hues (≈ 8 %).
     Nested frames layer, so the hierarchy reads without extra lines.
@@ -198,6 +201,10 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
     its own voice.
   - **Ratchet:** S&H (input normalled to noise), sampled on a SLOPE's EOC, sets that SLOPE's fall, so the rhythm
     drifts.
+  - **Acid:** a frame ACID with its own clock at 128 BPM; RHYTHM (GRID `x.xx..x.x.xx..x.`, accents on 4, 12, 15) at
+    ×4 on its CLK; GATE advances STAGES (8 notes in C minor, two slides — pitch against rhythm is a polymeter) and
+    fires the filter and amp SLOPEs; ACC fires a third SLOPE stacked on the same CUTOFF mod jack; STAGES → OSC (saw)
+    → FILTER (LP, high res) → VCA → DELAY → OUT.
 
 ## 7. First modules
 
@@ -216,8 +223,14 @@ Size is `HP × U`.
 | | **VCA** | in (audio) | level | out (audio) | — |
 | | **FILTER** — state-variable, all outputs at once | in (audio) | cutoff, res | lp, bp, hp (audio) | — |
 | | **FOLD** | in (audio) | fold, symmetry | out (audio) | — |
-| Time & logic | **STAGES** — Buchla 248 style | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage) | per stage 1–8: voltage, time, pulse ON/OFF; length; mode STEP/SLOPE | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
+| Time & logic | **STAGES** — Buchla 248 style, generative | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage), dice (trigger) | per stage 1–8: voltage, time, pulse ON/OFF, glide STEP/SLIDE (80 ms slide into the stage); length; GEN 303/MOTIF/WALK/TURING/ARP/PHRASE/PEDAL; SCALE; ROOT; DICE button | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
+| | **RHYTHM** — 16-step rhythm sequencer, generative | clk (trigger), reset (trigger), dice (trigger) | 16 gate steps, 16 accent steps; LEN 1–16, HITS 0–16, ROT 0–15, DENS 1–16; MODE EUCLID/GRID; DICE button | gate (trigger), acc (trigger), eoc (trigger) | — |
+| | **CHANCE** — Bernoulli gate | trig (trigger) | P (0…1) | a, b (trigger): each event goes to A with probability P, else to B | — |
+| | **SHIFT** | trig (trigger) | AMT (0…1 of the measured period), WHICH ALL/EVEN (EVEN = swing) | out (trigger) | — |
 | | **COMPARE** | in (audio) | threshold | out (trigger) | — |
+| | **FOLLOW** — envelope follower | in (audio) | ATK, REL, GAIN, THR | env (mod uni), gate (trigger: env above THR) | — |
+| | **SWITCH** — sequential switch 4 → 1 | in1–in4 (audio), adv (trigger), reset (trigger), addr (mod) | LEN 2–4, MODE SEQ/RAND | out (audio) | — |
+| | **SPREAD** — sequential switch 1 → 4 | in (audio), adv (trigger), reset (trigger), addr (mod) | LEN 2–4, MODE SEQ/RAND | out1–out4 (audio) | — |
 | | **S&H** | in (audio), trig (trigger) | — | out (mod bi) | in ← internal noise |
 | | **QUANT** | in (pitch) | scale, root | out (pitch) | — |
 | Mix & math | **MIX** | a, b, c, d (audio) | level a–d | out (audio) | — |
@@ -228,7 +241,17 @@ Size is `HP × U`.
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
 - Sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1, LPG 5×1, VCA 3×1, FILTER 4×1,
-  FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1.
+  FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1, RHYTHM 10×3, CHANCE 3×1, SHIFT 4×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2.
+- **RHYTHM:** in EUCLID the pattern is computed live from LEN, HITS and ROT (all modulatable) and the step cells show
+  it dashed; touching a step turns the current euclid pattern into a grid (MODE → GRID) and toggles that step. Steps
+  past LEN are dimmed. Each clock rise advances one step; a hit raises GATE for half the last clock interval; an
+  accented hit also fires ACC.
+- **DICE** (button, or a rise on the DICE input): STAGES writes a line from GEN in its SCALE and ROOT into its 8
+  voltages (v = (semitone − 12) / 12, so 0…24 semitones span −1…+1), with slides for 303 / MOTIF; RHYTHM writes
+  303-style gates (DENS hits, euclid-spread, random rotation) and accents (30 % of hits) and switches to GRID. The
+  generators are ported from the old SREDA (`../sreda/design/mockup/reference-js/seqgen.js`, `sgDice`), with the RNG
+  passed in. The button is an undo step; the input changes the patch without one.
+- Action cells (DICE) are buttons on the face; they hold no value.
 - SCOPE syncs its sweep on a TRIG rise when TRIG is patched, else on A's rising zero crossing, else runs free.
   Its display area takes the space of 4 × 2 knob cells.
 - Several OUT modules sum. After them the master stage is fixed: 5 Hz DC blocker, soft limiter, nothing non-finite

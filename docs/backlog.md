@@ -16,6 +16,8 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Frame snapshots A/B + MORPH** (2026-10-07): store two states of a frame's knobs and morph between them from the
   header (Buchla-style preset morph).
 - **Notes** (2026-10-07): Miro-like text stickies on the canvas.
+- **MULT** (2026-10-07): a passive multiple as a patch point, if a hub is wanted for organising cables (outputs already
+  fan out). Alt-drag tapping from a cable's middle was considered and dropped.
 
 ## Deep backlog
 
