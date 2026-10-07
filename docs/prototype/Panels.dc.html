@@ -132,12 +132,12 @@ function panel(def, x, y, scale) {
   r.jacks = [];
   def.ins.forEach(function (p, i) {
     var t = laneTop(i), col = ROLE[p[1]];
-    r.jacks.push({ style: 'left:7.5px;top:' + (t + 10.5) + 'px;border-color:' + col + ';' + (p[3] ? 'background:' + col + ';' : ''), label: p[0], lstyle: 'left:24px;top:' + (t + (p[2] ? 6 : 11)) + 'px;',
+    r.jacks.push({ style: 'left:7.5px;top:' + (t + 10.5) + 'px;border-color:' + col + ';' + (p[3] ? 'background:' + col + ';' : ''), label: p[0], lstyle: 'left:24px;top:' + (t + 6) + 'px;',
       field: p[2] || '', fstyle: 'left:24px;top:' + (t + 17) + 'px;color:' + col + ';', lvl: 'display:none;' });
   });
   def.outs.forEach(function (p, i) {
     var t = laneTop(i), col = ROLE[p[1]];
-    r.jacks.push({ style: 'left:' + (w - 18.5) + 'px;top:' + (t + 10.5) + 'px;border-color:' + col + ';background:' + col + ';', label: p[0], lstyle: 'right:24px;top:' + (t + 7) + 'px;text-align:right;',
+    r.jacks.push({ style: 'left:' + (w - 18.5) + 'px;top:' + (t + 10.5) + 'px;border-color:' + col + ';background:' + col + ';', label: p[0], lstyle: 'right:24px;top:' + (t + 6) + 'px;text-align:right;',
       field: '', fstyle: 'display:none;', lvl: 'right:24px;top:' + (t + 20) + 'px;width:' + (8 + (i * 7) % 14) + 'px;height:2px;border-radius:1px;background:' + col + ';' });
   });
   // knobs: rows of C after the display
@@ -200,7 +200,7 @@ var DEFS = {
   slope: { name: 'SLOPE', size: [5, 1], ins: [['TRIG', 'trigger', '1', 1], ['IN', 'audio']], outs: [['OUT', 'mod'], ['EOR', 'trigger'], ['EOC', 'trigger']], knobs: [['RISE', 0.2], ['FALL', 0.5], ['SHP', 0.5]], modes: [{ t: 'CYC', hp: 1, on: true }] },
   osc: { name: 'OSC', size: [5, 1], ins: [['PTCH', 'pitch', '', 1], ['FM', 'audio'], ['SYNC', 'trigger']], outs: [['OUT', 'audio']], knobs: [['FREQ', 0.45], ['PW', 0.5], ['FM', 0]], modes: [{ glyph: 'saw', hp: 1 }] },
   complex: { name: 'COMPLEX', size: [6, 1], ins: [['PTCH', 'pitch'], ['FM', 'audio']], outs: [['OUT', 'audio'], ['MOD', 'audio']], knobs: [['FREQ', 0.4], ['RAT', 0.5], ['IDX', 0.2], ['TMB', 0]], modes: [{ glyph: 'sin', hp: 1 }] },
-  scope: { name: 'SCOPE', size: [6, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['TRIG', 'trigger']], outs: [['THRU A', 'audio'], ['THRU B', 'audio']], display: { kind: 'scope', lanes: 4 }, knobs: [['TIME', 0.5], ['GA', 0.5], ['GB', 0.5]], modes: [{ t: 'A·B', hp: 1 }] },
+  scope: { name: 'SCOPE', size: [6, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['TRIG', 'trigger']], outs: [['THR A', 'audio'], ['THR B', 'audio']], display: { kind: 'scope', lanes: 4 }, knobs: [['TIME', 0.5], ['GA', 0.5], ['GB', 0.5]], modes: [{ t: 'A·B', hp: 1 }] },
   rhythm: { name: 'RHYTHM', size: [10, 2], ins: [['CLK', 'trigger', '×4', 1], ['RST', 'trigger'], ['DICE', 'trigger']], outs: [['GATE', 'trigger'], ['ACC', 'trigger'], ['EOC', 'trigger']], display: { kind: 'pads', lanes: 4 },
     knobs: [['LEN', 1], ['HITS', 0.47], ['ROT', 0], ['DENS', 0.47]], modes: [{ t: 'GRID', hp: 1 }, { t: 'DICE', hp: 1, right: true }] },
   mix: { name: 'MIX', size: [4, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['C', 'audio'], ['D', 'audio']], outs: [['OUT', 'audio']], knobs: [['A', 0.8], ['B', 0.8], ['C', 0.8], ['D', 0.8]] },

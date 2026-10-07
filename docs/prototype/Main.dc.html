@@ -461,7 +461,7 @@ var SPECS = {
   delay: { label: 'DELAY', desc: 'echo', cols: 3, ins: [P('in', 'audio')], outs: [P('out', 'audio')],
     params: [K('time', 'TIME', 0.001, 2, 0.3, { exp: 1, unit: 's', rr: [0.05, 1] }), K('feedback', 'FB', 0, 0.95, 0.4), K('mix', 'MIX', 0, 1, 0.3)] },
   scope: { label: 'SCOPE', desc: 'oscilloscope with thru outputs', cols: 4, display: { lanes: 4, kind: 'scope' },
-    ins: [P('a', 'audio'), P('b', 'audio'), P('trig', 'trigger')], outs: [P('thruA', 'audio', 'THRU A'), P('thruB', 'audio', 'THRU B')],
+    ins: [P('a', 'audio'), P('b', 'audio'), P('trig', 'trigger')], outs: [P('thruA', 'audio', 'THR A'), P('thruB', 'audio', 'THR B')],
     params: [K('time', 'TIME', 0.001, 10, 2, { exp: 1, unit: 's', rr: [0.3, 4] }), K('ga', 'GA', 0.1, 10, 1, { exp: 1 }), K('gb', 'GB', 0.1, 10, 1, { exp: 1 }), O('mode', 'MODE', ['A·B', 'XY'])] },
   out: { label: 'OUT', desc: 'to speakers', cols: 1, ins: [P('l', 'audio'), P('r', 'audio')], outs: [], params: [K('level', 'LVL', 0, 1, 0.7)],
     normals: [{ input: 'r', internal: 'L' }] }
@@ -2288,7 +2288,7 @@ class Component extends DCLogic {
           key: key + '|in', label: p.label,
           title: p.label + (n ? ' ← ' + nsrc + ' (normal)' : '') + (connIn[key] ? ' · drag to pick up a cable' : ''),
           style: jackStyle(j, col, connIn[key], (self.sim.flash[key] || 0) > now, false, !!n),
-          labelStyle: 'left:' + (j.x + 11) + 'px;top:' + (j.y - (showF ? 10 : 5)) + 'px;' + (m.type === 'switch' && p.id === 'in' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
+          labelStyle: 'left:' + (j.x + 11) + 'px;top:' + (j.y - 10) + 'px;' + (m.type === 'switch' && p.id === 'in' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
           down: function (e) { self.jackDown(e, id, p.id, 'in', p.role); },
           hasField: !!field, fieldKey: id + '|' + p.id + '|' + field, fieldText: showF ? ftext : '',
           fieldStyle: 'left:' + (j.x + 11) + 'px;top:' + (j.y + 1) + 'px;color:' + (fdef ? '#5d594f' : col) + ';',
@@ -2301,7 +2301,7 @@ class Component extends DCLogic {
         var j = L.jacks[p.id], key = id + '|' + p.id, lst = listen && listen.id === id && listen.port === p.id;
         return { key: key + '|out', label: p.label, title: p.label + ' · click to listen',
           style: jackStyle(j, ROLE[p.role], connOut[key], false, lst, false),
-          labelStyle: 'right:' + (L.w - j.x + 11) + 'px;top:' + (j.y - 9) + 'px;text-align:right;' + (m.type === 'spread' && p.id === 'out' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
+          labelStyle: 'right:' + (L.w - j.x + 11) + 'px;top:' + (j.y - 10) + 'px;text-align:right;' + (m.type === 'spread' && p.id === 'out' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
           lvlStyle: 'right:' + (L.w - j.x + 11) + 'px;top:' + (j.y + 4) + 'px;width:' + Math.round((self.sim.peak[key] || 0) * 22) + 'px;background:' + ROLE[p.role] + ';',
           down: function (e) { self.jackDown(e, id, p.id, 'out', p.role); } };
       }),

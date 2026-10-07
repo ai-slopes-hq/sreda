@@ -55,7 +55,8 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   3. **One jack per lane**, top down in spec order: sound, then clocks and triggers, then CV. A jack's label and its
      value (attenuverter or ratio) share its lane; an output's level bar sits under its label. Quiet: the value
      shows only when it is not the default, or while the module is under the pointer, selected alone or being
-     edited; otherwise the label sits in the middle of the lane.
+     edited. Every port label sits on the same upper line of its lane (the value or level line under it stays
+     reserved, so nothing moves when a value appears); port labels are at most 5 characters (`THR A`).
   4. **The control area, top to bottom, always in this order:** the DISPLAY (if any; the full width of the control
      area, a whole number of lanes) → KNOB ROWS (2 lanes each, knobs left to right by importance) → the MODE STRIP
      (the bottom lane).

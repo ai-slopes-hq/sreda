@@ -140,12 +140,12 @@ function panel(def, x, y, scale) {
   r.jacks = [];
   def.ins.forEach(function (p, i) {
     var t = laneTop(i), col = ROLE[p[1]];
-    r.jacks.push({ style: 'left:7.5px;top:' + (t + 10.5) + 'px;border-color:' + col + ';' + (p[3] ? 'background:' + col + ';' : ''), label: p[0], lstyle: 'left:24px;top:' + (t + (p[2] ? 6 : 11)) + 'px;',
+    r.jacks.push({ style: 'left:7.5px;top:' + (t + 10.5) + 'px;border-color:' + col + ';' + (p[3] ? 'background:' + col + ';' : ''), label: p[0], lstyle: 'left:24px;top:' + (t + 6) + 'px;',
       field: p[2] || '', fstyle: 'left:24px;top:' + (t + 17) + 'px;color:' + col + ';', lvl: 'display:none;' });
   });
   def.outs.forEach(function (p, i) {
     var t = laneTop(i), col = ROLE[p[1]];
-    r.jacks.push({ style: 'left:' + (w - 18.5) + 'px;top:' + (t + 10.5) + 'px;border-color:' + col + ';background:' + col + ';', label: p[0], lstyle: 'right:24px;top:' + (t + 7) + 'px;text-align:right;',
+    r.jacks.push({ style: 'left:' + (w - 18.5) + 'px;top:' + (t + 10.5) + 'px;border-color:' + col + ';background:' + col + ';', label: p[0], lstyle: 'right:24px;top:' + (t + 6) + 'px;text-align:right;',
       field: '', fstyle: 'display:none;', lvl: 'right:24px;top:' + (t + 20) + 'px;width:' + (8 + (i * 7) % 14) + 'px;height:2px;border-radius:1px;background:' + col + ';' });
   });
   // knobs: rows of C after the display
