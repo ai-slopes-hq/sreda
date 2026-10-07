@@ -20,6 +20,9 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **MULT** (2026-10-07): a passive multiple as a patch point, if a hub is wanted for organising cables (outputs already
   fan out). Alt-drag tapping from a cable's middle was considered and dropped.
 
+- **Pin matrix module** (2026-10-07): an EMS Synthi-style routing module on the canvas (4×4 pins, modulatable and
+  switchable by trigger) — a creative module, separate from the wire editor.
+
 ## Deep backlog
 
 - **Panels in rows / rails** (2026-10-07): a canvas-wide HP × U lattice with rails between rows, like a case.

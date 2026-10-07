@@ -303,6 +303,30 @@ Size is `HP × U`.
 - Several OUT modules sum. After them the master stage is fixed: 5 Hz DC blocker, soft limiter, nothing non-finite
   reaches the device.
 
+## 7a. Second milestone: the sound pack
+
+Specified now, built right after the first build (its own plan). Atomic modules with character; ports and sizes
+follow the same rules (§2, §3).
+
+| Module | What it is | Controls | Ports |
+|---|---|---|---|
+| FILTER (upgrade) | the SVF gains a notch output | — | + notch (audio) |
+| **LADDER** | Moog-style 24 dB lowpass | cutoff, res, drive | in → out |
+| **DIODE** | TB-303-style diode ladder, for acid | cutoff, res, env-mod input | in → out |
+| **SK** | Sallen-Key (MS-20-style), aggressive LP / HP | cutoff, res, mode LP/HP | in → out |
+| **COMB** | comb filter tuned by pitch | freq (+ pitch input), feedback ±, damp | in → out |
+| **VOWEL** | formant filter morphing A-E-I-O-U | vowel, shift, res | in → out |
+| **SAMPLER** | plays a file from the library's `samples/` folder | start, end (dragged on its waveform display), pitch, mode ONE / LOOP / PING-PONG, reverse, level | trig, pitch → out L, out R |
+| **GRAINS** | granular player — its own instrument | position, size, density, spray, pitch, reverse %, source FILE / LIVE, FREEZE | in (live source), trig, pitch → out L, out R |
+| **REVERB** | algorithmic reverb | type ROOM / PLATE / HALL, size, decay, damp, pre-delay, mix | in → out L, out R |
+| DELAY (upgrade) | delay types | type DIGI / TAPE / SPRING, CHAR (DIGI: bit depth · TAPE: wow & flutter · SPRING: drip) | — |
+| **DRIVE** | saturation / overdrive / fuzz | mode SAT / OD / FUZZ, gain (to +24 dB), tone, mix | in → out |
+
+- Samples live in the library folder (`samples/**`); the picker gains a SAMPLES tab (key **S**); an audio file dropped
+  on the canvas is copied into `samples/` and opens a SAMPLER with it. Clicking a SAMPLER's waveform opens the picker
+  on SAMPLES.
+- Stereo outputs are two mono outputs (cables stay mono).
+
 ## 8. Architecture
 
 Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by ESLint.
