@@ -28,6 +28,10 @@ export interface NodeReadouts {
   knobs: number;
   trigs: number;
   outs: number;
+  /** one float: the module's current index (STAGES, RHYTHM, SWITCH, SPREAD) */
+  state: number;
+  /** TRACE_LEN floats for a scope display: min A, max A, min B, max B, 256 columns each */
+  trace: number | null;
 }
 export interface ReadoutLayout {
   size: number;
@@ -39,6 +43,8 @@ export interface Plan {
   steps: Step[];
   layout: ReadoutLayout;
 }
+
+export const TRACE_LEN = 1024;
 
 /** Floats in the readout SharedArrayBuffer; compile throws above it. */
 export const READOUT_CAPACITY = 262_144;

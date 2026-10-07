@@ -42,6 +42,14 @@ pub fn spec(type_: &str) -> Option<ModuleSpec> {
         "trig" => m("trig", vec![port("clk", "CLK", Role::Trigger)], vec![]),
         // out = NaN
         "boom" => m("boom", vec![], vec![]),
+        // state() = 3, trace() = 0, 1, 2, …
+        "stater" => ModuleSpec {
+            display: Some(crate::spec::Display {
+                lanes: 4,
+                kind: "scope",
+            }),
+            ..m("stater", vec![], vec![])
+        },
         _ => return None,
     })
 }
@@ -82,12 +90,27 @@ impl Dsp for Boom {
     }
 }
 
+struct Stater(Vec<f32>);
+impl Dsp for Stater {
+    fn process(&mut self, _io: &mut Io, _ctx: &mut Ctx, _from: usize, _to: usize) {}
+    fn reset(&mut self) {}
+    fn state(&self) -> f32 {
+        3.0
+    }
+    fn trace(&self) -> Option<&[f32]> {
+        Some(&self.0)
+    }
+}
+
 pub fn create(type_: &str) -> Option<Box<dyn Dsp>> {
     Some(match type_ {
         "dc" => Box::new(Dc),
         "gain" => Box::new(Gain),
         "cvthru" | "trig" => Box::new(Thru),
         "boom" => Box::new(Boom),
+        "stater" => Box::new(Stater(
+            (0..crate::dsp::TRACE_LEN).map(|i| i as f32).collect(),
+        )),
         _ => return None,
     })
 }

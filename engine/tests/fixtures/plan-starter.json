@@ -98,17 +98,21 @@
     }
   ],
   "layout": {
-    "size": 8,
+    "size": 10,
     "nodes": [
       {
         "knobs": 2,
         "trigs": 5,
-        "outs": 6
+        "outs": 6,
+        "state": 7,
+        "trace": null
       },
       {
-        "knobs": 7,
-        "trigs": 8,
-        "outs": 8
+        "knobs": 8,
+        "trigs": 9,
+        "outs": 9,
+        "state": 9,
+        "trace": null
       }
     ]
   }

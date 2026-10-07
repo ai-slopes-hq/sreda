@@ -1,7 +1,7 @@
 // Document → plan: one node per module, inputs resolved (cables, normals), the run order with feedback loops
 // found (Tarjan), and the readout layout.
 import type { Doc } from './doc';
-import { READOUT_CAPACITY, type InputPlan, type Plan, type PlanNode, type Step } from './plan';
+import { READOUT_CAPACITY, TRACE_LEN, type InputPlan, type Plan, type PlanNode, type Step } from './plan';
 import { fromKnob, inputPorts, type ModuleSpec, type Specs } from './spec';
 
 export function compile(doc: Doc, specs: Specs, seq: number): Plan {
@@ -70,7 +70,13 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
     off += spec.inputs.filter((p) => p.role === 'trigger').length;
     const outs = off;
     off += spec.outputs.length;
-    return { knobs, trigs, outs };
+    const state = off++;
+    let trace: number | null = null;
+    if (spec.display?.kind === 'scope') {
+      trace = off;
+      off += TRACE_LEN;
+    }
+    return { knobs, trigs, outs, state, trace };
   });
   if (off > READOUT_CAPACITY) throw new Error(`readouts need ${off} floats, more than ${READOUT_CAPACITY}`);
   return { seq, nodes, steps, layout: { size: off, nodes: layout } };

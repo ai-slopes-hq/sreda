@@ -3,6 +3,9 @@
 /// Samples per block: the AudioWorklet's render quantum.
 pub const BLOCK: usize = 128;
 
+/// Floats in a SCOPE trace: min A, max A, min B, max B — 256 columns each.
+pub const TRACE_LEN: usize = 1024;
+
 /// A seeded PRNG, the same sequence as the TypeScript `mulberry32`.
 pub struct Rng {
     state: u32,
@@ -63,6 +66,14 @@ pub trait Dsp {
     fn process(&mut self, io: &mut Io, ctx: &mut Ctx, from: usize, to: usize);
     /// Back to the initial state (after a non-finite output).
     fn reset(&mut self);
+    /// A current index for the UI (STAGES, RHYTHM, SWITCH, SPREAD).
+    fn state(&self) -> f32 {
+        0.0
+    }
+    /// SCOPE's display: `TRACE_LEN` floats.
+    fn trace(&self) -> Option<&[f32]> {
+        None
+    }
 }
 
 /// A bench for module tests: owns the buffers, runs a DSP block by block, collects its outputs.
@@ -126,6 +137,56 @@ pub mod bench {
                 }
             }
             res
+        }
+    }
+
+    impl Bench {
+        /// Runs a DSP over whole blocks and, from a fresh instance, one sample at a time with the same inputs; the
+        /// outputs must be identical (the engine runs any module per sample inside a feedback loop). `inputs` holds one
+        /// signal per input (all connected), each `blocks · BLOCK` long.
+        pub fn blockwise_equals_per_sample(
+            make: impl Fn() -> Box<dyn Dsp>,
+            inputs: &[Vec<f32>],
+            par: &[f64],
+            fixed: &[f64],
+            outputs: usize,
+            blocks: usize,
+        ) {
+            let run = |per_sample: bool| {
+                let mut b = Bench::new(48_000.0, inputs.len(), par, fixed, outputs);
+                b.connected_in = vec![true; inputs.len()];
+                let mut dsp = make();
+                let mut res = vec![Vec::new(); outputs];
+                for blk in 0..blocks {
+                    for (j, sig) in inputs.iter().enumerate() {
+                        b.inp[j].copy_from_slice(&sig[blk * BLOCK..(blk + 1) * BLOCK]);
+                    }
+                    let mut io = Io {
+                        inp: &b.inp,
+                        par: &b.par,
+                        fixed: &b.fixed,
+                        out: &mut b.out,
+                        connected_in: &b.connected_in,
+                        connected_out: &b.connected_out,
+                    };
+                    if per_sample {
+                        for i in 0..BLOCK {
+                            dsp.process(&mut io, &mut b.ctx, i, i + 1);
+                        }
+                    } else {
+                        dsp.process(&mut io, &mut b.ctx, 0, BLOCK);
+                    }
+                    for (o, r) in b.out.iter().zip(res.iter_mut()) {
+                        r.extend_from_slice(o);
+                    }
+                }
+                res
+            };
+            assert_eq!(
+                run(false),
+                run(true),
+                "block-wise and per-sample outputs differ"
+            );
         }
     }
 

@@ -120,5 +120,92 @@
         "internal": "L"
       }
     ]
+  },
+  {
+    "type": "scope",
+    "label": "SCOPE",
+    "desc": "oscilloscope with thru outputs",
+    "size": [
+      6,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "a",
+        "label": "A",
+        "role": "audio"
+      },
+      {
+        "id": "b",
+        "label": "B",
+        "role": "audio"
+      },
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "thruA",
+        "label": "THR A",
+        "role": "audio"
+      },
+      {
+        "id": "thruB",
+        "label": "THR B",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "time",
+        "label": "TIME",
+        "min": 0.001,
+        "max": 10.0,
+        "def": 2.0,
+        "taper": "exp",
+        "unit": "s",
+        "randomRange": [
+          0.3,
+          4.0
+        ]
+      },
+      {
+        "kind": "knob",
+        "id": "ga",
+        "label": "GA",
+        "min": 0.1,
+        "max": 10.0,
+        "def": 1.0,
+        "taper": "exp"
+      },
+      {
+        "kind": "knob",
+        "id": "gb",
+        "label": "GB",
+        "min": 0.1,
+        "max": 10.0,
+        "def": 1.0,
+        "taper": "exp"
+      },
+      {
+        "kind": "option",
+        "id": "mode",
+        "label": "MODE",
+        "options": [
+          "A·B",
+          "XY"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 4,
+      "kind": "scope"
+    }
   }
 ]

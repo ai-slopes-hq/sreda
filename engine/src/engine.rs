@@ -268,6 +268,8 @@ impl Engine {
                 || l.knobs + knobs > size
                 || l.trigs + trigs > size
                 || l.outs + spec.outputs.len() > size
+                || l.state >= size
+                || l.trace.is_some_and(|t| t + crate::dsp::TRACE_LEN > size)
             {
                 return Err(PlanError::Invalid("readout layout out of range".into()));
             }
@@ -748,6 +750,11 @@ impl Engine {
                     .iter()
                     .fold(0.0f32, |a, x| a.max(x.abs()));
             }
+            self.readouts[l.state] = s.dsp.state();
+            if let (Some(t), Some(src)) = (l.trace, s.dsp.trace()) {
+                let n = src.len().min(crate::dsp::TRACE_LEN);
+                self.readouts[t..t + n].copy_from_slice(&src[..n]);
+            }
         }
     }
 
@@ -830,7 +837,23 @@ mod tests {
                     .count();
                 let outs = off;
                 off += s.outputs.len();
-                NodeLayout { knobs, trigs, outs }
+                let state = off;
+                off += 1;
+                let trace = s
+                    .display
+                    .as_ref()
+                    .is_some_and(|d| d.kind == "scope")
+                    .then(|| {
+                        off += crate::dsp::TRACE_LEN;
+                        off - crate::dsp::TRACE_LEN
+                    });
+                NodeLayout {
+                    knobs,
+                    trigs,
+                    outs,
+                    state,
+                    trace,
+                }
             })
             .collect();
         Plan {
@@ -1002,6 +1025,21 @@ mod tests {
         run(&mut e, 2);
         assert!(e.output(0, 0).iter().all(|x| *x == 0.0));
         assert!(BOOM_RESETS.load(Ordering::Relaxed) > before);
+    }
+
+    #[test]
+    fn state_and_trace_reach_the_readouts() {
+        let mut e = Engine::new(SR, 1);
+        let p = plan(1, vec![node("s", "stater", &[], &[], vec![])], chain(1));
+        let l = p.layout.nodes[0];
+        e.apply(p).unwrap();
+        run(&mut e, 1);
+        assert_eq!(e.readouts()[l.state], 3.0);
+        let t = l.trace.expect("a scope display has a trace");
+        assert!(e.readouts()[t..t + crate::dsp::TRACE_LEN]
+            .iter()
+            .enumerate()
+            .all(|(i, v)| *v == i as f32));
     }
 
     #[test]

@@ -30,7 +30,9 @@ function play(e: WasmEngine, blocks: number): Float32Array {
   return out;
 }
 
-test('the starter patch renders a 110 Hz saw', () => {
+test('the starter patch renders a 110 Hz saw at 48 and 44.1 kHz', () => {
+  const at44 = renderDoc(starterDoc(SPECS), SPECS, 0.5, 44_100).l;
+  expect(meanPeriod(at44, 4410)).toBeCloseTo(44_100 / 110, 0);
   const { l } = renderDoc(starterDoc(SPECS), SPECS, 0.5);
   expect(meanPeriod(l, 4800)).toBeCloseTo(48_000 / 110, 0);
   expect(l.reduce((a, x) => Math.max(a, Math.abs(x)), 0)).toBeGreaterThan(0.5);

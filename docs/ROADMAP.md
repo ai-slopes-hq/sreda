@@ -28,7 +28,9 @@ of a creative tool; nothing of its UI is ported.
   ("From the Plan 1 review"). Rulings made during Plan 1 are in the git history of the commits (the ledger was
   scratch and is gone).
 - **Plan 2 written:** `docs/superpowers/plans/2026-10-07-2-modules.md` (10 tasks; stops after SCOPE, *Pulse*,
-  *Acid*, *Drone* and the last task). **Next:** execute it from Task 1, natively, on a branch.
+  *Acid*, *Drone* and the last task). In progress on branch `plan-2-modules` (ledger:
+  `.superpowers/sdd/2026-10-07-2-modules/progress.md`). Task 1 (state / trace readouts, SCOPE) done.
+  **Next:** user checkpoint (OSC into SCOPE), then Task 2 (SLOPE, NOISE).
 
 ## The road (vertical slices: something to hear at every stage)
 

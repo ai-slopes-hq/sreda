@@ -2,8 +2,9 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import { compile } from './compile';
+import { TRACE_LEN } from './plan';
 import { emptyDoc, starterDoc, type Doc } from './doc';
-import { addModule, connect, setAtt, setParam, setRatio } from './ops';
+import { addModule, connect, deleteObjects, removeCable, setAtt, setParam, setRatio } from './ops';
 import { SPECS, type Specs } from './spec';
 import { TEST_SPECS as S } from './testspecs';
 
@@ -86,6 +87,7 @@ test('the readout layout is disjoint and starts after the seq and master slots',
     for (let j = 0; j < c.knobs; j++) used.push(n.knobs + j);
     for (let j = 0; j < c.trigs; j++) used.push(n.trigs + j);
     for (let j = 0; j < c.outs; j++) used.push(n.outs + j);
+    used.push(n.state);
   });
   expect(new Set(used).size).toBe(used.length);
   expect(Math.min(...used)).toBe(2);
@@ -97,7 +99,23 @@ test('fixtures for the engine', () => {
   const starter = starterDoc(SPECS);
   const osc = starter.modules[0]!.id;
   const loop = connect(starter, SPECS, [osc, 'out'], [osc, 'fm']);
-  const plans = { starter: compile(starter, SPECS, 1), 'self-fm': compile(loop, SPECS, 2) };
+  // OSC → SCOPE A and TRIG, OSC → OUT; then OUT removed and the OSC re-routed from SCOPE A to B
+  let scoped = addModule(starter, SPECS, 'scope', 0, 300).doc;
+  scoped = connect(scoped, SPECS, [osc, 'out'], ['m3', 'a']);
+  scoped = connect(scoped, SPECS, [osc, 'out'], ['m3', 'trig']);
+  let rerouted = deleteObjects(scoped, ['m2']);
+  rerouted = connect(
+    removeCable(rerouted, { from: [osc, 'out'], to: ['m3', 'a'] }),
+    SPECS,
+    [osc, 'out'],
+    ['m3', 'b'],
+  );
+  const plans = {
+    starter: compile(starter, SPECS, 1),
+    'self-fm': compile(loop, SPECS, 2),
+    'scope-a': compile(scoped, SPECS, 3),
+    'scope-b': compile(rerouted, SPECS, 4),
+  };
   expect(plans['self-fm'].steps).toEqual([{ loop: [0] }, { node: 1 }]);
   if (process.env['UPDATE_FIXTURES']) {
     const dir = fileURLToPath(new URL('../../../engine/tests/fixtures/', import.meta.url));
@@ -105,4 +123,18 @@ test('fixtures for the engine', () => {
     for (const [name, plan] of Object.entries(plans))
       writeFileSync(`${dir}plan-${name}.json`, JSON.stringify(plan, null, 2) + '\n');
   }
+});
+
+test('every node gets a state slot; a scope display gets a 1024-float trace', () => {
+  const specs = { ...S, sc: { ...S['src']!, type: 'sc', display: { lanes: 4, kind: 'scope' } } };
+  const { doc } = build(specs, ['src', 'sc', 'fx']);
+  const { layout } = compile(doc, specs, 1);
+  const used: number[] = [];
+  layout.nodes.forEach((n) => {
+    used.push(n.state);
+    if (n.trace !== null) for (let i = 0; i < TRACE_LEN; i++) used.push(n.trace + i);
+  });
+  expect(layout.nodes.map((n) => n.trace === null)).toEqual([true, false, true]);
+  expect(new Set(used).size).toBe(used.length);
+  expect(Math.max(...used)).toBeLessThan(layout.size);
 });

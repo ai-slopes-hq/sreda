@@ -14,6 +14,7 @@ import { fmtAtt, fmtRat } from './glyphs';
 import { Jack } from './Jack';
 import { Knob } from './Knob';
 import { Option } from './Option';
+import { Scope } from './displays/Scope';
 
 export type FieldKind = 'att' | 'ratio';
 
@@ -76,6 +77,18 @@ export function Panel(props: PanelProps): JSX.Element {
         <div class="sr-col" style={{ right: '0' }} />
       </Show>
       <div class="sr-head">{props.name}</div>
+      <Show when={props.spec.display?.kind === 'scope' && L().display}>
+        {(d) => (
+          <Scope
+            x={d().x}
+            y={d().y}
+            w={d().w}
+            h={d().h}
+            mode={props.mod.params['mode'] ?? 0}
+            trace={props.readouts?.trace ?? undefined}
+          />
+        )}
+      </Show>
 
       <For each={props.spec.inputs}>
         {(port) => {

@@ -1,14 +1,17 @@
 // Everything that moves every frame bypasses Solid: one requestAnimationFrame loop reads the readout buffer and
 // writes registered elements directly.
 import { createEffect, onCleanup } from 'solid-js';
+import { tracePaths } from './canvas/displays/trace';
 
-type Kind = 'level' | 'meter' | 'modDot' | 'flash';
+type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step';
 interface Entry {
   el: Element;
   kind: Kind;
   offset: number;
   last: number;
   until: number;
+  /** a level bar's held peak */
+  hold: number;
 }
 
 const entries = new Set<Entry>();
@@ -26,7 +29,7 @@ export function setSeq(n: number): void {
 
 /** level: a bar's width (22 px at full); meter: width in %; modDot: rotation of a knob's dot; flash: a trigger count changed. */
 export function register(el: Element, kind: Kind, offset: number): () => void {
-  const e: Entry = { el, kind, offset, last: NaN, until: 0 };
+  const e: Entry = { el, kind, offset, last: NaN, until: 0, hold: 0 };
   entries.add(e);
   if (!running && typeof requestAnimationFrame === 'function') {
     running = true;
@@ -43,8 +46,12 @@ export function track(el: Element, kind: Kind, offset: () => number | undefined)
   });
 }
 
+let lastTick = 0;
+
 function tick(now: number): void {
   requestAnimationFrame(tick);
+  const dt = lastTick ? Math.min(0.1, (now - lastTick) / 1000) : 0;
+  lastTick = now;
   const buf = source;
   if (!buf || buf[0] !== seq) return; // the engine is still on an older plan's layout
   for (const e of entries) {
@@ -52,7 +59,9 @@ function tick(now: number): void {
     const style = (e.el as HTMLElement).style;
     switch (e.kind) {
       case 'level':
-        style.width = Math.round(Math.min(1, v) * 22) + 'px';
+        // hold the peak, fall at full scale per 0.3 s
+        e.hold = Math.max(Math.min(1, v), e.hold - dt / 0.3);
+        style.width = Math.round(e.hold * 22) + 'px';
         break;
       case 'meter':
         style.width = Math.min(1, v) * 100 + '%';
@@ -61,8 +70,26 @@ function tick(now: number): void {
         e.el.setAttribute('transform', `rotate(${(-135 + 270 * v).toFixed(1)} 24 17)`);
         break;
       case 'flash':
-        if (v !== e.last && !Number.isNaN(e.last)) e.until = now + 80;
+        if (v !== e.last && !Number.isNaN(e.last)) e.until = now + 120;
         e.el.classList.toggle('flash', now < e.until);
+        break;
+      case 'trace': {
+        const svg = e.el as SVGSVGElement;
+        const p = tracePaths(
+          buf,
+          e.offset,
+          +svg.getAttribute('width')!,
+          +svg.getAttribute('height')!,
+          svg.getAttribute('data-mode') === '1',
+        );
+        svg.querySelector('.band-a')?.setAttribute('d', p.bandA);
+        svg.querySelector('.band-b')?.setAttribute('d', p.bandB);
+        svg.querySelector('.line-a')?.setAttribute('d', p.lineA);
+        svg.querySelector('.line-b')?.setAttribute('d', p.lineB);
+        break;
+      }
+      case 'step':
+        e.el.setAttribute('data-cur', String(Math.round(v)));
         break;
     }
     e.last = v;

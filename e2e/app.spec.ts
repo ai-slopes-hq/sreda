@@ -270,3 +270,19 @@ test('a scroll that pans the canvas passes over knobs without turning them', asy
   expect(await page.locator('.sr-layer').getAttribute('style')).not.toBe(view0);
   await app.close();
 });
+
+test('SCOPE shows the signal patched into A', async () => {
+  const { app, page } = await launch();
+  const out = await center(page, jack(page, 'osc', 'out'));
+  await drag(page, out, { x: out.x + 100, y: out.y + 260 });
+  await page.keyboard.type('scope');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-type=scope]')).toBeVisible();
+  expect((await fullDoc(page)).cables).toContainEqual({ from: ['m1', 'out'], to: ['m3', 'a'] });
+  await page.mouse.click(1300, 900); // start audio
+  const trace = page.locator('[data-type=scope] .sr-scope path.line-a');
+  await expect
+    .poll(async () => ((await trace.getAttribute('d')) ?? '').length, { timeout: 2000 })
+    .toBeGreaterThan(100);
+  await app.close();
+});

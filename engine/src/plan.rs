@@ -76,6 +76,10 @@ pub struct NodeLayout {
     pub knobs: usize,
     pub trigs: usize,
     pub outs: usize,
+    /// one float: the DSP's `state()`
+    pub state: usize,
+    /// `TRACE_LEN` floats for a scope display
+    pub trace: Option<usize>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
