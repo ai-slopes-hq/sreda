@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 6 (rhythm, generative STAGES, CHANCE / SHIFT / FOLLOW / SWITCH / SPREAD, fit view, frame meter) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 7 (STAGES as a 16-stage contour, RHYTHM as pads) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -131,8 +131,7 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   show `▾` and open a small list anchored under the cell on click — not a window: the current value is highlighted,
   a click picks, Esc or a click elsewhere closes. The wheel steps any option without opening the list.
 - Options that are shapes are drawn, not named: WAVE options (OSC, COMPLEX's modulator) show the waveform as a small
-  glyph; SCALE (QUANT) shows its 12 semitones from the root as a strip (scale degrees tall, the rest short); STAGES
-  MODE shows a staircase (STEP) or a ramp (SLOPE). The cell shows the current value's glyph; the list shows glyph
+  glyph; SCALE (QUANT) shows its 12 semitones from the root as a strip (scale degrees tall, the rest short);  The cell shows the current value's glyph; the list shows glyph
   and name for every value. SLOPE's SHP knob shows its rise curve (log … lin … exp, modulation included) in place
   of a number.
 
@@ -204,7 +203,8 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   - **Ratchet:** S&H (input normalled to noise), sampled on a SLOPE's EOC, sets that SLOPE's fall, so the rhythm
     drifts.
   - **Acid:** a frame ACID with its own clock at 128 BPM; RHYTHM (GRID `x.xx..x.x.xx..x.`, accents on 4, 12, 15) at
-    ×4 on its CLK; GATE advances STAGES (8 notes in C minor, two slides — pitch against rhythm is a polymeter) and
+    ×4 on its CLK; GATE advances STAGES (16 notes in C minor with four slides; pitch moves only on notes, as on a
+    TB-303) and
     fires the filter and amp SLOPEs; ACC fires a third SLOPE stacked on the same CUTOFF mod jack; STAGES → OSC (saw)
     → FILTER (LP, high res) → VCA → DELAY → OUT.
 
@@ -225,8 +225,8 @@ Size is `HP × U`.
 | | **VCA** | in (audio) | level | out (audio) | — |
 | | **FILTER** — state-variable, all outputs at once | in (audio) | cutoff, res | lp, bp, hp (audio) | — |
 | | **FOLD** | in (audio) | fold, symmetry | out (audio) | — |
-| Time & logic | **STAGES** — Buchla 248 style, generative | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage), dice (trigger) | per stage 1–8: voltage, time, pulse ON/OFF, glide STEP/SLIDE (80 ms slide into the stage); length; GEN 303/MOTIF/WALK/TURING/ARP/PHRASE/PEDAL; SCALE; ROOT; DICE button | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
-| | **RHYTHM** — 16-step rhythm sequencer, generative | clk (trigger), reset (trigger), dice (trigger) | 16 gate steps, 16 accent steps; LEN 1–16, HITS 0–16, ROT 0–15, DENS 1–16; MODE EUCLID/GRID; DICE button | gate (trigger), acc (trigger), eoc (trigger) | — |
+| Time & logic | **STAGES** — Buchla 248 style, generative, drawn as a contour | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage), dice (trigger) | per stage 1–16 (in the contour, not as knobs): voltage, time, pulse ON/OFF, slide (80 ms into the stage); LEN 1–16; GEN 303/MOTIF/WALK/TURING/ARP/PHRASE/PEDAL; SCALE; ROOT; DICE button | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
+| | **RHYTHM** — 16-step rhythm sequencer, generative, drawn as pads | clk (trigger), reset (trigger), dice (trigger) | 16 gate steps, 16 accent steps; LEN 1–16, HITS 0–16, ROT 0–15, DENS 1–16; MODE EUCLID/GRID; DICE button | gate (trigger), acc (trigger), eoc (trigger) | — |
 | | **CHANCE** — Bernoulli gate | trig (trigger) | P (0…1) | a, b (trigger): each event goes to A with probability P, else to B | — |
 | | **SHIFT** | trig (trigger) | AMT (0…1 of the measured period), WHICH ALL/EVEN (EVEN = swing) | out (trigger) | — |
 | | **COMPARE** | in (audio) | threshold | out (trigger) | — |
@@ -243,9 +243,19 @@ Size is `HP × U`.
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
 - Sizes (HP × U): OSC 6×1, COMPLEX 7×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 6×1, LPG 5×1, VCA 3×1, FILTER 4×1,
-  FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1, RHYTHM 10×3, CHANCE 3×1, SHIFT 4×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2.
-- **RHYTHM:** in EUCLID the pattern is computed live from LEN, HITS and ROT (all modulatable) and the step cells show
-  it dashed; touching a step turns the current euclid pattern into a grid (MODE → GRID) and toggles that step. Steps
+  FOLD 4×1, STAGES 10×3, COMPARE 3×1, S&H 2×1, QUANT 4×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1, RHYTHM 10×2, CHANCE 3×1, SHIFT 4×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2.
+- **STAGES panel = a contour.** A display shows the LEN stages as one line: a step's height is its note (named above
+  it), a sloped joint is a slide, dots along the bottom are pulses, the current stage is amber. While ADV is
+  unpatched (free-running on its own timer) step widths follow stage times; while ADV is patched (timed from
+  outside) all steps are equal width. Gestures: press and drag inside the display draws notes — each step under the
+  pointer takes the pointer's height, snapped to the nearest degree of SCALE from ROOT (one undo step per stroke);
+  click a joint toggles the slide into the next stage; drag a joint sideways changes the stage time (free-running
+  only); click a dot toggles that stage's pulse. The per-stage values are params without knobs or mod jacks; R leaves
+  them alone (DICE generates them).
+- **RHYTHM panel = 16 pads** in two rows of eight with an accent strip under each: click a pad toggles the step,
+  click the strip toggles the accent; the current step has an amber ring.
+- **RHYTHM:** in EUCLID the pattern is computed live from LEN, HITS and ROT (all modulatable) and the pads show it
+  dashed; touching a pad turns the current euclid pattern into a grid (MODE → GRID) and toggles that pad. Pads
   past LEN are dimmed. Each clock rise advances one step; a hit raises GATE for half the last clock interval; an
   accented hit also fires ACC.
 - **DICE** (button, or a rise on the DICE input): STAGES writes a line from GEN in its SCALE and ROOT into its 8
