@@ -180,8 +180,8 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   captures what it lands on; a resize re-parents everything (growing a frame over an object attaches it); an added,
   duplicated or ⌘G-framed object gets its parent on creation. Frames nest to any depth.
 - While a module or frame is dragged, the frame it would land in is highlighted.
-- **⌘G** wraps the selection in a new frame fitted around it (16 px padding, header above), nested in the
-  selection's innermost common parent. **⇧⌘G** removes the selected frame; its children move to its parent.
+- **G** (or ⌘G) wraps the selection in a new frame fitted around it (16 px padding, header above), nested in the
+  selection's innermost common parent. **G** on a selection of frames only (or ⇧⌘G) removes them; their children move to their parent.
   **Backspace** on a selected frame deletes it and everything inside it (one undo step).
 - **Clock.** The header has a **CLK in** jack (trigger role, outside the frame at the header's left end) and a
   **CLK out** jack (trigger role, inside the frame under the header). Members use the clock by being patched from
@@ -278,8 +278,8 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   unsaved changes. Factory entries are read-only: saving one asks for a new name.
 - **One picker** for modules, groups and projects: the module search (§4) gets tabs ALL · MODULES · GROUPS ·
   PROJECTS (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows
-  its folder and kind. IDE-style keys open it at the pointer: **/** (or a double-click on empty canvas) on ALL,
-  **M** on MODULES, **G** on GROUPS, **P** on PROJECTS (⌘O = P, in the middle of the screen). Opened from a jack, it
+  its folder and kind. **/** (or a double-click on empty canvas) opens it at the pointer on ALL; ⌘O opens it on
+  PROJECTS in the middle of the screen. No single-letter keys for tabs (G is taken by frames). Opened from a jack, it
   offers modules and groups (no projects); in REPLACE mode, modules only.
   - A **group** lands with its frame's top-left at the drop point, with fresh ids; opened from a trigger output, the
     cable goes into the group's CLK in.

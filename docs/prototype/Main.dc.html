@@ -357,7 +357,7 @@ body{margin:0;background:#121210}
 </div>
 </div>
 </sc-if>
-<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · M G P MODULES GROUPS PROJECTS · W WIRES · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · ⌘G FRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
+<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · W WIRES · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · G FRAME / UNFRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
 <div class="sr-zoom" style="{{zoomStyle}}" onPointerDown="{{stop}}">
 <button onClick="{{zoomOut}}" aria-label="Zoom out">−</button>
 <span>{{zoomText}}</span>
@@ -1996,8 +1996,13 @@ class Component extends DCLogic {
     if (meta && k === 'g') { e.preventDefault(); if (e.shiftKey) this.ungroup(); else this.group(); return; }
     if (meta && k === 's') { e.preventDefault(); this.saveStart(e.shiftKey); return; }
     if (meta && k === 'o') { e.preventDefault(); this.openPicker('PROJECTS'); return; }
-    if (!meta && !e.altKey && (e.key === '/' || k === 'm' || k === 'g' || k === 'p')) {
-      e.preventDefault(); this.openPicker({ '/': 'ALL', m: 'MODULES', g: 'GROUPS', p: 'PROJECTS' }[e.key === '/' ? '/' : k], true); return;
+    // G alone: frame the selection, or unframe when only frames are selected (⌘G / ⇧⌘G still work)
+    if (!meta && !e.altKey && k === 'g') {
+      var gsel = this.state.sel; if (!gsel.length) return;
+      e.preventDefault(); if (gsel.every(isGroup)) this.ungroup(); else this.group(); return;
+    }
+    if (!meta && !e.altKey && e.key === '/') {
+      e.preventDefault(); this.openPicker('ALL', true); return;
     }
     if (k === 'backspace' || k === 'delete') { e.preventDefault(); this.deleteSel(); return; }
     if (!meta && k === 'r' && this.state.hover) { e.preventDefault(); this.randomize(this.state.hover); }

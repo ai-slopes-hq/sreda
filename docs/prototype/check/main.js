@@ -34,4 +34,9 @@ step('DICE stages', () => { const m = mod('stages'); c.act(m.id, 'dice'); });
 step('replace module', () => { const m = mod('filter'); c.setState({ search: { sx: 0, sy: 0, cx: 0, cy: 0, from: null, replace: m.id, q: '', idx: 0 } }); c.renderVals().searchItems.find(i => i.label === 'FOLD').pick(); });
 step('randomize + fit', () => { c.randomize(doc().mods[0].id); c.fit(false); });
 step('delete selection', () => { c.setState({ sel: [doc().mods[0].id] }); c.deleteSel(); });
-step('keys: w / m / g / p / esc', () => { const k = (key, o) => c.key(ev(Object.assign({ key }, o || {}))); k('Escape'); k('w'); k('m'); k('Escape'); k('g'); k('Escape'); k('p'); k('Escape'); k('f'); });
+step('keys: w / / / g g / esc', () => { const k = (key, o) => c.key(ev(Object.assign({ key }, o || {}))); k('Escape'); k('w'); k('/'); k('Escape'); k('g'); k('g'); k('f'); });
+// G frames the selection, G again (on the new frame) unframes it
+(() => { const k = (key) => c.key(ev({ key }));
+  c.setState({ sel: doc().mods.slice(0, 2).map(m => m.id) }); const n0 = doc().groups.length; k('g'); const n1 = doc().groups.length;
+  k('g'); const n2 = doc().groups.length; c.setState({ sel: [] }); k('g'); const n3 = doc().groups.length; k('m'); k('p');
+  console.log('G frame/unframe'.padEnd(28), n1 === n0 + 1 && n2 === n0 && n3 === n0 && !c.state.search ? 'ok' : 'FAIL ' + [n0, n1, n2, n3, !!c.state.search]); })();
