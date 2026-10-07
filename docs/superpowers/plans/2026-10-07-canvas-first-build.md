@@ -1,5 +1,8 @@
 # SREDA 2 First Build Implementation Plan
 
+> **OUTDATED:** written against spec revision 1. Revision 2 (stacking, attenuverters, ratios, normals, groups,
+> the west-coast module set, SCOPE) needs a new plan once the revised prototype is approved. Do not execute.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A browser canvas of small modules that is always live: patch by dragging from jacks, click any output to
