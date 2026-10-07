@@ -34,7 +34,7 @@ of a creative tool; nothing of its UI is ported.
 | Stage | Plan | Ends with | State |
 |---|---|---|---|
 | **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | done, merged |
-| **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | done, awaiting the listen |
+| **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | done, merged |
 | **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (written when Plan 1 lands) | the 24 first-build modules | — |
 | **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 | the first build complete | — |
 | **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | its own plan | spec §7a | — |
