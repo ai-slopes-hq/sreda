@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 8 (library: saved groups and projects, one picker, NEW = empty canvas) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 9 (wire hover, WIRE FIX on by default) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -116,6 +116,9 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
 - **Insert into a cable:** drag a module that has no cables over a cable; within 8 screen px the cable highlights;
   dropping splits it: source → the module's first input of the source's role (else its first input), the module's
   first output of the target's role (else its first output) → the old target. One undo step.
+- **Wire hover:** a wire under the pointer (within 6 screen px of its drawn path, routed or curved) is drawn at full
+  strength and thicker, every other wire dims to 15 %, and a tag by the pointer names both ends
+  (`SLOPE › EOC  →  STAGES › ADV`). It takes precedence over cable focus.
 - **Cable focus:** hovering a module or a frame header shows its cables (a frame: all cables touching anything inside
   it) at full strength and slightly thicker, and dims every other cable to 20 %. Selection does not focus: with
   nothing hovered all cables are drawn normally.
@@ -138,8 +141,8 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
 ## 5. Groups (frames)
 
 - A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
-  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, ROUTE, M) show while the header is hovered, and stay visible
-  while ROUTE or M is on. Drag an edge or corner to resize (minimum 352 × 96);
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, FIX, SAVE, M) show while the header is hovered, and stay visible
+  while FIX or M is on. Drag an edge or corner to resize (minimum 352 × 96);
   drag the header to move the frame and everything inside it; click the header to select it.
 - **Membership is containment.** Every module and frame has a `parent` (a frame or none): the innermost frame that
   contains its centre, never itself or one of its descendants. It is recomputed only for what an action touched:
@@ -170,7 +173,8 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
   - **STACK:** packs the frame's direct children (modules, and child frames as single blocks) flush, Tetris-style:
     children are taken in reading order (rows by position, then x) and each goes to the lowest free spot across the
     frame's width; the width stays, the height fits the result. One action, one undo step.
-  - **ROUTE:** a frame mode (`layout: 'route'`), toggled. A ROUTE frame manages its own layout: its direct children
+  - **WIRE FIX** (button `FIX`): a frame mode (`layout: 'route'`), toggled, **on by default** — ⌘G frames and
+    factory frames start packed in rows with routed wires (innermost frames first). A ROUTE frame manages its own layout: its direct children
     sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the
     left padding is a trunk). Anything dropped into, moved within or taken out of it re-packs it, so the channels
     always run through. Cables between two direct children are drawn orthogonally and never cross a module. A cable to
