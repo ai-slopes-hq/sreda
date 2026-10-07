@@ -107,7 +107,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
 - **Magnets:** while a module or selection is dragged, its bounding box snaps flush to nearby modules when an edge
   comes within 10 screen px: side by side (edges touching, tops or bottoms aligned) or stacked (one under the
   other, lefts or rights aligned). A thin guide line shows each active snap. Holding ⌘ while dragging turns magnets
-  off. Magnets only arrange; snapped modules do not stay linked. Inside a ROUTE frame magnets keep a 32 px gap instead
+  off. Magnets only arrange; snapped modules do not stay linked. Inside a WIRE FIX frame magnets keep a 32 px gap instead
   of a flush edge.
 - **Replace:** double-click a module's name → the search opens as `REPLACE <MODULE>`; Enter puts the new module in
   the same place and frame. Cables move to the new module's port with the same id, else to its next unused port of
@@ -174,7 +174,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     children are taken in reading order (rows by position, then x) and each goes to the lowest free spot across the
     frame's width; the width stays, the height fits the result. One action, one undo step.
   - **WIRE FIX** (button `FIX`): a frame mode (`layout: 'route'`), toggled, **on by default** — ⌘G frames and
-    factory frames start packed in rows with routed wires (innermost frames first). A ROUTE frame manages its own layout: its direct children
+    factory frames start packed in rows with routed wires (innermost frames first). A WIRE FIX frame manages its own layout: its direct children
     sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the
     left padding is a trunk). Anything dropped into, moved within or taken out of it re-packs it, so the channels
     always run through. Cables between two direct children are drawn orthogonally and never cross a module. A cable to
@@ -182,7 +182,7 @@ touch, polyphony, stereo cables, group macros and collapsing, reverb. Later idea
     the jacks are at different heights). Any other cable goes out of
     the source into the channel on its right, up into the channel above its row, along the trunk to the channel
     above the target's row (same row: straight across), down the channel on the target's left into the jack (a
-    knob's mod jack: straight down from the channel above) — rounded corners, one 4 px lane per cable. Turning ROUTE
+    knob's mod jack: straight down from the channel above) — rounded corners, one 4 px lane per cable. Turning WIRE FIX
     off returns to curves and keeps the layout.
   - **MUTE (M):** the frame fades out over 50 ms: cables leaving the frame and OUT modules inside it go silent; clocks
     and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 % (its own
@@ -343,7 +343,7 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
 - **e2e (Playwright):** drag from a jack → search → placed and wired; stack two cables on one input; click to listen
   and back; R randomises and undo restores; box-select by dragging; magnets snap flush; ⌘G frames the selection,
   own clock ticks, CLK out drives a member, a nested frame inherits its parent's clock at ÷2; dragging a module out
-  of a frame detaches it; STACK packs a frame; ROUTE draws orthogonal cables; MUTE silences a frame's outgoing
+  of a frame detaches it; STACK packs a frame; WIRE FIX draws orthogonal cables; MUTE silences a frame's outgoing
   cables; replace keeps matching cables and knob values; dropping a free module on a cable inserts it; NEW clears and
   undo restores; reload resumes the canvas; ⌘S saves a frame as a group and the picker places it twice with fresh
   ids; ⌘S / ⌘O round-trip a project through the library folder.
