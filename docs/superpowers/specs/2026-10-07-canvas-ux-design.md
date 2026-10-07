@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 13 (sound pack designed) · Status: approved
+Date: 2026-10-07 · Revision 14 (panels: air + quiet) · Status: approved
 
 ## Why
 
@@ -42,15 +42,20 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
 
 - A module is a compact block: name on top, inputs on the left edge, outputs on the right edge, parameters on the
   face between them.
-- **Sizes are quantised:** width N × HP (HP = 48 px), height 1U, 2U or 3U (U = 112 px; 2U is exactly two 1U). Each
-  module's size is fixed in its spec (§7). Placement on the canvas stays free (16 px grid, magnets); the sizes make
-  STACK pack cleanly.
+- **Sizes are quantised:** width N × HP (HP = 56 px), height 1U, 2U or 3U (144, 272 and 400 px: the header, a 6 px
+  inset, the lanes, 10 px under the last lane). Each module's size is fixed in its spec (§7). Placement on the canvas
+  stays free (8 px grid, magnets); the sizes make STACK pack cleanly.
 - **Panel grammar — one layout for every module, small or large** (board *Panel system* in the prototype):
-  1. Under a 24 px header (the name), the panel is cut into **lanes of 28 px**: 1U = 3 lanes, 2U = 7, 3U = 11.
+  1. Under a 32 px header (the name) and a 6 px inset, the panel is cut into **lanes of 32 px**: 1U = 3 lanes,
+     2U = 7, 3U = 11. Room to breathe is part of the grammar: knobs 56 × 40, jacks 11 px, 4 px inside the edges of a
+     display or a button.
   2. **Three columns, always:** the IN column (1 HP) on the left, the OUT column (1 HP) on the right, the control
-     area (N − 2 HP) between them. Ports live only in the side columns (knob mod jacks excepted).
+     area (N − 2 HP) between them, the side columns a shade darker (#171715). Ports live only in the side columns
+     (knob mod jacks excepted).
   3. **One jack per lane**, top down in spec order: sound, then clocks and triggers, then CV. A jack's label and its
-     value (attenuverter or ratio) share its lane; an output's level bar sits under its label.
+     value (attenuverter or ratio) share its lane; an output's level bar sits under its label. Quiet: the value
+     shows only when it is not the default, or while the module is under the pointer, selected alone or being
+     edited; otherwise the label sits in the middle of the lane.
   4. **The control area, top to bottom, always in this order:** the DISPLAY (if any; the full width of the control
      area, a whole number of lanes) → KNOB ROWS (2 lanes each, knobs left to right by importance) → the MODE STRIP
      (the bottom lane).
@@ -63,7 +68,11 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   7. **Size follows content:** control columns = max(knobs per row, the display's width); height = the smallest of
      1U / 2U / 3U that holds the jacks and the control area. Large modules are the same grammar with a larger
      display, not a different design.
-  8. **Type:** the module name 11 px semibold, labels 9 px muted, values 9–10 px; no other sizes on a panel.
+  8. **Type:** the module name 11 px semibold, labels 9 px in a quiet colour (#6f6a5f), values 9–10 px; no other
+     sizes on a panel.
+  9. **Quiet panels:** a knob's value shows only while the module is under the pointer, selected alone or being
+     edited, and always on a modulated knob (in the mod colour). Labels, arcs and pointers always show, so the
+     state reads at a glance and the numbers come when you reach for them.
 - Every parameter is on the face as a small knob or a value field you drag. A module whose parameters do not fit is
   split into two modules; there is never a popup or side panel.
 - Every knob has its own mod jack (top-left of the knob). Its attenuverter (§3) is drawn as a ring around the knob:

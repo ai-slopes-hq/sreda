@@ -39,18 +39,19 @@ body{margin:0;background:#121210}
 .sr-frame .sr-jack{pointer-events:auto}
 .sr-mod{position:absolute;background:#1b1b18;border:1px solid #2e2d28;border-radius:3px;box-sizing:border-box;cursor:grab}
 .sr-mod.sel{border-color:#8f897c}
-.sr-head{height:24px;line-height:24px;padding:0 8px;font-size:11px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid #2a2924;white-space:nowrap;overflow:hidden}
-.sr-jack{position:absolute;width:9px;height:9px;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210;cursor:crosshair;z-index:2}
+.sr-head{height:32px;line-height:32px;padding:0 10px;font-size:11px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid #2a2924;white-space:nowrap;overflow:hidden}
+.sr-jack{position:absolute;width:11px;height:11px;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210;cursor:crosshair;z-index:2}
 .sr-jack:hover{transform:scale(1.4)}
-.sr-plabel{position:absolute;font-size:9px;line-height:10px;color:#8f897c;letter-spacing:.04em;pointer-events:none;white-space:nowrap}
+.sr-plabel{position:absolute;font-size:9px;line-height:10px;color:#6f6a5f;letter-spacing:.04em;pointer-events:none;white-space:nowrap}
 .sr-field{position:absolute;font-size:10px;line-height:11px;padding:0 2px;margin-left:-2px;border-radius:2px;cursor:ns-resize;white-space:nowrap;z-index:2}
 .sr-field:hover{background:#2a2924}
 .sr-lvl{position:absolute;height:2px;border-radius:1px;pointer-events:none}
-.sr-cell{position:absolute;width:48px;height:56px}
-.sr-knob{position:absolute;left:0;top:0;width:48px;height:34px;cursor:ns-resize}
-.sr-clabel{position:absolute;left:0;right:0;top:35px;text-align:center;font-size:9px;line-height:10px;color:#8f897c;letter-spacing:.04em;pointer-events:none}
-.sr-cval{position:absolute;left:0;right:0;top:45px;text-align:center;font-size:9px;line-height:10px;color:#e9e4d8;pointer-events:none}
-.sr-opt{position:absolute;left:5px;top:7px;width:38px;height:20px;background:#121210;border:1px solid #3a3933;border-radius:2px;color:#e9e4d8;font:500 9px 'IBM Plex Mono',monospace;cursor:pointer;padding:0}
+.sr-cell{position:absolute;width:56px;height:64px}
+.sr-col{position:absolute;top:32px;bottom:0;width:56px;background:#171715;pointer-events:none}
+.sr-knob{position:absolute;left:0;top:2px;width:56px;height:40px;cursor:ns-resize}
+.sr-clabel{position:absolute;left:0;right:0;top:43px;text-align:center;font-size:9px;line-height:10px;color:#6f6a5f;letter-spacing:.04em;pointer-events:none}
+.sr-cval{position:absolute;left:0;right:0;top:53px;text-align:center;font-size:9px;line-height:10px;color:#e9e4d8;pointer-events:none}
+.sr-opt{position:absolute;left:6px;top:10px;width:44px;height:20px;background:#121210;border:1px solid #3a3933;border-radius:2px;color:#e9e4d8;font:500 9px 'IBM Plex Mono',monospace;cursor:pointer;padding:0}
 .sr-opt:hover{border-color:#8f897c}
 .k-track,.k-arc,.k-ring{fill:none;stroke-linecap:round}
 .k-track{stroke:#34332d;stroke-width:2.5}
@@ -221,6 +222,8 @@ body{margin:0;background:#121210}
 </svg>
 </div>
 </sc-if>
+<div class="sr-col" style="{{m.inCol}}"></div>
+<div class="sr-col" style="{{m.outCol}}"></div>
 <sc-for list="{{m.ins}}" as="j">
 <div class="sr-jack" data-jack="{{j.key}}" style="{{j.style}}" onPointerDown="{{j.down}}" title="{{j.title}}"></div>
 <div class="sr-plabel" style="{{j.labelStyle}}">{{j.label}}</div>
@@ -237,7 +240,7 @@ body{margin:0;background:#121210}
 <div class="sr-cell" style="{{c.style}}">
 <sc-if value="{{c.isKnob}}" hint-placeholder-val="{{true}}">
 <div class="sr-knob" data-knob="{{c.key}}" onPointerDown="{{c.down}}" onDoubleClick="{{c.dbl}}">
-<svg width="48" height="34" viewBox="0 0 48 34" style="display:block;overflow:visible">
+<svg width="56" height="40" viewBox="0 0 48 34" style="display:block;overflow:visible">
 <path class="k-track" d="{{c.track}}"></path>
 <path class="k-ring" d="{{c.ring}}"></path>
 <path class="k-arc" d="{{c.arc}}"></path>
@@ -251,7 +254,7 @@ body{margin:0;background:#121210}
 <button class="sr-opt" style="{{c.optStyle}}" data-opt="{{c.optKey}}" onPointerDown="{{stop}}" onClick="{{c.cycle}}" aria-label="{{c.optAria}}" aria-haspopup="{{c.optPopup}}"><sc-if value="{{c.hasGlyph}}" hint-placeholder-val="{{false}}"><svg class="g-svg" width="{{c.gw}}" height="12"><path class="g-wave" d="{{c.gWave}}"></path><path class="g-on" d="{{c.gOn}}"></path><path class="g-off" d="{{c.gOff}}"></path></svg><span class="caret">{{c.caret}}</span></sc-if><sc-if value="{{c.noGlyph}}" hint-placeholder-val="{{true}}">{{c.optText}}</sc-if></button>
 </sc-if>
 <div class="sr-clabel" style="{{c.labelStyle}}">{{c.label}}</div>
-<sc-if value="{{c.hasVG}}" hint-placeholder-val="{{false}}"><div class="sr-cval"><svg class="g-svg" width="22" height="9"><path class="g-wave" d="{{c.vg}}"></path></svg></div></sc-if><sc-if value="{{c.noVG}}" hint-placeholder-val="{{true}}"><div class="sr-cval">{{c.value}}</div></sc-if>
+<sc-if value="{{c.hasVG}}" hint-placeholder-val="{{false}}"><div class="sr-cval"><svg class="g-svg" width="22" height="9"><path class="g-wave" d="{{c.vg}}"></path></svg></div></sc-if><sc-if value="{{c.noVG}}" hint-placeholder-val="{{true}}"><div class="sr-cval" style="{{c.valStyle}}">{{c.value}}</div></sc-if>
 </div>
 </sc-for>
 <sc-if value="{{m.isOut}}" hint-placeholder-val="{{false}}">
@@ -364,7 +367,9 @@ body{margin:0;background:#121210}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
 var ROLE = { audio: '#e9e4d8', mod: '#6cb4ee', pitch: '#9ad18b', trigger: '#f5a524' };
-var G = 16, HEAD = 24, ROW = 26, CW = 48, CH = 56, GUT = 48, GHEAD = 28, GPAD = 16, HP = 48, U = 112, LANE = 28, TOP = 26, LANES = { 1: 3, 2: 7, 3: 11 };
+// panel units (air): HP 56 wide, header 32, lanes of 32 under a 6 px inset, 10 px under the last lane → 1U 144, 2U 272, 3U 400
+var G = 8, HEAD = 32, GUT = 48, GHEAD = 28, GPAD = 16, HP = 56, LANE = 32, TOP = HEAD + 6, FOOT = 10, LANES = { 1: 3, 2: 7, 3: 11 };
+var U = TOP + 3 * LANE + FOOT;   // the height of 1U
 var TINTS = [["rgba(233,228,216,0.035)", "#8f897c"], ["rgba(217,119,87,0.09)", "#d97757"], ["rgba(240,200,110,0.08)", "#d8b25e"], ["rgba(154,209,139,0.08)", "#8fbf80"], ["rgba(110,200,190,0.08)", "#62b3a8"], ["rgba(108,180,238,0.09)", "#6cb4ee"], ["rgba(196,140,220,0.09)", "#b98ad0"]];
 var NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 var SCALES = [[0,1,2,3,4,5,6,7,8,9,10,11],[0,2,4,5,7,9,11],[0,2,3,5,7,8,10],[0,2,3,5,7,9,10],[0,1,3,5,7,8,10],[0,3,5,7,10],[0,2,4,7,9],[0,2,4,6,8,10]];
@@ -520,10 +525,10 @@ function lay(type) {
   if (LAY[type]) return LAY[type];
   var s = SPECS[type], vis = s.params.filter(function (p) { return !p.hidden; });
   var knobs = vis.filter(function (p) { return p.kind === 'k'; }), modes = vis.filter(function (p) { return p.kind !== 'k'; });
-  var C = s.size[0] - 2, w = s.size[0] * HP, h = s.size[1] * U, lanes = LANES[s.size[1]], dl = s.display ? s.display.lanes : 0;
+  var C = s.size[0] - 2, w = s.size[0] * HP, lanes = LANES[s.size[1]], h = TOP + lanes * LANE + FOOT, dl = s.display ? s.display.lanes : 0;
   var jacks = {}, cells = {};
-  s.ins.forEach(function (p, i) { jacks[p.id] = { x: 10, y: TOP + i * LANE + 14, role: p.role, dir: 'in', label: p.label }; });
-  s.outs.forEach(function (p, i) { jacks[p.id] = { x: w - 10, y: TOP + i * LANE + 14, role: p.role, dir: 'out', label: p.label }; });
+  s.ins.forEach(function (p, i) { jacks[p.id] = { x: 13, y: TOP + i * LANE + LANE / 2, role: p.role, dir: 'in', label: p.label }; });
+  s.outs.forEach(function (p, i) { jacks[p.id] = { x: w - 13, y: TOP + i * LANE + LANE / 2, role: p.role, dir: 'out', label: p.label }; });
   knobs.forEach(function (p, j) {
     var cx = HP + (j % C) * HP, cy = TOP + (dl + Math.floor(j / C) * 2) * LANE;
     cells[p.id] = { x: cx, y: cy, w: HP, mode: false };
@@ -535,7 +540,7 @@ function lay(type) {
     if (p.kind === 'a') { right += hp; x = HP + (C - right) * HP; } else { x = HP + left * HP; left += hp; }
     cells[p.id] = { x: x, y: my, w: hp * HP, mode: true };
   });
-  var disp = dl ? { x: HP + 2, y: TOP + 2, w: C * HP - 4, h: dl * LANE - 4 } : null;
+  var disp = dl ? { x: HP + 4, y: TOP + 2, w: C * HP - 8, h: dl * LANE - 6 } : null;
   return (LAY[type] = { w: w, h: h, jacks: jacks, cells: cells, disp: disp, lanes: lanes, knobRows: Math.ceil(knobs.length / Math.max(1, C)), modeHP: left + right });
 }
 function portsIn(type) {
@@ -617,7 +622,7 @@ function arc(k0, k1, r) {
   return 'M' + (24 + r * Math.sin(a0)).toFixed(2) + ' ' + (17 - r * Math.cos(a0)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + (24 + r * Math.sin(a1)).toFixed(2) + ' ' + (17 - r * Math.cos(a1)).toFixed(2);
 }
 function jackStyle(j, col, filled, flash, listen, dashed) {
-  var s = 'left:' + (j.x - 4.5) + 'px;top:' + (j.y - 4.5) + 'px;border-color:' + col + ';';
+  var s = 'left:' + (j.x - 5.5) + 'px;top:' + (j.y - 5.5) + 'px;border-color:' + col + ';';
   if (dashed) s += 'border-style:dashed;';
   if (filled) s += 'background:' + col + ';';
   if (flash) s += 'background:#f5a524;border-color:#f5a524;box-shadow:0 0 0 3px rgba(245,165,36,.35);';
@@ -787,7 +792,7 @@ var FACTORY_GROUPS = [
 function buildWith(build, base) {
   var n = base, doc = { mods: [], cables: [], groups: [], next: 0 };
   var S = {
-    add: function (type, x, y, vals) { var id = 'm' + (n++); doc.mods.push(newMod(id, type, x, y, vals)); return id; },
+    add: function (type, x, y, vals) { var id = 'm' + (n++); doc.mods.push(newMod(id, type, Math.round(x * 7 / 6), Math.round(y * 9 / 7), vals)); return id; },
     w: function (a, ap, b, bp) { doc.cables.push({ f: [a, ap], t: [b, bp] }); },
     att: function (id, port, v) { findMod(doc, id).att[port] = v; },
     rat: function (id, port, r) { findMod(doc, id).rat[port] = r; },
@@ -823,7 +828,7 @@ function mergeInto(doc, src, dx, dy) {
   src.cables.forEach(function (c) { if (map[c.f[0]] && map[c.t[0]]) doc.cables.push({ f: [map[c.f[0]], c.f[1]], t: [map[c.t[0]], c.t[1]] }); });
   return map;
 }
-var LIB_KEY = 'sreda2-proto-lib-v2';
+var LIB_KEY = 'sreda2-proto-lib-v3';
 function loadLib() { try { var l = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); return Array.isArray(l) ? l.filter(function (e) { return e && e.path && validDoc(e.doc); }) : []; } catch (err) { return []; } }
 function saveLib(lib) { try { localStorage.setItem(LIB_KEY, JSON.stringify(lib)); } catch (err) { /* storage unavailable */ } }
 function fullLib(user) {
@@ -1443,7 +1448,7 @@ function relayoutRoutes(doc, gids) {
   gids.forEach(function (gid) { var g = findGrp(doc, gid); if (g && g.layout === 'route') doc = layoutRows(doc, gid); });
   return doc;
 }
-var SAVE_KEY = 'sreda2-proto-v10';
+var SAVE_KEY = 'sreda2-proto-v11';
 function validDoc(d) {
   if (!d || !Array.isArray(d.mods) || !Array.isArray(d.cables) || !Array.isArray(d.groups) || typeof d.next !== 'number') return false;
   var ids = {};
@@ -1709,9 +1714,9 @@ class Component extends DCLogic {
     var doc = this.state.doc, m = findMod(doc, id), L = lay(m.type), p = this.toCanvas(e), lx = p.x - m.x - L.disp.x, ly = p.y - m.y - L.disp.y;
     var key = 's' + (++this.strokes);
     if (m.type === 'rhythm') {
-      var c = Math.floor(lx / 48), r = Math.floor(ly / 50); if (c < 0 || c > 7 || r < 0 || r > 1) return;
+      var c = Math.floor(lx / 56), r = Math.floor(ly / 62); if (c < 0 || c > 7 || r < 0 || r > 1) return;
       var k = r * 8 + c + 1, nd = clone(doc), nm = findMod(nd, id);
-      if (ly - r * 50 > 38) nm.p['a' + k] = 1 - nm.p['a' + k];
+      if (ly - r * 62 > 46) nm.p['a' + k] = 1 - nm.p['a' + k];
       else {
         if (nm.p.mode === 0) {
           // touching a pad in EUCLID turns the current pattern into a grid first
@@ -2214,10 +2219,15 @@ class Component extends DCLogic {
   }
 
   // ── view model ──
-  cellVals(m, p, connIn) {
+  loud(id) {
+    // quiet panels: values show while the module is under the pointer, selected alone, or being edited
+    var d = this.drag, st = this.state;
+    return st.hover === id || (st.sel.length === 1 && st.sel[0] === id) || !!(d && (d.kind === 'knob' || d.kind === 'field') && d.id === id);
+  }
+  cellVals(m, p, connIn, loud) {
     var c = lay(m.type).cells[p.id], self = this, id = m.id;
-    var base = { style: 'left:' + c.x + 'px;top:' + c.y + 'px;' + (c.mode ? 'width:' + c.w + 'px;height:28px;' : ''), label: c.mode ? '' : p.label, isKnob: p.kind === 'k', isOpt: p.kind === 'o', labelStyle: '' };
-    var btn = c.mode ? 'left:3px;top:4px;width:' + (c.w - 6) + 'px;' : '';
+    var base = { style: 'left:' + c.x + 'px;top:' + c.y + 'px;' + (c.mode ? 'width:' + c.w + 'px;height:' + LANE + 'px;' : ''), label: c.mode ? '' : p.label, isKnob: p.kind === 'k', isOpt: p.kind === 'o', labelStyle: '', valStyle: '' };
+    var btn = c.mode ? 'left:4px;top:6px;width:' + (c.w - 8) + 'px;' : '';
     var cur = (this.sim.cur[id] || 0) + 1, num = +p.id.replace(/^\D+/, '');
     var active = (m.type === 'stages' && /^[vtpg]\d$/.test(p.id) && num === cur) || (m.type === 'rhythm' && /^[ga]\d+$/.test(p.id) && num === cur);
     if (p.kind === 'a') {
@@ -2249,9 +2259,10 @@ class Component extends DCLogic {
       ring: modded ? arc(clamp(k - Math.abs(dep), 0, 1), clamp(k + Math.abs(dep), 0, 1), 15) : '',
       px: (24 + 8 * Math.sin(a)).toFixed(2), py: (17 - 8 * Math.cos(a)).toFixed(2),
       tx: (24 + 15 * Math.sin(t)).toFixed(2), ty: (17 - 15 * Math.cos(t)).toFixed(2), tickOp: modded ? 1 : 0,
-      value: fmt(p, fromK(p, km)), labelStyle: active ? 'color:#f5a524;' : '',
-      hasVG: p.glyph === 'curve', noVG: p.glyph !== 'curve', vg: p.glyph === 'curve' ? curveGlyph(fromK(p, km)) : '',
-      jackKey: modKey + '|in', jackStyle: jackStyle({ x: 5, y: 5 }, ROLE.mod, modded, false, false, false),
+      value: loud || modded ? fmt(p, fromK(p, km)) : '', labelStyle: active ? 'color:#f5a524;' : '',
+      hasVG: p.glyph === 'curve' && (loud || modded), noVG: !(p.glyph === 'curve' && (loud || modded)), vg: p.glyph === 'curve' ? curveGlyph(fromK(p, km)) : '',
+      valStyle: modded ? 'color:#6cb4ee;' : '',
+      jackKey: modKey + '|in', jackStyle: jackStyle({ x: 7, y: 7 }, ROLE.mod, modded, false, false, false),
       jackTitle: 'MOD ' + p.label + (modded ? ' · att ' + fmtAtt(dep) + ' (Alt-drag knob)' : ''),
       down: function (e) { self.knobDown(e, id, p.id); }, dbl: function (e) { self.knobReset(e, id, p.id); },
       jackDown: function (e) { self.jackDown(e, id, '@' + p.id, 'in', 'mod'); }
@@ -2259,6 +2270,7 @@ class Component extends DCLogic {
   }
   modVals(m, connIn, connOut, now, muted) {
     var s = SPECS[m.type], L = lay(m.type), id = m.id, self = this, listen = this.state.listen;
+    var loud = this.loud(id);
     var r = {
       id: id, label: s.label, selCls: this.state.sel.indexOf(id) >= 0 ? 'sel' : '',
       style: 'left:' + m.x + 'px;top:' + m.y + 'px;width:' + L.w + 'px;height:' + L.h + 'px;' + (muted[id] ? 'opacity:.4;' : '') + (this.peekIds && this.peekIds[id] ? 'box-shadow:0 0 0 2px #f5a524;' : ''),
@@ -2270,15 +2282,16 @@ class Component extends DCLogic {
         var field = hasAtt(p.role) ? 'att' : p.role === 'trigger' ? 'rat' : null, fv, ftext = '', fdef = true;
         if (field === 'att') { fv = m.att[p.id] == null ? 1 : m.att[p.id]; ftext = fmtAtt(fv); fdef = fv === 1; }
         if (field === 'rat') { fv = m.rat[p.id] || 1; ftext = fmtRat(fv); fdef = fv === 1; }
+        var showF = !!field && (!fdef || loud);
         var nsrc = n ? (n.own ? n.own.toUpperCase() : n.internal ? n.internal.toUpperCase() : n.value != null ? '+' + n.value : '') : '';
         return {
           key: key + '|in', label: p.label,
           title: p.label + (n ? ' ← ' + nsrc + ' (normal)' : '') + (connIn[key] ? ' · drag to pick up a cable' : ''),
           style: jackStyle(j, col, connIn[key], (self.sim.flash[key] || 0) > now, false, !!n),
-          labelStyle: 'left:19px;top:' + (j.y - 10) + 'px;' + (m.type === 'switch' && p.id === 'in' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
+          labelStyle: 'left:' + (j.x + 11) + 'px;top:' + (j.y - (showF ? 10 : 5)) + 'px;' + (m.type === 'switch' && p.id === 'in' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
           down: function (e) { self.jackDown(e, id, p.id, 'in', p.role); },
-          hasField: !!field, fieldKey: id + '|' + p.id + '|' + field, fieldText: ftext,
-          fieldStyle: 'left:19px;top:' + (j.y + 1) + 'px;color:' + (fdef ? '#5d594f' : col) + ';',
+          hasField: !!field, fieldKey: id + '|' + p.id + '|' + field, fieldText: showF ? ftext : '',
+          fieldStyle: 'left:' + (j.x + 11) + 'px;top:' + (j.y + 1) + 'px;color:' + (fdef ? '#5d594f' : col) + ';',
           fieldTitle: field === 'att' ? 'attenuverter · drag, wheel, double-click resets' : 'ratio ÷16…×8 · drag, wheel, double-click resets',
           fieldDown: function (e) { self.fieldDown(e, id, p.id, field); },
           fieldDbl: function (e) { self.fieldReset(e, id, p.id, field); }
@@ -2288,11 +2301,12 @@ class Component extends DCLogic {
         var j = L.jacks[p.id], key = id + '|' + p.id, lst = listen && listen.id === id && listen.port === p.id;
         return { key: key + '|out', label: p.label, title: p.label + ' · click to listen',
           style: jackStyle(j, ROLE[p.role], connOut[key], false, lst, false),
-          labelStyle: 'right:19px;top:' + (j.y - 10) + 'px;text-align:right;' + (m.type === 'spread' && p.id === 'out' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
-          lvlStyle: 'right:19px;top:' + (j.y + 3) + 'px;width:' + Math.round((self.sim.peak[key] || 0) * 22) + 'px;background:' + ROLE[p.role] + ';',
+          labelStyle: 'right:' + (L.w - j.x + 11) + 'px;top:' + (j.y - 9) + 'px;text-align:right;' + (m.type === 'spread' && p.id === 'out' + ((self.sim.cur[id] || 0) + 1) ? 'color:#f5a524;' : ''),
+          lvlStyle: 'right:' + (L.w - j.x + 11) + 'px;top:' + (j.y + 4) + 'px;width:' + Math.round((self.sim.peak[key] || 0) * 22) + 'px;background:' + ROLE[p.role] + ';',
           down: function (e) { self.jackDown(e, id, p.id, 'out', p.role); } };
       }),
-      cells: s.params.filter(function (p) { return !p.hidden; }).map(function (p) { return self.cellVals(m, p, connIn); }),
+      cells: s.params.filter(function (p) { return !p.hidden; }).map(function (p) { return self.cellVals(m, p, connIn, loud); }),
+      inCol: s.ins.length ? 'left:0;border-bottom-left-radius:2px;' : 'display:none;', outCol: s.outs.length ? 'right:0;border-bottom-right-radius:2px;' : 'display:none;',
       isOut: m.type === 'out', meterStyle: 'width:' + Math.round((this.sim.master[id] || 0) * 100) + '%;',
       hasDisp: !!L.disp && s.display.kind === 'scope', hasContour: !!L.disp && s.display.kind === 'contour', hasPads: !!L.disp && s.display.kind === 'pads',
       dispDown: function (e) { self.dispDown(e, id); }, steps: [], cLine: '', cFill: '', pads: []
@@ -2317,15 +2331,15 @@ class Component extends DCLogic {
     } else if (L.disp && s.display.kind === 'pads') {
       var D2 = L.disp, pr = function (q) { return Math.round(fromK(param('rhythm', q), m.p[q])); }, rlen = pr('length'), eu = m.p.mode === 0 ? euclid(rlen, pr('hits'), pr('rot')) : null, rcur = this.sim.cur[id] || 0;
       for (var k = 0; k < 16; k++) {
-        var px = (k % 8) * 48, py = Math.floor(k / 8) * 50, gs = eu ? (eu[k] && k < rlen ? 1 : 0) : m.p['g' + (k + 1)], hit = gs > 0, tie = gs === 2, acc = m.p['a' + (k + 1)] === 1, past = k >= rlen;
+        var px = (k % 8) * 56, py = Math.floor(k / 8) * 62, gs = eu ? (eu[k] && k < rlen ? 1 : 0) : m.p['g' + (k + 1)], hit = gs > 0, tie = gs === 2, acc = m.p['a' + (k + 1)] === 1, past = k >= rlen;
         var shadows = [];
         if (tie) shadows.push('-4px 0 0 0 #b9b3a6');
         if (k === rcur && !past) shadows.push('0 0 0 2px #f5a524');
         r.pads.push({
           num: tie ? (k + 1) + ' —' : '' + (k + 1),
-          pad: 'left:' + px + 'px;top:' + py + 'px;width:44px;height:36px;' + (hit ? 'background:' + (tie ? '#b9b3a6' : '#e9e4d8') + ';color:#121210;' : 'background:#121210;color:#5d594f;border:1px ' + (eu ? 'dashed' : 'solid') + ' #3a3933;') +
+          pad: 'left:' + px + 'px;top:' + py + 'px;width:50px;height:44px;' + (hit ? 'background:' + (tie ? '#b9b3a6' : '#e9e4d8') + ';color:#121210;' : 'background:#121210;color:#5d594f;border:1px ' + (eu ? 'dashed' : 'solid') + ' #3a3933;') +
             (eu && hit ? 'background:rgba(233,228,216,.55);' : '') + (shadows.length ? 'box-shadow:' + shadows.join(',') + ';' : '') + (past ? 'opacity:.25;' : ''),
-          acc: 'left:' + px + 'px;top:' + (py + 40) + 'px;width:44px;' + (acc ? 'background:#f5a524;' : 'background:#2a2924;') + (past ? 'opacity:.25;' : '')
+          acc: 'left:' + px + 'px;top:' + (py + 48) + 'px;width:50px;' + (acc ? 'background:#f5a524;' : 'background:#2a2924;') + (past ? 'opacity:.25;' : '')
         });
       }
       Object.assign(r, { dispStyle: 'left:' + D2.x + 'px;top:' + D2.y + 'px;width:' + D2.w + 'px;height:' + D2.h + 'px;', dispW: D2.w, dispH: D2.h, dispGrid: '', bandA: '', bandB: '', lineA: '', lineB: '' });

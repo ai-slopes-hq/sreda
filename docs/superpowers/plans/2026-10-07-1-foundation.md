@@ -46,14 +46,14 @@ the sidebar and WIRES, the library folder and pickers for groups and projects, e
 - Master: 5 Hz DC blocker, soft limiter (identity to |x| 0.9, `sign·(0.9 + 0.1·tanh((|x|−0.9)/0.1))` above), nothing
   non-finite reaches the output; the listen path goes through it too; several OUT modules sum before it.
 - Fades: removed nodes and re-routed inputs 10 ms; frame mute 50 ms; factory projects fade in over 200 ms.
-- Panel grammar (spec §2): header 24 px; lanes 28 px (1U = 3, 2U = 7, 3U = 11); IN column 1 HP | control area
+- Panel grammar (spec §2): header 32 px, 6 px inset, lanes 32 px (1U = 3, 2U = 7, 3U = 11), 10 px foot; IN column 1 HP | control area
   N − 2 HP | OUT column 1 HP; one jack per lane in spec order; control area = display (whole lanes) → knob rows
   (2 lanes each) → mode strip (bottom lane; options from the left, actions from the right; 1 HP per button, 2 HP for
-  a `▾` list with words). Displays: STAGES 8 lanes, RHYTHM 4, SCOPE 4. HP = 48, U = 112.
+  a `▾` list with words). Displays: STAGES 8 lanes, RHYTHM 4, SCOPE 4. HP = 56; heights 1U 144, 2U 272, 3U 400.
 - Sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 4×1,
   STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 3×1, COMPARE 3×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2, S&H 2×1,
   QUANT 3×1, MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1.
-- Frames: header 28 px, padding 16 px, WIRE FIX channel 32 px, minimum 352 × 96, grid 16 px.
+- Frames: header 28 px, padding 16 px, WIRE FIX channel 32 px, minimum 352 × 96, canvas grid 8 px.
 - Names: English; same-type modules are numbered in names (`SLOPE 1`, `SLOPE 2`).
 
 ## Review Focus
@@ -176,11 +176,12 @@ export const emptyDoc: Doc;
 export function validateDoc(json: unknown, specs: Specs): Doc | null;
 export function mulberry32(seed: number): () => number;
 // panel.ts — port the prototype's lay(); positions relative to the module's top-left
-export const HEAD = 24, LANE = 28, LANES = { 1: 3, 2: 7, 3: 11 } as const, HP = 48, U = 112;
+export const HEAD = 32, INSET = 6, TOP = 38, LANE = 32, FOOT = 10, LANES = { 1: 3, 2: 7, 3: 11 } as const, HP = 56;
+// h = TOP + lanes·LANE + FOOT → 1U 144, 2U 272, 3U 400
 export interface PanelLayout { w: number; h: number; lanes: number;
-  jacks: Record<string, { x: number; y: number }>;     // ins x 10, outs x w − 10, y 40 + 28·i; mod jacks at a knob cell + (5, 5)
+  jacks: Record<string, { x: number; y: number }>;     // ins x 13, outs x w − 13, y 54 + 32·i; mod jacks at a knob cell + (7, 7)
   cells: Record<string, { x: number; y: number; w: number; mode: boolean }>;
-  display: { x: number; y: number; w: number; h: number } | null;   // x 50, y 28, w (N−2)·48 − 4, h lanes·28 − 4
+  display: { x: number; y: number; w: number; h: number } | null;   // x 60, y 40, w (N−2)·56 − 8, h lanes·32 − 6
   fits: boolean }
 export function layoutPanel(spec: ModuleSpec): PanelLayout;
 ```
@@ -189,8 +190,8 @@ Ids: modules `m<n>`, frames `g<n>`; frame jacks `[frameId, 'clkIn' | 'clkOut']`.
 - [ ] **Step 1: Failing tests:** `validateDoc` returns null for `version: 2`, an unknown type, a cable to a missing
   port, a cable to a missing module, a `parent` naming a missing frame, a cable to `[frame, 'nope']` (Review
   Focus 2); fills missing params with defaults and keeps atts / ratios. `layoutPanel` on an inline 5×1 spec with 3
-  knobs and one 3-value option: knob cells at x 48 / 96 / 144, y 26; the option at the bottom lane (y 82), 2 HP;
-  display null; `fits`. `mulberry32(7)` repeats.
+  knobs and one 3-value option: w 280, h 144; knob cells at x 56 / 112 / 168, y 38; the option at the bottom lane
+  (y 102), 2 HP; display null; `fits`. `mulberry32(7)` repeats.
 - [ ] **Step 2:** → FAIL. **Step 3:** Implement. **Step 4:** → PASS. **Step 5:** Commit `feat(core): document, validation, panel layout`.
 
 ### Task 4: Edits and names
