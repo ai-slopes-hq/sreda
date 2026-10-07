@@ -50,3 +50,22 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Hardening:** the app:// path check uses `startsWith(root)` without a separator; no `will-navigate` /
   `setWindowOpenHandler` guard; no production CSP; `package.json` uses `^` ranges, not exact pins; the WASM path is not
   tested at 44.1 kHz any more (add `renderDoc(…, 44100)`).
+
+## From the Plan 2 review (deferred, 2026-10-07)
+
+- **The folder's "2× oversampling" is a no-op:** averaging ADAA over linear-interpolated midpoints equals 1× ADAA. Either
+  real 2× (a half-band decimator) or drop it and fix the spec / plan text.
+- **FOLLOW's GATE latches on for THR < 0.02** (the envelope never goes below THR − 0.02); scale the hysteresis with THR.
+- **QUANT `snap` overflows** for absurd inputs (1e30 from a runaway): clamp `rel` (debug panics; release wraps).
+- **SCOPE TIME below ~5 ms** does nothing (256-sample minimum sweep); spec says 1 ms.
+- **LPG LP mode at g = 0** still passes the 20 Hz pole (a 50 Hz sine leaks at −8.6 dB between pings).
+- **SHIFT's queue** assumes ascending due times; AMT modulated down can queue an earlier event behind a later one.
+- **SHP's curve glyph** shows the base value, not the modulated one (§4 says modulation included).
+- **A×B+C's c2** shows the dashed normal ring and title while out1 is patched (the normal is not live then).
+- **EUCLID pads** show the unmodulated LEN / HITS / ROT; touching a pad freezes that, not what plays.
+- **Contour joints** (±5 px over the full height) take ~35 % of the display at LEN 16; fast strokes skip stages
+  (no interpolation between moves).
+- **DICE input latency:** a rAF + message round-trip; with DICE ← EOC the first step of the new cycle still plays the
+  old pattern; it pauses while the window is hidden.
+- **STAGES ADDR** has no hysteresis at stage boundaries; **RHYTHM** drops the accent on a TIE after a rest; dead
+  `ids` in att.rs.

@@ -9,7 +9,6 @@ import {
   removeCable,
   RATIOS,
   RuleError,
-  setParam,
   type Cable,
   type Doc,
   type Role,
@@ -263,6 +262,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     s.setState('sel', [added.id]);
   }
 
+  /** the params DICE writes into a module, as changes (sent as messages, not a plan) */
+  function diced(id: string): Record<string, number> {
+    const after = diceModule(s.current(), specs, id, mulberry32((Math.random() * 2 ** 32) >>> 0));
+    const before = s.current().modules.find((x) => x.id === id)!.params;
+    const now = after.modules.find((x) => x.id === id)!.params;
+    return Object.fromEntries(Object.entries(now).filter(([k, v]) => before[k] !== v));
+  }
+
   function fit(selection: boolean): void {
     const mods = st.doc.modules.filter((m) => !selection || st.sel.includes(m.id));
     if (!mods.length) return;
@@ -382,7 +389,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 closeEpoch={closeEpoch()}
                 act={{
                   knob: (param, k, merge) => s.knob(m.id, param, k, merge),
-                  option: (param, v, merge) => s.edit((d) => setParam(d, specs, m.id, param, v), merge),
+                  option: (param, v, merge) => s.params(m.id, { [param]: v }, merge),
                   hover: (on) => s.setState('hover', on ? m.id : st.hover === m.id ? null : st.hover),
                   edit: (on) => s.setState('editing', on ? m.id : null),
                   depth: (param, v, merge) => s.att(m.id, '@' + param, v, merge),
@@ -392,19 +399,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                     kind === 'att' ? s.att(m.id, port, null, undefined) : s.ratio(m.id, port, 1, undefined),
                   moduleDown: (e) => moduleDown(m.id, e),
                   action: (param) => {
-                    if (param === 'dice')
-                      s.edit((d) => diceModule(d, specs, m.id, mulberry32((Math.random() * 2 ** 32) >>> 0)));
+                    if (param === 'dice') s.params(m.id, diced(m.id), undefined);
                   },
-                  editParams: (changes, merge) =>
-                    s.edit(
-                      (d) =>
-                        Object.entries(changes).reduce((acc, [k, v]) => setParam(acc, specs, m.id, k, v), d),
-                      merge,
-                    ),
-                  diceInput: () =>
-                    s.replaceDoc(
-                      diceModule(s.current(), specs, m.id, mulberry32((Math.random() * 2 ** 32) >>> 0)),
-                    ),
+                  editParams: (changes, merge) => s.params(m.id, changes, merge),
+                  diceInput: () => s.params(m.id, diced(m.id), undefined, false),
                 }}
               />
             );

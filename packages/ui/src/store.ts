@@ -2,6 +2,7 @@
 // and sends it to the engine; a knob turn sends only a knob message.
 import {
   compile,
+  fromKnob,
   History,
   inputPorts,
   setAtt,
@@ -17,7 +18,7 @@ import { createSignal } from 'solid-js';
 import { createStore, reconcile } from 'solid-js/store';
 import type { AudioHost } from './audio/host';
 import { scheduleSave } from './autosave';
-import { setSeq, setSource } from './live';
+import { setLayoutSeq, setSource } from './live';
 
 export interface Session {
   doc: Doc;
@@ -67,6 +68,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
 
   function send(): void {
     plan = compile(state.doc, specs, ++seq);
+    setLayoutSeq(seq);
     setLayout(plan.layout);
     host?.post({ t: 'plan', plan });
     sendListen(); // a new plan clears listening in the engine
@@ -99,10 +101,8 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
     /** after the first click: the engine starts playing the current document */
     attach(h: AudioHost): void {
       host = h;
-      // live readouts follow a plan's layout only once the engine has taken that plan
       h.onMessage = (msg) => {
-        if (msg.code === 0) setSeq(msg.seq);
-        else
+        if (msg.code !== 0)
           setState('notice', `THE ENGINE REFUSED THE PATCH (${msg.code}) — THE PREVIOUS ONE KEEPS PLAYING`);
       };
       h.onError = () => setState('notice', 'THE AUDIO ENGINE STOPPED — RESTART THE APP');
@@ -120,6 +120,47 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
       history.replace(doc);
       show(doc);
       send();
+    },
+    /**
+     * Params of one module changed (an option, a display edit, DICE): visible knobs go as knob messages, options and
+     * hidden knobs as fixed messages — no new plan, unless a param decides one of the module's own normals.
+     * `undoable` false: a change made by the patch itself (no undo step).
+     */
+    params(id: string, changes: Record<string, number>, merge: Merge, undoable = true): void {
+      let doc = history.current;
+      for (const [k, v] of Object.entries(changes)) doc = setParam(doc, specs, id, k, v);
+      if (undoable) history.commit(doc, merge);
+      else history.replace(doc);
+      show(doc);
+      const node = nodeOf(id);
+      const m = doc.modules.find((x) => x.id === id);
+      const spec = m && specs[m.type];
+      if (node === null || !m || !spec) return;
+      const structural = Object.keys(changes).some((k) =>
+        spec.normals.some((n) => n.kind === 'own' && n.when?.param === k),
+      );
+      if (structural) {
+        send();
+        return;
+      }
+      const visible = spec.params.filter((p): p is KnobParam => p.kind === 'knob' && !p.hidden);
+      const fixed = spec.params.filter((p) => p.kind === 'option' || (p.kind === 'knob' && p.hidden));
+      for (const k of Object.keys(changes)) {
+        const v = visible.findIndex((p) => p.id === k);
+        if (v >= 0) {
+          host?.post({ t: 'knob', node, index: v, value: m.params[k]! });
+          continue;
+        }
+        const f = fixed.findIndex((p) => p.id === k);
+        const p = fixed[f];
+        if (!p) continue;
+        host?.post({
+          t: 'fixed',
+          node,
+          index: f,
+          value: p.kind === 'knob' ? fromKnob(p, m.params[k]!) : m.params[k]!,
+        });
+      }
     },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {

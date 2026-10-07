@@ -655,6 +655,13 @@ impl Engine {
         }
     }
 
+    /// A fixed value — an option's index or a hidden knob in real units — without a new plan.
+    pub fn fixed(&mut self, node: usize, index: usize, value: f64) {
+        if let Some(f) = self.slot_mut(node).and_then(|s| s.fixed.get_mut(index)) {
+            *f = value;
+        }
+    }
+
     pub fn att(&mut self, node: usize, input: usize, value: f64) {
         if let Some(i) = self.slot_mut(node).and_then(|s| s.inputs.get_mut(input)) {
             i.att = value.clamp(-1.0, 1.0);
@@ -1305,6 +1312,20 @@ mod tests {
                 .chain(r.iter())
                 .all(|x| x.is_finite() && x.abs() <= 1.0));
         }
+    }
+
+    #[test]
+    fn a_fixed_message_changes_an_option_without_a_plan() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![osc("o"), out("x", 0, 1.0)], chain(2)))
+            .unwrap();
+        run(&mut e, 4);
+        let square = |e: &Engine| e.output(0, 0).iter().filter(|x| x.abs() > 0.95).count();
+        assert!(square(&e) < 64, "a saw first");
+        e.fixed(0, 0, 3.0); // WAVE → SQR
+        run(&mut e, 2);
+        assert!(square(&e) > 100, "now a square: {}", square(&e));
+        e.fixed(9, 9, 1.0); // out of range: ignored
     }
 
     #[test]

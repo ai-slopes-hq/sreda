@@ -161,15 +161,20 @@ impl Dsp for Rhythm {
                 self.step = Some(next);
                 let gate = self.gate_at(io, i, next, len);
                 let next_is_tie = self.gate_at(io, i, (next + 1) % len, len) == 2;
-                // a gate held into a following TIE overlaps the next clock, so the tie does not retrigger
+                // before a TIE the gate stays up until the next clock (whenever it comes — a swung clock too),
+                // capped at four intervals in case the clock stops; else half an interval
                 let hold = if next_is_tie {
-                    self.interval + self.interval / 20
+                    4 * self.interval
                 } else {
                     self.interval / 2
                 };
                 match gate {
                     2 if self.sounding => self.gate_until = self.now + hold,
-                    0 => self.sounding = false,
+                    0 => {
+                        // a rest: whatever was held ends here
+                        self.sounding = false;
+                        self.gate_until = self.gate_until.min(self.now);
+                    }
                     _ => {
                         // ON, or a TIE after a rest: a new note
                         if self.gate_until > self.now {
@@ -274,6 +279,36 @@ mod tests {
             [14],
             "the accent on a TIE (step 12) is ignored; step 15's fires"
         );
+    }
+
+    #[test]
+    fn ties_hold_on_a_swung_clock() {
+        // x-x-x-… on a clock swung 1500 / 900 samples (SHIFT EVEN): every tie holds, so rises = notes
+        let mut b = Bench::new(
+            SR,
+            3,
+            &[16.0, 5.0, 0.0, 8.0],
+            &fixed("x-x-x-x-x-x-x-x-", "................", 1.0),
+            3,
+        );
+        b.connected_in = vec![true, false, false];
+        let clocks: Vec<usize> = (0..40)
+            .scan(0, |t, k| {
+                let at = *t;
+                *t += if k % 2 == 0 { 1500 } else { 900 };
+                Some(at)
+            })
+            .collect();
+        let end = *clocks.last().unwrap() + 2000;
+        let o = b.run(&mut Rhythm::new(SR), end.div_ceil(BLOCK), |blk, i, inp| {
+            let n = blk * BLOCK + i;
+            inp[0][i] = if clocks.iter().any(|c| n >= *c && n < c + 48) {
+                1.0
+            } else {
+                0.0
+            };
+        });
+        assert_eq!(rises(&o[GATE]).len(), 20, "20 notes, the ties held");
     }
 
     #[test]

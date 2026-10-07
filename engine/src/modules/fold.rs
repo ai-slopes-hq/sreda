@@ -29,9 +29,11 @@ pub struct Fold {
 impl Dsp for Fold {
     fn process(&mut self, io: &mut Io, _ctx: &mut Ctx, from: usize, to: usize) {
         for i in from..to {
-            io.out[0][i] = self
-                .folder
-                .process(io.inp[0][i], io.par[0][i], io.par[1][i]);
+            let (x, fold) = (io.inp[0][i], io.par[0][i]);
+            let folded = self.folder.process(x, fold, io.par[1][i]);
+            // the folder fades in over FOLD 0…0.25, so FOLD 0 passes the signal unchanged
+            let w = (4.0 * fold).min(1.0);
+            io.out[0][i] = (1.0 - w) * x + w * folded;
         }
     }
     fn reset(&mut self) {
@@ -64,6 +66,21 @@ mod tests {
             crossings(1.0),
             crossings(0.0)
         );
+    }
+
+    #[test]
+    fn fold_zero_passes_the_signal_unchanged() {
+        let mut b = Bench::new(48_000.0, 1, &[0.0, 0.0], &[], 1);
+        b.connected_in = vec![true];
+        let o = b.run(&mut Fold::default(), 4, |blk, i, inp| {
+            inp[0][i] = ((blk * BLOCK + i) as f32 * 0.05).sin() * 0.9
+        });
+        for (n, y) in o[0].iter().enumerate() {
+            assert!(
+                (y - (n as f32 * 0.05).sin() * 0.9).abs() < 1e-6,
+                "sample {n}"
+            );
+        }
     }
 
     #[test]

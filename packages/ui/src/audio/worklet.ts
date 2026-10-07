@@ -39,6 +39,9 @@ class SredaProcessor extends AudioWorkletProcessor {
       case 'knob':
         this.engine.knob(msg.node, msg.index, msg.value);
         break;
+      case 'fixed':
+        this.engine.fixed(msg.node, msg.index, msg.value);
+        break;
       case 'att':
         this.engine.att(msg.node, msg.input, msg.value);
         break;

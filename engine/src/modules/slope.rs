@@ -145,7 +145,7 @@ impl Dsp for Slope {
                         self.phase = Phase::Idle;
                         self.eoc_left = self.pulse;
                     } else {
-                        self.value = self.from * (1.0 - curve(self.x, shape));
+                        self.value = self.from * curve(1.0 - self.x, shape);
                     }
                 }
                 Phase::Idle if in_patched => {
@@ -228,6 +228,35 @@ mod tests {
         let eoc = first_above(&o[EOC], 0.5).expect("an EOC pulse");
         assert!((eoc as i64 - (480 + 4800)).abs() <= 3, "EOC at {eoc}");
         assert!(o[OUT][eoc + 10].abs() < 1e-6);
+    }
+
+    #[test]
+    fn exp_shape_falls_concave_up_and_log_shape_bulges() {
+        let half_fall = |shape: f64| {
+            let sr = 48_000.0;
+            let mut b = Bench::new(sr, 2, &[0.001, 0.1, shape], &[0.0], 3);
+            b.connected_in[0] = true;
+            let o = b.run(&mut Slope::new(sr), 60, |blk, i, inp| {
+                inp[0][i] = if blk == 0 && i < 48 { 1.0 } else { 0.0 }
+            });
+            // the rise takes 48 samples; half way through the 4800-sample fall
+            o[OUT][48 + 2400]
+        };
+        assert!(
+            half_fall(1.0) < 0.2,
+            "exp: a quick drop then a long tail: {}",
+            half_fall(1.0)
+        );
+        assert!(
+            half_fall(-1.0) > 0.8,
+            "log: holds up then drops: {}",
+            half_fall(-1.0)
+        );
+        assert!(
+            (half_fall(0.0) - 0.5).abs() < 0.02,
+            "lin: {}",
+            half_fall(0.0)
+        );
     }
 
     #[test]

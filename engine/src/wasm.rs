@@ -43,6 +43,13 @@ pub unsafe extern "C" fn engine_knob(e: *mut Engine, node: u32, index: u32, valu
 /// # Safety
 /// `e` comes from `engine_new`.
 #[no_mangle]
+pub unsafe extern "C" fn engine_fixed(e: *mut Engine, node: u32, index: u32, value: f64) {
+    unsafe { (*e).fixed(node as usize, index as usize, value) }
+}
+
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
 pub unsafe extern "C" fn engine_att(e: *mut Engine, node: u32, input: u32, value: f64) {
     unsafe { (*e).att(node as usize, input as usize, value) }
 }

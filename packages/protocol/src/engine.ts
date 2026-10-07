@@ -9,6 +9,7 @@ export interface WasmEngine {
   apply(plan: Plan): 0 | 1 | 2;
   applyJson(json: string): 0 | 1 | 2;
   knob(node: number, index: number, value: number): void;
+  fixed(node: number, index: number, value: number): void;
   att(node: number, input: number, value: number): void;
   ratio(node: number, input: number, value: number): void;
   listen(target: { node: number; port: number } | null): void;
@@ -23,6 +24,7 @@ interface Exports {
   engine_alloc(len: number): number;
   engine_apply(e: number, ptr: number, len: number): number;
   engine_knob(e: number, node: number, index: number, value: number): void;
+  engine_fixed(e: number, node: number, index: number, value: number): void;
   engine_att(e: number, node: number, input: number, value: number): void;
   engine_ratio(e: number, node: number, input: number, value: number): void;
   engine_listen(e: number, node: number, port: number): void;
@@ -70,6 +72,10 @@ class Engine implements WasmEngine {
 
   knob(node: number, index: number, value: number): void {
     this.x.engine_knob(this.e, node, index, value);
+  }
+
+  fixed(node: number, index: number, value: number): void {
+    this.x.engine_fixed(this.e, node, index, value);
   }
 
   att(node: number, input: number, value: number): void {

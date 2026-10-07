@@ -79,7 +79,10 @@ export function Contour(props: ContourProps): JSX.Element {
     if (e.button !== 0) return;
     e.stopPropagation();
     const r = (e.currentTarget as Element).getBoundingClientRect();
-    const at = (ev: PointerEvent) => ({ x: ev.clientX - r.left, y: ev.clientY - r.top });
+    // the canvas is scaled (zoom): screen pixels back to the display's own
+    const sx = r.width > 0 ? props.w / r.width : 1;
+    const sy = r.height > 0 ? props.h / r.height : 1;
+    const at = (ev: PointerEvent) => ({ x: (ev.clientX - r.left) * sx, y: (ev.clientY - r.top) * sy });
     const p0 = at(e);
     const g = geom();
     const key = `contour:${++strokes}`;

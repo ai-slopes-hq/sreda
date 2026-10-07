@@ -12,26 +12,29 @@ interface Entry {
   until: number;
   /** a level bar's held peak */
   hold: number;
-  /** 'watch': called when the readout changes */
+  /** 'watch': called when the readout rises (a trigger count going up) */
   onChange: (() => void) | undefined;
+  /** the plan whose layout `offset` belongs to: values are read only while the engine plays that plan */
+  seq: number;
 }
 
 const entries = new Set<Entry>();
 let source: Float32Array | null = null;
-let seq = -1;
+let layoutSeq = -1;
 let running = false;
 
-/** The readout buffer and the seq of the plan whose layout the registered offsets follow. */
+/** The readout buffer the worklet fills. */
 export function setSource(buf: Float32Array | null): void {
   source = buf;
 }
-export function setSeq(n: number): void {
-  seq = n;
+/** The plan whose layout the next registrations follow (set before the panels re-register). */
+export function setLayoutSeq(n: number): void {
+  layoutSeq = n;
 }
 
 /** level: a bar's width (22 px at full); meter: width in %; modDot: rotation of a knob's dot; flash: a trigger count changed. */
 export function register(el: Element, kind: Kind, offset: number, onChange?: () => void): () => void {
-  const e: Entry = { el, kind, offset, last: NaN, until: 0, hold: 0, onChange };
+  const e: Entry = { el, kind, offset, last: NaN, until: 0, hold: 0, onChange, seq: layoutSeq };
   entries.add(e);
   if (!running && typeof requestAnimationFrame === 'function') {
     running = true;
@@ -57,11 +60,17 @@ let lastTick = 0;
 
 function tick(now: number): void {
   requestAnimationFrame(tick);
+  frame(now);
+}
+
+/** One frame of readouts (exported for tests). */
+export function frame(now: number): void {
   const dt = lastTick ? Math.min(0.1, (now - lastTick) / 1000) : 0;
   lastTick = now;
   const buf = source;
-  if (!buf || buf[0] !== seq) return; // the engine is still on an older plan's layout
+  if (!buf) return;
   for (const e of entries) {
+    if (buf[0] !== e.seq) continue; // the engine is on another plan: this offset means something else there
     const v = buf[e.offset] ?? 0;
     const style = (e.el as HTMLElement).style;
     switch (e.kind) {
@@ -99,7 +108,8 @@ function tick(now: number): void {
         e.el.setAttribute('data-cur', String(Math.round(v)));
         break;
       case 'watch':
-        if (v !== e.last && !Number.isNaN(e.last)) e.onChange?.();
+        // a rise of the count is an event; the first reading is a baseline and a reset to 0 is not one
+        if (!Number.isNaN(e.last) && v > e.last) e.onChange?.();
         break;
     }
     e.last = v;
