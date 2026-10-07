@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Panel density</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.p-mod{position:absolute;background:#1b1b18;border:1px solid #2e2d28;border-radius:4px;box-sizing:border-box;overflow:hidden}
+.p-head{position:absolute;left:0;right:0;top:0;border-bottom:1px solid #2a2924;display:flex;align-items:center;padding:0 10px;box-sizing:border-box}
+.p-name{font-size:11px;font-weight:600;letter-spacing:.08em;color:#e9e4d8}
+.a{position:absolute}
+.colbg{position:absolute;background:#171715}
+.jack{position:absolute;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210}
+.lbl{position:absolute;font-size:9px;line-height:10px;letter-spacing:.04em;white-space:nowrap}
+.fld{position:absolute;font-size:10px;line-height:11px;white-space:nowrap}
+.txt{position:absolute;font-size:9px;line-height:10px;text-align:center;white-space:nowrap}
+.opt{position:absolute;height:20px;background:#121210;border:1px solid #3a3933;border-radius:3px;color:#e9e4d8;font-size:9px;line-height:18px;text-align:center;box-sizing:border-box;white-space:nowrap}
+.opt.on{background:#e9e4d8;color:#121210;border-color:#e9e4d8}
+.k-track,.k-arc{fill:none;stroke-linecap:round}
+.k-track{stroke:#34332d;stroke-width:2.5}
+.k-arc{stroke:#e9e4d8;stroke-width:2.5}
+.k-ring{fill:none;stroke:#6cb4ee;stroke-width:2;stroke-opacity:.45;stroke-linecap:round}
+.k-ptr{stroke:#e9e4d8;stroke-width:1.5;stroke-linecap:round}
+.k-dot{fill:#6cb4ee}
+.disp{position:absolute;background:#121210;border:1px solid #2a2924;border-radius:3px;overflow:hidden}
+.d-a{fill:none;stroke:#e9e4d8;stroke-width:1.2}.d-b{fill:none;stroke:#6cb4ee;stroke-width:1.2}
+.d-on{fill:#e9e4d8}.d-off{fill:none;stroke:#3a3933}.d-acc{fill:#f5a524}.d-ring{fill:none;stroke:#f5a524;stroke-width:2}
+.col-title{position:absolute;font-size:13px;font-weight:600;letter-spacing:.06em;color:#e9e4d8}
+.col-sub{position:absolute;font-size:11px;line-height:16px;color:#8f897c}
+.hover{position:absolute;font-size:9px;color:#f5a524;letter-spacing:.06em}
+</style>
+</helmet>
+<div style="position: relative; width: 2440px; height: 1180px; overflow: hidden; background: #121210; color: #e9e4d8; font-family: 'IBM Plex Mono', ui-monospace, monospace">
+<div style="position: absolute; left: 40px; top: 36px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 0; margin-top: 10px; font-size: 28px; font-weight: 600; letter-spacing: .04em">Плотность панелей: четыре варианта</h1>
+<div style="margin-top: 6px; font-size: 12px; color: #8f897c">Одни и те же модули. Слева направо: как сейчас · воздух · тишина · воздух + тишина. В вариантах с тишиной у одного модуля показано «наведение» — значения появляются.</div>
+</div>
+<sc-for list="{{cols}}" as="C" hint-placeholder-count="4">
+<div class="col-title" style="{{C.tpos}}">{{C.title}}</div>
+<div class="col-sub" style="{{C.spos}}">{{C.sub}}</div>
+</sc-for>
+<sc-for list="{{mods}}" as="M" hint-placeholder-count="16">
+<div class="p-mod" style="{{M.style}}">
+<div class="colbg" style="{{M.inBg}}"></div>
+<div class="colbg" style="{{M.outBg}}"></div>
+<div class="p-head" style="{{M.headStyle}}"><span class="p-name">{{M.name}}</span><span class="hover" style="{{M.hoverStyle}}">{{M.hoverTag}}</span></div>
+<sc-if value="{{M.hasDisp}}" hint-placeholder-val="{{false}}">
+<div class="disp" style="{{M.dispStyle}}"><svg width="{{M.dw}}" height="{{M.dh}}" style="display: block"><path class="d-a" d="{{M.dA}}"></path><path class="d-b" d="{{M.dB}}"></path><path class="d-off" d="{{M.dOff}}"></path><path class="d-on" d="{{M.dOn}}"></path><path class="d-acc" d="{{M.dAcc}}"></path><path class="d-ring" d="{{M.dRing}}"></path></svg></div>
+</sc-if>
+<sc-for list="{{M.jacks}}" as="j">
+<div class="jack" style="{{j.style}}"></div>
+<div class="lbl" style="{{j.lstyle}}">{{j.label}}</div>
+<div class="fld" style="{{j.fstyle}}">{{j.field}}</div>
+<div class="a" style="{{j.lvl}}"></div>
+</sc-for>
+<sc-for list="{{M.knobs}}" as="k">
+<svg class="a" style="{{k.pos}}" width="{{k.size}}" height="{{k.size}}" viewBox="0 0 48 34"><path class="k-track" d="{{k.track}}"></path><path class="k-ring" d="{{k.ring}}"></path><path class="k-arc" d="{{k.arc}}"></path><line class="k-ptr" x1="24" y1="17" x2="{{k.px}}" y2="{{k.py}}"></line><circle class="k-dot" cx="{{k.tx}}" cy="{{k.ty}}" r="2.2" opacity="{{k.dotOp}}"></circle></svg>
+<div class="jack" style="{{k.jack}}"></div>
+<div class="txt" style="{{k.lstyle}}">{{k.label}}</div>
+<div class="txt" style="{{k.vstyle}}">{{k.value}}</div>
+</sc-for>
+<sc-for list="{{M.modes}}" as="o">
+<div class="opt {{o.cls}}" style="{{o.style}}">{{o.text}}</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2440,"height":1180}}'>
+var ROLE = { audio: '#e9e4d8', mod: '#6cb4ee', pitch: '#9ad18b', trigger: '#f5a524' };
+function ang(k) { return (-135 + 270 * k) * Math.PI / 180; }
+function arc(k0, k1, r) {
+  if (k1 - k0 < 0.002) return '';
+  var a0 = ang(k0), a1 = ang(k1), large = (k1 - k0) * 270 > 180 ? 1 : 0;
+  return 'M' + (24 + r * Math.sin(a0)).toFixed(2) + ' ' + (17 - r * Math.cos(a0)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + (24 + r * Math.sin(a1)).toFixed(2) + ' ' + (17 - r * Math.cos(a1)).toFixed(2);
+}
+function rect(x, y, w, h) { return 'M' + x + ' ' + y + ' h' + w + ' v' + h + ' h' + (-w) + ' Z '; }
+// the two levers: units (air) and what is printed (quiet)
+var DENSE = { HP: 48, LANE: 28, HEAD: 24, PAD: 2, colBg: false };
+var AIR = { HP: 56, LANE: 32, HEAD: 32, PAD: 6, colBg: true };
+function panel(def, x, y, U, quiet, hovered) {
+  var HP = U.HP, LANE = U.LANE, HEAD = U.HEAD, TOP = HEAD + U.PAD, lanes = { 1: 3, 2: 7, 3: 11 }[def.size[1]];
+  var C = def.size[0] - 2, w = def.size[0] * HP, h = TOP + lanes * LANE + U.PAD + 4, dl = def.display ? def.display.lanes : 0;
+  var showVals = !quiet || hovered, r = { name: def.name };
+  r.style = 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;' + (hovered ? 'border-color:#8f897c;' : '');
+  r.headStyle = 'height:' + HEAD + 'px;'; r.hoverTag = hovered ? 'HOVER' : ''; r.hoverStyle = 'margin-left:auto;';
+  r.inBg = U.colBg ? 'left:0;top:' + HEAD + 'px;width:' + HP + 'px;bottom:0;' : 'display:none;';
+  r.outBg = U.colBg ? 'right:0;top:' + HEAD + 'px;width:' + HP + 'px;bottom:0;' : 'display:none;';
+  var js = U.HP > 48 ? 11 : 9, labC = quiet ? '#6f6a5f' : '#8f897c';
+  r.jacks = [];
+  def.ins.forEach(function (p, i) {
+    var cy = TOP + i * LANE + LANE / 2, col = ROLE[p[1]], def1 = !p[2], field = p[1] === 'trigger' ? (p[2] || '1') : (p[1] === 'mod' || p[1] === 'pitch') ? (p[2] || '1.00') : '';
+    var showF = field && (!quiet || !def1 || hovered);
+    r.jacks.push({ style: 'left:' + (12 - js / 2) + 'px;top:' + (cy - js / 2) + 'px;width:' + js + 'px;height:' + js + 'px;border-color:' + col + ';' + (p[3] ? 'background:' + col + ';' : ''),
+      label: p[0], lstyle: 'left:' + (12 + js / 2 + 6) + 'px;top:' + (cy - (showF ? 11 : 5)) + 'px;color:' + labC + ';',
+      field: showF ? field : '', fstyle: 'left:' + (12 + js / 2 + 6) + 'px;top:' + (cy + 1) + 'px;color:' + (def1 ? '#5d594f' : col) + ';', lvl: 'display:none;' });
+  });
+  def.outs.forEach(function (p, i) {
+    var cy = TOP + i * LANE + LANE / 2, col = ROLE[p[1]];
+    r.jacks.push({ style: 'left:' + (w - 12 - js / 2) + 'px;top:' + (cy - js / 2) + 'px;width:' + js + 'px;height:' + js + 'px;border-color:' + col + ';background:' + col + ';',
+      label: p[0], lstyle: 'right:' + (12 + js / 2 + 6) + 'px;top:' + (cy - 8) + 'px;text-align:right;color:' + labC + ';', field: '', fstyle: 'display:none;',
+      lvl: 'right:' + (12 + js / 2 + 6) + 'px;top:' + (cy + 4) + 'px;width:' + (10 + i * 5) + 'px;height:2px;border-radius:1px;background:' + col + ';' });
+  });
+  var ks = U.HP > 48 ? 52 : 48, ky0 = U.HP > 48 ? 2 : 0;
+  r.knobs = (def.knobs || []).map(function (k, j) {
+    var cx = HP + (j % C) * HP + (HP - ks) / 2, cy = TOP + (dl + Math.floor(j / C) * 2) * LANE + ky0, a = ang(k[1]), mod = k[3], km = mod ? Math.min(1, k[1] + 0.2) : k[1], t = ang(km);
+    var sv = showVals || mod;
+    return { pos: 'left:' + cx + 'px;top:' + cy + 'px;', size: ks, track: arc(0, 1, 11), arc: arc(0, k[1], 11), ring: mod ? arc(Math.max(0, k[1] - 0.25), Math.min(1, k[1] + 0.25), 15) : '',
+      px: (24 + 8 * Math.sin(a)).toFixed(2), py: (17 - 8 * Math.cos(a)).toFixed(2), tx: (24 + 15 * Math.sin(t)).toFixed(2), ty: (17 - 15 * Math.cos(t)).toFixed(2), dotOp: mod ? 1 : 0,
+      jack: 'left:' + (cx + 1) + 'px;top:' + (cy + 1) + 'px;width:8px;height:8px;border-color:#6cb4ee;' + (mod ? 'background:#6cb4ee;' : ''),
+      label: k[0], lstyle: 'left:' + (HP + (j % C) * HP) + 'px;width:' + HP + 'px;top:' + (cy + ks * 0.72 + (sv ? 0 : 4)) + 'px;color:' + labC + ';',
+      value: sv ? k[2] : '', vstyle: 'left:' + (HP + (j % C) * HP) + 'px;width:' + HP + 'px;top:' + (cy + ks * 0.72 + 11) + 'px;color:' + (mod ? '#6cb4ee' : '#e9e4d8') + ';' };
+  });
+  var left = 0, right = 0, mt = TOP + (lanes - 1) * LANE + (LANE - 20) / 2;
+  r.modes = (def.modes || []).map(function (o) {
+    var bw = o.hp * HP - 8, bx;
+    if (o.right) { right += o.hp; bx = HP + (C - right) * HP + 4; } else { bx = HP + left * HP + 4; left += o.hp; }
+    return { style: 'left:' + bx + 'px;top:' + mt + 'px;width:' + bw + 'px;', cls: o.on ? 'on' : '', text: o.t };
+  });
+  r.hasDisp = !!def.display;
+  var dw = C * HP - 8, dh = dl * LANE - 6;
+  Object.assign(r, { dispStyle: 'left:' + (HP + 4) + 'px;top:' + (TOP + 2) + 'px;width:' + dw + 'px;height:' + dh + 'px;', dw: dw, dh: dh, dA: '', dB: '', dOn: '', dOff: '', dAcc: '', dRing: '' });
+  if (def.display && def.display.kind === 'scope') {
+    for (var i = 0; i <= 80; i++) { var xx = (i / 80 * dw).toFixed(1); r.dA += (i ? 'L' : 'M') + xx + ' ' + (dh / 2 - Math.sin(i / 80 * 6 * Math.PI) * dh * 0.32).toFixed(1); r.dB += (i ? 'L' : 'M') + xx + ' ' + (dh * 0.85 - ((i % 27) / 27) * dh * 0.55).toFixed(1); }
+  }
+  if (def.display && def.display.kind === 'pads') {
+    var G = 'x.x-..x.x.xx-.x.', A = '...........A..A.', gap = U.HP > 48 ? 6 : 4, pw = (dw - 7 * gap) / 8, ph = (dh - 2 * 10 - gap) / 2;
+    for (var s = 0; s < 16; s++) {
+      var px = (s % 8) * (pw + gap), py = Math.floor(s / 8) * (ph + 10 + gap);
+      if (G[s] === '.') r.dOff += rect(px + 0.5, py + 0.5, pw - 1, ph - 1); else r.dOn += rect(px - (G[s] === '-' ? gap : 0), py, pw + (G[s] === '-' ? gap : 0), ph);
+      if (A[s] === 'A') r.dAcc += rect(px, py + ph + 3, pw, 4);
+      if (s === 5) r.dRing = rect(px - 1, py - 1, pw + 2, ph + 2);
+    }
+  }
+  r.w = w; r.h = h;
+  return r;
+}
+var DEFS = [
+  { name: 'OSC', size: [5, 1], ins: [['PTCH', 'pitch', '', 1], ['FM', 'audio'], ['SYNC', 'trigger']], outs: [['OUT', 'audio']], knobs: [['FREQ', 0.45, '110'], ['PW', 0.5, '0.50'], ['FM', 0.1, '0.10']], modes: [{ t: 'SAW ▾', hp: 2 }] },
+  { name: 'LPG', size: [4, 1], ins: [['IN', 'audio', '', 1], ['CV', 'mod'], ['PING', 'trigger', '×2', 1]], outs: [['OUT', 'audio']], knobs: [['LVL', 1, '1.00'], ['DEC', 0.45, '400ms', 1]], modes: [{ t: 'BOTH ▾', hp: 2 }] },
+  { name: 'SLOPE', size: [5, 1], ins: [['TRIG', 'trigger', '', 1], ['IN', 'audio']], outs: [['OUT', 'mod'], ['EOR', 'trigger'], ['EOC', 'trigger']], knobs: [['RISE', 0.2, '10ms'], ['FALL', 0.5, '300ms', 1], ['SHP', 0.5, 'lin']], modes: [{ t: 'CYC', hp: 1, on: true }] },
+  { name: 'SCOPE', size: [6, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['TRIG', 'trigger']], outs: [['THRU A', 'audio'], ['THRU B', 'audio']], display: { kind: 'scope', lanes: 4 }, knobs: [['TIME', 0.5, '2.0s'], ['GA', 0.5, '1.00'], ['GB', 0.5, '1.00']], modes: [{ t: 'A·B', hp: 1 }] },
+  { name: 'RHYTHM', size: [10, 2], ins: [['CLK', 'trigger', '×4', 1], ['RST', 'trigger'], ['DICE', 'trigger']], outs: [['GATE', 'trigger'], ['ACC', 'trigger'], ['EOC', 'trigger']], display: { kind: 'pads', lanes: 4 },
+    knobs: [['LEN', 1, '16'], ['HITS', 0.47, '7'], ['ROT', 0, '0'], ['DENS', 0.47, '8']], modes: [{ t: 'GRID', hp: 1 }, { t: 'DICE', hp: 1, right: true }] }
+];
+class Component extends DCLogic {
+  renderVals() {
+    var variants = [
+      { title: 'КАК СЕЙЧАС', sub: 'HP 48 · дорожка 28 · заголовок 24\nвсе значения на виду', U: DENSE, quiet: false },
+      { title: 'ВОЗДУХ', sub: 'HP 56 · дорожка 32 · заголовок 32\nотступы, фон у колонок портов', U: AIR, quiet: false },
+      { title: 'ТИШИНА', sub: 'единицы как сейчас; значения ручек —\nпри наведении и у модулируемых;\nзначения входов — только не по умолчанию', U: DENSE, quiet: true },
+      { title: 'ВОЗДУХ + ТИШИНА', sub: 'обе меры вместе', U: AIR, quiet: true }
+    ];
+    var mods = [], cols = [], x = 40;
+    variants.forEach(function (v) {
+      var colW = 10 * v.U.HP + 40;
+      cols.push({ title: v.title, sub: v.sub, tpos: 'left:' + x + 'px;top:130px;', spos: 'left:' + x + 'px;top:152px;width:' + (colW - 20) + 'px;white-space:pre-line;' });
+      var y = 220, rowX = x;
+      // row 1: OSC, LPG side by side; then SLOPE; then SCOPE; then RHYTHM
+      var a = panel(DEFS[0], rowX, y, v.U, v.quiet, false); mods.push(a);
+      var b = panel(DEFS[1], rowX + a.w + 16, y, v.U, v.quiet, v.quiet); mods.push(b);
+      y += a.h + 20;
+      var c = panel(DEFS[2], rowX, y, v.U, v.quiet, false); mods.push(c);
+      y += c.h + 20;
+      var d = panel(DEFS[3], rowX, y, v.U, v.quiet, false); mods.push(d);
+      y += d.h + 20;
+      var e = panel(DEFS[4], rowX, y, v.U, v.quiet, false); mods.push(e);
+      x += Math.max(colW, e.w) + 50;
+    });
+    return { mods: mods, cols: cols };
+  }
+}
+</script>
+</body>
+</html>
