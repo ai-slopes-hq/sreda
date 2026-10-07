@@ -18,14 +18,14 @@ export function Picker(props: PickerProps): JSX.Element {
   const [q, setQ] = createSignal('');
   const [idx, setIdx] = createSignal(0);
   const items = createMemo(() => pickerItems(props.specs, q(), props.from));
-  let input!: HTMLInputElement;
-  let list!: HTMLDivElement;
-  onMount(() => input.focus());
+  let input: HTMLInputElement | undefined;
+  let list: HTMLDivElement | undefined;
+  onMount(() => input?.focus());
   createEffect(() => {
     q();
     setIdx(0);
   });
-  createEffect(() => list.children[idx()]?.scrollIntoView({ block: 'nearest' }));
+  createEffect(() => list?.children[idx()]?.scrollIntoView({ block: 'nearest' }));
 
   function key(e: KeyboardEvent): void {
     e.stopPropagation();
@@ -48,7 +48,7 @@ export function Picker(props: PickerProps): JSX.Element {
       onWheel={(e) => e.stopPropagation()}
     >
       <input
-        ref={input}
+        ref={(el) => (input = el)}
         class="sr-search"
         placeholder={props.from ? 'ADD AND WIRE…' : 'ADD MODULE…'}
         value={q()}
@@ -56,7 +56,7 @@ export function Picker(props: PickerProps): JSX.Element {
         onKeyDown={key}
         onBlur={() => queueMicrotask(() => document.activeElement !== input && props.close())}
       />
-      <div class="sr-plist" ref={list}>
+      <div class="sr-plist" ref={(el) => (list = el)}>
         <For each={items()}>
           {(it, i) => (
             <button
