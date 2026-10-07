@@ -1,5 +1,45 @@
 [
   {
+    "type": "chance",
+    "label": "CHANCE",
+    "desc": "bernoulli: each trigger to A or B",
+    "size": [
+      3,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "a",
+        "label": "A",
+        "role": "trigger"
+      },
+      {
+        "id": "b",
+        "label": "B",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "p",
+        "label": "P",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.5,
+        "taper": "lin"
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "complex",
     "label": "COMPLEX",
     "desc": "modulator + carrier",
@@ -1098,6 +1138,42 @@
     }
   },
   {
+    "type": "sah",
+    "label": "S&H",
+    "desc": "sample and hold",
+    "size": [
+      2,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      },
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "mod"
+      }
+    ],
+    "params": [],
+    "normals": [
+      {
+        "kind": "internal",
+        "input": "in",
+        "internal": "noise"
+      }
+    ]
+  },
+  {
     "type": "scope",
     "label": "SCOPE",
     "desc": "oscilloscope with thru outputs",
@@ -1183,6 +1259,51 @@
       "lanes": 4,
       "kind": "scope"
     }
+  },
+  {
+    "type": "shift",
+    "label": "SHIFT",
+    "desc": "delay triggers by part of the period · swing",
+    "size": [
+      3,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "amt",
+        "label": "AMT",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.25,
+        "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "which",
+        "label": "WHICH",
+        "options": [
+          "ALL",
+          "EVEN"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": []
   },
   {
     "type": "slope",
@@ -2089,5 +2210,72 @@
       "lanes": 8,
       "kind": "contour"
     }
+  },
+  {
+    "type": "uncertainty",
+    "label": "UNCERTAINTY",
+    "desc": "smooth, stepped, quantised random",
+    "size": [
+      4,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "smooth",
+        "label": "SMTH",
+        "role": "mod"
+      },
+      {
+        "id": "stepped",
+        "label": "STEP",
+        "role": "mod"
+      },
+      {
+        "id": "quant",
+        "label": "QNT",
+        "role": "mod"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "rate",
+        "label": "RATE",
+        "min": 0.01,
+        "max": 20.0,
+        "def": 1.0,
+        "taper": "exp",
+        "unit": "hz",
+        "randomRange": [
+          0.1,
+          4.0
+        ],
+        "modDepth": 0.25
+      },
+      {
+        "kind": "knob",
+        "id": "levels",
+        "label": "LVLS",
+        "min": 2.0,
+        "max": 16.0,
+        "def": 4.0,
+        "taper": "lin",
+        "step": 1.0
+      }
+    ],
+    "normals": [
+      {
+        "kind": "internal",
+        "input": "trig",
+        "internal": "clock at RATE"
+      }
+    ]
   }
 ]

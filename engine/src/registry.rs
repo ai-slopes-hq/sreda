@@ -10,6 +10,9 @@ type Entry = (&'static str, fn() -> ModuleSpec, Make);
 
 /// Every module, in type-id order.
 const MODULES: &[Entry] = &[
+    ("chance", chance::spec, |sr| {
+        Box::new(chance::Chance::new(sr))
+    }),
     ("complex", complex::spec, |sr| {
         Box::new(complex::Complex::new(sr))
     }),
@@ -27,10 +30,15 @@ const MODULES: &[Entry] = &[
     ("rhythm", rhythm::spec, |sr| {
         Box::new(rhythm::Rhythm::new(sr))
     }),
+    ("sah", sah::spec, |_| Box::new(sah::Sah::default())),
     ("scope", scope::spec, |sr| Box::new(scope::Scope::new(sr))),
+    ("shift", shift::spec, |sr| Box::new(shift::Shift::new(sr))),
     ("slope", slope::spec, |sr| Box::new(slope::Slope::new(sr))),
     ("stages", stages::spec, |sr| {
         Box::new(stages::Stages::new(sr))
+    }),
+    ("uncertainty", uncertainty::spec, |sr| {
+        Box::new(uncertainty::Uncertainty::new(sr))
     }),
 ];
 
