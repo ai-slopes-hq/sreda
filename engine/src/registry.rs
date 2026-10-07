@@ -5,9 +5,11 @@ use crate::modules::*;
 use crate::spec::ModuleSpec;
 
 type Make = fn(f64) -> Box<dyn Dsp>;
+/// (type id, spec, constructor at a sample rate)
+type Entry = (&'static str, fn() -> ModuleSpec, Make);
 
-/// (type id, spec, constructor at a sample rate), in type-id order.
-const MODULES: &[(&str, fn() -> ModuleSpec, Make)] = &[
+/// Every module, in type-id order.
+const MODULES: &[Entry] = &[
     ("lpg", lpg::spec, |sr| Box::new(lpg::Lpg::new(sr))),
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),
     ("osc", osc::spec, |sr| Box::new(osc::Osc::new(sr))),
