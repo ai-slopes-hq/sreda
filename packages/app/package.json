@@ -1,0 +1,14 @@
+{
+  "name": "@sreda/app",
+  "private": true,
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@sreda/ui": "workspace:*",
+    "solid-js": "^1.9.16"
+  }
+}

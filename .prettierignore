@@ -1,0 +1,8 @@
+docs/prototype/**
+**/generated/**
+target/**
+engine/pkg/**
+packages/app/out/**
+pnpm-lock.yaml
+docs/**
+*.md

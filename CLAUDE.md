@@ -12,7 +12,21 @@ or UX from `../sreda`.
 agreements (answer the user in Russian; native execution with listening checkpoints; spec first). Update its
 Status section at the end of each task.
 
-There is no code yet. Plan 1 Task 1 adds the build, lint and test commands (including how to run a single test) here.
+## Commands
+
+```
+pnpm install             # if Electron is missing afterwards: node node_modules/electron/install.js
+pnpm dev                 # build the WASM engine, start the app with hot reload
+pnpm check               # typecheck, ESLint + clippy, cargo test, WASM build, Vitest — run before every commit
+pnpm test -- <path>      # one Vitest file (TS); pnpm test -- -t '<name>' for one test
+cargo test -p sreda-engine <name>   # Rust tests matching <name>
+pnpm specs               # after changing a module spec in Rust: regenerate packages/core/src/generated/specs.json
+pnpm e2e                 # build the app, then Playwright drives Electron (e2e/)
+pnpm wasm                # engine → engine/pkg/sreda_engine.wasm (tests that load WASM need it)
+```
+
+The built renderer is served from `app://sreda/` (see `packages/app/src/main/index.ts`), never `file://`, so the
+page stays cross-origin isolated; COOP / COEP must appear exactly once per response.
 
 ## Layout
 

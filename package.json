@@ -1,0 +1,39 @@
+{
+  "name": "sreda2",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm wasm && pnpm --filter @sreda/app dev",
+    "build": "pnpm wasm && pnpm --filter @sreda/app build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rust": "cargo test",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "eslint . && cargo clippy --all-targets -- -D warnings",
+    "wasm": "cargo build -p sreda-engine --release --target wasm32-unknown-unknown && mkdir -p engine/pkg && cp target/wasm32-unknown-unknown/release/sreda_engine.wasm engine/pkg/sreda_engine.wasm",
+    "specs": "cargo run -q -p sreda-engine --bin export-specs > packages/core/src/generated/specs.json",
+    "e2e": "pnpm build && playwright test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test:rust && pnpm wasm && pnpm test",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.0.0",
+    "electron": "^44.6.0",
+    "electron-vite": "^5.0.0",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^7.0.0",
+    "vite-plugin-solid": "^2.11.14",
+    "vitest": "^5.0.3"
+  }
+}

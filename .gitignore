@@ -1,0 +1,9 @@
+node_modules/
+target/
+engine/pkg/
+packages/*/out/
+packages/*/dist/
+test-results/
+playwright-report/
+.superpowers/
+.DS_Store
