@@ -128,6 +128,9 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
   double-click resets. Options with two values toggle on click. Options with three or more (SCALE, WAVE, MODE…)
   show `▾` and open a small list anchored under the cell on click — not a window: the current value is highlighted,
   a click picks, Esc or a click elsewhere closes. The wheel steps any option without opening the list.
+- Options that are shapes are drawn, not named: WAVE options (OSC, COMPLEX's modulator) show the waveform as a small
+  glyph; SCALE (QUANT) shows its 12 semitones from the root as a strip (scale degrees tall, the rest short). The
+  cell shows the current value's glyph; the list shows glyph and name for every value.
 
 ## 5. Groups (frames)
 
