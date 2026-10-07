@@ -395,9 +395,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                     if (param === 'dice')
                       s.edit((d) => diceModule(d, specs, m.id, mulberry32((Math.random() * 2 ** 32) >>> 0)));
                   },
-                  editParams: (changes) =>
-                    s.edit((d) =>
-                      Object.entries(changes).reduce((acc, [k, v]) => setParam(acc, specs, m.id, k, v), d),
+                  editParams: (changes, merge) =>
+                    s.edit(
+                      (d) =>
+                        Object.entries(changes).reduce((acc, [k, v]) => setParam(acc, specs, m.id, k, v), d),
+                      merge,
                     ),
                   diceInput: () =>
                     s.replaceDoc(

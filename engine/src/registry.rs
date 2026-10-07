@@ -18,11 +18,15 @@ const MODULES: &[Entry] = &[
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),
     ("osc", osc::spec, |sr| Box::new(osc::Osc::new(sr))),
     ("out", out::spec, |_| Box::new(out::Out)),
+    ("quant", quant::spec, |_| Box::new(quant::Quant)),
     ("rhythm", rhythm::spec, |sr| {
         Box::new(rhythm::Rhythm::new(sr))
     }),
     ("scope", scope::spec, |sr| Box::new(scope::Scope::new(sr))),
     ("slope", slope::spec, |sr| Box::new(slope::Slope::new(sr))),
+    ("stages", stages::spec, |sr| {
+        Box::new(stages::Stages::new(sr))
+    }),
 ];
 
 /// Every module's spec, in type-id order (what `pnpm specs` exports).

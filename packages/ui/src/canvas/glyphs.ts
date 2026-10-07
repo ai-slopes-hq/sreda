@@ -72,3 +72,17 @@ export function curveGlyph(shape: number): string {
   }
   return d;
 }
+
+/** A scale's 12 semitones as bars: degrees tall (`on`), the rest short (`off`), in a (12·pitch) × 12 box. */
+export function scaleGlyph(scale: number[], big: boolean): { on: string; off: string; w: number } {
+  const pitch = big ? 3 : 2;
+  const bw = big ? 2 : 1.4;
+  let on = '';
+  let off = '';
+  for (let k = 0; k < 12; k++) {
+    const x = (k * pitch).toFixed(1);
+    if (scale.includes(k)) on += `M${x} 1 h${bw} v10 h-${bw} Z`;
+    else off += `M${x} 8 h${bw} v3 h-${bw} Z`;
+  }
+  return { on, off, w: 12 * pitch };
+}

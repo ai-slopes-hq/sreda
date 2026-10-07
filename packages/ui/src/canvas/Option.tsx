@@ -1,7 +1,8 @@
 import type { OptionParam } from '@sreda/core';
 import { createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { Merge } from '@sreda/core';
-import { waveGlyph } from './glyphs';
+import { SCALES } from '@sreda/core';
+import { scaleGlyph, waveGlyph } from './glyphs';
 import { panning } from './wheel';
 
 export interface OptionProps {
@@ -17,11 +18,24 @@ export interface OptionProps {
   set(value: number, merge?: Merge): void;
 }
 
-function Glyph(props: { param: OptionParam; value: number; w: number }): JSX.Element {
+/** An option value drawn as its shape: a waveform, or a scale's 12 semitones; else its name. */
+function Glyph(props: { param: OptionParam; value: number; big: boolean }): JSX.Element {
+  const w = () => (props.big ? 30 : 24);
+  const scale = () => scaleGlyph(SCALES[props.value] ?? [], props.big);
   return (
-    <Show when={props.param.glyph === 'wave'} fallback={<span>{props.param.options[props.value]}</span>}>
-      <svg class="g-svg" width={props.w} height="12">
-        <path class="g-wave" d={waveGlyph(props.param.options[props.value]!, props.w)} />
+    <Show
+      when={props.param.glyph === 'wave'}
+      fallback={
+        <Show when={props.param.glyph === 'scale'} fallback={<span>{props.param.options[props.value]}</span>}>
+          <svg class="g-svg" width={scale().w} height="12">
+            <path class="g-on" d={scale().on} />
+            <path class="g-off" d={scale().off} />
+          </svg>
+        </Show>
+      }
+    >
+      <svg class="g-svg" width={w()} height="12">
+        <path class="g-wave" d={waveGlyph(props.param.options[props.value]!, w())} />
       </svg>
     </Show>
   );
@@ -83,7 +97,7 @@ export function Option(props: OptionProps): JSX.Element {
         aria-label={`${p().label} ${p().options[props.value]}`}
       >
         <Show when={!toggle()} fallback={p().label}>
-          <Glyph param={p()} value={props.value} w={24} />
+          <Glyph param={p()} value={props.value} big={false} />
           <Show when={p().options.length > 2}>
             <span class="caret">▾</span>
           </Show>
@@ -102,10 +116,8 @@ export function Option(props: OptionProps): JSX.Element {
                   setOpen(false);
                 }}
               >
-                <Show when={p().glyph === 'wave'}>
-                  <svg class="g-svg" width="30" height="12">
-                    <path class="g-wave" d={waveGlyph(name, 30)} />
-                  </svg>
+                <Show when={p().glyph}>
+                  <Glyph param={p()} value={i()} big={true} />
                 </Show>
                 {name}
               </button>

@@ -15,6 +15,7 @@ import { fmtAtt, fmtRat, ROLE } from './glyphs';
 import { Jack } from './Jack';
 import { Knob } from './Knob';
 import { Option } from './Option';
+import { Contour } from './displays/Contour';
 import { Pads } from './displays/Pads';
 import { Scope } from './displays/Scope';
 
@@ -34,7 +35,7 @@ export interface PanelActions {
   /** an action button (DICE) */
   action?(param: string): void;
   /** a display edit: several params in one undo step */
-  editParams?(changes: Record<string, number>): void;
+  editParams?(changes: Record<string, number>, merge?: Merge): void;
   /** the module's DICE input fired (the patch changes, no undo step) */
   diceInput?(): void;
 }
@@ -129,6 +130,21 @@ export function Panel(props: PanelProps): JSX.Element {
         <svg class="sr-ghosts" width={L().w} height={L().h}>
           <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} stroke={ROLE[g.role]} />}</For>
         </svg>
+      </Show>
+      <Show when={props.spec.display?.kind === 'contour' && L().display}>
+        {(d) => (
+          <Contour
+            x={d().x}
+            y={d().y}
+            w={d().w}
+            h={d().h}
+            spec={props.spec}
+            params={props.mod.params}
+            advPatched={props.cabledIn('adv')}
+            state={props.readouts?.state}
+            edit={(c, merge) => props.act.editParams?.(c, merge)}
+          />
+        )}
       </Show>
       <Show when={props.spec.display?.kind === 'pads' && L().display}>
         {(d) => (
