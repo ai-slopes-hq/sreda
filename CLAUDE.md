@@ -18,7 +18,7 @@ Status section at the end of each task.
 pnpm install             # if Electron is missing afterwards: node node_modules/electron/install.js
 pnpm dev                 # build the WASM engine, start the app with hot reload
 pnpm check               # typecheck, ESLint + clippy, cargo test, WASM build, Vitest — run before every commit
-pnpm test -- <path>      # one Vitest file (TS); pnpm test -- -t '<name>' for one test
+pnpm test <path>         # one Vitest file (TS); pnpm test <path> -t '<name>' for one test
 cargo test -p sreda-engine <name>   # Rust tests matching <name>
 pnpm specs               # after changing a module spec in Rust: regenerate packages/core/src/generated/specs.json
 pnpm e2e                 # build the app, then Playwright drives Electron (e2e/)

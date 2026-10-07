@@ -1,13 +1,15 @@
 import { createSignal, type JSX } from 'solid-js';
+import { compile, emptyDoc, SPECS, starterDoc } from '@sreda/core';
 import { AudioHost } from './audio/host';
 
-// For now the window is the empty canvas with one line about audio: the first click starts the engine and a
-// 220 Hz test tone, later clicks toggle the tone. (The tone goes away in Task 6.)
+// For now the window is the empty canvas with one line about audio: the first click starts the engine playing
+// the starter patch (OSC → OUT), later clicks toggle it. (The canvas replaces this in Task 6.)
 export function App(): JSX.Element {
   const [line, setLine] = createSignal('CLICK TO START AUDIO');
   let host: AudioHost | null = null;
   let starting = false;
-  let toneOn = false;
+  let playing = false;
+  let seq = 0;
 
   async function click(): Promise<void> {
     if (starting) return;
@@ -22,9 +24,9 @@ export function App(): JSX.Element {
         starting = false;
       }
     }
-    toneOn = !toneOn;
-    host.post({ t: 'tone', hz: toneOn ? 220 : 0 });
-    setLine(toneOn ? 'TEST TONE 220 HZ · CLICK TO STOP' : 'TEST TONE OFF · CLICK TO PLAY');
+    playing = !playing;
+    host.post({ t: 'plan', plan: compile(playing ? starterDoc(SPECS) : emptyDoc, SPECS, ++seq) });
+    setLine(playing ? 'OSC → OUT · 110 HZ SAW · CLICK TO STOP' : 'STOPPED · CLICK TO PLAY');
   }
 
   return (

@@ -1,6 +1,6 @@
 // The AudioWorklet glue: owns the WASM engine, forwards messages, copies each block to the output.
 // process() runs on the audio thread: no allocation, no closures, no array literals (CLAUDE.md).
-import { loadEngine, type ToEngine, type WasmEngine } from '@sreda/protocol';
+import { loadEngine, type FromEngine, type ToEngine, type WasmEngine } from '@sreda/protocol';
 
 // The worklet scope's globals (not in TypeScript's DOM lib).
 declare const sampleRate: number;
@@ -26,7 +26,25 @@ class SredaProcessor extends AudioWorkletProcessor {
   }
 
   private receive(msg: ToEngine): void {
-    if (msg.t === 'tone') this.engine.setTone(msg.hz);
+    switch (msg.t) {
+      case 'plan': {
+        const reply: FromEngine = { t: 'applied', seq: msg.plan.seq, code: this.engine.apply(msg.plan) };
+        this.port.postMessage(reply);
+        break;
+      }
+      case 'knob':
+        this.engine.knob(msg.node, msg.index, msg.value);
+        break;
+      case 'att':
+        this.engine.att(msg.node, msg.input, msg.value);
+        break;
+      case 'ratio':
+        this.engine.ratio(msg.node, msg.input, msg.value);
+        break;
+      case 'listen':
+        this.engine.listen(msg.target);
+        break;
+    }
   }
 
   process(_inputs: Float32Array[][], outputs: Float32Array[][]): boolean {

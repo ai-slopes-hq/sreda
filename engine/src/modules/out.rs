@@ -24,8 +24,8 @@ pub struct Out;
 
 impl Dsp for Out {
     fn process(&mut self, io: &mut Io, ctx: &mut Ctx, from: usize, to: usize) {
-        let (l, level) = (io.inp[0], io.par[0]);
-        let r = if io.connected_in[1] { io.inp[1] } else { l };
+        let (l, level) = (&io.inp[0], &io.par[0]);
+        let r = if io.connected_in[1] { &io.inp[1] } else { l };
         for i in from..to {
             ctx.master[0][i] += l[i] * level[i];
             ctx.master[1][i] += r[i] * level[i];

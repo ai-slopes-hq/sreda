@@ -1,2 +1,11 @@
-// Messages from the UI to the engine in the worklet. For now only the test tone; Task 5 brings the real set.
-export type ToEngine = { t: 'tone'; hz: number };
+// Messages from the UI to the engine in the worklet, and back.
+import type { Plan } from '@sreda/core';
+
+export type ToEngine =
+  | { t: 'plan'; plan: Plan }
+  | { t: 'knob'; node: number; index: number; value: number }
+  | { t: 'att'; node: number; input: number; value: number }
+  | { t: 'ratio'; node: number; input: number; value: number }
+  | { t: 'listen'; target: { node: number; port: number } | null };
+
+export type FromEngine = { t: 'applied'; seq: number; code: 0 | 1 | 2 };

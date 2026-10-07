@@ -75,8 +75,8 @@ fn blep(t: f64, dt: f64) -> f64 {
 impl Dsp for Osc {
     fn process(&mut self, io: &mut Io, _ctx: &mut Ctx, from: usize, to: usize) {
         let wave = io.fixed[WAVE] as u32;
-        let (pitch, fm, sync) = (io.inp[PITCH], io.inp[FM], io.inp[SYNC]);
-        let (freq, pw, fmi) = (io.par[FREQ], io.par[PW], io.par[FMI]);
+        let (pitch, fm, sync) = (&io.inp[PITCH], &io.inp[FM], &io.inp[SYNC]);
+        let (freq, pw, fmi) = (&io.par[FREQ], &io.par[PW], &io.par[FMI]);
         for i in from..to {
             let s = sync[i] > 0.5;
             if s && !self.sync_high {

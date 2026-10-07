@@ -2,10 +2,14 @@
 
 pub mod dsp;
 pub mod engine;
+pub mod inputs;
 pub mod master;
 pub mod modules;
+pub mod plan;
 pub mod registry;
 pub mod spec;
+#[cfg(test)]
+mod testmods;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm;

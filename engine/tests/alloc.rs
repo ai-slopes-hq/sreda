@@ -26,12 +26,21 @@ unsafe impl GlobalAlloc for Counting {
 static GLOBAL: Counting = Counting;
 
 #[test]
-fn process_allocates_nothing() {
+fn process_and_knob_messages_allocate_nothing() {
+    let json = std::fs::read(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/fixtures/plan-self-fm.json"
+    ))
+    .unwrap();
     let mut e = Engine::new(48_000.0, 1);
-    e.set_tone(220.0);
+    e.apply(sreda_engine::plan::decode(&json).unwrap()).unwrap();
     e.process();
     let before = ALLOCS.load(Ordering::Relaxed);
-    for _ in 0..10_000 {
+    for i in 0..10_000 {
+        if i % 100 == 0 {
+            e.knob(0, 0, (i % 1000) as f64 / 1000.0);
+            e.att(0, 1, 0.5);
+        }
         e.process();
     }
     assert_eq!(ALLOCS.load(Ordering::Relaxed) - before, 0);

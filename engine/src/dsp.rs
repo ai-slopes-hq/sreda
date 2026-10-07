@@ -48,9 +48,9 @@ impl Ctx {
 /// One module's view of its buffers for a block (or part of one).
 pub struct Io<'a> {
     /// prepared inputs in spec order (mod jacks excluded: they feed `par`)
-    pub inp: &'a [&'a [f32; BLOCK]],
+    pub inp: &'a [[f32; BLOCK]],
     /// visible knobs in spec order, in real units, modulation applied
-    pub par: &'a [&'a [f32; BLOCK]],
+    pub par: &'a [[f32; BLOCK]],
     /// options (index) and hidden knobs (real units), in spec order
     pub fixed: &'a [f64],
     pub out: &'a mut [[f32; BLOCK]],
@@ -112,11 +112,9 @@ pub mod bench {
                     feed(b, i, &mut self.inp);
                 }
                 self.ctx.master = [[0.0; BLOCK]; 2];
-                let inp: Vec<&[f32; BLOCK]> = self.inp.iter().collect();
-                let par: Vec<&[f32; BLOCK]> = self.par.iter().collect();
                 let mut io = Io {
-                    inp: &inp,
-                    par: &par,
+                    inp: &self.inp,
+                    par: &self.par,
                     fixed: &self.fixed,
                     out: &mut self.out,
                     connected_in: &self.connected_in,

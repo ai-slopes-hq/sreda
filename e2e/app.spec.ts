@@ -8,13 +8,13 @@ test('the app opens a cross-origin isolated SREDA window', async () => {
   await app.close();
 });
 
-test('a click starts audio and the test tone', async () => {
+test('a click starts audio playing the starter patch', async () => {
   const app = await electron.launch({ args: ['packages/app'] });
   const page = await app.firstWindow();
   await expect(page.getByText('CLICK TO START AUDIO')).toBeVisible();
   await page.mouse.click(400, 300);
-  await expect(page.getByText('TEST TONE 220 HZ · CLICK TO STOP')).toBeVisible();
+  await expect(page.getByText('OSC → OUT · 110 HZ SAW · CLICK TO STOP')).toBeVisible();
   await page.mouse.click(400, 300);
-  await expect(page.getByText('TEST TONE OFF · CLICK TO PLAY')).toBeVisible();
+  await expect(page.getByText('STOPPED · CLICK TO PLAY')).toBeVisible();
   await app.close();
 });
