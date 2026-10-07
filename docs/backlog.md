@@ -26,4 +26,4 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   placement stays free.
 - **Category tint on panels** (2026-10-07): a barely-there tint per family (sources, shapers, logic, FX), like
   Buchla's coloured panel sections.
-- **Group collapse and group snippets**: collapse a group to its header; save / load groups as reusable snippets.
+- **Group collapse**: collapse a group to its header. (Saving and loading groups moved into the first build.)

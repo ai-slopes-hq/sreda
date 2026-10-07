@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 7 (STAGES as a 16-stage contour, RHYTHM as pads) · Status: approved in brainstorming, awaiting spec review
+Date: 2026-10-07 · Revision 8 (library: saved groups and projects, one picker, NEW = empty canvas) · Status: approved in brainstorming, awaiting spec review
 
 ## Why
 
@@ -20,8 +20,8 @@ only so you can come back to it. The instrument it chases is a Serge / Buchla / 
 
 ## Out of scope (first build)
 
-Timeline, arrangement, transport, recording, export, file management, multiple canvases, MIDI and hardware
-controllers, touch, polyphony, stereo cables, group macros and collapsing, snippets, reverb. Later ideas are kept in
+Timeline, arrangement, transport, recording, audio export, multiple open canvases, MIDI and hardware controllers,
+touch, polyphony, stereo cables, group macros and collapsing, reverb. Later ideas are kept in
 `docs/backlog.md`.
 
 ## 1. Canvas
@@ -119,7 +119,7 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
 - **Cable focus:** hovering a module or a frame header shows its cables (a frame: all cables touching anything inside
   it) at full strength and slightly thicker, and dims every other cable to 20 %. Selection does not focus: with
   nothing hovered all cables are drawn normally.
-- Popups (module search, option lists) close when the canvas pans or zooms.
+- Popups (the picker, option lists) close when the canvas pans or zooms.
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
   attenuverters and ratios are left alone. One undo step.
@@ -184,14 +184,35 @@ controllers, touch, polyphony, stereo cables, group macros and collapsing, snipp
     and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
 
-## 6. Session and seeds
+## 6. Session, library and factory patches
 
-- The canvas autosaves to IndexedDB 500 ms after the last edit. Opening the app resumes the last canvas.
+- The current canvas autosaves to IndexedDB 500 ms after the last edit. Opening the app resumes it; the very first
+  launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
-- **NEW** (top-right button, the only chrome besides the listen bar) replaces the canvas with a random seed patch,
-  never the same seed twice in a row. Pressing NEW again re-rolls. NEW is an undo step.
-- Seeds are built only from the first modules and fade in over 200 ms:
+- **NEW** (top-right button, the only chrome besides the listen bar) clears the canvas. It is an undo step.
+- **Library = a folder on disk.** The first save or open asks for a library folder once (File System Access API;
+  the handle is kept in IndexedDB and permission re-asked by the browser when needed). Inside it:
+  `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
+  as path prefixes. Files are the document JSON (`version`, `modules`, `cables`, `groups`); a group file holds one
+  top frame with everything inside it.
+- **Save:** ⌘S with exactly one frame selected saves that group — a name field appears (`acid/303 voice`: a slash
+  makes subfolders); it stores the frame, everything inside it, the cables between those, its clock and tint, not
+  cables from outside. ⌘S with anything else saves the project (straight away if it already has a name, else a
+  name field); ⇧⌘S is save-as. The project's path shows next to SREDA at the top left, with `●` while there are
+  unsaved changes. Factory entries are read-only: saving one asks for a new name.
+- **One picker** for modules, groups and projects: the module search (§4) gets tabs ALL · MODULES · GROUPS ·
+  PROJECTS (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows
+  its folder and kind. ⌘O opens it on PROJECTS in the middle of the screen. Opened from a jack, it offers modules
+  and groups (no projects); in REPLACE mode, modules only.
+  - A **group** lands with its frame's top-left at the drop point, with fresh ids; opened from a trigger output, the
+    cable goes into the group's CLK in.
+  - A **project** replaces the canvas (one undo step) and fits it in view.
+- **FACTORY** (read-only, shipped with the app, listed under `FACTORY/`): projects — the ones below — and groups —
+  *303 voice* (the ACID voice without delay and out, own clock 128 BPM), *complex vco* (COMPLEX → FOLD → LPG pinged
+  by a cycling SLOPE, UNCERTAINTY on the fold), *bleep-bloop* (own clock 120 BPM at ×4 → CHANCE → UNCERTAINTY
+  quantised → QUANT → OSC → LPG), *vca-lpg* (CLK in pings an LPG and a SLOPE on a VCA's level).
+- Factory projects are built only from the first modules and fade in over 200 ms:
   - **Pulse:** an OSC square at 2 Hz pings an LPG on a 50 Hz sine (kick); the same clock, ×2 on the input, pings a
     second LPG on NOISE (hats); MIX → OUT.
   - **Drone:** COMPLEX (modulator → carrier FM normal, low index) → FOLD → FILTER (LP) → DELAY → OUT; UNCERTAINTY's
@@ -310,5 +331,6 @@ Package boundaries: `core ← protocol ← engine`, `core ← ui`, enforced by E
   and back; R randomises and undo restores; box-select by dragging; magnets snap flush; ⌘G frames the selection,
   own clock ticks, CLK out drives a member, a nested frame inherits its parent's clock at ÷2; dragging a module out
   of a frame detaches it; STACK packs a frame; ROUTE draws orthogonal cables; MUTE silences a frame's outgoing
-  cables; replace keeps matching cables and knob values; dropping a free module on a cable inserts it; NEW re-rolls and
-  undo restores; reload resumes the canvas.
+  cables; replace keeps matching cables and knob values; dropping a free module on a cable inserts it; NEW clears and
+  undo restores; reload resumes the canvas; ⌘S saves a frame as a group and the picker places it twice with fresh
+  ids; ⌘S / ⌘O round-trip a project through the library folder.
