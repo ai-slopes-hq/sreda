@@ -48,7 +48,23 @@ export interface Session {
   saving: Saving | null;
   /** the library folder's groups and projects (factory ones are added by the picker) */
   library: LibEntry[];
+  sidebar: SidebarState;
 }
+
+/** The sidebar (spec §5a): docked right, WIRES its only tab for now. */
+export interface SidebarState {
+  open: boolean;
+  width: number;
+  /** SELECTION: only the wires touching the selection */
+  selOnly: boolean;
+  /** the filter field */
+  q: string;
+  /** collapsed sections */
+  closed: Record<string, boolean>;
+  /** the wire row picked with a click or ↑ / ↓ (an index into doc.cables) */
+  picked: number | null;
+}
+export const SIDEBAR_WIDTH = 440;
 
 /** A save waiting for its name: `confirm` holds a name that exists and is to be replaced on the next Enter. */
 export interface Saving {
@@ -80,6 +96,7 @@ export function createSession(
     dirty: false,
     saving: null,
     library: [],
+    sidebar: { open: false, width: SIDEBAR_WIDTH, selOnly: false, q: '', closed: {}, picked: null },
   });
   /** the document last opened or saved: anything else is unsaved */
   let saved: Doc = initial;
@@ -233,6 +250,8 @@ export function createSession(
     /** A project replaces the canvas: one undo step; the speakers fade in over 200 ms. */
     openProject(doc: Doc, project: { path: string; factory: boolean }): void {
       setState('project', project);
+      // the sidebar opens at its fixed width with every opened project
+      setState('sidebar', { width: SIDEBAR_WIDTH, picked: null });
       this.commit(doc);
       this.markSaved();
       host?.post({ t: 'fade', ms: 200 });

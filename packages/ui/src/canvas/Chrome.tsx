@@ -32,6 +32,14 @@ export function Chrome(props: {
         </Show>
       </div>
       <div class="sr-tbtns" onPointerDown={stop} onDblClick={stop}>
+        <button
+          class="sr-tbtn"
+          classList={{ on: st.sidebar.open }}
+          title="sidebar (W)"
+          onClick={() => props.session.setState('sidebar', 'open', !st.sidebar.open)}
+        >
+          SIDEBAR
+        </button>
         <button class="sr-tbtn" title="save (⌘S)" onClick={() => void props.lib.save()}>
           SAVE
         </button>

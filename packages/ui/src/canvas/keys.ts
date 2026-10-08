@@ -74,7 +74,10 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
   } else if (e.key === 'Escape') {
     if (k.pickerOpen()) k.closePicker();
     else if (s.state.listen) s.setListen(null);
+    else if (s.state.sidebar.open) s.setState('sidebar', 'open', false);
     else s.setState('sel', []);
+  } else if (!meta && key === 'w') {
+    s.setState('sidebar', 'open', !s.state.sidebar.open);
   } else if (meta && key === 'd') {
     // ⌘D: copies of the selected modules with the cables between them
     e.preventDefault();

@@ -38,6 +38,7 @@ import { Cables } from './Cables';
 import { cableAt, cableGeoms } from './cablegeom';
 import { magnet, type Snap } from './magnets';
 import { Chrome } from './Chrome';
+import { Sidebar } from '../sidebar/Sidebar';
 import { Frame, type Edge } from './Frame';
 import { ROLE } from './glyphs';
 import { handleKey } from './keys';
@@ -200,6 +201,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     const parent = first?.parent ? base.groups.find((g) => g.id === first.parent) : undefined;
     return magnet(box, others, 10 / st.view.z, parent?.layout === 'route' ? RGAP : 0);
   }
+
+  let root: HTMLDivElement | undefined;
+  /** the canvas's own size (it ends at the sidebar's edge) */
+  const W = () => root?.clientWidth || window.innerWidth;
+  const H = () => root?.clientHeight || window.innerHeight;
 
   function begin(d: Drag): void {
     setHovered(null);
@@ -505,13 +511,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         Math.max(y1, r.y + r.h),
       ];
     }
-    const z = Math.min(
-      1.5,
-      Math.max(ZOOM.min, Math.min((innerWidth - 120) / (x1 - x0), (innerHeight - 120) / (y1 - y0))),
-    );
+    const z = Math.min(1.5, Math.max(ZOOM.min, Math.min((W() - 120) / (x1 - x0), (H() - 120) / (y1 - y0))));
     s.setState('view', {
-      x: (innerWidth - (x1 - x0) * z) / 2 - x0 * z,
-      y: (innerHeight - (y1 - y0) * z) / 2 - y0 * z,
+      x: (W() - (x1 - x0) * z) / 2 - x0 * z,
+      y: (H() - (y1 - y0) * z) / 2 - y0 * z,
       z,
     });
     viewChanged();
@@ -521,7 +524,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   function zoomBy(f: number | null): void {
     const v = st.view;
     const z = f === null ? 1 : Math.min(ZOOM.max, Math.max(ZOOM.min, v.z * f));
-    const [cx, cy] = [innerWidth / 2, innerHeight / 2];
+    const [cx, cy] = [W() / 2, H() / 2];
     s.setState('view', { x: cx - ((cx - v.x) * z) / v.z, y: cy - ((cy - v.y) * z) / v.z, z });
     viewChanged();
   }
@@ -551,7 +554,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       pickerOpen: () => !!picker(),
       closePicker: () => setPicker(null),
       openPicker: (at, tab = 'ALL') => setPicker({ screen: at, at: toCanvas(at), from: null, tab }),
-      middle: () => ({ x: innerWidth / 2 - 150, y: innerHeight / 3 }),
+      middle: () => ({ x: W() / 2 - 150, y: H() / 3 }),
       pointer: () => pointer,
       fit,
       setSpace: (on) => (space = on),
@@ -577,221 +580,242 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   };
 
   return (
-    <div
-      class="sr-canvas"
-      classList={{
-        'wiring-out': wiring() === 'out',
-        'wiring-in': wiring() === 'in',
-        'hovering-wire': !!hovered(),
-      }}
-      style={{
-        'background-size': `${16 * st.view.z}px ${16 * st.view.z}px`,
-        'background-position': `${st.view.x}px ${st.view.y}px`,
-      }}
-      onWheel={wheel}
-      onPointerDown={rootDown}
-      onPointerMove={hoverWires}
-      onDblClick={(e) => {
-        if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
-        setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
-      }}
-    >
+    <>
       <div
-        class="sr-layer"
-        style={{ transform: `translate(${st.view.x}px, ${st.view.y}px) scale(${st.view.z})` }}
+        ref={(el) => (root = el)}
+        class="sr-canvas"
+        classList={{
+          'wiring-out': wiring() === 'out',
+          'wiring-in': wiring() === 'in',
+          'hovering-wire': !!hovered(),
+        }}
+        style={{
+          // the canvas ends at the sidebar's edge
+          right: st.sidebar.open ? st.sidebar.width + 'px' : '0',
+          'background-size': `${16 * st.view.z}px ${16 * st.view.z}px`,
+          'background-position': `${st.view.x}px ${st.view.y}px`,
+        }}
+        onWheel={wheel}
+        onPointerDown={rootDown}
+        onPointerMove={hoverWires}
+        onDblClick={(e) => {
+          if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
+          setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
+        }}
       >
-        <For each={frames()}>
-          {(g) => (
-            <Frame
-              group={g}
-              selected={st.sel.includes(g.id)}
-              drop={drop() === g.id}
-              cabledIn={cabledIn(g.id, 'clkIn')}
-              cabledOut={cabledOut(g.id, 'clkOut')}
-              normal={(() => {
-                const parent = g.parent && st.doc.groups.find((x) => x.id === g.parent);
-                return parent && !cabledIn(g.id, 'clkIn') ? `CLK IN ← ${parent.name} (normal)` : undefined;
-              })()}
-              listening={st.listen?.id === g.id}
-              dim={dimmed(g.id)}
-              meter={st.audio ? s.layout().frames + st.doc.groups.findIndex((x) => x.id === g.id) : undefined}
-              readouts={st.audio && s.nodeOf(g.id) !== null ? s.layout().nodes[s.nodeOf(g.id)!] : undefined}
-              act={{
-                headDown: (e) => moduleDown(g.id, e),
-                rename: (name) => s.frame(g.id, { name }, undefined),
-                tint: () => s.frame(g.id, { tint: (g.tint + 1) % TINTS }, undefined),
-                resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
-                hover: (on) => s.setState('hover', on ? g.id : st.hover === g.id ? null : st.hover),
-                clock: (c, merge) => s.frame(g.id, { clock: c }, merge),
-                jackDown: (port, e) => jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
-                fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
-                fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
-                mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
-                stack: () => {
-                  const d = s.current();
-                  s.commit(settle(d, packFrame(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []));
-                },
-                save: () => lib.saveGroup(g.id),
-                fix: () => {
-                  const d = s.current();
-                  const next = setLayout(d, specs, g.id, g.layout === 'route' ? 'free' : 'route');
-                  s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
-                },
+        <div
+          class="sr-layer"
+          style={{ transform: `translate(${st.view.x}px, ${st.view.y}px) scale(${st.view.z})` }}
+        >
+          <For each={frames()}>
+            {(g) => (
+              <Frame
+                group={g}
+                selected={st.sel.includes(g.id)}
+                drop={drop() === g.id}
+                cabledIn={cabledIn(g.id, 'clkIn')}
+                cabledOut={cabledOut(g.id, 'clkOut')}
+                normal={(() => {
+                  const parent = g.parent && st.doc.groups.find((x) => x.id === g.parent);
+                  return parent && !cabledIn(g.id, 'clkIn') ? `CLK IN ← ${parent.name} (normal)` : undefined;
+                })()}
+                listening={st.listen?.id === g.id}
+                dim={dimmed(g.id)}
+                meter={
+                  st.audio ? s.layout().frames + st.doc.groups.findIndex((x) => x.id === g.id) : undefined
+                }
+                readouts={st.audio && s.nodeOf(g.id) !== null ? s.layout().nodes[s.nodeOf(g.id)!] : undefined}
+                act={{
+                  headDown: (e) => moduleDown(g.id, e),
+                  rename: (name) => s.frame(g.id, { name }, undefined),
+                  tint: () => s.frame(g.id, { tint: (g.tint + 1) % TINTS }, undefined),
+                  resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
+                  hover: (on) => s.setState('hover', on ? g.id : st.hover === g.id ? null : st.hover),
+                  clock: (c, merge) => s.frame(g.id, { clock: c }, merge),
+                  jackDown: (port, e) => jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
+                  fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
+                  fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
+                  mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
+                  stack: () => {
+                    const d = s.current();
+                    s.commit(
+                      settle(d, packFrame(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []),
+                    );
+                  },
+                  save: () => lib.saveGroup(g.id),
+                  fix: () => {
+                    const d = s.current();
+                    const next = setLayout(d, specs, g.id, g.layout === 'route' ? 'free' : 'route');
+                    s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
+                  },
+                }}
+              />
+            )}
+          </For>
+          <For each={st.doc.modules}>
+            {(m) => {
+              const node = () => s.nodeOf(m.id);
+              return (
+                <Panel
+                  mod={m}
+                  spec={specs[m.type]!}
+                  name={nameOf(st.doc, specs, m.id)}
+                  loud={loud(m.id)}
+                  selected={st.sel.includes(m.id)}
+                  cabledIn={(p) => cabledIn(m.id, p)}
+                  cabledOut={(p) => cabledOut(m.id, p)}
+                  listening={st.listen?.id === m.id ? st.listen.port : null}
+                  readouts={st.audio && node() !== null ? s.layout().nodes[node()!] : undefined}
+                  closeEpoch={closeEpoch()}
+                  end={wireEnds().includes(m.id)}
+                  dim={dimmed(m.id)}
+                  act={{
+                    knob: (param, k, merge) => s.knob(m.id, param, k, merge),
+                    option: (param, v, merge) => s.params(m.id, { [param]: v }, merge),
+                    hover: (on) => s.setState('hover', on ? m.id : st.hover === m.id ? null : st.hover),
+                    edit: (on) => s.setState('editing', on ? m.id : null),
+                    depth: (param, v, merge) => s.att(m.id, '@' + param, v, merge),
+                    jackDown: (port, dir, role, e) => jackDown(m.id, port, dir, role, e),
+                    fieldDown: (port, kind, e) => fieldDown(m.id, port, kind, e),
+                    fieldReset: (port, kind) =>
+                      kind === 'att' ? s.att(m.id, port, null, undefined) : s.ratio(m.id, port, 1, undefined),
+                    moduleDown: (e) => moduleDown(m.id, e),
+                    replace: (e) =>
+                      setPicker({
+                        screen: client(e),
+                        at: { x: m.x, y: m.y },
+                        from: null,
+                        tab: 'MODULES',
+                        replace: m.id,
+                      }),
+                    action: (param) => {
+                      if (param === 'dice') s.params(m.id, diced(m.id), undefined);
+                    },
+                    editParams: (changes, merge) => s.params(m.id, changes, merge),
+                    diceInput: () => s.params(m.id, diced(m.id), undefined, false),
+                  }}
+                />
+              );
+            }}
+          </For>
+          <Show when={guides()}>
+            {(g) => (
+              <>
+                <Show when={g().gx}>
+                  {(x) => (
+                    <div
+                      class="sr-guide"
+                      style={{
+                        left: x().x + 'px',
+                        top: x().y0 + 'px',
+                        width: '1px',
+                        height: x().y1 - x().y0 + 'px',
+                      }}
+                    />
+                  )}
+                </Show>
+                <Show when={g().gy}>
+                  {(y) => (
+                    <div
+                      class="sr-guide"
+                      style={{
+                        left: y().x0 + 'px',
+                        top: y().y + 'px',
+                        width: y().x1 - y().x0 + 'px',
+                        height: '1px',
+                      }}
+                    />
+                  )}
+                </Show>
+              </>
+            )}
+          </Show>
+          <Cables
+            doc={st.doc}
+            specs={specs}
+            geoms={geoms()}
+            hover={hovered()?.cable ?? null}
+            focus={focus()}
+            insert={insert()}
+          />
+          <Show when={ghost()}>
+            {(g) => (
+              <svg class="sr-cables">
+                <path
+                  class="ghost"
+                  d={`M${g().a.x} ${g().a.y} L${g().b.x} ${g().b.y}`}
+                  stroke={ROLE[g().role]}
+                />
+              </svg>
+            )}
+          </Show>
+        </div>
+        <Show when={box()}>
+          {(b) => (
+            <div
+              class="sr-box"
+              style={{
+                left: Math.min(b().a.x, b().b.x) + 'px',
+                top: Math.min(b().a.y, b().b.y) + 'px',
+                width: Math.abs(b().b.x - b().a.x) + 'px',
+                height: Math.abs(b().b.y - b().a.y) + 'px',
               }}
             />
           )}
-        </For>
-        <For each={st.doc.modules}>
-          {(m) => {
-            const node = () => s.nodeOf(m.id);
-            return (
-              <Panel
-                mod={m}
-                spec={specs[m.type]!}
-                name={nameOf(st.doc, specs, m.id)}
-                loud={loud(m.id)}
-                selected={st.sel.includes(m.id)}
-                cabledIn={(p) => cabledIn(m.id, p)}
-                cabledOut={(p) => cabledOut(m.id, p)}
-                listening={st.listen?.id === m.id ? st.listen.port : null}
-                readouts={st.audio && node() !== null ? s.layout().nodes[node()!] : undefined}
-                closeEpoch={closeEpoch()}
-                end={wireEnds().includes(m.id)}
-                dim={dimmed(m.id)}
-                act={{
-                  knob: (param, k, merge) => s.knob(m.id, param, k, merge),
-                  option: (param, v, merge) => s.params(m.id, { [param]: v }, merge),
-                  hover: (on) => s.setState('hover', on ? m.id : st.hover === m.id ? null : st.hover),
-                  edit: (on) => s.setState('editing', on ? m.id : null),
-                  depth: (param, v, merge) => s.att(m.id, '@' + param, v, merge),
-                  jackDown: (port, dir, role, e) => jackDown(m.id, port, dir, role, e),
-                  fieldDown: (port, kind, e) => fieldDown(m.id, port, kind, e),
-                  fieldReset: (port, kind) =>
-                    kind === 'att' ? s.att(m.id, port, null, undefined) : s.ratio(m.id, port, 1, undefined),
-                  moduleDown: (e) => moduleDown(m.id, e),
-                  replace: (e) =>
-                    setPicker({
-                      screen: client(e),
-                      at: { x: m.x, y: m.y },
-                      from: null,
-                      tab: 'MODULES',
-                      replace: m.id,
-                    }),
-                  action: (param) => {
-                    if (param === 'dice') s.params(m.id, diced(m.id), undefined);
-                  },
-                  editParams: (changes, merge) => s.params(m.id, changes, merge),
-                  diceInput: () => s.params(m.id, diced(m.id), undefined, false),
-                }}
-              />
-            );
-          }}
-        </For>
-        <Show when={guides()}>
-          {(g) => (
-            <>
-              <Show when={g().gx}>
-                {(x) => (
-                  <div
-                    class="sr-guide"
-                    style={{
-                      left: x().x + 'px',
-                      top: x().y0 + 'px',
-                      width: '1px',
-                      height: x().y1 - x().y0 + 'px',
-                    }}
-                  />
-                )}
-              </Show>
-              <Show when={g().gy}>
-                {(y) => (
-                  <div
-                    class="sr-guide"
-                    style={{
-                      left: y().x0 + 'px',
-                      top: y().y + 'px',
-                      width: y().x1 - y().x0 + 'px',
-                      height: '1px',
-                    }}
-                  />
-                )}
-              </Show>
-            </>
+        </Show>
+        {/* keyed: the picker gets the value, so closing it never makes its props read a stale accessor */}
+        <Show when={picker()} keyed>
+          {(pk) => (
+            <Picker
+              specs={specs}
+              x={Math.min(pk.screen.x, W() - 300)}
+              y={Math.min(pk.screen.y, H() - 340)}
+              from={pk.from}
+              library={library()}
+              tab={pk.tab}
+              replace={pk.replace ? nameOf(st.doc, specs, pk.replace) : null}
+              pick={place}
+              close={() => setPicker(null)}
+            />
           )}
         </Show>
-        <Cables
-          doc={st.doc}
-          specs={specs}
-          geoms={geoms()}
-          hover={hovered()?.cable ?? null}
-          focus={focus()}
-          insert={insert()}
-        />
-        <Show when={ghost()}>
-          {(g) => (
-            <svg class="sr-cables">
-              <path
-                class="ghost"
-                d={`M${g().a.x} ${g().a.y} L${g().b.x} ${g().b.y}`}
-                stroke={ROLE[g().role]}
-              />
-            </svg>
+        <Show when={listenText()}>
+          {(t) => (
+            <div
+              class="sr-listen"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => s.setListen(null)}
+            >
+              {t()}
+            </div>
           )}
+        </Show>
+        <Show when={wireTag()}>
+          {(t) => (
+            <div
+              class="sr-wtag"
+              style={{ left: hovered()!.at.x + 14 + 'px', top: hovered()!.at.y + 14 + 'px' }}
+            >
+              {t()}
+            </div>
+          )}
+        </Show>
+        <Chrome session={s} lib={lib} zoom={zoomBy} />
+        <Show when={!st.audio}>
+          <div class="sr-line">CLICK TO START AUDIO</div>
+        </Show>
+        <Show when={st.notice}>
+          <div class="sr-line notice">{st.notice}</div>
         </Show>
       </div>
-      <Show when={box()}>
-        {(b) => (
-          <div
-            class="sr-box"
-            style={{
-              left: Math.min(b().a.x, b().b.x) + 'px',
-              top: Math.min(b().a.y, b().b.y) + 'px',
-              width: Math.abs(b().b.x - b().a.x) + 'px',
-              height: Math.abs(b().b.y - b().a.y) + 'px',
-            }}
-          />
-        )}
-      </Show>
-      {/* keyed: the picker gets the value, so closing it never makes its props read a stale accessor */}
-      <Show when={picker()} keyed>
-        {(pk) => (
-          <Picker
-            specs={specs}
-            x={Math.min(pk.screen.x, innerWidth - 300)}
-            y={Math.min(pk.screen.y, innerHeight - 340)}
-            from={pk.from}
-            library={library()}
-            tab={pk.tab}
-            replace={pk.replace ? nameOf(st.doc, specs, pk.replace) : null}
-            pick={place}
-            close={() => setPicker(null)}
-          />
-        )}
-      </Show>
-      <Show when={listenText()}>
-        {(t) => (
-          <div class="sr-listen" onPointerDown={(e) => e.stopPropagation()} onClick={() => s.setListen(null)}>
-            {t()}
-          </div>
-        )}
-      </Show>
-      <Show when={wireTag()}>
-        {(t) => (
-          <div
-            class="sr-wtag"
-            style={{ left: hovered()!.at.x + 14 + 'px', top: hovered()!.at.y + 14 + 'px' }}
-          >
-            {t()}
-          </div>
-        )}
-      </Show>
-      <Chrome session={s} lib={lib} zoom={zoomBy} />
-      <Show when={!st.audio}>
-        <div class="sr-line">CLICK TO START AUDIO</div>
-      </Show>
-      <Show when={st.notice}>
-        <div class="sr-line notice">{st.notice}</div>
-      </Show>
-    </div>
+      <Sidebar
+        session={s}
+        specs={specs}
+        focus={(id) => {
+          s.setState('sel', [id]);
+          fit(true);
+        }}
+      />
+    </>
   );
 }

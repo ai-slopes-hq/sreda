@@ -709,3 +709,54 @@ test('replace, R, ⌘D and magnets', async () => {
   expect(d.cables).toEqual([{ from: [cx.id, 'out'], to: ['m2', 'l'] }]);
   await app.close();
 });
+
+test('WIRES: W opens the sidebar beside the canvas; sections, problems, a value dragged, ✕; F fits the visible part', async () => {
+  const { app, page } = await launch();
+  const width = () => page.locator('.sr-canvas').evaluate((el) => el.clientWidth);
+  const full = await width();
+  // OSC's own output into its PTCH (a CV input: a value), both modules framed, a lone FILTER
+  await drag(
+    page,
+    await center(page, jack(page, 'osc', 'out')),
+    await center(page, jack(page, 'osc', 'pitch')),
+  );
+  const osc = (await page.locator('[data-type=osc]').boundingBox())!;
+  const out = (await page.locator('[data-type=out]').boundingBox())!;
+  await drag(
+    page,
+    { x: osc.x - 20, y: osc.y - 20 },
+    { x: out.x + out.width + 20, y: out.y + out.height + 20 },
+  );
+  await page.keyboard.press('g');
+  await page.mouse.move(400, 760);
+  await page.keyboard.press('/');
+  await page.keyboard.type('filter');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.press('w');
+  await expect(page.locator('.sr-side')).toBeVisible();
+  expect(full - (await width())).toBe(440);
+  const group = page.locator('[data-section]').filter({ hasText: 'GROUP 1' });
+  await expect(group.locator('.sr-wrow').filter({ hasText: 'OSC › OUT  →  OUT › L' })).toHaveCount(1);
+  await expect(page.locator('[data-section=problems]')).toContainText('FILTER › IN — empty input');
+
+  // drag the PTCH row's value down 50 px: the attenuverter on the module is 0.5
+  const row = group.locator('.sr-wrow').filter({ hasText: '→  OSC › PTCH' });
+  const v = await center(page, row.locator('.value'));
+  await drag(page, v, { x: v.x, y: v.y + 50 });
+  expect((await fullDoc(page)).modules[0]!.atts['pitch']).toBeCloseTo(0.5, 2);
+  await row.getByLabel('Remove wire').click();
+  expect((await fullDoc(page)).cables.some((c) => c.to[1] === 'pitch')).toBe(false);
+
+  // F fits the patch in the part of the window the sidebar leaves
+  await page.mouse.move(300, 300);
+  await page.keyboard.press('f');
+  const vw = await page.evaluate(() => innerWidth);
+  for (const box of await page
+    .locator('.sr-mod')
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right)))
+    expect(box).toBeLessThan(vw - 440);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.sr-side')).toBeHidden();
+  await app.close();
+});
