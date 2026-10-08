@@ -32,6 +32,8 @@ export interface PanelActions {
   fieldDown?(port: string, kind: FieldKind, e: PointerEvent): void;
   fieldReset?(port: string, kind: FieldKind): void;
   moduleDown?(e: PointerEvent): void;
+  /** double-click on the name: the picker as REPLACE <MODULE> */
+  replace?(e: MouseEvent): void;
   /** an action button (DICE) */
   action?(param: string): void;
   /** a display edit: several params in one undo step */
@@ -130,7 +132,15 @@ export function Panel(props: PanelProps): JSX.Element {
       <Show when={props.spec.outputs.length}>
         <div class="sr-col" style={{ right: '0' }} />
       </Show>
-      <div class="sr-head">{props.name}</div>
+      <div
+        class="sr-head"
+        onDblClick={(e) => {
+          e.stopPropagation();
+          props.act.replace?.(e);
+        }}
+      >
+        {props.name}
+      </div>
       <Show when={ghosts().length}>
         <svg class="sr-ghosts" width={L().w} height={L().h}>
           <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} stroke={ROLE[g.role]} />}</For>

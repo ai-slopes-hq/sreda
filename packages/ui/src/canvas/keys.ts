@@ -1,5 +1,14 @@
 // The canvas keyboard (spec §4, §5): undo, delete, Esc, `/`, F, G.
-import { deleteObjects, frameSelection, isGroupId, settle, unframe, type Specs } from '@sreda/core';
+import {
+  deleteObjects,
+  duplicate,
+  frameSelection,
+  isGroupId,
+  randomise,
+  settle,
+  unframe,
+  type Specs,
+} from '@sreda/core';
 import type { LibraryApi } from '../library';
 import type { SessionApi } from '../store';
 import type { PickerTab } from './patching';
@@ -66,6 +75,28 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     if (k.pickerOpen()) k.closePicker();
     else if (s.state.listen) s.setListen(null);
     else s.setState('sel', []);
+  } else if (meta && key === 'd') {
+    // ⌘D: copies of the selected modules with the cables between them
+    e.preventDefault();
+    const before = s.current();
+    const sel = s.state.sel.filter((id) => !isGroupId(id));
+    if (!sel.length) return;
+    const { doc, ids } = duplicate(before, k.specs, sel);
+    s.commit(settle(before, doc, k.specs));
+    s.setState('sel', ids);
+  } else if (!meta && key === 'r') {
+    // R: the module under the pointer gets random knob values (sent as knob messages, one undo step)
+    const id = s.state.hover;
+    const m = id && s.current().modules.find((x) => x.id === id);
+    if (!m) return;
+    const after = randomise(s.current(), k.specs, m.id, Math.random).modules.find(
+      (x) => x.id === m.id,
+    )!.params;
+    s.params(
+      m.id,
+      Object.fromEntries(Object.entries(after).filter(([p, v]) => m.params[p] !== v)),
+      undefined,
+    );
   } else if (meta && key === 's') {
     e.preventDefault();
     if (e.shiftKey) k.lib.saveAs();

@@ -668,3 +668,44 @@ test('wire hover names both ends; a free FILTER dropped on the cable goes into i
   expect((await fullDoc(page)).cables).toEqual([{ from: ['m1', 'out'], to: ['m2', 'l'] }]);
   await app.close();
 });
+
+test('replace, R, ⌘D and magnets', async () => {
+  const { app, page } = await launch();
+  // magnets: OUT dragged to 5 px right of OSC lands flush against it
+  const osc = (await page.locator('[data-type=osc]').boundingBox())!;
+  const out = (await page.locator('[data-type=out]').boundingBox())!;
+  const h = await center(page, page.locator('[data-type=out] .sr-head'));
+  await drag(page, h, { x: h.x - (out.x - (osc.x + osc.width + 5)), y: h.y + 3 });
+  let d = await fullDoc(page);
+  expect(d.modules[1]!.x).toBe(d.modules[0]!.x + 280);
+  expect(d.modules[1]!.y).toBe(d.modules[0]!.y);
+
+  // R over OSC randomises its knobs; ⌘Z restores
+  const freq0 = d.modules[0]!.params['freq'];
+  await page.locator('[data-type=osc] .sr-head').hover();
+  await page.keyboard.press('r');
+  expect((await fullDoc(page)).modules[0]!.params['freq']).not.toBe(freq0);
+  await page.keyboard.press('Meta+z');
+  expect((await fullDoc(page)).modules[0]!.params['freq']).toBe(freq0);
+
+  // ⌘D on both: four modules, two cables
+  const a = (await page.locator('[data-type=osc]').boundingBox())!;
+  const b = (await page.locator('[data-type=out]').boundingBox())!;
+  await drag(page, { x: a.x - 20, y: a.y - 20 }, { x: b.x + b.width + 20, y: b.y + b.height + 20 });
+  await page.keyboard.press('Meta+d');
+  d = await fullDoc(page);
+  expect(d.modules).toHaveLength(4);
+  expect(d.cables).toHaveLength(2);
+  await page.keyboard.press('Meta+z');
+
+  // double-click OSC's name → REPLACE OSC → COMPLEX keeps the cable to OUT
+  await page.locator('[data-type=osc] .sr-head').dblclick();
+  await expect(page.locator('.sr-search')).toHaveAttribute('placeholder', 'REPLACE OSC');
+  await page.keyboard.type('complex');
+  await page.keyboard.press('Enter');
+  d = await fullDoc(page);
+  const cx = d.modules.find((m) => m.type === 'complex')!;
+  expect(d.modules.map((m) => m.type).sort()).toEqual(['complex', 'out']);
+  expect(d.cables).toEqual([{ from: [cx.id, 'out'], to: ['m2', 'l'] }]);
+  await app.close();
+});

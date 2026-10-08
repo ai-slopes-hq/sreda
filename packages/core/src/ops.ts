@@ -1,7 +1,7 @@
 // Edits: pure functions from a document to a new one. RuleError is for structural mistakes only.
 import { blankModule, type Cable, type Doc, type ModuleDoc } from './doc';
 import { recomputeParents, rootsOf, withDescendants } from './frames';
-import { inputPorts, RATIOS, specOf, type Specs } from './spec';
+import { fromKnob, inputPorts, RATIOS, specOf, toKnob, type Port, type Specs } from './spec';
 
 export class RuleError extends Error {}
 
@@ -159,4 +159,118 @@ export function insertIntoCable(doc: Doc, specs: Specs, id: string, cable: Cable
     ...rest,
     cables: [...rest.cables, { from: cable.from, to: [id, inp.id] }, { from: [id, out.id], to: cable.to }],
   };
+}
+
+/**
+ * Replace a module (spec §4): the new one takes its place and frame. Cables move to the port with the same id, else to
+ * the next unused port of the same role; the rest go. Knobs with the same id keep their value (in real units), options
+ * their index; attenuverters and ratios move with a port whose id is kept.
+ */
+export function replaceModule(doc: Doc, specs: Specs, oldId: string, type: string): { doc: Doc; id: string } {
+  const old = doc.modules.find((m) => m.id === oldId);
+  const so = old && specs[old.type];
+  const sn = specOf(specs, type);
+  if (!old || !so || !sn || sn.internal) throw new RuleError(`cannot replace ${oldId} by ${type}`);
+  const id = `m${doc.nextId}`;
+  const m: ModuleDoc = { ...blankModule(specs, type, id, old.x, old.y), parent: old.parent };
+  for (const p of sn.params) {
+    const op = so.params.find((q) => q.id === p.id && q.kind === p.kind);
+    if (!op || p.kind === 'action' || op.kind === 'action') continue;
+    if (p.kind === 'knob' && op.kind === 'knob')
+      m.params[p.id] = toKnob(p, fromKnob(op, old.params[p.id] ?? 0));
+    else if (p.kind === 'option') m.params[p.id] = Math.min(old.params[p.id] ?? 0, p.options.length - 1);
+  }
+  const mapper = (used: Port[], ports: Port[]) => {
+    const taken = new Set<string>();
+    const map = new Map<string, string>();
+    for (const op of used) {
+      const np =
+        ports.find((x) => x.id === op.id && !taken.has(x.id)) ??
+        ports.find((x) => x.role === op.role && !taken.has(x.id));
+      if (np) {
+        taken.add(np.id);
+        map.set(op.id, np.id);
+      }
+    }
+    return map;
+  };
+  const usedIn = new Set(doc.cables.filter((c) => c.to[0] === oldId).map((c) => c.to[1]));
+  const usedOut = new Set(doc.cables.filter((c) => c.from[0] === oldId).map((c) => c.from[1]));
+  const inMap = mapper(
+    inputPorts(so).filter((p) => usedIn.has(p.id)),
+    inputPorts(sn),
+  );
+  const outMap = mapper(
+    so.outputs.filter((p) => usedOut.has(p.id)),
+    sn.outputs,
+  );
+  for (const [o, n] of inMap)
+    if (o === n) {
+      if (old.atts[o] !== undefined) m.atts[o] = old.atts[o];
+      if (old.ratios[o] !== undefined) m.ratios[o] = old.ratios[o];
+    }
+  const cables: Cable[] = [];
+  for (const c of doc.cables) {
+    let { from, to } = c;
+    if (to[0] === oldId) {
+      const p = inMap.get(to[1]);
+      if (!p) continue;
+      to = [id, p];
+    }
+    if (from[0] === oldId) {
+      const p = outMap.get(from[1]);
+      if (!p) continue;
+      from = [id, p];
+    }
+    if (!cables.some((x) => sameCable(x, { from, to }))) cables.push({ from, to });
+  }
+  return {
+    doc: {
+      ...doc,
+      nextId: doc.nextId + 1,
+      modules: doc.modules.map((x) => (x.id === oldId ? m : x)),
+      cables,
+    },
+    id,
+  };
+}
+
+/** ⌘D: copies of the modules among `ids` with the cables between them, 32 px right and down, with fresh ids. */
+export function duplicate(doc: Doc, specs: Specs, ids: readonly string[]): { doc: Doc; ids: string[] } {
+  let next = doc.nextId;
+  const map = new Map<string, string>();
+  const copies: ModuleDoc[] = [];
+  for (const m of doc.modules)
+    if (ids.includes(m.id)) {
+      const id = `m${next++}`;
+      map.set(m.id, id);
+      copies.push({ ...structuredClone(m), id, x: m.x + 32, y: m.y + 32 });
+    }
+  const cables = doc.cables
+    .filter((c) => map.has(c.from[0]) && map.has(c.to[0]))
+    .map((c) => ({
+      from: [map.get(c.from[0])!, c.from[1]] as [string, string],
+      to: [map.get(c.to[0])!, c.to[1]] as [string, string],
+    }));
+  const added = [...map.values()];
+  const d: Doc = {
+    ...doc,
+    nextId: next,
+    modules: [...doc.modules, ...copies],
+    cables: [...doc.cables, ...cables],
+  };
+  return { doc: recomputeParents(d, specs, added), ids: added };
+}
+
+/** R: every visible knob to a uniform value within its `randomRange` (default the full range), in real units. */
+export function randomise(doc: Doc, specs: Specs, id: string, rng: () => number): Doc {
+  return mapModule(doc, id, (m) => {
+    const params = { ...m.params };
+    for (const p of specs[m.type]!.params) {
+      if (p.kind !== 'knob' || p.hidden) continue;
+      const [lo, hi] = p.randomRange ?? [p.min, p.max];
+      params[p.id] = toKnob(p, lo + rng() * (hi - lo));
+    }
+    return { ...m, params };
+  });
 }

@@ -1133,3 +1133,10 @@
   pointer-events: none;
   z-index: 30;
 }
+.sr-guide {
+  position: absolute;
+  background: #8f897c;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 4;
+}

@@ -5,6 +5,8 @@ import {
   connect,
   FACTORY,
   insertIntoCable,
+  replaceModule,
+  RGAP,
   portLabel,
   withDescendants,
   isGroupId,
@@ -34,6 +36,7 @@ import { diceModule } from '../dice';
 import { libraryActions } from '../library';
 import { Cables } from './Cables';
 import { cableAt, cableGeoms } from './cablegeom';
+import { magnet, type Snap } from './magnets';
 import { Chrome } from './Chrome';
 import { Frame, type Edge } from './Frame';
 import { ROLE } from './glyphs';
@@ -56,7 +59,17 @@ type Pt = { x: number; y: number };
 type Drag =
   | { kind: 'pan'; at: Pt; vx: number; vy: number }
   | { kind: 'wire'; from: JackEnd; picked: Cable | null; at: Pt; moved: boolean }
-  | { kind: 'move'; ids: string[]; at: Pt; base: Doc; moved: boolean; insert: Cable | null }
+  | {
+      kind: 'move';
+      ids: string[];
+      at: Pt;
+      base: Doc;
+      moved: boolean;
+      insert: Cable | null;
+      /** the move so far, magnets included */
+      dx: number;
+      dy: number;
+    }
   | { kind: 'resize'; id: string; edge: Edge; at: Pt; base: Doc; r0: Rect; moved: boolean }
   | { kind: 'box'; at: Pt; add: string[] }
   | { kind: 'field'; id: string; port: string; field: FieldKind; at: Pt; v0: number; key: string };
@@ -77,6 +90,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     at: Pt;
     from: JackEnd | null;
     tab: PickerTab;
+    /** REPLACE mode: the module being replaced */
+    replace?: string;
   } | null>(null);
   const lib = libraryActions(s, specs);
   void lib.refresh();
@@ -164,6 +179,28 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     return `${portLabel(st.doc, specs, c.from[0], c.from[1])}  →  ${portLabel(st.doc, specs, c.to[0], c.to[1])}`;
   };
 
+  /** magnet guide lines while dragging */
+  const [guides, setGuides] = createSignal<Pick<Snap, 'gx' | 'gy'> | null>(null);
+  /** the snap for a moved selection: its bounding box against the modules not moving (32 px apart in WIRE FIX) */
+  function magnets(base: Doc, ids: string[], dx: number, dy: number): Snap | null {
+    const moving = new Set(withDescendants(base, ids));
+    const roots = ids.filter((id) => moving.has(id));
+    if (!roots.length) return null;
+    const rs = roots.map((id) => rectOf(base, specs, id));
+    const x0 = Math.min(...rs.map((r) => r.x)) + dx;
+    const y0 = Math.min(...rs.map((r) => r.y)) + dy;
+    const box = {
+      x: x0,
+      y: y0,
+      w: Math.max(...rs.map((r) => r.x + r.w)) + dx - x0,
+      h: Math.max(...rs.map((r) => r.y + r.h)) + dy - y0,
+    };
+    const others = base.modules.filter((m) => !moving.has(m.id)).map((m) => rectOf(base, specs, m.id));
+    const first = base.modules.find((m) => m.id === roots[0]) ?? base.groups.find((g) => g.id === roots[0]);
+    const parent = first?.parent ? base.groups.find((g) => g.id === first.parent) : undefined;
+    return magnet(box, others, 10 / st.view.z, parent?.layout === 'route' ? RGAP : 0);
+  }
+
   function begin(d: Drag): void {
     setHovered(null);
     drag = d;
@@ -207,7 +244,16 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     if (e.shiftKey) sel = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
     else if (!sel.includes(id)) sel = [id];
     s.setState('sel', sel);
-    begin({ kind: 'move', ids: sel, at: client(e), base: s.current(), moved: false, insert: null });
+    begin({
+      kind: 'move',
+      ids: sel,
+      at: client(e),
+      base: s.current(),
+      moved: false,
+      insert: null,
+      dx: 0,
+      dy: 0,
+    });
   }
 
   function fieldDown(id: string, port: string, field: FieldKind, e: PointerEvent): void {
@@ -252,7 +298,12 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       case 'move': {
         if (!d.moved && !far(p, d.at)) return;
         d.moved = true;
-        const [dx, dy] = [(p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z];
+        let [dx, dy] = [(p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z];
+        // magnets (⌘ held: off): the moved box snaps to the modules around it
+        const snap = e.metaKey ? null : magnets(d.base, d.ids, dx, dy);
+        if (snap) [dx, dy] = [dx + snap.dx, dy + snap.dy];
+        setGuides(snap && { gx: snap.gx, gy: snap.gy });
+        [d.dx, d.dy] = [dx, dy];
         s.preview(moveObjects(d.base, specs, d.ids, dx, dy));
         setDrop(landingFrame(d.base, specs, d.ids, dx, dy));
         // a lone free module over a cable (within 8 screen px of the pointer) would go into it
@@ -329,14 +380,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     } else if (d.kind === 'move') {
       setDrop(null);
       setInsert(null);
+      setGuides(null);
       if (d.moved) {
-        const moved = moveObjects(
-          d.base,
-          specs,
-          d.ids,
-          (p.x - d.at.x) / st.view.z,
-          (p.y - d.at.y) / st.view.z,
-        );
+        const moved = moveObjects(d.base, specs, d.ids, d.dx, d.dy);
         // the WIRE FIX frames a module left, landed in or moved within re-pack
         const parents = (doc: Doc) =>
           d.ids.flatMap((id) => {
@@ -410,6 +456,13 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     const pk = picker();
     if (!pk) return;
     setPicker(null);
+    if (pk.replace && item.kind === 'module') {
+      const before = s.current();
+      const { doc, id } = replaceModule(before, specs, pk.replace, item.type);
+      s.commit(settle(before, doc, specs));
+      s.setState('sel', [id]);
+      return;
+    }
     if (item.kind !== 'module') {
       void lib.read(item).then((doc) => {
         if (!doc) return;
@@ -616,6 +669,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   fieldReset: (port, kind) =>
                     kind === 'att' ? s.att(m.id, port, null, undefined) : s.ratio(m.id, port, 1, undefined),
                   moduleDown: (e) => moduleDown(m.id, e),
+                  replace: (e) =>
+                    setPicker({
+                      screen: client(e),
+                      at: { x: m.x, y: m.y },
+                      from: null,
+                      tab: 'MODULES',
+                      replace: m.id,
+                    }),
                   action: (param) => {
                     if (param === 'dice') s.params(m.id, diced(m.id), undefined);
                   },
@@ -626,6 +687,38 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             );
           }}
         </For>
+        <Show when={guides()}>
+          {(g) => (
+            <>
+              <Show when={g().gx}>
+                {(x) => (
+                  <div
+                    class="sr-guide"
+                    style={{
+                      left: x().x + 'px',
+                      top: x().y0 + 'px',
+                      width: '1px',
+                      height: x().y1 - x().y0 + 'px',
+                    }}
+                  />
+                )}
+              </Show>
+              <Show when={g().gy}>
+                {(y) => (
+                  <div
+                    class="sr-guide"
+                    style={{
+                      left: y().x0 + 'px',
+                      top: y().y + 'px',
+                      width: y().x1 - y().x0 + 'px',
+                      height: '1px',
+                    }}
+                  />
+                )}
+              </Show>
+            </>
+          )}
+        </Show>
         <Cables
           doc={st.doc}
           specs={specs}
@@ -659,15 +752,17 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           />
         )}
       </Show>
-      <Show when={picker()}>
+      {/* keyed: the picker gets the value, so closing it never makes its props read a stale accessor */}
+      <Show when={picker()} keyed>
         {(pk) => (
           <Picker
             specs={specs}
-            x={Math.min(pk().screen.x, innerWidth - 300)}
-            y={Math.min(pk().screen.y, innerHeight - 340)}
-            from={pk().from}
+            x={Math.min(pk.screen.x, innerWidth - 300)}
+            y={Math.min(pk.screen.y, innerHeight - 340)}
+            from={pk.from}
             library={library()}
-            tab={pk().tab}
+            tab={pk.tab}
+            replace={pk.replace ? nameOf(st.doc, specs, pk.replace) : null}
             pick={place}
             close={() => setPicker(null)}
           />

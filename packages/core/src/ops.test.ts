@@ -5,7 +5,10 @@ import {
   addModule,
   canInsert,
   connect,
+  duplicate,
   insertIntoCable,
+  randomise,
+  replaceModule,
   deleteObjects,
   moveObjects,
   removeCable,
@@ -124,4 +127,75 @@ test('inserting into a trigger cable prefers trigger ports', () => {
     { from: [mid.id, 'eoc'], to: [third.id, 'clk'] },
   ]);
   void src;
+});
+
+test('replace: knobs keep their value by id, cables follow port id then role, the place and frame stay', async () => {
+  const { SPECS, starterDoc, frameSelection, fromKnob } = await import('./index');
+  const freq = (type: string) => SPECS[type]!.params.find((p) => p.id === 'freq')!;
+  let doc = starterDoc(SPECS);
+  doc = setParam(doc, SPECS, 'm1', 'freq', 0.6);
+  const hz = fromKnob(freq('osc') as never, 0.6);
+  const lfo = addModule(doc, SPECS, 'slope', 0, 400);
+  doc = connect(lfo.doc, SPECS, [lfo.id, 'out'], ['m1', 'pitch']);
+  doc = frameSelection(doc, SPECS, ['m1']).doc;
+  const osc = doc.modules.find((m) => m.id === 'm1')!;
+  const { doc: d, id } = replaceModule(doc, SPECS, 'm1', 'complex');
+  const c = d.modules.find((m) => m.id === id)!;
+  expect(c).toMatchObject({ type: 'complex', x: osc.x, y: osc.y, parent: osc.parent });
+  expect(fromKnob(freq('complex') as never, c.params['freq']!)).toBeCloseTo(hz, 3);
+  expect(d.cables).toContainEqual({ from: [lfo.id, 'out'], to: [id, 'pitch'] });
+  expect(d.cables).toContainEqual({ from: [id, 'out'], to: ['m2', 'l'] });
+  expect(d.modules.some((m) => m.id === 'm1')).toBe(false);
+});
+
+test('replace FILTER by FOLD: IN stays, LP moves to OUT, BP and HP have no match and go', async () => {
+  const { SPECS } = await import('./index');
+  let doc = addModule(emptyDoc, SPECS, 'noise', 0, 0).doc;
+  doc = addModule(doc, SPECS, 'filter', 300, 0).doc;
+  doc = addModule(doc, SPECS, 'mix', 600, 0).doc;
+  doc = connect(doc, SPECS, ['m1', 'white'], ['m2', 'in']);
+  for (const [o, i] of [
+    ['lp', 'a'],
+    ['bp', 'b'],
+    ['hp', 'c'],
+  ] as const)
+    doc = connect(doc, SPECS, ['m2', o], ['m3', i]);
+  const { doc: d, id } = replaceModule(doc, SPECS, 'm2', 'fold');
+  expect(d.cables).toEqual([
+    { from: ['m1', 'white'], to: [id, 'in'] },
+    { from: [id, 'out'], to: ['m3', 'a'] },
+  ]);
+});
+
+test('⌘D copies the selected modules with the cables between them, 32 px right and down, with fresh ids', () => {
+  const { doc: d0, src, fx } = two();
+  const third = addModule(d0, S, 'sink', 600, 0);
+  let doc = connect(third.doc, S, [src, 'out'], [fx, 'in']);
+  doc = connect(doc, S, [fx, 'out'], [third.id, 'l']);
+  const { doc: d, ids } = duplicate(doc, S, [src, fx]);
+  expect(ids).toEqual(['m4', 'm5']);
+  expect(d.modules.find((m) => m.id === 'm4')).toMatchObject({ type: 'src', x: 32, y: 40 });
+  expect(d.cables.filter((c) => ids.includes(c.from[0]) || ids.includes(c.to[0]))).toEqual([
+    { from: ['m4', 'out'], to: ['m5', 'in'] },
+  ]);
+});
+
+test('R sets every visible knob within its random range and leaves options and hidden params alone', async () => {
+  const { SPECS, fromKnob } = await import('./index');
+  const doc = addModule(emptyDoc, SPECS, 'osc', 0, 0).doc;
+  const before = doc.modules[0]!.params;
+  let n = 0;
+  const d = randomise(doc, SPECS, 'm1', () => [0, 0.999, 0.5][n++ % 3]!);
+  const after = d.modules[0]!.params;
+  for (const p of SPECS['osc']!.params) {
+    if (p.kind !== 'knob' || p.hidden) {
+      if (p.kind !== 'action') expect(after[p.id]).toBe(before[p.id]);
+      continue;
+    }
+    const [lo, hi] = p.randomRange ?? [p.min, p.max];
+    const v = fromKnob(p, after[p.id]!);
+    expect(v).toBeGreaterThanOrEqual(lo - 1e-9);
+    expect(v).toBeLessThanOrEqual(hi + 1e-9);
+  }
+  expect(after['freq']).not.toBe(before['freq']);
 });
