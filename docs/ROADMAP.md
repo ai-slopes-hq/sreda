@@ -36,7 +36,8 @@ of a creative tool; nothing of its UI is ported.
   replace / ⌘D / R, the sidebar with WIRES, and a 200-module patch in real time (16.6 % natively, ~36 % in WASM).
   Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 3 review").
   Spec revision 16: the top-right button is SIDEBAR. **The first build is complete.**
-- **Next:** milestone 2, the sound pack (spec §7a) — its own plan; skins (§1a, revision 18 in progress) are written
+- **Next:** milestone 2, the sound pack (spec §7a) — Plan 4 written (`docs/superpowers/plans/2026-10-08-4-sound-pack.md`,
+  10 tasks); execute it natively on a branch `plan-4-sound-pack`; skins (§1a, revision 18 in progress) are written
   down only.
 
 ## The road (vertical slices: something to hear at every stage)
