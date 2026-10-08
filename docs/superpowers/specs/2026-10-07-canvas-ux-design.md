@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 14 (panels: air + quiet) · Status: approved
+Date: 2026-10-07 · Revision 15 (Plan 3 clarifications: library over IPC, ⌘D modules only, groups from a jack, mute rule) · Status: approved
 
 ## Why
 
@@ -132,8 +132,9 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   the master stage (§7).
 - **Select:** click selects; Shift adds. Dragging on empty canvas (also the empty inside of a frame) draws a
   selection box: it selects the modules it touches and the frames it fully encloses.
-- **Edit:** drag a module anywhere on its face (not on a control) to move it; ⌘D duplicates the selection with the
-  cables inside it; Backspace deletes the selection with its cables.
+- **Edit:** drag a module anywhere on its face (not on a control) to move it; ⌘D duplicates the selection's modules with
+  the cables between them, 32 px right and down (frames in the selection are skipped: duplicating a frame is in the
+  backlog); Backspace deletes the selection with its cables.
 - **Magnets:** while a module or selection is dragged, its bounding box snaps flush to nearby modules when an edge
   comes within 10 screen px: side by side (edges touching, tops or bottoms aligned) or stacked (one under the
   other, lefts or rights aligned). A thin guide line shows each active snap. Holding ⌘ while dragging turns magnets
@@ -218,7 +219,8 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
     knob's mod jack: straight down from the channel above) — rounded corners, one 4 px lane per cable. Turning WIRE FIX
     off returns to curves and keeps the layout.
   - **MUTE (M):** the frame fades out over 50 ms: cables leaving the frame and OUT modules inside it go silent; clocks
-    and everything inside keep running, so the voice comes back in time. Its contents are drawn at 40 % (its own
+    and everything inside keep running, so the voice comes back in time. A cable is silenced by the innermost
+    frame that holds its source but not its target, when that frame or one of its parents is muted. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
 
 ## 5a. Sidebar and the WIRES editor
@@ -269,8 +271,8 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   `CLICK TO START AUDIO`.
 - Top right: **WIRES** (opens the sidebar, §5a), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
   canvas; an undo step). With the listen bar these are the only chrome.
-- **Library = a folder on disk.** The first save or open asks for a library folder once (File System Access API;
-  the handle is kept in IndexedDB and permission re-asked by the browser when needed). Inside it:
+- **Library = a folder on disk.** The first save or open asks for a library folder once (a folder dialog; the
+  main process keeps its path in the app's settings and reads and writes it with Node `fs`, §8). Inside it:
   `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
   as path prefixes. Files are the document JSON (`version`, `modules`, `cables`, `groups`); a group file holds one
   top frame with everything inside it.
@@ -285,7 +287,7 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   PROJECTS in the middle of the screen. No single-letter keys for tabs (G is taken by frames). Opened from a jack, it
   offers modules and groups (no projects); in REPLACE mode, modules only.
   - A **group** lands with its frame's top-left at the drop point, with fresh ids; opened from a trigger output, the
-    cable goes into the group's CLK in.
+    cable goes into the group's CLK in (from any other jack the group lands unwired).
   - A **project** replaces the canvas (one undo step) and fits it in view.
 - **FACTORY** (read-only, shipped with the app, listed under `FACTORY/`): projects — the ones below — and groups —
   *303 voice* (the ACID voice without delay and out, own clock 128 BPM), *complex vco* (COMPLEX → FOLD → LPG pinged
