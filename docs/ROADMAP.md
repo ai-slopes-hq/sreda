@@ -34,10 +34,10 @@ of a creative tool; nothing of its UI is ported.
   allocates nothing; a minute of audio takes 2.6 % of real time natively.
 - **2026-10-08** — Plan 3 written (11 tasks; spec revision 15 clarifies the library over IPC, ⌘D, groups from a
   jack, the mute rule). Executing on branch `plan-3-organisation`; progress ledger in
-  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. Tasks 1–9 done (frames, frame clocks, MUTE + frame
+  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. Tasks 1–10 done (frames, frame clocks, MUTE + frame
   meter, STACK / WIRE FIX, factory patches + picker tabs, library folder + SAVE / NEW, wire hover / focus / insert,
-  magnets / replace / ⌘D / R, the sidebar + WIRES); Task 9 waits at its checkpoint; next is Task 10 (WIRES
-  rewiring and the link to the canvas). Spec revision 16: the top-right button is SIDEBAR.
+  magnets / replace / ⌘D / R, the sidebar + WIRES, WIRES rewiring + canvas link); Task 10 waits at its
+  checkpoint; next is Task 11 (200 modules: performance and the benchmark), then the final review. Spec revision 16: the top-right button is SIDEBAR.
 
 ## The road (vertical slices: something to hear at every stage)
 
