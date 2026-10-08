@@ -73,3 +73,19 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   old pattern; it pauses while the window is hidden.
 - **STAGES ADDR** has no hysteresis at stage boundaries; **RHYTHM** drops the accent on a TIE after a rest; dead
   `ids` in att.rs.
+
+## From the Plan 3 review (deferred, 2026-10-08)
+
+- **Parent-cycle repair loses nesting:** `validateDoc` recomputes parents with "descendants" taken from the broken
+  links, so g1 ↔ g2 (g2 inside g1) repairs to g2 without a parent; null every group's parent before recomputing.
+- **Frame meters:** an OUT's `master_peak` is already gated and then multiplied by the gain again (wrong during a
+  glide); an outer frame's meter reads ungated buffers, so it shows a muted inner frame's audio.
+- **Library paths:** `fileFor` compares `startsWith(root + sep)` lexically — a root with a trailing slash (possible via
+  `SREDA_LIBRARY`) refuses everything; symlinks inside the folder are not resolved. Use `path.resolve` / `path.relative`
+  (and `realpath`).
+- **Two quick saves of one file** share the temporary name `${file}.${pid}.tmp`; add a counter or random suffix.
+- **Silent failures:** a group file with no frame places nothing without a notice; a WIRES rewire refused by
+  `RuleError` shows nothing.
+- **`applyJson` uses `TextEncoder`**, which the AudioWorklet scope lacks; the worklet only calls `applyBytes` today.
+- **`openProject`** resets `sidebar.picked` but not `ports` / `hover` (they are cleared when the cables change, which
+  covers most cases).
