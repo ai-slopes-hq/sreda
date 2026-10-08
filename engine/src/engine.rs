@@ -7,6 +7,7 @@ use crate::inputs::TriggerInput;
 use crate::master::Master;
 use crate::plan::{Kind, NodeLayout, NormalPlan, Plan, PlanError, Step};
 use crate::registry;
+use crate::samples::Sample;
 use crate::spec::{from_knob, Knob, ModuleSpec, Param};
 
 const FADE_MS: f64 = 10.0;
@@ -130,6 +131,10 @@ pub struct Engine {
     seq: u32,
     listen: Option<usize>,
     out: [[f32; BLOCK]; 2],
+    /// a sample on its way in: (id, frames, channels, hits) and its planar floats (`sample_alloc`, `sample_commit`)
+    staging: Option<(usize, usize, usize, usize, Vec<f32>)>,
+    /// audition: the sample playing in place of the main mix, and how far it is
+    audition: Option<(i32, usize)>,
 }
 
 fn visible_knobs(spec: &ModuleSpec) -> Vec<Knob> {
@@ -371,6 +376,8 @@ impl Engine {
             readouts: vec![0.0; 2],
             seq: 0,
             listen: None,
+            staging: None,
+            audition: None,
             out: [[0.0; BLOCK]; 2],
         }
     }
@@ -987,6 +994,34 @@ impl Engine {
         });
     }
 
+    /// Room for a sample's planar floats (`channels` × `frames`, then `hits` × 2: position, strength); the caller
+    /// fills it, then `sample_commit` puts it in the pool under `id`.
+    pub fn sample_alloc(
+        &mut self,
+        id: usize,
+        frames: usize,
+        channels: usize,
+        hits: usize,
+    ) -> *mut f32 {
+        let mut buf = vec![0.0f32; channels.clamp(1, 2) * frames + 2 * hits];
+        let p = buf.as_mut_ptr();
+        self.staging = Some((id, frames, channels.clamp(1, 2), hits, buf));
+        p
+    }
+
+    pub fn sample_commit(&mut self) {
+        if let Some((id, frames, channels, hits, buf)) = self.staging.take() {
+            self.ctx
+                .samples
+                .insert(id, Sample::from_planar(&buf, frames, channels, hits));
+        }
+    }
+
+    /// Plays a sample from its start, once, in place of the mix (through the master); −1 stops.
+    pub fn audition(&mut self, id: i32) {
+        self.audition = (id >= 0).then_some((id, 0));
+    }
+
     pub fn process(&mut self) -> (&[f32; BLOCK], &[f32; BLOCK]) {
         self.ctx.master = [[0.0; BLOCK]; 2];
         // this block's frame gains, gliding toward mute / unmute
@@ -1064,6 +1099,20 @@ impl Engine {
             Some(b) => [self.outs[b], self.outs[b]],
             None => self.ctx.master,
         };
+        // audition: the sample from the start, once, in place of the mix
+        if let Some((id, pos)) = self.audition {
+            match self.ctx.samples.get(id) {
+                Some(s) if pos < s.frames => {
+                    for (ch, out) in self.out.iter_mut().enumerate() {
+                        for (i, y) in out.iter_mut().enumerate() {
+                            *y = s.channels[ch].get(pos + i).copied().unwrap_or(0.0);
+                        }
+                    }
+                    self.audition = Some((id, pos + BLOCK));
+                }
+                _ => self.audition = None,
+            }
+        }
         let [l, r] = &mut self.out;
         self.master.process(l, r);
         self.readouts[1] = self.out[0]
@@ -2115,5 +2164,65 @@ mod tests {
             e.apply(plan(1, vec![out("x", 5, 1.0)], chain(1))),
             Err(PlanError::Invalid(_))
         ));
+    }
+
+    fn load(e: &mut Engine, id: usize, l: &[f32], r: &[f32], hits: &[(f32, f32)]) {
+        let p = e.sample_alloc(id, l.len(), 2, hits.len());
+        let data: Vec<f32> = l
+            .iter()
+            .chain(r)
+            .copied()
+            .chain(hits.iter().flat_map(|h| [h.0, h.1]))
+            .collect();
+        unsafe { std::ptr::copy_nonoverlapping(data.as_ptr(), p, data.len()) };
+        e.sample_commit();
+    }
+
+    #[test]
+    fn a_sample_alloc_and_commit_reaches_the_pool_and_replaces_by_id() {
+        let mut e = Engine::new(48_000.0, 1);
+        load(
+            &mut e,
+            2,
+            &[0.1, 0.2, 0.3],
+            &[0.4, 0.5, 0.6],
+            &[(1.0, 0.75)],
+        );
+        let s = e.ctx.samples.get(2).unwrap();
+        assert_eq!((s.frames, s.channels[1][2], s.hits[0]), (3, 0.6, (1, 0.75)));
+        load(&mut e, 2, &[1.0], &[1.0], &[]);
+        assert_eq!(e.ctx.samples.get(2).unwrap().frames, 1);
+    }
+
+    #[test]
+    fn audition_plays_the_sample_through_the_master_and_stops_at_its_end() {
+        let mut e = Engine::new(48_000.0, 1);
+        let n = 10 * BLOCK;
+        let sine: Vec<f32> = (0..n).map(|i| 0.25 * (i as f32 * 0.13).sin()).collect();
+        let neg: Vec<f32> = sine.iter().map(|x| -x).collect();
+        load(&mut e, 0, &sine, &neg, &[]);
+        e.audition(0);
+        let peak = |b: &[f32; BLOCK]| b.iter().fold(0.0f32, |a, x| a.max(x.abs()));
+        let mut heard = Vec::new();
+        for _ in 0..20 {
+            let (l, r) = e.process();
+            heard.push((peak(l), peak(r), l[40] * r[40]));
+        }
+        let h = heard[3];
+        assert!(h.0 > 0.1 && h.1 > 0.1 && h.2 <= 0.0, "playing: {h:?}");
+        assert!(
+            heard[12..].iter().all(|h| h.0 < 1e-2),
+            "stopped: {:?}",
+            &heard[12..]
+        );
+        assert!(e.audition.is_none());
+        // a stop
+        e.audition(0);
+        e.process();
+        e.audition(-1);
+        for _ in 0..4 {
+            e.process();
+        }
+        assert!(peak(e.process().0) < 1e-2);
     }
 }

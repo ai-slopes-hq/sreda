@@ -118,3 +118,24 @@ fn the_200_module_patch_allocates_nothing() {
     }
     assert_eq!(allocs() - before, 0);
 }
+
+#[test]
+fn process_with_a_sample_loaded_and_auditioning_allocates_nothing() {
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(fixture("all-a")).unwrap();
+    let p = e.sample_alloc(0, 48_000, 2, 4);
+    unsafe { std::ptr::write_bytes(p, 0, 2 * 48_000 + 8) };
+    e.sample_commit();
+    e.process();
+    let before = allocs();
+    for i in 0..2_000 {
+        if i % 500 == 0 {
+            e.audition(0);
+        }
+        if i == 1_700 {
+            e.audition(-1);
+        }
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+}

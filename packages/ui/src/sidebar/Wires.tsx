@@ -22,7 +22,12 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
   const s = props.session;
   const st = s.state;
   const sections = createMemo(() =>
-    wireSections(st.doc, props.specs, { q: st.sidebar.q, selOnly: st.sidebar.selOnly, sel: st.sel }),
+    wireSections(st.doc, props.specs, {
+      q: st.sidebar.q,
+      selOnly: st.sidebar.selOnly,
+      sel: st.sel,
+      missing: st.missing,
+    }),
   );
 
   let box: HTMLDivElement | undefined;

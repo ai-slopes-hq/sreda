@@ -11,6 +11,7 @@ function fakeBridge(folder: string | null = '/lib') {
   let chosen = folder;
   const bridge: SredaBridge = {
     first: async () => null,
+    pathForFile: () => '',
     library: {
       folder: async () => chosen,
       choose: async () => {
@@ -33,6 +34,11 @@ function fakeBridge(folder: string | null = '/lib') {
         calls.push(`write ${kind} ${path}`);
         files.set(key(kind, path), structuredClone(doc));
       },
+      samples: async () => [],
+      readSample: async () => {
+        throw new Error('no samples');
+      },
+      importSample: async (p) => p,
     },
   };
   return { bridge, files, calls };

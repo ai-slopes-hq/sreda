@@ -18,7 +18,11 @@ export function clockNode(doc: Doc, gid: string): number {
   return doc.modules.length + doc.groups.findIndex((g) => g.id === gid);
 }
 
-export function compile(doc: Doc, specs: Specs, seq: number): Plan {
+/**
+ * `sampleId` turns a module's sample path into the id the engine's pool knows it by (−1: none, or not loaded); it
+ * goes into the fixed slot of the hidden knob `sample`.
+ */
+export function compile(doc: Doc, specs: Specs, seq: number, sampleId?: (path: string) => number): Plan {
   const nm = doc.modules.length;
   const index = new Map([
     ...doc.modules.map((m, i) => [m.id, i] as const),
@@ -66,6 +70,8 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
     const fixed: number[] = [];
     for (const p of spec.params) {
       if (p.kind === 'knob' && !p.hidden) knobs.push(m.params[p.id] ?? 0);
+      else if (p.kind === 'knob' && p.id === 'sample')
+        fixed.push(m.sample && sampleId ? sampleId(m.sample) : -1);
       else if (p.kind === 'knob') fixed.push(fromKnob(p, m.params[p.id] ?? 0));
       else if (p.kind === 'option') fixed.push(m.params[p.id] ?? 0);
     }

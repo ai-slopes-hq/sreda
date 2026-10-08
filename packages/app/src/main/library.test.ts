@@ -2,7 +2,15 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
-import { fileFor, listLibrary, readEntry, writeEntry } from './library';
+import {
+  fileFor,
+  importSample,
+  listLibrary,
+  listSamples,
+  readEntry,
+  readSample,
+  writeEntry,
+} from './library';
 
 const tmp = () => mkdtempSync(join(tmpdir(), 'sreda-lib-'));
 
@@ -43,4 +51,36 @@ test('writing makes the folders and replaces an existing file; reading bad JSON 
   writeFileSync(file, '{ nope');
   await expect(readEntry(root, 'group', 'kit/drums')).rejects.toThrow();
   await expect(writeEntry(root, 'project', '../escape', {})).rejects.toThrow();
+});
+
+test('samples: listed under samples/ with their extension, others ignored; read only inside samples/', async () => {
+  const root = tmp();
+  mkdirSync(join(root, 'samples', 'kit'), { recursive: true });
+  for (const f of ['kit/kick.wav', 'kit/snare.AIFF', 'pad.flac', 'a.mp3', 'b.ogg', 'c.aif', 'notes.txt'])
+    writeFileSync(join(root, 'samples', f), 'x');
+  expect(await listSamples(root)).toEqual([
+    'a.mp3',
+    'b.ogg',
+    'c.aif',
+    'kit/kick.wav',
+    'kit/snare.AIFF',
+    'pad.flac',
+  ]);
+  expect(Buffer.from(await readSample(root, 'kit/kick.wav')).toString()).toBe('x');
+  await expect(readSample(root, '../projects/x.wav')).rejects.toThrow();
+  await expect(readSample(root, 'notes.txt')).rejects.toThrow();
+  rmSync(join(root, 'samples'), { recursive: true });
+  expect(await listSamples(root)).toEqual([]);
+});
+
+test('importing a file copies it into samples/ under a free name', async () => {
+  const root = tmp();
+  const src = join(tmp(), 'kick.wav');
+  writeFileSync(src, 'boom');
+  expect(await importSample(root, src)).toBe('kick.wav');
+  expect(await importSample(root, src)).toBe('kick 2.wav');
+  expect(readFileSync(join(root, 'samples', 'kick 2.wav'), 'utf8')).toBe('boom');
+  const txt = join(tmp(), 'readme.txt');
+  writeFileSync(txt, 'no');
+  await expect(importSample(root, txt)).rejects.toThrow();
 });

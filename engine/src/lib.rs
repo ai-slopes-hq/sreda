@@ -7,6 +7,7 @@ pub mod master;
 pub mod modules;
 pub mod plan;
 pub mod registry;
+pub mod samples;
 pub mod shaping;
 pub mod spec;
 #[cfg(test)]

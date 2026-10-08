@@ -19,7 +19,15 @@ export interface SredaBridge {
     read(kind: Kind, path: string): Promise<unknown>;
     exists(kind: Kind, path: string): Promise<boolean>;
     write(kind: Kind, path: string, doc: unknown): Promise<void>;
+    /** every audio file under samples/ ('drums/kick 909.wav') */
+    samples(): Promise<string[]>;
+    /** a sample's raw bytes; throws when it is not there */
+    readSample(path: string): Promise<ArrayBuffer>;
+    /** copies an audio file into samples/ under a free name; returns its path */
+    importSample(absolutePath: string): Promise<string>;
   };
+  /** a dropped file's path on disk */
+  pathForFile(file: File): string;
 }
 
 declare global {

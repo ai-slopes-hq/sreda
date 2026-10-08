@@ -1,7 +1,16 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { app, BrowserWindow, dialog, ipcMain, protocol, session } from 'electron';
-import { existsEntry, listLibrary, readEntry, writeEntry, type Kind } from './library';
+import {
+  existsEntry,
+  importSample,
+  listLibrary,
+  listSamples,
+  readEntry,
+  readSample,
+  writeEntry,
+  type Kind,
+} from './library';
 
 // Every response carries COOP / COEP so the renderer is cross-origin isolated (SharedArrayBuffer).
 const ISOLATION = {
@@ -117,6 +126,12 @@ function serveLibrary(): void {
   );
   ipcMain.handle('library:write', async (_e, kind: unknown, path: unknown, doc: unknown) =>
     writeEntry(await root(), kindOf(kind), pathOf(path), doc),
+  );
+  ipcMain.handle('library:samples', async () => listSamples(await root()));
+  ipcMain.handle('library:readSample', async (_e, path: unknown) => readSample(await root(), pathOf(path)));
+  // any file the user dropped (an absolute path from the renderer): copied in, never read elsewhere
+  ipcMain.handle('library:importSample', async (_e, path: unknown) =>
+    importSample(await root(), pathOf(path)),
   );
 }
 

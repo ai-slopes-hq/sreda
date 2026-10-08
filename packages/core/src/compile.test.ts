@@ -281,3 +281,52 @@ test('the 200-module patch validates, compiles, and compiles in under 10 ms', as
   times.sort((a, b) => a - b);
   expect(times[2]).toBeLessThan(10);
 });
+
+/** a sampler-like type: a knob, an option, then the hidden `sample` slot */
+const SAMPLING: Specs = {
+  ...SPECS,
+  smp: {
+    type: 'smp',
+    label: 'SMP',
+    desc: '',
+    size: [4, 1],
+    inputs: [],
+    outputs: [{ id: 'out', label: 'OUT', role: 'audio' }],
+    params: [
+      { kind: 'knob', id: 'gain', label: 'GAIN', min: 0, max: 1, def: 1, taper: 'lin' },
+      { kind: 'option', id: 'mode', label: 'MODE', options: ['A', 'B'], def: 0 },
+      {
+        kind: 'knob',
+        id: 'sample',
+        label: 'SAMPLE',
+        min: -1,
+        max: 1e6,
+        def: -1,
+        taper: 'lin',
+        step: 1,
+        hidden: true,
+      },
+    ],
+    normals: [],
+  },
+};
+
+test("a module's sample goes into its fixed slot as the registry's id (−1 without one)", () => {
+  const m = (id: string, sample?: string) => ({
+    id,
+    type: 'smp',
+    x: 0,
+    y: 0,
+    parent: null,
+    params: { gain: 1, mode: 1, sample: 0.5 },
+    atts: {},
+    ratios: {},
+    ...(sample === undefined ? {} : { sample }),
+  });
+  const doc: Doc = { ...emptyDoc, modules: [m('m1', 'kick.wav'), m('m2')], nextId: 3 };
+  const ids: Record<string, number> = { 'kick.wav': 7 };
+  const plan = compile(doc, SAMPLING, 1, (p) => ids[p] ?? -1);
+  expect(plan.nodes[0]!.fixed).toEqual([1, 7]);
+  expect(plan.nodes[1]!.fixed).toEqual([1, -1]);
+  expect(compile(doc, SAMPLING, 1).nodes[0]!.fixed).toEqual([1, -1]);
+});

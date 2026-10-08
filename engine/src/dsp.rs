@@ -36,6 +36,8 @@ pub struct Ctx {
     pub rng: Rng,
     /// OUT modules add into this; the engine sends it through the master stage.
     pub master: [[f32; BLOCK]; 2],
+    /// decoded samples by id (SAMPLER, GRAINS)
+    pub samples: crate::samples::SamplePool,
 }
 
 impl Ctx {
@@ -44,6 +46,7 @@ impl Ctx {
             sample_rate,
             rng: Rng::new(seed),
             master: [[0.0; BLOCK]; 2],
+            samples: crate::samples::SamplePool::default(),
         }
     }
 }

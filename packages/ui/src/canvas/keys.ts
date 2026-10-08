@@ -51,7 +51,12 @@ function unframeSelected(k: KeyCtx): void {
 /** the wire rows WIRES shows (filter, SELECTION and collapsed sections applied), as cable indices */
 function visibleWires(k: KeyCtx): number[] {
   const st = k.s.state;
-  return wireSections(st.doc, k.specs, { q: st.sidebar.q, selOnly: st.sidebar.selOnly, sel: st.sel })
+  return wireSections(st.doc, k.specs, {
+    q: st.sidebar.q,
+    selOnly: st.sidebar.selOnly,
+    sel: st.sel,
+    missing: st.missing,
+  })
     .filter((sec) => !st.sidebar.closed[sec.key])
     .flatMap((sec) => sec.rows.flatMap((r) => (r.kind === 'wire' ? [r.index] : [])));
 }

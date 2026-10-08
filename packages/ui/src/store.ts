@@ -30,6 +30,7 @@ import type { AudioHost } from './audio/host';
 import { scheduleSave } from './autosave';
 import { setLayoutSeq, setSource } from './live';
 import type { LibEntry } from './canvas/patching';
+import { createSampleRegistry } from './samples';
 
 export interface Session {
   doc: Doc;
@@ -52,6 +53,8 @@ export interface Session {
   sidebar: SidebarState;
   /** the port a WIRES port list points at: ringed on the canvas */
   candidate: { id: string; port: string } | null;
+  /** sample paths the library could not read (spec §7a: MISSING) */
+  missing: string[];
 }
 
 /** The sidebar (spec §5a): docked right, WIRES its only tab for now. */
@@ -122,6 +125,7 @@ export function createSession(
       ports: null,
     },
     candidate: null,
+    missing: [],
   });
   /** the document last opened or saved: anything else is unsaved */
   let saved: Doc = initial;
@@ -130,7 +134,21 @@ export function createSession(
   const history = new History(initial);
   let host: AudioHost | null = null;
   let seq = 0;
-  let plan: Plan = compile(initial, specs, seq);
+  const samples = createSampleRegistry({
+    read: (path) => window.sreda?.library.readSample(path) ?? Promise.reject(new Error('no library')),
+    notice: (text) => setState('notice', text),
+    changed: () => {
+      const missing = [...new Set(state.doc.modules.flatMap((m) => (m.sample ? [m.sample] : [])))].filter(
+        (p) => samples.status(p) === 'missing',
+      );
+      if (missing.join('\0') !== state.missing.join('\0')) setState('missing', missing);
+      send();
+    },
+  });
+  /** a module's sample as the engine's pool id (−1: none, or missing) */
+  const sampleId = (path: string) => (samples.status(path) === 'missing' ? -1 : samples.id(path));
+  samples.loadDoc(initial);
+  let plan: Plan = compile(initial, specs, seq, sampleId);
   // reactive: panels re-register their live readouts when a new plan moves the offsets
   const [layout, setLayout] = createSignal(plan.layout);
 
@@ -162,7 +180,16 @@ export function createSession(
   }
   const structure = (d: Doc): string =>
     JSON.stringify([
-      d.modules.map((m) => [m.id, m.type, m.parent, m.params, m.atts, m.ratios]),
+      d.modules.map((m) => [
+        m.id,
+        m.type,
+        m.parent,
+        m.params,
+        m.atts,
+        m.ratios,
+        m.sample,
+        m.sample && sampleId(m.sample),
+      ]),
       d.cables,
       d.groups.map((g) => [g.id, g.parent, g.ratio, g.muted, g.clock]),
     ]);
@@ -171,7 +198,7 @@ export function createSession(
     if (!host) return;
     const key = structure(state.doc);
     if (!force && key === sentKey) return;
-    plan = compile(state.doc, specs, ++seq);
+    plan = compile(state.doc, specs, ++seq, sampleId);
     sentKey = key;
     setLayoutSeq(seq);
     setLayout(plan.layout);
@@ -188,6 +215,7 @@ export function createSession(
       if (state.candidate) setState('candidate', null);
     }
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
+    samples.loadDoc(doc);
     setState('dirty', history.current !== saved);
     scheduleSave(doc, state.project);
     // selection and listening follow what still exists
@@ -211,6 +239,8 @@ export function createSession(
   return {
     state,
     setState,
+    /** the sample registry (SAMPLER, GRAINS, the SAMPLES picker) */
+    samples,
     /** after the first click: the engine starts playing the current document */
     attach(h: AudioHost): void {
       host = h;
@@ -221,6 +251,7 @@ export function createSession(
       h.onError = () => setState('notice', 'THE AUDIO ENGINE STOPPED — RESTART THE APP');
       setSource(h.readouts);
       setState('audio', true);
+      samples.attach((msg) => h.post(msg), h.sampleRate);
       send(true);
       h.post({ t: 'fade', ms: 200 }); // the patch fades in
     },

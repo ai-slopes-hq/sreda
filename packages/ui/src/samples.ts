@@ -1,0 +1,213 @@
+// Samples as a system (spec §7a): every sample a document names is read from the library's samples/ once per
+// session, decoded at the engine's rate, given a stable id and sent to the engine's pool. A sample that cannot be
+// read is MISSING (the module plays nothing; WIRES lists it); one that cannot be used is refused with a notice.
+import type { Doc } from '@sreda/core';
+import type { ToEngine } from '@sreda/protocol';
+import { parseAiff } from './samples/aiff';
+import { onsets } from './samples/onsets';
+
+/** A sample refused: the reason, shown as `<NAME> — <reason>`. */
+export class SampleError extends Error {}
+
+export interface DecodedSample {
+  /** one or two channels at the engine's rate */
+  channels: Float32Array[];
+  frames: number;
+  rate: number;
+  hits: { at: number; strength: number }[];
+  /** 512 column peaks (0…1) for the displays */
+  peaks: Float32Array;
+}
+
+const MAX_S = 600;
+const COLUMNS = 512;
+
+/** The largest |x| of each of 512 columns, over the channels. */
+export function peaksOf(channels: Float32Array[]): Float32Array {
+  const out = new Float32Array(COLUMNS);
+  const n = channels[0]?.length ?? 0;
+  for (let c = 0; c < COLUMNS; c++) {
+    const [a, b] = [
+      Math.floor((c * n) / COLUMNS),
+      Math.max(Math.floor(((c + 1) * n) / COLUMNS), Math.floor((c * n) / COLUMNS) + 1),
+    ];
+    let p = 0;
+    for (const ch of channels) for (let i = a; i < b && i < n; i++) p = Math.max(p, Math.abs(ch[i]!));
+    out[c] = Math.min(1, p);
+  }
+  return out;
+}
+
+async function resample(src: AudioBuffer, rate: number): Promise<Float32Array[]> {
+  const n = Math.min(2, src.numberOfChannels);
+  if (src.sampleRate === rate) return Array.from({ length: n }, (_, c) => src.getChannelData(c).slice());
+  const ctx = new OfflineAudioContext(n, Math.max(1, Math.ceil((src.length * rate) / src.sampleRate)), rate);
+  const node = ctx.createBufferSource();
+  node.buffer = src;
+  node.connect(ctx.destination);
+  node.start();
+  const out = await ctx.startRendering();
+  return Array.from({ length: n }, (_, c) => out.getChannelData(c).slice());
+}
+
+/**
+ * A file's bytes as one or two channels at `rate`: `decodeAudioData` (WAV, FLAC, MP3, OGG; it resamples), AIFF
+ * through `parseAiff` and an offline render. Throws `SampleError` when it cannot be decoded.
+ */
+export async function decodeSample(bytes: ArrayBuffer, name: string, rate: number): Promise<DecodedSample> {
+  let channels: Float32Array[];
+  try {
+    if (/\.aiff?$/i.test(name)) {
+      const a = parseAiff(bytes);
+      const frames = a.channels[0]?.length ?? 0;
+      if (frames === 0)
+        return check({
+          channels: [new Float32Array(0)],
+          frames: 0,
+          rate,
+          hits: [],
+          peaks: new Float32Array(COLUMNS),
+        });
+      if (frames / a.rate > MAX_S) throw new SampleError('LONGER THAN 10 MINUTES');
+      const src = new AudioBuffer({
+        numberOfChannels: Math.min(2, a.channels.length),
+        length: frames,
+        sampleRate: a.rate,
+      });
+      for (let c = 0; c < src.numberOfChannels; c++)
+        src.copyToChannel(a.channels[c]! as Float32Array<ArrayBuffer>, c);
+      channels = await resample(src, rate);
+    } else {
+      const buf = await new OfflineAudioContext(2, 1, rate).decodeAudioData(bytes);
+      if (buf.duration > MAX_S) throw new SampleError('LONGER THAN 10 MINUTES');
+      channels = Array.from({ length: Math.min(2, buf.numberOfChannels) }, (_, c) =>
+        buf.getChannelData(c).slice(),
+      );
+    }
+  } catch (e) {
+    if (e instanceof SampleError) throw e;
+    throw new SampleError('CANNOT BE DECODED');
+  }
+  const frames = channels[0]?.length ?? 0;
+  return check({ channels, frames, rate, hits: onsets(channels, rate), peaks: peaksOf(channels) });
+}
+
+/** Refuses a sample with no frames or longer than 10 minutes. */
+function check(s: DecodedSample): DecodedSample {
+  if (s.frames === 0) throw new SampleError('NO AUDIO IN IT');
+  if (s.frames / s.rate > MAX_S) throw new SampleError('LONGER THAN 10 MINUTES');
+  return s;
+}
+
+export type SampleStatus = 'loading' | 'ready' | 'missing';
+
+export interface SampleRegistry {
+  /** the id a path is known by in the engine's pool (stable for the session) */
+  id(path: string): number;
+  status(path: string): SampleStatus | undefined;
+  peaks(path: string): Float32Array | null;
+  /** reads, decodes and sends a path (once per session; again after `forget`) */
+  load(path: string): Promise<void>;
+  /** loads every path a document names */
+  loadDoc(doc: Doc): void;
+  /** the engine is there: everything ready goes to it, decoded again if its rate differs */
+  attach(post: (msg: ToEngine) => void, rate: number): void;
+  /** plays a loaded sample in place of the mix (null stops) */
+  audition(path: string | null): void;
+  /** the frames and rate of a ready sample */
+  info(path: string): { frames: number; rate: number; hits: { at: number; strength: number }[] } | null;
+}
+
+export function createSampleRegistry(o: {
+  read: (path: string) => Promise<ArrayBuffer>;
+  decode?: (bytes: ArrayBuffer, name: string, rate: number) => Promise<DecodedSample>;
+  notice: (text: string) => void;
+  /** a status changed (the plan and WIRES follow) */
+  changed: () => void;
+}): SampleRegistry {
+  const decode = o.decode ?? decodeSample;
+  const ids = new Map<string, number>();
+  const status = new Map<string, SampleStatus>();
+  const bytes = new Map<string, ArrayBuffer>();
+  const ready = new Map<string, DecodedSample>();
+  const pending = new Map<string, Promise<void>>();
+  let post: ((msg: ToEngine) => void) | null = null;
+  let rate = 48_000;
+
+  const name = (path: string) => (path.split('/').pop() ?? path).toUpperCase();
+  const id = (path: string) => {
+    if (!ids.has(path)) ids.set(path, ids.size);
+    return ids.get(path)!;
+  };
+  const send = (path: string, s: DecodedSample) => {
+    if (!post) return;
+    const channels = s.channels.slice(0, 2).map((c) => c.slice());
+    post({
+      t: 'sample',
+      id: id(path),
+      channels,
+      hits: Uint32Array.from(s.hits, (h) => h.at),
+      strengths: Float32Array.from(s.hits, (h) => h.strength),
+    });
+  };
+  const decodeAt = async (path: string, b: ArrayBuffer) => {
+    try {
+      const s = check(await decode(b.slice(0), path, rate));
+      ready.set(path, s);
+      status.set(path, 'ready');
+      send(path, s);
+    } catch (e) {
+      status.delete(path);
+      bytes.delete(path);
+      o.notice(`${name(path)} — ${e instanceof SampleError ? e.message : 'CANNOT BE DECODED'}`);
+    }
+    o.changed();
+  };
+
+  const load = (path: string): Promise<void> => {
+    const known = pending.get(path);
+    if (known) return known;
+    status.set(path, 'loading');
+    id(path);
+    const p = (async () => {
+      let b: ArrayBuffer;
+      try {
+        b = await o.read(path);
+      } catch {
+        status.set(path, 'missing');
+        o.changed();
+        return;
+      }
+      bytes.set(path, b);
+      await decodeAt(path, b);
+    })();
+    pending.set(path, p);
+    return p;
+  };
+
+  return {
+    id,
+    status: (path) => status.get(path),
+    peaks: (path) => ready.get(path)?.peaks ?? null,
+    info: (path) => {
+      const s = ready.get(path);
+      return s ? { frames: s.frames, rate: s.rate, hits: s.hits } : null;
+    },
+    load,
+    loadDoc(doc) {
+      for (const m of doc.modules) if (m.sample) void load(m.sample);
+    },
+    attach(p, r) {
+      post = p;
+      const again = r !== rate;
+      rate = r;
+      for (const [path, s] of ready) {
+        if (!again) send(path, s);
+        else void decodeAt(path, bytes.get(path)!);
+      }
+    },
+    audition(path) {
+      post?.({ t: 'audition', id: path && ready.has(path) ? id(path) : null });
+    },
+  };
+}

@@ -65,7 +65,8 @@ const NEEDS_INPUT: Record<string, string> = {
 };
 
 /** What WIRES lists under PROBLEMS (spec §5a). */
-export function wireProblems(doc: Doc, specs: Specs): Problem[] {
+/** `missing`: a sample path the library could not read (spec §7a). */
+export function wireProblems(doc: Doc, specs: Specs, missing?: (path: string) => boolean): Problem[] {
   const res: Problem[] = [];
   const cabled = (id: string) => doc.cables.some((c) => c.from[0] === id || c.to[0] === id);
   // sound that reaches no OUT: walk back from every OUT along the cables
@@ -89,6 +90,12 @@ export function wireProblems(doc: Doc, specs: Specs): Problem[] {
     const patched = (port: string) => doc.cables.some((c) => c.to[0] === m.id && c.to[1] === port);
     if (need && !patched(need) && !spec.normals.some((n) => n.input === need))
       res.push({ id: m.id, text: `${portLabel(doc, specs, m.id, need)} — empty input`, info: false });
+    if (m.sample && missing?.(m.sample))
+      res.push({
+        id: m.id,
+        text: `${nameOf(doc, specs, m.id)} — MISSING · ${m.sample.split('/').pop()}`,
+        info: false,
+      });
     if (m.type === 'rhythm' && !patched('clk'))
       res.push({ id: m.id, text: `${portLabel(doc, specs, m.id, 'clk')} — no clock`, info: false });
   }

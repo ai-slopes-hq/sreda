@@ -199,3 +199,13 @@ test("a Plan 3 DELAY's `out` cables move to `l`", () => {
   expect(d).not.toBeNull();
   expect(d.cables).toEqual([{ from: ['m1', 'l'], to: ['m2', 'l'] }]);
 });
+
+test('a module keeps a string `sample` and drops anything else', () => {
+  const m = (id: string, sample: unknown) => ({ id, type: 'osc', x: 0, y: 0, params: {}, sample });
+  const d = validateDoc(
+    { version: 1, modules: [m('m1', 'drums/kick.wav'), m('m2', 5)], cables: [], nextId: 3 },
+    SPECS,
+  )!;
+  expect(d.modules[0]!.sample).toBe('drums/kick.wav');
+  expect('sample' in d.modules[1]!).toBe(false);
+});

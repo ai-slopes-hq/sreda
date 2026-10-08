@@ -19,6 +19,10 @@ export interface WasmEngine {
   mute(frame: number, on: boolean): void;
   /** the speakers fade in over `ms` (a project just opened) */
   fadeIn(ms: number): void;
+  /** a sample into the pool under `id` (one or two channels at the engine's rate; hits as positions and strengths) */
+  sample(id: number, channels: Float32Array[], hits: Uint32Array, strengths: Float32Array): void;
+  /** play a sample in place of the mix, once; null stops */
+  audition(id: number | null): void;
   /** Views into WASM memory, valid until the next call. */
   process(): { l: Float32Array; r: Float32Array };
   readouts(): Float32Array;
@@ -36,6 +40,9 @@ interface Exports {
   engine_listen(e: number, node: number, port: number): void;
   engine_mute(e: number, frame: number, on: number): void;
   engine_fade_in(e: number, ms: number): void;
+  engine_sample_alloc(e: number, id: number, frames: number, channels: number, hits: number): number;
+  engine_sample_commit(e: number): void;
+  engine_audition(e: number, id: number): void;
   engine_process(e: number): number;
   engine_readouts(e: number): number;
   engine_readouts_len(e: number): number;
@@ -94,6 +101,24 @@ class Engine implements WasmEngine {
 
   fadeIn(ms: number): void {
     this.x.engine_fade_in(this.e, ms);
+  }
+
+  sample(id: number, channels: Float32Array[], hits: Uint32Array, strengths: Float32Array): void {
+    const frames = channels[0]?.length ?? 0;
+    const n = Math.min(2, channels.length);
+    const ptr = this.x.engine_sample_alloc(this.e, id, frames, n, hits.length);
+    // views after the allocation (memory may have grown)
+    const mem = new Float32Array(this.x.memory.buffer, ptr, n * frames + 2 * hits.length);
+    for (let c = 0; c < n; c++) mem.set(channels[c]!, c * frames);
+    for (let k = 0; k < hits.length; k++) {
+      mem[n * frames + 2 * k] = hits[k]!;
+      mem[n * frames + 2 * k + 1] = strengths[k]!;
+    }
+    this.x.engine_sample_commit(this.e);
+  }
+
+  audition(id: number | null): void {
+    this.x.engine_audition(this.e, id ?? -1);
   }
 
   process(): { l: Float32Array; r: Float32Array } {

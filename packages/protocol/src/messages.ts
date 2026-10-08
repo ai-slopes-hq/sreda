@@ -13,7 +13,11 @@ export type ToEngine =
   /** a frame (index in doc.groups) muted or unmuted: its gain glides over 50 ms */
   | { t: 'mute'; frame: number; on: boolean }
   /** the speakers fade in (a project just opened) */
-  | { t: 'fade'; ms: number };
+  | { t: 'fade'; ms: number }
+  /** a decoded sample at the engine's rate for the pool, under `id`; its buffers are transferred */
+  | { t: 'sample'; id: number; channels: Float32Array[]; hits: Uint32Array; strengths: Float32Array }
+  /** play a sample from its start in place of the mix; null stops */
+  | { t: 'audition'; id: number | null };
 
 export type FromEngine = { t: 'applied'; seq: number; code: 0 | 1 | 2 };
 

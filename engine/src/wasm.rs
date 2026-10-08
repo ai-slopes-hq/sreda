@@ -85,6 +85,44 @@ pub unsafe extern "C" fn engine_listen(e: *mut Engine, node: i32, port: i32) {
     unsafe { (*e).listen(target) }
 }
 
+/// Room for a sample (see `Engine::sample_alloc`); fill it, then `engine_sample_commit`.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_sample_alloc(
+    e: *mut Engine,
+    id: u32,
+    frames: u32,
+    channels: u32,
+    hits: u32,
+) -> *mut f32 {
+    unsafe {
+        (*e).sample_alloc(
+            id as usize,
+            frames as usize,
+            channels as usize,
+            hits as usize,
+        )
+    }
+}
+
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_sample_commit(e: *mut Engine) {
+    unsafe { (*e).sample_commit() }
+}
+
+/// `id` −1 stops.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_audition(e: *mut Engine, id: i32) {
+    unsafe { (*e).audition(id) }
+}
+
 /// 256 floats: the L block, then the R block.
 ///
 /// # Safety

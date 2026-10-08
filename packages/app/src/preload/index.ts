@@ -1,5 +1,5 @@
 // The renderer reaches the main process only through what is exposed here (`SredaBridge` in packages/ui).
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 type Kind = 'group' | 'project';
 
@@ -13,5 +13,11 @@ contextBridge.exposeInMainWorld('sreda', {
     exists: (kind: Kind, path: string): Promise<boolean> => ipcRenderer.invoke('library:exists', kind, path),
     write: (kind: Kind, path: string, doc: unknown): Promise<void> =>
       ipcRenderer.invoke('library:write', kind, path, doc),
+    samples: (): Promise<string[]> => ipcRenderer.invoke('library:samples'),
+    readSample: (path: string): Promise<ArrayBuffer> => ipcRenderer.invoke('library:readSample', path),
+    importSample: (absolutePath: string): Promise<string> =>
+      ipcRenderer.invoke('library:importSample', absolutePath),
   },
+  /** a dropped file's path on disk ('' for one that is not a file) */
+  pathForFile: (file: File): string => webUtils.getPathForFile(file),
 });

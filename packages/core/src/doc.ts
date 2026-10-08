@@ -11,6 +11,8 @@ export interface ModuleDoc {
   params: Record<string, number>;
   atts: Record<string, number>;
   ratios: Record<string, number>;
+  /** SAMPLER / GRAINS: a path under the library's samples/ (spec §7a) */
+  sample?: string;
 }
 export interface Cable {
   from: [string, string];
@@ -142,6 +144,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
       // attenuverters clamped to −1…+1; a ratio outside the allowed set falls back to its default (dropped)
       atts: Object.fromEntries(Object.entries(atts).map(([k, v]) => [k, Math.min(1, Math.max(-1, v))])),
       ratios: Object.fromEntries(Object.entries(ratios).filter(([, r]) => RATIOS.includes(r))),
+      ...(typeof m['sample'] === 'string' && m['sample'].length > 0 ? { sample: m['sample'] } : {}),
     };
     byId.set(mod.id, mod);
     out.push(mod);

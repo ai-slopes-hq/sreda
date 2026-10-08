@@ -65,3 +65,13 @@ test('problems: an empty processor input, a RHYTHM without a clock, sound that r
   // SLOPE's IN is optional: no problem
   expect(p.some((x) => x.text.startsWith('SLOPE'))).toBe(false);
 });
+
+test('a module whose sample is missing is a problem: MISSING and its name', () => {
+  const doc = {
+    ...emptyDoc,
+    modules: [{ ...addModule(emptyDoc, SPECS, 'osc', 0, 0).doc.modules[0]!, sample: 'drums/kick.wav' }],
+  };
+  const texts = wireProblems(doc, SPECS, (p) => p === 'drums/kick.wav').map((p) => p.text);
+  expect(texts).toContain('OSC — MISSING · kick.wav');
+  expect(wireProblems(doc, SPECS, () => false).map((p) => p.text)).not.toContain('OSC — MISSING · kick.wav');
+});

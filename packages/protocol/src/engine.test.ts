@@ -102,3 +102,18 @@ test('a mute message silences a framed OUT in about 50 ms; a fade-in ramps the s
   expect(peak(back.subarray(0, 128))).toBeLessThan(0.05);
   expect(peak(back.subarray(back.length - 1280))).toBeGreaterThan(0.1);
 });
+
+test('a sample into the pool, then auditioned: it plays in place of the mix and stops by itself', () => {
+  const e = loadEngine(wasm, 48_000, 1);
+  e.apply(compile(starterDoc(SPECS), SPECS, 1));
+  const n = 10 * 128;
+  const tone = Float32Array.from({ length: n }, (_, i) => 0.3 * Math.sin(i * 0.05));
+  e.sample(4, [tone], new Uint32Array([0]), new Float32Array([1]));
+  play(e, 4);
+  e.audition(4);
+  const heard = play(e, 30);
+  // the saw's 110 Hz is replaced by the tone (period 2π / 0.05 ≈ 126 samples)
+  expect(meanPeriod(heard.subarray(128, 8 * 128), 0)).toBeCloseTo((2 * Math.PI) / 0.05, -1);
+  // then the starter's saw again
+  expect(meanPeriod(heard, 14 * 128)).toBeCloseTo(48_000 / 110, -1);
+});
