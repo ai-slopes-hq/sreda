@@ -12,7 +12,7 @@ of a creative tool; nothing of its UI is ported.
 
 | What | Where |
 |---|---|
-| The design (approved, revision 16) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
+| The design (approved, revision 18) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
 | Plan 3 (being executed) | `docs/superpowers/plans/2026-10-08-3-organisation.md` |
 | Plans 1 and 2 (done) | `docs/superpowers/plans/2026-10-07-1-foundation.md`, `…-2-modules.md` |
 | Ideas for later | `docs/backlog.md` |
@@ -34,10 +34,12 @@ of a creative tool; nothing of its UI is ported.
   allocates nothing; a minute of audio takes 2.6 % of real time natively.
 - **2026-10-08** — Plan 3 written (11 tasks; spec revision 15 clarifies the library over IPC, ⌘D, groups from a
   jack, the mute rule). Executing on branch `plan-3-organisation`; progress ledger in
-  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. Tasks 1–10 done (frames, frame clocks, MUTE + frame
+  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. All 11 tasks done (frames, frame clocks, MUTE + frame
   meter, STACK / WIRE FIX, factory patches + picker tabs, library folder + SAVE / NEW, wire hover / focus / insert,
-  magnets / replace / ⌘D / R, the sidebar + WIRES, WIRES rewiring + canvas link); Task 10 waits at its
-  checkpoint; next is Task 11 (200 modules: performance and the benchmark), then the final review. Spec revision 16: the top-right button is SIDEBAR.
+  magnets / replace / ⌘D / R, the sidebar + WIRES, WIRES rewiring + canvas link, 200 modules in real time:
+  16.7 % natively, 35.6 % in WASM); Task 11 waits at its checkpoint; next is the final whole-branch review, then
+  the merge. Spec revision 16: the top-right button is SIDEBAR. Spec revision 18: skins (§1a) — DEFAULT, ANNABIOSIS, KANAGAWA, TOUCH, NORD, TOKYO NIGHT written down; choosing a skin is in the
+  backlog, nothing in code yet.
 
 ## The road (vertical slices: something to hear at every stage)
 
