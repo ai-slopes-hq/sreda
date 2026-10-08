@@ -935,3 +935,20 @@
 .sr-gfield:hover {
   background: #2a2924;
 }
+.sr-gmeter {
+  width: 28px;
+  height: 3px;
+  background: #2a2924;
+  border-radius: 1px;
+  overflow: hidden;
+  flex: none;
+}
+.sr-gmeter div {
+  height: 3px;
+  width: 0;
+  background: #e9e4d8;
+}
+.sr-mod.muted,
+.sr-frame.muted {
+  opacity: 0.4;
+}

@@ -100,3 +100,26 @@ test('a frame CLK OUT can be listened to', async () => {
   s.setListen({ id: framed.id, port: 'clkOut' });
   expect(sent).toEqual([{ t: 'listen', target: { node: 2, port: 0 } }]);
 });
+
+test('muting a frame mutes its children: mute messages, no plan; undo restores through a plan', async () => {
+  const { frameSelection } = await import('@sreda/core');
+  const g1 = frameSelection(starterDoc(SPECS), SPECS, ['m1', 'm2']);
+  const g2 = frameSelection(g1.doc, SPECS, ['m1']);
+  const s = createSession(SPECS, g2.doc);
+  const { sent, asHost } = fakeHost();
+  s.attach(asHost);
+  sent.length = 0;
+  s.frame(g1.id, { muted: true }, undefined);
+  expect(sent).toEqual([
+    { t: 'mute', frame: 0, on: true },
+    { t: 'mute', frame: 1, on: true },
+  ]);
+  sent.length = 0;
+  // the child is muted through its parent already: muting it too changes nothing in the engine
+  s.frame(g2.id, { muted: true }, undefined);
+  expect(sent).toEqual([]);
+  s.undo();
+  s.undo();
+  const last = sent.filter((m) => m.t === 'plan').pop();
+  expect(last?.t === 'plan' && last.plan.frames.map((f) => f.muted)).toEqual([false, false]);
+});

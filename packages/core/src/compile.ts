@@ -1,7 +1,16 @@
 // Document → plan: one node per module, inputs resolved (cables, normals), the run order with feedback loops
 // found (Tarjan), and the readout layout.
-import type { Doc } from './doc';
-import { READOUT_CAPACITY, TRACE_LEN, type InputPlan, type Plan, type PlanNode, type Step } from './plan';
+import type { Cable, Doc } from './doc';
+import { chainOf, descendants, effectiveMuted } from './frames';
+import {
+  READOUT_CAPACITY,
+  TRACE_LEN,
+  type FramePlan,
+  type InputPlan,
+  type Plan,
+  type PlanNode,
+  type Step,
+} from './plan';
 import { fromKnob, inputPorts, type ModuleSpec, type Specs } from './spec';
 
 /** A frame's clock node: frames are compiled after the modules, in document order. */
@@ -18,13 +27,28 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
   const specOf = (i: number): ModuleSpec => (i < nm ? specs[doc.modules[i]!.type]! : specs['clock']!);
   const n = nm + doc.groups.length;
   const edges: number[][] = Array.from({ length: n }, () => []);
+  const frameIndex = new Map(doc.groups.map((g, k) => [g.id, k]));
+  const chains = new Map<string, string[]>();
+  const chain = (id: string): string[] => {
+    let c = chains.get(id);
+    if (!c) chains.set(id, (c = chainOf(doc, id)));
+    return c;
+  };
+  /** the innermost frame a cable leaves (holding its source, not its target): muting it silences the cable */
+  const gateOf = (c: Cable): number | undefined => {
+    const to = chain(c.to[0]);
+    const left = chain(c.from[0]).find((g) => !to.includes(g));
+    return left === undefined ? undefined : frameIndex.get(left);
+  };
   /** the plan source a cable's `from` end reads: a module's output, or a frame's clock */
-  const sourceOf = (c: { from: [string, string] }) => {
+  const sourceOf = (c: Cable) => {
     const from = index.get(c.from[0])!;
+    const gate = gateOf(c);
     return {
       node: from,
       port: from < nm ? specOf(from).outputs.findIndex((o) => o.id === c.from[1]) : 0,
       late: false,
+      ...(gate === undefined ? {} : { gate }),
     };
   };
 
@@ -65,7 +89,16 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
     const connectedOut = spec.outputs.map((o) =>
       doc.cables.some((c) => c.from[0] === m.id && c.from[1] === o.id),
     );
-    return { id: m.id, type: m.type, knobs, fixed, inputs, connectedOut };
+    const gate = m.type === 'out' && m.parent ? frameIndex.get(m.parent) : undefined;
+    return {
+      id: m.id,
+      type: m.type,
+      knobs,
+      fixed,
+      inputs,
+      connectedOut,
+      ...(gate === undefined ? {} : { gate }),
+    };
   });
   // each frame: a clock node; CLK IN takes its cables, else its parent frame's clock (through this frame's ratio)
   doc.groups.forEach((g, k) => {
@@ -125,8 +158,17 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
     }
     return { knobs, trigs, outs, state, trace };
   });
+  // the frame meters: one float per frame
+  const framesAt = off;
+  off += doc.groups.length;
   if (off > READOUT_CAPACITY) throw new Error(`readouts need ${off} floats, more than ${READOUT_CAPACITY}`);
-  return { seq, nodes, steps, layout: { size: off, nodes: layout } };
+  return {
+    seq,
+    nodes,
+    steps,
+    frames: framePlans(doc, specs, index),
+    layout: { size: off, nodes: layout, frames: framesAt },
+  };
 }
 
 /** Strongly connected components (Tarjan), then a topological order that prefers document order. */
@@ -184,4 +226,22 @@ function order(n: number, edges: number[][]): Step[] {
     steps.push(members.length === 1 && !edges[v]!.includes(v) ? { node: v } : { loop: members });
   }
   return steps;
+}
+
+/** Per frame: muted (itself or a parent), the audio sources whose cables leave it, and the OUT nodes inside it. */
+function framePlans(doc: Doc, specs: Specs, index: Map<string, number>): FramePlan[] {
+  return doc.groups.map((g) => {
+    const inside = new Set(descendants(doc, g.id));
+    const sources: FramePlan['sources'] = [];
+    for (const c of doc.cables) {
+      const m = doc.modules.find((x) => x.id === c.from[0]);
+      if (!m || !inside.has(m.id) || inside.has(c.to[0]) || c.to[0] === g.id) continue;
+      const port = specs[m.type]!.outputs.findIndex((o) => o.id === c.from[1]);
+      if (specs[m.type]!.outputs[port]?.role !== 'audio') continue;
+      const node = index.get(m.id)!;
+      if (!sources.some((s) => s.node === node && s.port === port)) sources.push({ node, port });
+    }
+    const outs = doc.modules.filter((m) => m.type === 'out' && inside.has(m.id)).map((m) => index.get(m.id)!);
+    return { muted: effectiveMuted(doc, g.id), sources, outs };
+  });
 }

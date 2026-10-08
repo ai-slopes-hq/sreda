@@ -135,7 +135,11 @@ mod tests {
         let mut b = Bench::new(48_000.0, 1, &[], &[1.0, 120.0], 1);
         b.connected_in = vec![true];
         let o = b.run(&mut Clock::new(48_000.0), 100, |blk, i, inp| {
-            inp[0][i] = if (blk * BLOCK + i) % 1000 < 48 { 1.0 } else { 0.0 };
+            inp[0][i] = if (blk * BLOCK + i) % 1000 < 48 {
+                1.0
+            } else {
+                0.0
+            };
         });
         assert_eq!(rises(&o[0]), (0..13).map(|k| k * 1000).collect::<Vec<_>>());
     }
@@ -144,7 +148,11 @@ mod tests {
     fn with_its_clock_off_it_passes_the_parent_normal() {
         let mut b = Bench::new(48_000.0, 1, &[], &[0.0, 120.0], 1);
         let o = b.run(&mut Clock::new(48_000.0), 100, |blk, i, inp| {
-            inp[0][i] = if (blk * BLOCK + i) % 3000 < 48 { 1.0 } else { 0.0 };
+            inp[0][i] = if (blk * BLOCK + i) % 3000 < 48 {
+                1.0
+            } else {
+                0.0
+            };
         });
         assert_eq!(rises(&o[0]), (0..5).map(|k| k * 3000).collect::<Vec<_>>());
     }
@@ -168,7 +176,14 @@ mod tests {
         let t: Vec<f32> = (0..20 * BLOCK)
             .map(|i| if i % 700 < 48 { 1.0 } else { 0.0 })
             .collect();
-        Bench::blockwise_equals_per_sample(|| Box::new(Clock::new(48_000.0)), &[t], &[], &[0.0, 120.0], 1, 20);
+        Bench::blockwise_equals_per_sample(
+            || Box::new(Clock::new(48_000.0)),
+            &[t],
+            &[],
+            &[0.0, 120.0],
+            1,
+            20,
+        );
         Bench::blockwise_equals_per_sample(
             || Box::new(Clock::new(48_000.0)),
             &[vec![]],

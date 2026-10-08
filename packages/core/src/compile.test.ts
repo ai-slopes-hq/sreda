@@ -5,7 +5,16 @@ import { clockNode, compile } from './compile';
 import { editFrame, frameSelection, unframe } from './frames';
 import { TRACE_LEN } from './plan';
 import { emptyDoc, starterDoc, type Doc } from './doc';
-import { addModule, connect, deleteObjects, removeCable, setAtt, setParam, setRatio } from './ops';
+import {
+  addModule,
+  connect,
+  deleteObjects,
+  moveObjects,
+  removeCable,
+  setAtt,
+  setParam,
+  setRatio,
+} from './ops';
 import { inputPorts, SPECS, type Specs } from './spec';
 import { TEST_SPECS as S } from './testspecs';
 
@@ -146,6 +155,7 @@ test('fixtures for the engine', () => {
     'self-fm': compile(loop, SPECS, 2),
     'scope-a': compile(scoped, SPECS, 3),
     'scope-b': compile(rerouted, SPECS, 4),
+    frames: compile(nestedFrames(), SPECS, 7),
   };
   expect(plans['self-fm'].steps).toEqual([{ loop: [0] }, { node: 1 }]);
   if (process.env['UPDATE_FIXTURES']) {
@@ -204,3 +214,50 @@ test("a nested frame's CLK IN is normalled to its parent's clock, at its ratio; 
   const alone = unframe(doc, S, [outer.id]);
   expect(compile(alone, S, 1).nodes[clockNode(alone, inner.id)]!.inputs[0]!.normal).toBeNull();
 });
+
+/** OSC → (cable) → OUT with the OSC in frame G1 and the OUT outside; a second OUT inside G1 */
+function framedVoice() {
+  let { doc, ids } = build(SPECS, ['osc', 'out', 'out']);
+  doc = moveObjects(doc, SPECS, [ids[1]!], 2000, 0);
+  doc = connect(doc, SPECS, [ids[0]!, 'out'], [ids[1]!, 'l']);
+  doc = connect(doc, SPECS, [ids[0]!, 'out'], [ids[1]!, 'r']);
+  doc = connect(doc, SPECS, [ids[0]!, 'out'], [ids[2]!, 'l']);
+  const g1 = frameSelection(doc, SPECS, [ids[0]!, ids[2]!]);
+  return { doc: g1.doc, ids, g1: g1.id };
+}
+
+test('a cable leaving a frame is gated by it; one inside is not; an OUT inside is gated by its frame', () => {
+  const { doc, ids, g1 } = framedVoice();
+  const plan = compile(doc, SPECS, 1);
+  expect(plan.nodes[1]!.inputs[0]!.sources[0]!.gate).toBe(0);
+  expect(plan.nodes[2]!.inputs[0]!.sources[0]!.gate).toBeUndefined();
+  expect(plan.nodes[2]!.gate).toBe(0);
+  expect(plan.nodes[1]!.gate).toBeUndefined();
+  expect(plan.frames).toEqual([{ muted: false, sources: [{ node: 0, port: 0 }], outs: [2] }]);
+  // one float per frame, after the nodes
+  const last = Math.max(...plan.layout.nodes.map((n) => n.state));
+  expect(plan.layout.frames).toBe(last + 1);
+  expect(plan.layout.size).toBe(last + 2);
+  expect(compile(editFrame(doc, g1, { muted: true }), SPECS, 2).frames[0]!.muted).toBe(true);
+  void ids;
+});
+
+test('a cable leaving nested frames is gated by the innermost one it leaves; a muted parent mutes its children', () => {
+  const { doc: d0, ids, g1 } = framedVoice();
+  const g2 = frameSelection(d0, SPECS, [ids[0]!]);
+  const plan = compile(editFrame(g2.doc, g1, { muted: true }), SPECS, 1);
+  const k2 = g2.doc.groups.findIndex((g) => g.id === g2.id);
+  expect(plan.nodes[1]!.inputs[0]!.sources[0]!.gate).toBe(k2);
+  // the cable to the OUT inside G1 leaves G2 only
+  expect(plan.nodes[2]!.inputs[0]!.sources[0]!.gate).toBe(k2);
+  expect(plan.frames.map((f) => f.muted)).toEqual([true, true]);
+});
+
+/** frameVoice with the OSC in a second frame inside G1, both clocks on (the alloc fixture `plan-frames.json`) */
+function nestedFrames(): Doc {
+  const { doc, ids, g1 } = framedVoice();
+  const g2 = frameSelection(doc, SPECS, [ids[0]!]);
+  let d = editFrame(g2.doc, g1, { clock: { on: true, bpm: 140 } });
+  d = editFrame(d, g2.id, { ratio: -2 });
+  return connect(d, SPECS, [g2.id, 'clkOut'], [ids[0]!, 'sync']);
+}

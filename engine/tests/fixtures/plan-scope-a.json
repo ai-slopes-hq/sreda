@@ -163,6 +163,7 @@
       "node": 2
     }
   ],
+  "frames": [],
   "layout": {
     "size": 1041,
     "nodes": [
@@ -187,6 +188,7 @@
         "state": 16,
         "trace": 17
       }
-    ]
+    ],
+    "frames": 1041
   }
 }

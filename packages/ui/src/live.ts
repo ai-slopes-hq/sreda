@@ -80,7 +80,9 @@ export function frame(now: number): void {
         style.width = Math.round(e.hold * 22) + 'px';
         break;
       case 'meter':
-        style.width = Math.min(1, v) * 100 + '%';
+        // hold the peak, fall at full scale per 0.3 s
+        e.hold = Math.max(Math.min(1, v), e.hold - dt / 0.3);
+        style.width = e.hold * 100 + '%';
         break;
       case 'modDot':
         e.el.setAttribute('transform', `rotate(${(-135 + 270 * v).toFixed(1)} 24 17)`);

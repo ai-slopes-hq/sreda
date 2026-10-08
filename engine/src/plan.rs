@@ -8,6 +8,9 @@ pub struct Source {
     pub node: usize,
     pub port: usize,
     pub late: bool,
+    /// the frame whose mute silences this cable (the innermost one it leaves)
+    #[serde(default)]
+    pub gate: Option<usize>,
 }
 
 #[derive(Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,6 +60,23 @@ pub struct PlanNode {
     pub fixed: Vec<f64>,
     pub inputs: Vec<InputPlan>,
     pub connected_out: Vec<bool>,
+    /// OUT nodes: the frame whose mute silences their speaker output
+    #[serde(default)]
+    pub gate: Option<usize>,
+}
+
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub struct NodePort {
+    pub node: usize,
+    pub port: usize,
+}
+
+/// A frame: its mute state and what its meter reads (the audio leaving it, the OUT nodes inside it).
+#[derive(Deserialize, Debug, Clone)]
+pub struct FramePlan {
+    pub muted: bool,
+    pub sources: Vec<NodePort>,
+    pub outs: Vec<usize>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -86,6 +106,9 @@ pub struct NodeLayout {
 pub struct ReadoutLayout {
     pub size: usize,
     pub nodes: Vec<NodeLayout>,
+    /// one float per frame (its meter) from here
+    #[serde(default)]
+    pub frames: usize,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -93,6 +116,8 @@ pub struct Plan {
     pub seq: u32,
     pub nodes: Vec<PlanNode>,
     pub steps: Vec<Step>,
+    #[serde(default)]
+    pub frames: Vec<FramePlan>,
     pub layout: ReadoutLayout,
 }
 

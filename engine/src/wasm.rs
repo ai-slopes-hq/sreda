@@ -61,6 +61,20 @@ pub unsafe extern "C" fn engine_ratio(e: *mut Engine, node: u32, input: u32, val
     unsafe { (*e).ratio(node as usize, input as usize, value) }
 }
 
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_mute(e: *mut Engine, frame: u32, on: i32) {
+    unsafe { (*e).mute(frame as usize, on != 0) }
+}
+
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_fade_in(e: *mut Engine, ms: f64) {
+    unsafe { (*e).fade_in(ms) }
+}
+
 /// `node` −1 ends listening.
 ///
 /// # Safety

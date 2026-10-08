@@ -29,6 +29,7 @@ export interface FrameActions {
   /** the CLK IN ratio field */
   fieldDown(e: PointerEvent): void;
   fieldReset(): void;
+  mute(): void;
 }
 
 export interface FrameProps {
@@ -44,6 +45,10 @@ export interface FrameProps {
   listening?: boolean;
   /** the frame clock node's readouts, once audio runs */
   readouts?: NodeReadouts | undefined;
+  /** inside a muted frame: drawn at 40 % */
+  dim?: boolean;
+  /** where this frame's meter is in the readouts, once audio runs */
+  meter?: number | undefined;
   act: FrameActions;
 }
 
@@ -108,7 +113,7 @@ export function Frame(props: FrameProps): JSX.Element {
   return (
     <div
       class="sr-frame"
-      classList={{ sel: props.selected, drop: props.drop }}
+      classList={{ sel: props.selected, drop: props.drop, muted: !!props.dim }}
       data-frame={g().id}
       style={{
         left: g().x + 'px',
@@ -165,8 +170,11 @@ export function Frame(props: FrameProps): JSX.Element {
             onBlur={() => done(true)}
           />
         </Show>
+        <div class="sr-gmeter" title="level leaving the frame">
+          <div ref={(el) => track(el, 'meter', () => props.meter)} />
+        </div>
         <div class="sr-gclock">
-          <Show when={hot()}>
+          <Show when={hot() || g().muted || g().layout === 'route'}>
             <button
               class="sr-swatch"
               aria-label="Frame colour"
@@ -175,6 +183,16 @@ export function Frame(props: FrameProps): JSX.Element {
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => props.act.tint()}
             />
+            <button
+              class="sr-gbtn"
+              classList={{ on: g().muted }}
+              aria-label="Mute frame"
+              title="mute frame"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.mute()}
+            >
+              M
+            </button>
           </Show>
           <Show
             when={g().clock.on}

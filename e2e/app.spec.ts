@@ -454,3 +454,25 @@ test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half 
   expect(Math.abs(b - 3)).toBeLessThanOrEqual(1);
   await app.close();
 });
+
+test('MUTE: a framed voice goes silent and comes back', async () => {
+  const { app, page } = await launch();
+  const osc = (await page.locator('[data-type=osc]').boundingBox())!;
+  const out = (await page.locator('[data-type=out]').boundingBox())!;
+  await drag(
+    page,
+    { x: osc.x - 20, y: osc.y - 20 },
+    { x: out.x + out.width + 20, y: out.y + out.height + 20 },
+  );
+  await page.keyboard.press('g');
+  await page.mouse.click(1300, 880); // start audio
+  const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  await expect.poll(master).toBeGreaterThan(0.05);
+  await page.locator('.sr-ghead').hover();
+  await page.getByLabel('Mute frame').click();
+  await expect.poll(master, { timeout: 500 }).toBeLessThan(0.001);
+  await expect(page.locator('[data-type=osc]')).toHaveClass(/muted/);
+  await page.getByLabel('Mute frame').click();
+  await expect.poll(master).toBeGreaterThan(0.05);
+  await app.close();
+});

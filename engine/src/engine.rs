@@ -10,6 +10,9 @@ use crate::registry;
 use crate::spec::{from_knob, Knob, ModuleSpec, Param};
 
 const FADE_MS: f64 = 10.0;
+const MUTE_MS: f64 = 50.0;
+/// no frame gates this source / node
+const NO_GATE: u32 = u32::MAX;
 
 /// A source: which output buffer (an index into `Engine::outs`), from which slot and port.
 #[derive(Clone, Copy, PartialEq)]
@@ -18,6 +21,8 @@ struct Src {
     port: usize,
     buf: usize,
     late: bool,
+    /// the frame gain that scales this source (a muted frame's leaving cable), or NO_GATE
+    gate: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -64,6 +69,11 @@ struct Slot {
     out_base: usize,
     n_out: usize,
     layout: Option<NodeLayout>,
+    /// OUT nodes: the frame gain on their speaker output, or NO_GATE
+    gate: u32,
+    /// writes to the speakers (OUT): run gated, its peak kept for the frame meter
+    writes_master: bool,
+    master_peak: f32,
     /// samples of fade-out left once removed from the plan; 0 while in the plan
     fade_left: u32,
     dead: bool,
@@ -76,9 +86,29 @@ enum StepRt {
     Retire(usize),
 }
 
+/// A frame's mute gain, gliding over 50 ms.
+#[derive(Clone, Copy)]
+struct FrameGain {
+    cur: f32,
+    target: f32,
+    step: f32,
+}
+
+/// What a frame's meter reads: output buffers of the audio leaving it, and the OUT slots inside it.
+struct FrameRt {
+    bufs: Vec<usize>,
+    outs: Vec<usize>,
+}
+
 pub struct Engine {
     sample_rate: f64,
     fade_len: u32,
+    mute_len: u32,
+    gains: Vec<FrameGain>,
+    /// this block's gain per frame, per sample
+    gain_buf: Vec<[f32; BLOCK]>,
+    frames: Vec<FrameRt>,
+    frames_at: usize,
     ctx: Ctx,
     master: Master,
     /// stable slot indices: plans refer to slots through `order`
@@ -103,23 +133,39 @@ fn visible_knobs(spec: &ModuleSpec) -> Vec<Knob> {
         .collect()
 }
 
-/// One input's value at sample `i` from a set of sources (late ones read the previous sample).
-fn sum(outs: &[[f32; BLOCK]], sources: &[Src], i: usize) -> f32 {
+/// A source's value at sample `i` (a late one reads the previous sample), scaled by its frame gain.
+fn read(outs: &[[f32; BLOCK]], gains: &[[f32; BLOCK]], s: &Src, i: usize) -> f32 {
+    let v = outs[s.buf][if s.late { (i + BLOCK - 1) % BLOCK } else { i }];
+    if s.gate == NO_GATE {
+        v
+    } else {
+        v * gains[s.gate as usize][i]
+    }
+}
+
+/// One input's value at sample `i` from a set of sources.
+fn sum(outs: &[[f32; BLOCK]], gains: &[[f32; BLOCK]], sources: &[Src], i: usize) -> f32 {
     let mut v = 0.0;
     for s in sources {
-        v += outs[s.buf][if s.late { (i + BLOCK - 1) % BLOCK } else { i }];
+        v += read(outs, gains, s, i);
     }
     v
 }
 
 /// Fill a slot's prepared inputs and knob values for sample `i`.
-fn prepare(slot: &mut Slot, outs: &[[f32; BLOCK]], i: usize, fade_len: u32) {
+fn prepare(
+    slot: &mut Slot,
+    outs: &[[f32; BLOCK]],
+    gains: &[[f32; BLOCK]],
+    i: usize,
+    fade_len: u32,
+) {
     let n_in = slot.n_in;
     for (j, input) in slot.inputs.iter_mut().enumerate() {
         let raw = if let Some(t) = input.trig.as_mut() {
             let mut n = 0;
             for s in &input.sources {
-                input.scratch[n] = outs[s.buf][if s.late { (i + BLOCK - 1) % BLOCK } else { i }];
+                input.scratch[n] = read(outs, gains, s, i);
                 n += 1;
             }
             if n == 0 {
@@ -131,7 +177,7 @@ fn prepare(slot: &mut Slot, outs: &[[f32; BLOCK]], i: usize, fade_len: u32) {
             t.sample(&input.scratch[..n])
         } else {
             let mut v = if !input.sources.is_empty() {
-                sum(outs, &input.sources, i)
+                sum(outs, gains, &input.sources, i)
             } else {
                 match input.normal {
                     Norm::Own(b) => outs[b][(i + BLOCK - 1) % BLOCK],
@@ -141,7 +187,7 @@ fn prepare(slot: &mut Slot, outs: &[[f32; BLOCK]], i: usize, fade_len: u32) {
             };
             if input.xfade_left > 0 {
                 let t = 1.0 - input.xfade_left as f32 / fade_len as f32;
-                v = sum(outs, &input.old, i) * (1.0 - t) + v * t;
+                v = sum(outs, gains, &input.old, i) * (1.0 - t) + v * t;
                 input.xfade_left -= 1;
             }
             if input.kind == Kind::Cv {
@@ -207,6 +253,11 @@ impl Engine {
         Engine {
             sample_rate,
             fade_len: ((FADE_MS * 0.001 * sample_rate).round() as u32).max(1),
+            mute_len: ((MUTE_MS * 0.001 * sample_rate).round() as u32).max(1),
+            gains: Vec::new(),
+            gain_buf: Vec::new(),
+            frames: Vec::new(),
+            frames_at: 0,
             ctx: Ctx::new(sample_rate, seed),
             master: Master::new(sample_rate),
             pool: Vec::new(),
@@ -294,6 +345,25 @@ impl Engine {
                 }
             }
         }
+        // frames: gates, meter sources and OUTs in range; the meters inside the readouts
+        let nf = plan.frames.len();
+        let gate_ok = |g: Option<usize>| g.is_none_or(|g| g < nf);
+        let gates = plan.nodes.iter().all(|node| {
+            gate_ok(node.gate)
+                && node
+                    .inputs
+                    .iter()
+                    .all(|ip| ip.sources.iter().all(|s| gate_ok(s.gate)))
+        });
+        let meters = plan.frames.iter().all(|f| {
+            f.sources
+                .iter()
+                .all(|s| s.node < n && s.port < specs[s.node].outputs.len())
+                && f.outs.iter().all(|&o| o < n)
+        });
+        if !gates || !meters || (nf > 0 && plan.layout.frames + nf > plan.layout.size) {
+            return Err(PlanError::Invalid("frames out of range".into()));
+        }
         for st in &plan.steps {
             let ok = match st {
                 Step::Node { node } => *node < n,
@@ -342,6 +412,9 @@ impl Engine {
                         out_base: 0,
                         n_out: spec.outputs.len(),
                         layout: None,
+                        gate: NO_GATE,
+                        writes_master: node.type_ == "out",
+                        master_peak: 0.0,
                         fade_left: 0,
                         dead: false,
                     };
@@ -412,6 +485,9 @@ impl Engine {
                         base(&self.pool, s.slot).unwrap()
                     } + s.port;
                 }
+                for s in input.sources.iter_mut() {
+                    s.gate = NO_GATE; // frame indices belong to the new plan now
+                }
                 input.old.clear();
                 input.xfade_left = 0;
                 if let Norm::Own(_) = input.normal {
@@ -447,6 +523,7 @@ impl Engine {
                             port: s.port,
                             buf: resolve(&self.pool, &slot, q, s.port),
                             late: s.late,
+                            gate: s.gate.map_or(NO_GATE, |g| g as u32),
                         }
                     })
                     .collect();
@@ -498,6 +575,11 @@ impl Engine {
                             })
                             .map(|s| Src {
                                 buf: resolve(&self.pool, &slot, s.slot, s.port),
+                                gate: if (s.gate as usize) < nf {
+                                    s.gate
+                                } else {
+                                    NO_GATE
+                                },
                                 ..*s
                             })
                             .collect();
@@ -506,6 +588,7 @@ impl Engine {
                 }
                 inputs.push(rt);
             }
+            slot.gate = node.gate.map_or(NO_GATE, |g| g as u32);
             slot.connected_in = node.inputs[..spec.inputs.len()]
                 .iter()
                 .map(|ip| !ip.sources.is_empty())
@@ -548,6 +631,36 @@ impl Engine {
             })
             .collect();
         self.steps = self.place_retiring(live);
+        // frames: a gain kept by index glides to the plan's state; a new one starts there
+        let mute_len = self.mute_len as f32;
+        self.gains = plan
+            .frames
+            .iter()
+            .enumerate()
+            .map(|(k, f)| {
+                let target = if f.muted { 0.0 } else { 1.0 };
+                let cur = self.gains.get(k).map_or(target, |g| g.cur);
+                FrameGain {
+                    cur,
+                    target,
+                    step: (target - cur) / mute_len,
+                }
+            })
+            .collect();
+        self.gain_buf = vec![[1.0; BLOCK]; nf];
+        self.frames = plan
+            .frames
+            .iter()
+            .map(|f| FrameRt {
+                bufs: f
+                    .sources
+                    .iter()
+                    .map(|s| self.pool[order[s.node]].as_ref().unwrap().out_base + s.port)
+                    .collect(),
+                outs: f.outs.iter().map(|&o| order[o]).collect(),
+            })
+            .collect();
+        self.frames_at = plan.layout.frames;
         // buffers moved: the UI re-sends listen after a new plan
         self.listen = None;
         self.order = order;
@@ -623,7 +736,7 @@ impl Engine {
         let saved = self.ctx.master;
         self.ctx.master = [[0.0; BLOCK]; 2];
         for i in 0..BLOCK {
-            prepare(slot, &self.outs, i, fade_len);
+            prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
         }
         run(slot, &mut self.outs, &mut self.ctx, 0, BLOCK);
         guard(slot, &mut self.outs);
@@ -678,6 +791,25 @@ impl Engine {
         }
     }
 
+    /// Mute or unmute a frame: its gain glides to 0 or 1 over 50 ms.
+    pub fn mute(&mut self, frame: usize, on: bool) {
+        let len = self.mute_len as f32;
+        if let Some(g) = self.gains.get_mut(frame) {
+            g.target = if on { 0.0 } else { 1.0 };
+            g.step = (g.target - g.cur) / len;
+        }
+    }
+
+    /// The speakers fade in over `ms` (a project just opened).
+    pub fn fade_in(&mut self, ms: f64) {
+        self.master.fade_in(ms);
+    }
+
+    /// Where the frame meters start in the readouts.
+    pub fn layout_frames(&self) -> usize {
+        self.frames_at
+    }
+
     /// Send one node output to the speakers instead of the patch (through the master stage).
     pub fn listen(&mut self, target: Option<(usize, usize)>) {
         self.listen = target.and_then(|(node, port)| {
@@ -689,6 +821,21 @@ impl Engine {
 
     pub fn process(&mut self) -> (&[f32; BLOCK], &[f32; BLOCK]) {
         self.ctx.master = [[0.0; BLOCK]; 2];
+        // this block's frame gains, gliding toward mute / unmute
+        for (g, buf) in self.gains.iter_mut().zip(self.gain_buf.iter_mut()) {
+            for x in buf.iter_mut() {
+                if g.cur != g.target {
+                    g.cur += g.step;
+                    if (g.step > 0.0 && g.cur >= g.target)
+                        || (g.step < 0.0 && g.cur <= g.target)
+                        || g.step == 0.0
+                    {
+                        g.cur = g.target;
+                    }
+                }
+                *x = g.cur;
+            }
+        }
         let fade_len = self.fade_len;
         let steps = std::mem::take(&mut self.steps);
         for st in &steps {
@@ -696,16 +843,35 @@ impl Engine {
                 StepRt::Node(p) => {
                     let slot = self.pool[*p].as_mut().unwrap();
                     for i in 0..BLOCK {
-                        prepare(slot, &self.outs, i, fade_len);
+                        prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
                     }
-                    run(slot, &mut self.outs, &mut self.ctx, 0, BLOCK);
+                    if slot.writes_master && slot.gate != NO_GATE {
+                        // an OUT inside a frame: its speaker output through the frame's gain
+                        let saved = self.ctx.master;
+                        self.ctx.master = [[0.0; BLOCK]; 2];
+                        run(slot, &mut self.outs, &mut self.ctx, 0, BLOCK);
+                        let g = &self.gain_buf[slot.gate as usize];
+                        let mut peak = 0.0f32;
+                        let mine = self.ctx.master;
+                        self.ctx.master = saved;
+                        for (ch, buf) in mine.iter().enumerate() {
+                            for (i, x) in buf.iter().enumerate() {
+                                let y = x * g[i];
+                                peak = peak.max(y.abs());
+                                self.ctx.master[ch][i] += y;
+                            }
+                        }
+                        slot.master_peak = peak;
+                    } else {
+                        run(slot, &mut self.outs, &mut self.ctx, 0, BLOCK);
+                    }
                     guard(slot, &mut self.outs);
                 }
                 StepRt::Loop(members) => {
                     for i in 0..BLOCK {
                         for p in members {
                             let slot = self.pool[*p].as_mut().unwrap();
-                            prepare(slot, &self.outs, i, fade_len);
+                            prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
                             run(slot, &mut self.outs, &mut self.ctx, i, i + 1);
                         }
                     }
@@ -734,6 +900,19 @@ impl Engine {
 
     fn write_readouts(&mut self) {
         self.readouts[0] = self.seq as f32;
+        // frame meters: the peak of what leaves each frame, after its gain
+        for (k, f) in self.frames.iter().enumerate() {
+            let mut peak = 0.0f32;
+            for &b in &f.bufs {
+                peak = self.outs[b].iter().fold(peak, |a, x| a.max(x.abs()));
+            }
+            for &p in &f.outs {
+                if let Some(s) = self.pool[p].as_ref() {
+                    peak = peak.max(s.master_peak);
+                }
+            }
+            self.readouts[self.frames_at + k] = peak * self.gain_buf[k][BLOCK - 1];
+        }
         for s in self.pool.iter().flatten() {
             let Some(l) = s.layout else { continue };
             // a knob's position with its modulation, at the block's last sample
@@ -785,7 +964,8 @@ impl Engine {
 mod tests {
     use super::*;
     use crate::plan::{
-        InputPlan, Kind, NodeLayout, NormalPlan, PlanNode, ReadoutLayout, Source, Step,
+        FramePlan, InputPlan, Kind, NodeLayout, NodePort, NormalPlan, PlanNode, ReadoutLayout,
+        Source, Step,
     };
     use crate::registry::spec_of;
     use crate::spec::Param;
@@ -799,6 +979,7 @@ mod tests {
             node,
             port: 0,
             late,
+            gate: None,
         }
     }
     fn input(sources: Vec<Source>, kind: Kind) -> InputPlan {
@@ -822,6 +1003,7 @@ mod tests {
             fixed: fixed.to_vec(),
             inputs,
             connected_out: vec![true; outs],
+            gate: None,
         }
     }
     fn plan(seq: u32, nodes: Vec<PlanNode>, steps: Vec<Step>) -> Plan {
@@ -867,10 +1049,35 @@ mod tests {
             seq,
             nodes,
             steps,
+            frames: vec![],
             layout: ReadoutLayout {
                 size: off,
                 nodes: layout,
+                frames: off,
             },
+        }
+    }
+    /// the plan with frames: their meters after the nodes' readouts
+    fn with_frames(mut p: Plan, frames: Vec<FramePlan>) -> Plan {
+        p.layout.frames = p.layout.size;
+        p.layout.size += frames.len();
+        p.frames = frames;
+        p
+    }
+    fn frame(muted: bool, sources: &[(usize, usize)], outs: &[usize]) -> FramePlan {
+        FramePlan {
+            muted,
+            sources: sources
+                .iter()
+                .map(|&(node, port)| NodePort { node, port })
+                .collect(),
+            outs: outs.to_vec(),
+        }
+    }
+    fn gated(node: usize, gate: usize) -> Source {
+        Source {
+            gate: Some(gate),
+            ..src(node, false)
         }
     }
     fn chain(n: usize) -> Vec<Step> {
@@ -921,6 +1128,83 @@ mod tests {
         )
     }
 
+    /// dc 1 → gain, the cable gated by frame 0 (the dc is inside it, the gain outside)
+    fn gated_dc() -> Engine {
+        let dc = node("a", "dc", &[dcv(1.0)], &[], vec![none(Kind::Cv)]);
+        let gain = node(
+            "b",
+            "gain",
+            &[0.5],
+            &[],
+            vec![input(vec![gated(0, 0)], Kind::Sum), none(Kind::Cv)],
+        );
+        let mut e = Engine::new(SR, 1);
+        e.apply(with_frames(
+            plan(1, vec![dc, gain], chain(2)),
+            vec![frame(false, &[(0, 0)], &[])],
+        ))
+        .unwrap();
+        e
+    }
+    fn gain_out(e: &mut Engine, blocks: usize) -> Vec<f32> {
+        let mut o = Vec::new();
+        for _ in 0..blocks {
+            e.process();
+            o.extend_from_slice(e.output(1, 0));
+        }
+        o
+    }
+
+    #[test]
+    fn muting_a_frame_glides_its_leaving_cables_to_silence_in_50_ms_and_back() {
+        let mut e = gated_dc();
+        assert!((gain_out(&mut e, 10)[BLOCK * 10 - 1] - 1.0).abs() < 1e-6);
+        e.mute(0, true);
+        let down = gain_out(&mut e, 40);
+        let silent = down.iter().position(|x| x.abs() <= 0.001).unwrap();
+        assert!(silent.abs_diff(2400) <= 48, "−60 dB after {silent} samples");
+        assert!(down.windows(2).all(|w| (w[1] - w[0]).abs() <= 0.01));
+        assert!(down[BLOCK * 40 - 1].abs() < 1e-6);
+        e.mute(0, false);
+        let up = gain_out(&mut e, 40);
+        let back = up.iter().position(|x| *x >= 0.999).unwrap();
+        assert!(back.abs_diff(2400) <= 48, "back after {back} samples");
+        assert!(up.windows(2).all(|w| (w[1] - w[0]).abs() <= 0.01));
+    }
+
+    #[test]
+    fn the_frame_meter_reads_what_leaves_and_0_when_muted() {
+        let mut e = gated_dc();
+        e.process();
+        let at = e.layout_frames();
+        assert!((e.readouts()[at] - 1.0).abs() < 1e-6);
+        e.mute(0, true);
+        for _ in 0..30 {
+            e.process();
+        }
+        assert_eq!(e.readouts()[at], 0.0);
+    }
+
+    #[test]
+    fn an_out_inside_a_muted_frame_goes_silent_while_its_source_runs() {
+        let mut o = out("o", 0, 1.0);
+        o.gate = Some(0);
+        let mut e = Engine::new(SR, 1);
+        e.apply(with_frames(
+            plan(1, vec![osc("s"), o], chain(2)),
+            vec![frame(false, &[], &[1])],
+        ))
+        .unwrap();
+        assert!(peak(&run(&mut e, 40)) > 0.1);
+        let meter = e.layout_frames();
+        assert!(e.readouts()[meter] > 0.1);
+        e.mute(0, true);
+        run(&mut e, 20); // 53 ms
+        assert!(peak(&run(&mut e, 40)) < 0.001);
+        assert!(peak(e.output(0, 0)) > 0.5, "the source keeps running");
+        assert_eq!(e.readouts()[meter], 0.0);
+    }
+
     #[test]
     fn a_nested_frame_takes_its_parents_clock_through_its_ratio() {
         // node 0: the parent frame's clock, own clock on at 120 BPM; node 1: the child, clock off, ÷2
@@ -936,7 +1220,9 @@ mod tests {
             e.process();
             out.extend_from_slice(e.output(1, 0));
         }
-        let r: Vec<usize> = (1..out.len()).filter(|&i| out[i] > 0.5 && out[i - 1] <= 0.5).collect();
+        let r: Vec<usize> = (1..out.len())
+            .filter(|&i| out[i] > 0.5 && out[i - 1] <= 0.5)
+            .collect();
         assert!(r.len() >= 3, "{r:?}");
         for w in r.windows(2) {
             assert!((w[1] - w[0]).abs_diff(48_000) <= 2, "{r:?}");

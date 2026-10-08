@@ -13,6 +13,10 @@ export interface WasmEngine {
   att(node: number, input: number, value: number): void;
   ratio(node: number, input: number, value: number): void;
   listen(target: { node: number; port: number } | null): void;
+  /** a frame's gain glides to 0 (muted) or 1 over 50 ms */
+  mute(frame: number, on: boolean): void;
+  /** the speakers fade in over `ms` (a project just opened) */
+  fadeIn(ms: number): void;
   /** Views into WASM memory, valid until the next call. */
   process(): { l: Float32Array; r: Float32Array };
   readouts(): Float32Array;
@@ -28,6 +32,8 @@ interface Exports {
   engine_att(e: number, node: number, input: number, value: number): void;
   engine_ratio(e: number, node: number, input: number, value: number): void;
   engine_listen(e: number, node: number, port: number): void;
+  engine_mute(e: number, frame: number, on: number): void;
+  engine_fade_in(e: number, ms: number): void;
   engine_process(e: number): number;
   engine_readouts(e: number): number;
   engine_readouts_len(e: number): number;
@@ -88,6 +94,14 @@ class Engine implements WasmEngine {
 
   listen(target: { node: number; port: number } | null): void {
     this.x.engine_listen(this.e, target ? target.node : -1, target ? target.port : -1);
+  }
+
+  mute(frame: number, on: boolean): void {
+    this.x.engine_mute(this.e, frame, on ? 1 : 0);
+  }
+
+  fadeIn(ms: number): void {
+    this.x.engine_fade_in(this.e, ms);
   }
 
   process(): { l: Float32Array; r: Float32Array } {

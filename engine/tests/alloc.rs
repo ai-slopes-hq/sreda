@@ -91,3 +91,18 @@ fn every_module_type_together_allocates_nothing() {
     }
     assert_eq!(allocs() - before, 0);
 }
+
+#[test]
+fn frames_gated_cables_and_mute_toggles_allocate_nothing() {
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(fixture("frames")).unwrap();
+    e.process();
+    let before = allocs();
+    for i in 0..10_000 {
+        if i % 100 == 0 {
+            e.mute(i / 100 % 2, i % 200 == 0);
+        }
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+}

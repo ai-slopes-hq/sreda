@@ -83,6 +83,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   };
 
   const jackPos = (id: string, port: string): Pt => jackAt(st.doc, specs, id, port);
+  /** inside a muted frame (a muted frame's own header is not dimmed) */
+  const dimmed = (id: string) =>
+    chainOf(st.doc, id).some((g) => g !== id && st.doc.groups.find((x) => x.id === g)?.muted);
   /** frames, outer ones first (drawn under what they hold) */
   const frames = createMemo(() =>
     [...st.doc.groups].sort((a, b) => chainOf(st.doc, a.id).length - chainOf(st.doc, b.id).length),
@@ -438,6 +441,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 return parent && !cabledIn(g.id, 'clkIn') ? `CLK IN ← ${parent.name} (normal)` : undefined;
               })()}
               listening={st.listen?.id === g.id}
+              dim={dimmed(g.id)}
+              meter={st.audio ? s.layout().frames + st.doc.groups.findIndex((x) => x.id === g.id) : undefined}
               readouts={st.audio && s.nodeOf(g.id) !== null ? s.layout().nodes[s.nodeOf(g.id)!] : undefined}
               act={{
                 headDown: (e) => moduleDown(g.id, e),
@@ -449,6 +454,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 jackDown: (port, e) => jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
                 fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
                 fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
+                mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
               }}
             />
           )}
@@ -468,6 +474,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 listening={st.listen?.id === m.id ? st.listen.port : null}
                 readouts={st.audio && node() !== null ? s.layout().nodes[node()!] : undefined}
                 closeEpoch={closeEpoch()}
+                dim={dimmed(m.id)}
                 act={{
                   knob: (param, k, merge) => s.knob(m.id, param, k, merge),
                   option: (param, v, merge) => s.params(m.id, { [param]: v }, merge),

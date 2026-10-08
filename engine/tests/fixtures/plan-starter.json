@@ -97,6 +97,7 @@
       "node": 1
     }
   ],
+  "frames": [],
   "layout": {
     "size": 10,
     "nodes": [
@@ -114,6 +115,7 @@
         "state": 9,
         "trace": null
       }
-    ]
+    ],
+    "frames": 10
   }
 }

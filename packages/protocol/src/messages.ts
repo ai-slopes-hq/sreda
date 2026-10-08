@@ -8,6 +8,10 @@ export type ToEngine =
   | { t: 'fixed'; node: number; index: number; value: number }
   | { t: 'att'; node: number; input: number; value: number }
   | { t: 'ratio'; node: number; input: number; value: number }
-  | { t: 'listen'; target: { node: number; port: number } | null };
+  | { t: 'listen'; target: { node: number; port: number } | null }
+  /** a frame (index in doc.groups) muted or unmuted: its gain glides over 50 ms */
+  | { t: 'mute'; frame: number; on: boolean }
+  /** the speakers fade in (a project just opened) */
+  | { t: 'fade'; ms: number };
 
 export type FromEngine = { t: 'applied'; seq: number; code: 0 | 1 | 2 };

@@ -3,6 +3,8 @@ export interface Source {
   node: number;
   port: number;
   late: boolean;
+  /** the frame (index in doc.groups) that silences this cable when muted: the innermost one it leaves */
+  gate?: number;
 }
 export interface InputPlan {
   sources: Source[];
@@ -21,6 +23,14 @@ export interface PlanNode {
   /** inputPorts(spec) order: inputs, then mod jacks */
   inputs: InputPlan[];
   connectedOut: boolean[];
+  /** OUT nodes: the frame whose mute silences their speaker output */
+  gate?: number;
+}
+/** A frame, for mute and its meter: what leaves it (audio sources of leaving cables, OUT nodes inside). */
+export interface FramePlan {
+  muted: boolean;
+  sources: { node: number; port: number }[];
+  outs: number[];
 }
 export type Step = { node: number } | { loop: number[] };
 /** Offsets into the readout buffer; index 0 holds the plan's seq, 1 the master peak. Counts follow the node's spec. */
@@ -36,11 +46,14 @@ export interface NodeReadouts {
 export interface ReadoutLayout {
   size: number;
   nodes: NodeReadouts[];
+  /** one float per frame: its meter */
+  frames: number;
 }
 export interface Plan {
   seq: number;
   nodes: PlanNode[];
   steps: Step[];
+  frames: FramePlan[];
   layout: ReadoutLayout;
 }
 

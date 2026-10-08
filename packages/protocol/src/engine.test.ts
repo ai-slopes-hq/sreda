@@ -3,6 +3,7 @@ import {
   emptyDoc,
   addModule,
   connect,
+  frameSelection,
   SPECS,
   starterDoc,
   toKnob,
@@ -84,4 +85,20 @@ test('process returns the same views every block (no allocation in the worklet)'
   e.apply(compile(starterDoc(SPECS), SPECS, 1));
   const a = e.process();
   expect(e.process()).toBe(a);
+});
+
+test('a mute message silences a framed OUT in about 50 ms; a fade-in ramps the speakers', () => {
+  const e = loadEngine(wasm, 48_000, 1);
+  const framed = frameSelection(starterDoc(SPECS), SPECS, ['m1', 'm2']).doc;
+  expect(e.apply(compile(framed, SPECS, 1))).toBe(0);
+  const peak = (s: Float32Array) => s.reduce((a, x) => Math.max(a, Math.abs(x)), 0);
+  expect(peak(play(e, 40))).toBeGreaterThan(0.1);
+  e.mute(0, true);
+  play(e, 20);
+  expect(peak(play(e, 20))).toBeLessThan(0.001);
+  e.mute(0, false);
+  e.fadeIn(200);
+  const back = play(e, 100);
+  expect(peak(back.subarray(0, 128))).toBeLessThan(0.05);
+  expect(peak(back.subarray(back.length - 1280))).toBeGreaterThan(0.1);
 });

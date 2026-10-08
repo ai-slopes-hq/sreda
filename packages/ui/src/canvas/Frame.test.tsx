@@ -31,6 +31,7 @@ function frame(g: Partial<Group> = {}, cabledIn = false) {
     jackDown: (port) => calls.push(`jack ${port}`),
     fieldDown: () => calls.push('field'),
     fieldReset: () => calls.push('reset'),
+    mute: () => calls.push('mute'),
   };
   const r = render(() => (
     <Frame
@@ -106,4 +107,17 @@ test('a frame has CLK IN (with its ratio field) and CLK OUT jacks', () => {
   fireEvent.pointerDown(container.querySelector('[data-jack=clkOut]')!, { button: 0 });
   expect(container.querySelector('[data-field=clkIn]')!.textContent).toBe('÷2');
   expect(calls).toEqual(['jack clkIn', 'jack clkOut']);
+});
+
+test('M mutes; lit while on, and the tools stay visible while it is on; a muted parent dims the frame', () => {
+  const plain = frame();
+  fireEvent.pointerEnter(plain.container.querySelector('.sr-ghead')!);
+  fireEvent.click(plain.getByLabelText('Mute frame'));
+  expect(plain.calls).toEqual(['mute']);
+  plain.unmount();
+  const muted = frame({ muted: true });
+  expect(muted.getByLabelText('Mute frame').classList.contains('on')).toBe(true);
+  expect(muted.container.querySelector('.sr-swatch')).not.toBeNull();
+  expect(muted.container.querySelector('.sr-frame')!.classList.contains('muted')).toBe(false);
+  expect(muted.container.querySelector('.sr-gmeter')).not.toBeNull();
 });

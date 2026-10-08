@@ -4,6 +4,7 @@ import {
   clockNode,
   compile,
   editFrame,
+  effectiveMuted,
   fromKnob,
   History,
   inputPorts,
@@ -167,15 +168,15 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
       }
     },
     /**
-     * A frame's name, tint, clock or CLK IN ratio: the document, and messages to its clock node (no new plan).
-     * `muted` arrives in Task 3.
+     * A frame's name, tint, clock, CLK IN ratio or mute: the document, and messages to the engine (no new plan).
      */
     frame(
       gid: string,
       patch: Partial<Pick<Group, 'name' | 'tint' | 'muted' | 'ratio' | 'clock'>>,
       merge: Merge,
     ): void {
-      const doc = editFrame(history.current, gid, patch);
+      const before = history.current;
+      const doc = editFrame(before, gid, patch);
       history.commit(doc, merge);
       show(doc);
       const node = nodeOf(gid);
@@ -185,6 +186,12 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
         host?.post({ t: 'fixed', node, index: 1, value: patch.clock.bpm });
       }
       if (patch.ratio !== undefined) host?.post({ t: 'ratio', node, input: 0, value: patch.ratio });
+      if (patch.muted !== undefined)
+        // a frame inside a muted frame is muted too: tell the engine about every frame whose state changed
+        doc.groups.forEach((g, frame) => {
+          const on = effectiveMuted(doc, g.id);
+          if (on !== effectiveMuted(before, g.id)) host?.post({ t: 'mute', frame, on });
+        });
     },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {

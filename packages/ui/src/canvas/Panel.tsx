@@ -56,6 +56,8 @@ export interface PanelProps {
   readouts?: NodeReadouts | undefined;
   /** bumps on pan / zoom (open lists close) */
   closeEpoch?: number;
+  /** inside a muted frame: drawn at 40 % */
+  dim?: boolean;
 }
 
 /** A module drawn by the panel grammar from its spec: jacks in the side columns, knobs, the mode strip. */
@@ -111,7 +113,7 @@ export function Panel(props: PanelProps): JSX.Element {
   return (
     <div
       class="sr-mod"
-      classList={{ sel: !!props.selected }}
+      classList={{ sel: !!props.selected, muted: !!props.dim }}
       data-module={props.mod.id}
       data-type={props.mod.type}
       ref={(el) => track(el, 'step', () => props.readouts?.state)}
