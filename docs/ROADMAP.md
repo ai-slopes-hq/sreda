@@ -12,8 +12,9 @@ of a creative tool; nothing of its UI is ported.
 
 | What | Where |
 |---|---|
-| The design (approved, revision 14) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
-| Plan 1 (being executed) | `docs/superpowers/plans/2026-10-07-1-foundation.md` |
+| The design (approved, revision 15) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
+| Plan 3 (being executed) | `docs/superpowers/plans/2026-10-08-3-organisation.md` |
+| Plans 1 and 2 (done) | `docs/superpowers/plans/2026-10-07-1-foundation.md`, `…-2-modules.md` |
 | Ideas for later | `docs/backlog.md` |
 | The clickable prototype and its headless checks | `docs/prototype/` (see its README; live artifact linked there) |
 | Repo rules for Claude | `CLAUDE.md` |
@@ -31,8 +32,8 @@ of a creative tool; nothing of its UI is ported.
   pads), DICE and the generators, glyphs, normal ghosts, fixed-value messages. Reviewed by a fresh reviewer; its
   fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 2 review"). Every module type in one plan
   allocates nothing; a minute of audio takes 2.6 % of real time natively.
-- **Next:** write Plan 3 — frames (G, FIX / STACK, own clock, MUTE), the sidebar and WIRES, the library folder, the
-  group / project pickers, the factory patches (Pulse, Acid, Drone, …), the remaining gestures.
+- **2026-10-08** — Plan 3 written (11 tasks; spec revision 15 clarifies the library over IPC, ⌘D, groups from a
+  jack, the mute rule). **Next:** execute Plan 3 natively from Task 1, on a branch `plan-3-organisation`.
 
 ## The road (vertical slices: something to hear at every stage)
 
@@ -41,7 +42,7 @@ of a creative tool; nothing of its UI is ported.
 | **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | done, merged |
 | **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | done, merged |
 | **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (`2026-10-07-2-modules.md`) | the 24 first-build modules | done, merged |
-| **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 | the first build complete | — |
+| **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 (`2026-10-08-3-organisation.md`) | the first build complete | planned |
 | **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | its own plan | spec §7a | — |
 
 **Plan 2 order** (chosen so real patches come together early): SCOPE (see signals) → LPG, SLOPE, NOISE (*Pulse*) →
