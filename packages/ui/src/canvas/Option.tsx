@@ -2,7 +2,7 @@ import type { OptionParam } from '@sreda/core';
 import { createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { Merge } from '@sreda/core';
 import { SCALES } from '@sreda/core';
-import { scaleGlyph, waveGlyph } from './glyphs';
+import { responseGlyph, scaleGlyph, waveGlyph } from './glyphs';
 import { panning } from './wheel';
 
 export interface OptionProps {
@@ -24,19 +24,31 @@ function Glyph(props: { param: OptionParam; value: number; big: boolean }): JSX.
   const scale = () => scaleGlyph(SCALES[props.value] ?? [], props.big);
   return (
     <Show
-      when={props.param.glyph === 'wave'}
+      when={props.param.glyph !== 'response'}
       fallback={
-        <Show when={props.param.glyph === 'scale'} fallback={<span>{props.param.options[props.value]}</span>}>
-          <svg class="g-svg" width={scale().w} height="12">
-            <path class="g-on" d={scale().on} />
-            <path class="g-off" d={scale().off} />
-          </svg>
-        </Show>
+        <svg class="g-svg" width={w()} height="12">
+          <path class="g-wave" d={responseGlyph(props.param.options[props.value]!, w())} />
+        </svg>
       }
     >
-      <svg class="g-svg" width={w()} height="12">
-        <path class="g-wave" d={waveGlyph(props.param.options[props.value]!, w())} />
-      </svg>
+      <Show
+        when={props.param.glyph === 'wave'}
+        fallback={
+          <Show
+            when={props.param.glyph === 'scale'}
+            fallback={<span>{props.param.options[props.value]}</span>}
+          >
+            <svg class="g-svg" width={scale().w} height="12">
+              <path class="g-on" d={scale().on} />
+              <path class="g-off" d={scale().off} />
+            </svg>
+          </Show>
+        }
+      >
+        <svg class="g-svg" width={w()} height="12">
+          <path class="g-wave" d={waveGlyph(props.param.options[props.value]!, w())} />
+        </svg>
+      </Show>
     </Show>
   );
 }

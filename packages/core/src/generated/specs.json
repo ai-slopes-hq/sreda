@@ -623,9 +623,9 @@
   {
     "type": "filter",
     "label": "FILTER",
-    "desc": "state-variable filter: LP, BP, HP at once",
+    "desc": "SVF, ladder, diode, Sallen-Key, comb, vowel: LP, BP, HP at once",
     "size": [
-      4,
+      5,
       1
     ],
     "inputs": [
@@ -633,6 +633,11 @@
         "id": "in",
         "label": "IN",
         "role": "audio"
+      },
+      {
+        "id": "pitch",
+        "label": "PTCH",
+        "role": "pitch"
       }
     ],
     "outputs": [
@@ -676,6 +681,30 @@
         "max": 1.0,
         "def": 0.2,
         "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "drive",
+        "label": "DRV",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "model",
+        "label": "MODEL",
+        "options": [
+          "SVF",
+          "LADDER",
+          "DIODE",
+          "SK",
+          "COMB",
+          "VOWEL"
+        ],
+        "def": 0,
+        "glyph": "response"
       }
     ],
     "normals": []

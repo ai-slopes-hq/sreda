@@ -37,6 +37,32 @@ export function waveGlyph(name: string, w: number): string {
   return `M0 11 V1 H${w / 2} V11 H${w} V1`;
 }
 
+/** A filter model as a small magnitude response in a w × 12 box (high = loud): its slope, peak, teeth or formants. */
+export function responseGlyph(model: string, w: number): string {
+  const pts = (f: (t: number) => number) => {
+    let d = '';
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      d += `${i ? 'L' : 'M'}${(t * w).toFixed(1)} ${(11 - 10 * Math.max(0, Math.min(1, f(t)))).toFixed(1)}`;
+    }
+    return d;
+  };
+  // a low-pass of `order` with a resonant bump of `peak` at t = 0.5
+  const lp = (order: number, peak: number) => (t: number) => {
+    const r = Math.max(0, t - 0.5) * 4;
+    return 0.7 / Math.sqrt(1 + r ** (2 * order)) + peak * Math.exp(-(((t - 0.5) / 0.06) ** 2));
+  };
+  if (model === 'LADDER') return pts(lp(4, 0.25));
+  if (model === 'DIODE') return pts(lp(3, 0.3));
+  if (model === 'SK') return pts(lp(2, 0.35));
+  if (model === 'COMB') return pts((t) => 0.15 + 0.75 * Math.abs(Math.cos(Math.PI * 4 * t)) ** 3);
+  if (model === 'VOWEL')
+    return pts(
+      (t) => 0.1 + [0.2, 0.45, 0.8].reduce((a, c) => a + 0.8 * Math.exp(-(((t - c) / 0.06) ** 2)), 0),
+    );
+  return pts(lp(1.5, 0));
+}
+
 /** A knob value as text. */
 export function fmt(p: KnobParam, v: number): string {
   if (p.unit === 'hz')

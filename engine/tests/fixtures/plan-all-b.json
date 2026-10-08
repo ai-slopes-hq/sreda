@@ -654,8 +654,8 @@
     {
       "id": "m10",
       "type": "filter",
-      "knobs": [0.5663233347786729, 0.2],
-      "fixed": [],
+      "knobs": [0.5663233347786729, 0.2, 0],
+      "fixed": [0],
       "inputs": [
         {
           "sources": [
@@ -680,7 +680,33 @@
           ],
           "normal": null,
           "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
           "att": 0.25,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
           "ratio": 1
         },
         {
@@ -1945,7 +1971,7 @@
   ],
   "frames": [],
   "layout": {
-    "size": 1185,
+    "size": 1186,
     "nodes": [
       {
         "knobs": 2,
@@ -2005,131 +2031,131 @@
       },
       {
         "knobs": 56,
-        "trigs": 58,
-        "outs": 58,
-        "state": 61,
+        "trigs": 59,
+        "outs": 59,
+        "state": 62,
         "trace": null
       },
       {
-        "knobs": 62,
-        "trigs": 64,
-        "outs": 64,
-        "state": 65,
+        "knobs": 63,
+        "trigs": 65,
+        "outs": 65,
+        "state": 66,
         "trace": null
       },
       {
-        "knobs": 66,
-        "trigs": 70,
-        "outs": 70,
-        "state": 72,
+        "knobs": 67,
+        "trigs": 71,
+        "outs": 71,
+        "state": 73,
         "trace": null
       },
       {
-        "knobs": 73,
-        "trigs": 75,
-        "outs": 76,
-        "state": 77,
+        "knobs": 74,
+        "trigs": 76,
+        "outs": 77,
+        "state": 78,
         "trace": null
       },
       {
-        "knobs": 78,
-        "trigs": 82,
-        "outs": 82,
-        "state": 83,
+        "knobs": 79,
+        "trigs": 83,
+        "outs": 83,
+        "state": 84,
         "trace": null
       },
       {
-        "knobs": 84,
-        "trigs": 85,
-        "outs": 85,
-        "state": 87,
+        "knobs": 85,
+        "trigs": 86,
+        "outs": 86,
+        "state": 88,
         "trace": null
       },
       {
-        "knobs": 88,
-        "trigs": 91,
-        "outs": 92,
-        "state": 93,
+        "knobs": 89,
+        "trigs": 92,
+        "outs": 93,
+        "state": 94,
         "trace": null
       },
       {
-        "knobs": 94,
-        "trigs": 95,
-        "outs": 95,
-        "state": 95,
+        "knobs": 95,
+        "trigs": 96,
+        "outs": 96,
+        "state": 96,
         "trace": null
       },
       {
-        "knobs": 96,
-        "trigs": 97,
-        "outs": 97,
-        "state": 98,
+        "knobs": 97,
+        "trigs": 98,
+        "outs": 98,
+        "state": 99,
         "trace": null
       },
       {
-        "knobs": 99,
-        "trigs": 103,
-        "outs": 106,
-        "state": 109,
+        "knobs": 100,
+        "trigs": 104,
+        "outs": 107,
+        "state": 110,
         "trace": null
       },
       {
-        "knobs": 110,
-        "trigs": 113,
-        "outs": 114,
-        "state": 116,
-        "trace": 117
+        "knobs": 111,
+        "trigs": 114,
+        "outs": 115,
+        "state": 117,
+        "trace": 118
       },
       {
-        "knobs": 1141,
-        "trigs": 1142,
-        "outs": 1143,
-        "state": 1144,
+        "knobs": 1142,
+        "trigs": 1143,
+        "outs": 1144,
+        "state": 1145,
         "trace": null
       },
       {
-        "knobs": 1145,
-        "trigs": 1148,
-        "outs": 1149,
-        "state": 1152,
+        "knobs": 1146,
+        "trigs": 1149,
+        "outs": 1150,
+        "state": 1153,
         "trace": null
       },
       {
-        "knobs": 1153,
-        "trigs": 1153,
-        "outs": 1154,
-        "state": 1155,
+        "knobs": 1154,
+        "trigs": 1154,
+        "outs": 1155,
+        "state": 1156,
         "trace": null
       },
       {
-        "knobs": 1156,
-        "trigs": 1157,
-        "outs": 1159,
-        "state": 1163,
+        "knobs": 1157,
+        "trigs": 1158,
+        "outs": 1160,
+        "state": 1164,
         "trace": null
       },
       {
-        "knobs": 1164,
-        "trigs": 1166,
-        "outs": 1169,
-        "state": 1172,
+        "knobs": 1165,
+        "trigs": 1167,
+        "outs": 1170,
+        "state": 1173,
         "trace": null
       },
       {
-        "knobs": 1173,
-        "trigs": 1174,
-        "outs": 1176,
-        "state": 1177,
+        "knobs": 1174,
+        "trigs": 1175,
+        "outs": 1177,
+        "state": 1178,
         "trace": null
       },
       {
-        "knobs": 1178,
-        "trigs": 1180,
-        "outs": 1181,
-        "state": 1184,
+        "knobs": 1179,
+        "trigs": 1181,
+        "outs": 1182,
+        "state": 1185,
         "trace": null
       }
     ],
-    "frames": 1185
+    "frames": 1186
   }
 }

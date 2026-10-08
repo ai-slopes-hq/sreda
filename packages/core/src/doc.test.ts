@@ -156,3 +156,28 @@ test('a module saved under its old type name opens as S&H (snh)', () => {
   )!;
   expect(d.modules[0]!.type).toBe('snh');
 });
+
+test('a Plan 3 FILTER (CUT and RES only) opens as an SVF with DRV 0', () => {
+  const d = validateDoc(
+    {
+      version: 1,
+      modules: [
+        {
+          id: 'm1',
+          type: 'filter',
+          x: 0,
+          y: 0,
+          parent: null,
+          params: { cutoff: 0.6, res: 0.3 },
+          atts: {},
+          ratios: {},
+        },
+      ],
+      cables: [],
+      groups: [],
+      nextId: 2,
+    },
+    SPECS,
+  )!;
+  expect(d.modules[0]!.params).toMatchObject({ cutoff: 0.6, res: 0.3, drive: 0, model: 0 });
+});

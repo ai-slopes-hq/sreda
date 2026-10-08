@@ -65,7 +65,9 @@ pub struct Os2x {
     x: [f64; 2 * SIDE],
     y0: [f64; 2 * SIDE],
     y1: [f64; 2 * SIDE],
-    pos: usize,
+    /// where `up` and `down` write next (independent: one up may feed several downs, one per output)
+    upos: usize,
+    dpos: usize,
 }
 
 const TAPS: usize = 63;
@@ -125,7 +127,8 @@ impl Os2x {
             x: [0.0; 2 * SIDE],
             y0: [0.0; 2 * SIDE],
             y1: [0.0; 2 * SIDE],
-            pos: 0,
+            upos: 0,
+            dpos: 0,
         }
     }
 
@@ -145,21 +148,22 @@ impl Os2x {
         // zero-stuffed by 2 (the gain 2 gives the level back): the even output uses the side taps, the odd one only
         // the centre tap, i.e. the input 15 samples ago
         let (_, centre) = *half_band();
-        let p = self.pos;
+        let p = self.upos;
         Self::push(&mut self.x, p, x as f64);
         let even = 2.0 * Self::even(&self.x, p);
         let odd = 2.0 * centre * self.x[(p + SIDE - 15) % SIDE];
+        self.upos = (p + 1) % SIDE;
         [even as f32, odd as f32]
     }
 
     pub fn down(&mut self, y: [f32; 2]) -> f32 {
         // the even output: side taps over the even samples, the centre over the odd sample 16 back
         let (_, centre) = *half_band();
-        let p = self.pos;
+        let p = self.dpos;
         Self::push(&mut self.y0, p, y[0] as f64);
         Self::push(&mut self.y1, p, y[1] as f64);
         let out = Self::even(&self.y0, p) + centre * self.y1[(p + SIDE - 16) % SIDE];
-        self.pos = (p + 1) % SIDE;
+        self.dpos = (p + 1) % SIDE;
         out as f32
     }
 

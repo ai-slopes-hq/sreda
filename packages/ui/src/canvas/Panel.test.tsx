@@ -3,7 +3,7 @@ import { SPECS, starterDoc, type ModuleDoc } from '@sreda/core';
 import { render } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { expect, test } from 'vitest';
-import { waveGlyph } from './glyphs';
+import { responseGlyph, waveGlyph } from './glyphs';
 import { Panel, type PanelActions } from './Panel';
 
 const noop: PanelActions = { knob() {}, option() {}, hover() {}, edit() {} };
@@ -45,4 +45,21 @@ test('an input value shows when it is not the default', () => {
   const { container } = oscPanel({ ratios: { sync: 2 } });
   expect(container.querySelector('[data-field=sync]')?.textContent).toBe('×2');
   expect(container.querySelector('[data-field=pitch]')?.textContent).toBe('');
+});
+
+test("FILTER's MODEL is drawn as a response glyph", () => {
+  const { container } = render(() => (
+    <Panel
+      mod={{ id: 'm1', type: 'filter', x: 0, y: 0, parent: null, params: { model: 2 }, atts: {}, ratios: {} }}
+      spec={SPECS['filter']!}
+      name="FILTER"
+      loud={false}
+      cabledIn={() => false}
+      cabledOut={() => false}
+      act={noop}
+    />
+  ));
+  expect(container.querySelector('[data-option=model] path')?.getAttribute('d')).toBe(
+    responseGlyph('DIODE', 24),
+  );
 });
