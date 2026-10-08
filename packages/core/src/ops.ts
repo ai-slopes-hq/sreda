@@ -1,5 +1,6 @@
 // Edits: pure functions from a document to a new one. RuleError is for structural mistakes only.
 import { blankModule, type Cable, type Doc, type ModuleDoc } from './doc';
+import { recomputeParents, rootsOf, withDescendants } from './frames';
 import { inputPorts, RATIOS, specOf, type Specs } from './spec';
 
 export class RuleError extends Error {}
@@ -25,16 +26,36 @@ export function addModule(
   return { doc: { ...doc, modules: [...doc.modules, m], nextId: doc.nextId + 1 }, id };
 }
 
-export function moveObjects(doc: Doc, ids: readonly string[], dx: number, dy: number): Doc {
-  const set = new Set(ids);
-  return {
+/**
+ * Move modules and frames (a frame takes everything inside it). A module snaps to the 8 px grid; a frame moves by a
+ * snapped delta. Only the moved roots are re-parented, and never into what moved with them.
+ */
+export function moveObjects(doc: Doc, specs: Specs, ids: readonly string[], dx: number, dy: number): Doc {
+  const roots = rootsOf(doc, ids);
+  const delta = new Map<string, [number, number]>();
+  for (const id of roots) {
+    const m = doc.modules.find((x) => x.id === id);
+    if (m) delta.set(id, [snap(m.x + dx) - m.x, snap(m.y + dy) - m.y]);
+    else if (doc.groups.some((g) => g.id === id))
+      for (const d of withDescendants(doc, [id])) delta.set(d, [snap(dx), snap(dy)]);
+  }
+  const moved: Doc = {
     ...doc,
-    modules: doc.modules.map((m) => (set.has(m.id) ? { ...m, x: snap(m.x + dx), y: snap(m.y + dy) } : m)),
+    modules: doc.modules.map((m) => {
+      const d = delta.get(m.id);
+      return d ? { ...m, x: m.x + d[0], y: m.y + d[1] } : m;
+    }),
+    groups: doc.groups.map((g) => {
+      const d = delta.get(g.id);
+      return d ? { ...g, x: g.x + d[0], y: g.y + d[1] } : g;
+    }),
   };
+  return recomputeParents(moved, specs, roots, [...delta.keys()]);
 }
 
 type End = 'out' | 'in' | null;
 function endKind(doc: Doc, specs: Specs, [id, port]: [string, string]): End {
+  if (doc.groups.some((g) => g.id === id)) return port === 'clkOut' ? 'out' : port === 'clkIn' ? 'in' : null;
   const m = doc.modules.find((x) => x.id === id);
   const spec = m && specs[m.type];
   if (!spec) return null;
@@ -63,12 +84,13 @@ export function removeCable(doc: Doc, cable: Cable): Doc {
   return i < 0 ? doc : { ...doc, cables: doc.cables.filter((_, j) => j !== i) };
 }
 
-/** Remove modules and every cable touching them. */
+/** Remove modules and frames (with everything inside them) and every cable touching them. */
 export function deleteObjects(doc: Doc, ids: readonly string[]): Doc {
-  const set = new Set(ids);
+  const set = new Set(withDescendants(doc, ids));
   return {
     ...doc,
     modules: doc.modules.filter((m) => !set.has(m.id)),
+    groups: doc.groups.filter((g) => !set.has(g.id)),
     cables: doc.cables.filter((c) => !set.has(c.from[0]) && !set.has(c.to[0])),
   };
 }

@@ -806,3 +806,77 @@
 .sr-mod[data-type='spread'][data-cur='3'] .sr-plabel[data-port='out4'] {
   color: #f5a524;
 }
+
+/* frames (spec §5) */
+.sr-frame {
+  position: absolute;
+  border: 1px solid #3a3933;
+  border-radius: 4px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.sr-frame.sel {
+  border-color: #8f897c;
+}
+.sr-frame.drop {
+  border-color: #e9e4d8;
+  box-shadow: 0 0 0 1px #e9e4d8;
+}
+.sr-ghead {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 28px;
+  background: #1b1b18;
+  border-bottom: 1px solid #2e2d28;
+  border-radius: 4px 4px 0 0;
+  pointer-events: auto;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.sr-gname {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #b9b3a6;
+  white-space: nowrap;
+}
+.sr-gname-in {
+  width: 110px;
+  background: #121210;
+  border: 1px solid #8f897c;
+  color: #e9e4d8;
+  font: 600 10px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+  padding: 2px 4px;
+  outline: none;
+}
+.sr-gclock {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sr-swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #5d594f;
+  border-radius: 2px;
+  padding: 0;
+  cursor: pointer;
+  flex: none;
+}
+.sr-rs {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 1;
+}
+.sr-frame .sr-jack {
+  pointer-events: auto;
+}

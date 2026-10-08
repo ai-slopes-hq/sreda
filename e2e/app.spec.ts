@@ -124,15 +124,19 @@ test('a corrupt autosave is kept as a backup, the starter patch opens, a notice 
 type Mod = {
   id: string;
   type: string;
+  parent: string | null;
   x: number;
   y: number;
   params: Record<string, number>;
   atts: Record<string, number>;
 };
 type Cable = { from: [string, string]; to: [string, string] };
+type Frame = { id: string; name: string; parent: string | null };
 const fullDoc = (page: Page) =>
   page.evaluate(() =>
-    (window as unknown as { __sreda: { doc(): { modules: Mod[]; cables: Cable[] } } }).__sreda.doc(),
+    (
+      window as unknown as { __sreda: { doc(): { modules: Mod[]; cables: Cable[]; groups: Frame[] } } }
+    ).__sreda.doc(),
   );
 const jack = (page: Page, module: string, port: string, nth = 0) =>
   page.locator(`[data-type=${module}]`).nth(nth).locator(`[data-jack="${port}"]`);
@@ -355,5 +359,34 @@ test('SWITCH: the current input label is amber', async () => {
     .poll(() => label('in1').evaluate((el) => getComputedStyle(el).color), { timeout: 2000 })
     .toBe('rgb(245, 165, 36)');
   expect(await label('in2').evaluate((el) => getComputedStyle(el).color)).not.toBe('rgb(245, 165, 36)');
+  await app.close();
+});
+
+test('frames: G frames a box selection, dragging a module out detaches it, G unframes, ⌘Z restores', async () => {
+  const { app, page } = await launch();
+  const osc = (await page.locator('[data-type=osc]').boundingBox())!;
+  const out = (await page.locator('[data-type=out]').boundingBox())!;
+  await drag(page, { x: osc.x - 20, y: osc.y - 20 }, { x: out.x + out.width + 20, y: out.y + out.height + 20 });
+  await page.keyboard.press('g');
+  await expect(page.locator('.sr-frame')).toHaveCount(1);
+  await expect(page.locator('.sr-frame .sr-gname')).toHaveText('GROUP 1');
+  let d = await fullDoc(page);
+  expect(d.modules.map((m) => m.parent)).toEqual([d.groups[0]!.id, d.groups[0]!.id]);
+
+  const h = await center(page, page.locator('[data-type=out] .sr-head'));
+  await drag(page, h, { x: h.x + 600, y: h.y + 300 });
+  d = await fullDoc(page);
+  expect(d.modules[1]!.parent).toBeNull();
+  expect(d.modules[0]!.parent).toBe(d.groups[0]!.id);
+
+  const head = (await page.locator('.sr-ghead').boundingBox())!;
+  await page.mouse.click(head.x + head.width - 30, head.y + head.height / 2);
+  await page.keyboard.press('g');
+  await expect(page.locator('.sr-frame')).toHaveCount(0);
+  d = await fullDoc(page);
+  expect(d.modules).toHaveLength(2);
+  expect(d.modules.map((m) => m.parent)).toEqual([null, null]);
+  await page.keyboard.press('Meta+z');
+  await expect(page.locator('.sr-frame')).toHaveCount(1);
   await app.close();
 });

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { emptyDoc, starterDoc, validateDoc, type Doc } from './doc';
+import { emptyDoc, starterDoc, validateDoc, type Doc, type Group } from './doc';
 import { SPECS } from './spec';
 import { TEST_SPECS } from './testspecs';
 
@@ -30,11 +30,71 @@ test.each([
   ['a cable to a missing module', (d: Doc) => (d.cables[0]!.from = ['m9', 'out'])],
   ['a cable from an input', (d: Doc) => (d.cables[0]!.from = ['m2', 'in'])],
   ['a duplicated id', (d: Doc) => (d.modules[1]!.id = 'm1')],
-  ['frames (not yet supported)', (d: Doc) => Object.assign(d, { groups: [{ id: 'g1' }] })],
+  ['a frame with a non-numeric x', (d: Doc) => Object.assign(d, { groups: [{ ...frame('g5'), x: 'a' }] })],
 ])('rejects %s', (_name, breakIt) => {
   const d = good();
   breakIt(d);
   expect(validateDoc(d, TEST_SPECS)).toBeNull();
+});
+
+const frame = (id: string, o: Partial<Group> = {}): Group => ({
+  id,
+  name: 'DRUMS',
+  x: -100,
+  y: -100,
+  w: 800,
+  h: 600,
+  parent: null,
+  ratio: -2,
+  tint: 3,
+  layout: 'route',
+  muted: true,
+  clock: { on: true, bpm: 128 },
+  ...o,
+});
+const framed = (...gs: Group[]): Doc => {
+  const d = good();
+  d.groups = gs;
+  d.nextId = 9;
+  return d;
+};
+
+test('a well-formed frame is kept as it is', () => {
+  const d = framed(frame('g5'));
+  d.modules.forEach((m) => (m.parent = 'g5'));
+  d.cables.push({ from: ['g5', 'clkOut'], to: ['m2', 'clk'] }, { from: ['m2', 'eoc'], to: ['g5', 'clkIn'] });
+  const v = validateDoc(d, TEST_SPECS)!;
+  expect(v.groups).toEqual([frame('g5')]);
+  expect(v.modules.map((m) => m.parent)).toEqual(['g5', 'g5']);
+  expect(v.cables).toHaveLength(3);
+});
+
+test('parents naming no frame, or a parent cycle, are recomputed by containment', () => {
+  const d = framed(frame('g5', { parent: 'g6' }), frame('g6', { parent: 'g5', x: 2000 }));
+  d.modules[0]!.parent = 'g9';
+  const v = validateDoc(d, TEST_SPECS)!;
+  expect(v.groups.map((g) => g.parent)).toEqual([null, null]);
+  expect(v.modules.map((m) => m.parent)).toEqual(['g5', 'g5']);
+});
+
+test('cables to the jacks of a missing frame are dropped; tiny frames grow to the minimum', () => {
+  const d = framed(frame('g5', { w: 0, h: 0 }));
+  d.cables.push({ from: ['g8', 'clkOut'], to: ['m2', 'clk'] });
+  const v = validateDoc(d, TEST_SPECS)!;
+  expect(v.cables).toHaveLength(1);
+  expect(v.groups[0]).toMatchObject({ w: 352, h: 96 });
+});
+
+test('a document without groups (older saves) reads as having none', () => {
+  const d: Partial<Doc> = good();
+  delete d.groups;
+  expect(validateDoc(d, TEST_SPECS)!.groups).toEqual([]);
+});
+
+test('nextId stays above frame ids too', () => {
+  const d = framed(frame('g7'));
+  d.nextId = 1;
+  expect(validateDoc(d, TEST_SPECS)!.nextId).toBeGreaterThanOrEqual(8);
 });
 
 test('rejects things that are not documents', () => {
@@ -82,7 +142,7 @@ test('ratios outside the allowed set are dropped; attenuverters are clamped', ()
   expect(v.modules[1]!.atts).toEqual({ cv: 1, x: -1 });
 });
 
-test('a module saved under an old type name (sah) opens as its new one (snh)', () => {
+test('a module saved under its old type name opens as S&H (snh)', () => {
   const d = validateDoc(
     {
       version: 1,

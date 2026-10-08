@@ -1,24 +1,32 @@
 import {
   addModule,
+  chainOf,
   connect,
-  deleteObjects,
-  layoutPanel,
+  editFrame,
+  jackAt,
+  landingFrame,
   moveObjects,
   mulberry32,
   nameOf,
+  rectOf,
   removeCable,
+  resizeFrame,
   RATIOS,
   RuleError,
+  TINTS,
   type Cable,
   type Doc,
+  type Rect,
   type Role,
   type Specs,
 } from '@sreda/core';
-import { createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
+import { createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
 import { diceModule } from '../dice';
 import { Cables } from './Cables';
+import { Frame, type Edge } from './Frame';
 import { ROLE } from './glyphs';
+import { handleKey } from './keys';
 import { Panel, type FieldKind } from './Panel';
 import { placeFor, type End } from './patching';
 import { Picker } from './Picker';
@@ -38,6 +46,7 @@ type Drag =
   | { kind: 'pan'; at: Pt; vx: number; vy: number }
   | { kind: 'wire'; from: JackEnd; picked: Cable | null; at: Pt; moved: boolean }
   | { kind: 'move'; ids: string[]; at: Pt; base: Doc; moved: boolean }
+  | { kind: 'resize'; id: string; edge: Edge; at: Pt; base: Doc; r0: Rect; moved: boolean }
   | { kind: 'box'; at: Pt; add: string[] }
   | { kind: 'field'; id: string; port: string; field: FieldKind; at: Pt; v0: number; key: string };
 
@@ -53,6 +62,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   const [box, setBox] = createSignal<{ a: Pt; b: Pt } | null>(null);
   const [wiring, setWiring] = createSignal<'in' | 'out' | null>(null);
   const [picker, setPicker] = createSignal<{ screen: Pt; at: Pt; from: JackEnd | null } | null>(null);
+  /** the frame a dragged selection would land in */
+  const [drop, setDrop] = createSignal<string | null>(null);
   let drag: Drag | null = null;
   let space = false;
   let pointer: Pt = { x: 400, y: 300 };
@@ -71,11 +82,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     setPicker(null);
   };
 
-  function jackPos(id: string, port: string): Pt {
-    const m = st.doc.modules.find((x) => x.id === id)!;
-    const j = layoutPanel(specs[m.type]!).jacks[port]!;
-    return { x: m.x + j.x, y: m.y + j.y };
-  }
+  const jackPos = (id: string, port: string): Pt => jackAt(st.doc, specs, id, port);
+  /** frames, outer ones first (drawn under what they hold) */
+  const frames = createMemo(() =>
+    [...st.doc.groups].sort((a, b) => chainOf(st.doc, a.id).length - chainOf(st.doc, b.id).length),
+  );
   function roleOf(id: string, port: string, dir: 'in' | 'out'): Role {
     const spec = specs[st.doc.modules.find((m) => m.id === id)!.type]!;
     if (dir === 'out') return spec.outputs.find((p) => p.id === port)!.role;
@@ -111,6 +122,12 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     begin({ kind: 'wire', from, picked, at: client(e), moved: false });
   }
 
+  function frameResizeDown(id: string, edge: Edge, e: PointerEvent): void {
+    const base = s.current();
+    begin({ kind: 'resize', id, edge, at: client(e), base, r0: rectOf(base, specs, id), moved: false });
+  }
+
+  /** a module's face or a frame's header: select (Shift toggles) and start moving the selection */
   function moduleDown(id: string, e: PointerEvent): void {
     if (e.button !== 0 || space) return;
     e.stopPropagation();
@@ -161,7 +178,15 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       case 'move': {
         if (!d.moved && !far(p, d.at)) return;
         d.moved = true;
-        s.preview(moveObjects(d.base, d.ids, (p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z));
+        const [dx, dy] = [(p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z];
+        s.preview(moveObjects(d.base, specs, d.ids, dx, dy));
+        setDrop(landingFrame(d.base, specs, d.ids, dx, dy));
+        break;
+      }
+      case 'resize': {
+        if (!d.moved && !far(p, d.at)) return;
+        d.moved = true;
+        s.preview(resizeFrame(d.base, specs, d.id, resized(d, p)));
         break;
       }
       case 'box': {
@@ -174,12 +199,18 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           Math.min(a.y, b.y),
           Math.max(a.y, b.y),
         ];
-        const hit = st.doc.modules
-          .filter((m) => {
-            const L = layoutPanel(specs[m.type]!);
-            return m.x < x1 && m.x + L.w > x0 && m.y < y1 && m.y + L.h > y0;
-          })
-          .map((m) => m.id);
+        // modules the box touches, frames it fully encloses
+        const hit = [
+          ...st.doc.modules
+            .filter((m) => {
+              const r = rectOf(st.doc, specs, m.id);
+              return r.x < x1 && r.x + r.w > x0 && r.y < y1 && r.y + r.h > y0;
+            })
+            .map((m) => m.id),
+          ...st.doc.groups
+            .filter((g) => g.x >= x0 && g.y >= y0 && g.x + g.w <= x1 && g.y + g.h <= y1)
+            .map((g) => g.id),
+        ];
         s.setState('sel', [...new Set([...d.add, ...hit])]);
         break;
       }
@@ -211,10 +242,29 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       setGhost(null);
       setWiring(null);
       finishWire(d, p);
-    } else if (d.kind === 'move' && d.moved) {
-      s.commit(moveObjects(d.base, d.ids, (p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z));
+    } else if (d.kind === 'move') {
+      setDrop(null);
+      if (d.moved)
+        s.commit(moveObjects(d.base, specs, d.ids, (p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z));
+    } else if (d.kind === 'resize') {
+      if (d.moved) s.commit(resizeFrame(d.base, specs, d.id, resized(d, p)));
     } else if (d.kind === 'box') setBox(null);
     else if (d.kind === 'field') s.setState('editing', null);
+  }
+
+  /** a frame's rectangle while one of its edges is dragged (8 px steps) */
+  function resized(d: Extract<Drag, { kind: 'resize' }>, p: Pt): Rect {
+    const dx = Math.round((p.x - d.at.x) / st.view.z / 8) * 8;
+    const dy = Math.round((p.y - d.at.y) / st.view.z / 8) * 8;
+    const r = { ...d.r0 };
+    if (d.edge === 'r' || d.edge === 'br') r.w += dx;
+    if (d.edge === 'l' || d.edge === 'bl') {
+      const w = Math.max(352, r.w - dx);
+      r.x += r.w - w;
+      r.w = w;
+    }
+    if (d.edge === 'b' || d.edge === 'br' || d.edge === 'bl') r.h += dy;
+    return r;
   }
 
   function finishWire(d: Extract<Drag, { kind: 'wire' }>, p: Pt): void {
@@ -271,17 +321,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   }
 
   function fit(selection: boolean): void {
-    const mods = st.doc.modules.filter((m) => !selection || st.sel.includes(m.id));
-    if (!mods.length) return;
+    const ids = [...st.doc.modules.map((m) => m.id), ...st.doc.groups.map((g) => g.id)].filter(
+      (id) => !selection || st.sel.includes(id),
+    );
+    if (!ids.length) return;
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
-    for (const m of mods) {
-      const L = layoutPanel(specs[m.type]!);
-      [x0, y0, x1, y1] = [
-        Math.min(x0, m.x),
-        Math.min(y0, m.y),
-        Math.max(x1, m.x + L.w),
-        Math.max(y1, m.y + L.h),
-      ];
+    for (const id of ids) {
+      const r = rectOf(st.doc, specs, id);
+      [x0, y0, x1, y1] = [Math.min(x0, r.x), Math.min(y0, r.y), Math.max(x1, r.x + r.w), Math.max(y1, r.y + r.h)];
     }
     const z = Math.min(
       1.5,
@@ -313,28 +360,17 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     viewChanged();
   }
 
-  function key(e: KeyboardEvent): void {
-    if (e.target instanceof HTMLInputElement) return;
-    if (e.code === 'Space') space = e.type === 'keydown';
-    if (e.type !== 'keydown') return;
-    const meta = e.metaKey || e.ctrlKey;
-    const k = e.key.toLowerCase();
-    if (meta && k === 'z') {
-      e.preventDefault();
-      if (e.shiftKey) s.redo();
-      else s.undo();
-    } else if (!meta && (e.key === 'Backspace' || e.key === 'Delete') && st.sel.length) {
-      e.preventDefault();
-      s.commit(deleteObjects(s.current(), st.sel));
-    } else if (e.key === 'Escape') {
-      if (picker()) setPicker(null);
-      else if (st.listen) s.setListen(null);
-      else s.setState('sel', []);
-    } else if (e.key === '/' && !meta) {
-      e.preventDefault();
-      setPicker({ screen: pointer, at: toCanvas(pointer), from: null });
-    } else if (k === 'f' && !meta) fit(e.shiftKey);
-  }
+  const key = (e: KeyboardEvent): void =>
+    handleKey(e, {
+      s,
+      specs,
+      pickerOpen: () => !!picker(),
+      closePicker: () => setPicker(null),
+      openPicker: (at) => setPicker({ screen: at, at: toCanvas(at), from: null }),
+      pointer: () => pointer,
+      fit,
+      setSpace: (on) => (space = on),
+    });
   window.addEventListener('keydown', key);
   window.addEventListener('keyup', key);
   onCleanup(() => {
@@ -364,7 +400,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       onPointerDown={rootDown}
       onPointerMove={(e) => (pointer = client(e))}
       onDblClick={(e) => {
-        if ((e.target as Element).closest('[data-module]')) return;
+        if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
         setPicker({ screen: client(e), at: toCanvas(client(e)), from: null });
       }}
     >
@@ -372,6 +408,22 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         class="sr-layer"
         style={{ transform: `translate(${st.view.x}px, ${st.view.y}px) scale(${st.view.z})` }}
       >
+        <For each={frames()}>
+          {(g) => (
+            <Frame
+              group={g}
+              selected={st.sel.includes(g.id)}
+              drop={drop() === g.id}
+              act={{
+                headDown: (e) => moduleDown(g.id, e),
+                rename: (name) => s.edit((d) => editFrame(d, g.id, { name })),
+                tint: () => s.edit((d) => editFrame(d, g.id, { tint: (g.tint + 1) % TINTS })),
+                resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
+                hover: () => undefined,
+              }}
+            />
+          )}
+        </For>
         <For each={st.doc.modules}>
           {(m) => {
             const node = () => s.nodeOf(m.id);

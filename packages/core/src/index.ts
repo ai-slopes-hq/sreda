@@ -7,3 +7,4 @@ export * from './plan';
 export * from './compile';
 export * from './panel';
 export * from './generators';
+export * from './frames';

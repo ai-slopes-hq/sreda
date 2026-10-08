@@ -78,7 +78,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
     scheduleSave(doc);
     // selection and listening follow what still exists
-    const ids = new Set(doc.modules.map((m) => m.id));
+    const ids = new Set([...doc.modules.map((m) => m.id), ...doc.groups.map((g) => g.id)]);
     if (state.sel.some((id) => !ids.has(id)))
       setState(
         'sel',

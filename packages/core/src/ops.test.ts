@@ -26,7 +26,7 @@ test('ids are never reused and positions snap to 8', () => {
   expect(doc.modules[0]).toMatchObject({ x: 0, y: 8 });
   const gone = deleteObjects(doc, [fx]);
   expect(addModule(gone, S, 'src', 0, 0).id).toBe('m3');
-  expect(moveObjects(doc, [src], 13, -2).modules[0]).toMatchObject({ x: 16, y: 8 });
+  expect(moveObjects(doc, S, [src], 13, -2).modules[0]).toMatchObject({ x: 16, y: 8 });
 });
 
 test('an unknown type throws', () => {
