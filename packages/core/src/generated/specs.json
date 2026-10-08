@@ -315,6 +315,54 @@
     "normals": []
   },
   {
+    "type": "clock",
+    "label": "CLOCK",
+    "desc": "a frame's clock",
+    "internal": true,
+    "size": [
+      1,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "CLK",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "option",
+        "id": "on",
+        "label": "ON",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bpm",
+        "label": "BPM",
+        "min": 20.0,
+        "max": 300.0,
+        "def": 120.0,
+        "taper": "lin",
+        "hidden": true
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "compare",
     "label": "COMPARE",
     "desc": "signal to gate",

@@ -1,5 +1,8 @@
-import { GHEAD, type Group } from '@sreda/core';
+import { GHEAD, type Group, type Merge, type NodeReadouts } from '@sreda/core';
 import { createSignal, Show, type JSX } from 'solid-js';
+import { track } from '../live';
+import { fmtRat } from './glyphs';
+import { Jack } from './Jack';
 
 /** Fills (≈ 4 % neutral, ≈ 8 % hues) and swatch colours, by tint index. */
 export const TINT_FILL = [
@@ -20,6 +23,12 @@ export interface FrameActions {
   tint(): void;
   resizeDown(edge: Edge, e: PointerEvent): void;
   hover(on: boolean): void;
+  /** the own clock: + CLOCK, ✕, a BPM drag, TAP */
+  clock(c: Group['clock'], merge: Merge): void;
+  jackDown(port: 'clkIn' | 'clkOut', e: PointerEvent): void;
+  /** the CLK IN ratio field */
+  fieldDown(e: PointerEvent): void;
+  fieldReset(): void;
 }
 
 export interface FrameProps {
@@ -27,7 +36,23 @@ export interface FrameProps {
   selected: boolean;
   /** what is being dragged would land in this frame */
   drop: boolean;
+  /** a cable in CLK IN (the own clock is dimmed and does not run) */
+  cabledIn: boolean;
+  cabledOut: boolean;
+  /** CLK IN reads the parent frame's clock: its title */
+  normal?: string | undefined;
+  listening?: boolean;
+  /** the frame clock node's readouts, once audio runs */
+  readouts?: NodeReadouts | undefined;
   act: FrameActions;
+}
+
+/** BPM from the last taps (up to 4, within 2.5 s; at least 2) — null until there are two */
+export function tapTempo(taps: number[], now: number): { taps: number[]; bpm: number | null } {
+  const recent = [...taps.filter((t) => now - t < 2.5), now].slice(-4);
+  if (recent.length < 2) return { taps: recent, bpm: null };
+  const interval = (recent[recent.length - 1]! - recent[0]!) / (recent.length - 1);
+  return { taps: recent, bpm: Math.round(Math.min(300, Math.max(20, 60 / interval))) };
 }
 
 const HANDLES: Record<Edge, JSX.CSSProperties> = {
@@ -44,6 +69,34 @@ export function Frame(props: FrameProps): JSX.Element {
   const [renaming, setRenaming] = createSignal(false);
   const g = () => props.group;
   let draft = '';
+  let taps: number[] = [];
+
+  function tap(): void {
+    const t = tapTempo(taps, performance.now() / 1000);
+    taps = t.taps;
+    if (t.bpm !== null) props.act.clock({ on: true, bpm: t.bpm }, { key: `tap:${g().id}`, stroke: true });
+  }
+
+  /** drag the BPM vertically: 1 per 4 px, Shift 1 per 10 px */
+  function bpmDown(e: PointerEvent): void {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const y0 = e.clientY;
+    const b0 = g().clock.bpm;
+    const key = `bpm:${g().id}:${y0}:${performance.now()}`;
+    const move = (ev: PointerEvent) => {
+      const bpm = Math.round(
+        Math.min(300, Math.max(20, b0 + (y0 - ev.clientY) * (ev.shiftKey ? 0.1 : 0.25))),
+      );
+      if (bpm !== g().clock.bpm) props.act.clock({ on: true, bpm }, { key, stroke: true });
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
 
   function done(save: boolean): void {
     if (!renaming()) return;
@@ -123,7 +176,84 @@ export function Frame(props: FrameProps): JSX.Element {
               onClick={() => props.act.tint()}
             />
           </Show>
+          <Show
+            when={g().clock.on}
+            fallback={
+              <button
+                class="sr-gbtn"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => props.act.clock({ on: true, bpm: g().clock.bpm }, undefined)}
+              >
+                + CLOCK
+              </button>
+            }
+          >
+            <div
+              class="sr-bpm"
+              classList={{ dim: props.cabledIn }}
+              title="drag to change"
+              onPointerDown={bpmDown}
+              onDblClick={(e) => e.stopPropagation()}
+            >
+              {g().clock.bpm} BPM
+            </div>
+            <button class="sr-gbtn" onPointerDown={(e) => e.stopPropagation()} onClick={tap}>
+              TAP
+            </button>
+            <button
+              class="sr-gbtn"
+              aria-label="Remove group clock"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.clock({ on: false, bpm: g().clock.bpm }, undefined)}
+            >
+              ✕
+            </button>
+          </Show>
         </div>
+      </div>
+      <div
+        class="sr-gfield"
+        data-field="clkIn"
+        title="CLK IN ratio ÷16…×8 · drag, double-click resets"
+        style={{ color: g().ratio === 1 ? '#5d594f' : undefined }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.stopPropagation();
+          props.act.fieldDown(e);
+        }}
+        onDblClick={(e) => {
+          e.stopPropagation();
+          props.act.fieldReset();
+        }}
+      >
+        {g().ratio !== 1 || hot() ? fmtRat(g().ratio) : ''}
+      </div>
+      <Jack
+        port="clkIn"
+        dir="in"
+        role="trigger"
+        x={0}
+        y={GHEAD / 2}
+        filled={props.cabledIn}
+        normalled={!!props.normal}
+        title={props.normal ?? 'CLK IN'}
+        onPointerDown={(e) => props.act.jackDown('clkIn', e)}
+        ref={(el) => track(el, 'flash', () => props.readouts?.trigs)}
+      />
+      <Jack
+        port="clkOut"
+        dir="out"
+        role="trigger"
+        x={12}
+        y={GHEAD + 8}
+        filled={props.cabledOut}
+        listening={!!props.listening}
+        title="CLK OUT · patch to members · click to listen"
+        onPointerDown={(e) => props.act.jackDown('clkOut', e)}
+        ref={(el) => track(el, 'flash', () => props.readouts?.state)}
+      />
+      <div class="sr-plabel" style={{ left: '22px', top: `${GHEAD + 3}px` }}>
+        CLK
       </div>
       {(Object.keys(HANDLES) as Edge[]).map((edge) => (
         <div

@@ -51,6 +51,8 @@ export interface ModuleSpec {
   params: Param[];
   normals: Normal[];
   display?: { lanes: number; kind: string };
+  /** never offered in the picker or allowed in a document (a frame's clock) */
+  internal?: boolean;
 }
 export type Specs = Record<string, ModuleSpec>;
 

@@ -6,6 +6,7 @@ use crate::spec::{port, ModuleSpec, Normal, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "snh",
+        internal: false,
         label: "S&H",
         desc: "sample and hold",
         size: (2, 1),

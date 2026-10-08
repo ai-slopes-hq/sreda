@@ -15,6 +15,7 @@ const MODULES: &[Entry] = &[
     ("chance", chance::spec, |sr| {
         Box::new(chance::Chance::new(sr))
     }),
+    ("clock", clock::spec, |sr| Box::new(clock::Clock::new(sr))),
     ("compare", compare::spec, |_| {
         Box::new(compare::Compare::default())
     }),

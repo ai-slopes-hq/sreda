@@ -28,6 +28,17 @@ export function mod(type: string, o: Partial<ModuleSpec>): ModuleSpec {
 }
 
 export const TEST_SPECS: Specs = {
+  // a frame's clock, as engine/src/modules/clock.rs declares it
+  clock: mod('clock', {
+    internal: true,
+    size: [1, 1],
+    inputs: [p('clk', 'trigger')],
+    outputs: [p('out', 'trigger')],
+    params: [
+      { kind: 'option', id: 'on', label: 'ON', options: ['OFF', 'ON'], def: 0, hidden: true },
+      k('bpm', { hidden: true, min: 20, max: 300, def: 120 }),
+    ],
+  }),
   src: mod('src', { outputs: [p('out', 'audio')], params: [k('lvl')] }),
   fx: mod('fx', {
     inputs: [p('in', 'audio'), p('cv', 'mod'), p('clk', 'trigger')],

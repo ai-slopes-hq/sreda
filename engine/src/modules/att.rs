@@ -20,6 +20,7 @@ pub fn spec() -> ModuleSpec {
     params.extend((0..4).map(|k| knob(o_ids[k], o_labels[k], -1.0, 1.0, 0.0).into()));
     ModuleSpec {
         type_: "att",
+        internal: false,
         label: "ATT",
         desc: "4× attenuverter + offset",
         size: (6, 2),

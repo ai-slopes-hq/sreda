@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "compare",
+        internal: false,
         label: "COMPARE",
         desc: "signal to gate",
         size: (3, 1),

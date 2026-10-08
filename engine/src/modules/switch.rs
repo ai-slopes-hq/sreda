@@ -7,6 +7,7 @@ use crate::spec::{choice, knob, port, ModuleSpec, Role};
 pub fn switch_spec() -> ModuleSpec {
     ModuleSpec {
         type_: "switch",
+        internal: false,
         label: "SWITCH",
         desc: "sequential switch 4 → 1",
         size: (4, 2),
@@ -32,6 +33,7 @@ pub fn switch_spec() -> ModuleSpec {
 pub fn spread_spec() -> ModuleSpec {
     ModuleSpec {
         type_: "spread",
+        internal: false,
         label: "SPREAD",
         desc: "sequential switch 1 → 4",
         size: (4, 2),

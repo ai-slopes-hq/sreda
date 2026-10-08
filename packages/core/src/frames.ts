@@ -169,15 +169,34 @@ export function frameSelection(doc: Doc, specs: Specs, ids: readonly string[]): 
     clock: { on: false, bpm: 120 },
   };
   const set = new Set(roots);
-  return {
-    doc: {
-      ...doc,
-      nextId: doc.nextId + 1,
-      groups: [...doc.groups.map((g) => (set.has(g.id) ? { ...g, parent: id } : g)), group],
-      modules: doc.modules.map((m) => (set.has(m.id) ? { ...m, parent: id } : m)),
-    },
-    id,
+  const framed: Doc = {
+    ...doc,
+    nextId: doc.nextId + 1,
+    groups: [...doc.groups.map((g) => (set.has(g.id) ? { ...g, parent: id } : g)), group],
+    modules: doc.modules.map((m) => (set.has(m.id) ? { ...m, parent: id } : m)),
   };
+  return { doc: growToHold(framed, id), id };
+}
+
+/**
+ * The frames around `gid` grow, innermost first, until each holds what is inside it with 16 px to spare (under its
+ * header): a parent stays larger than its child, so containment keeps the nesting.
+ */
+function growToHold(doc: Doc, gid: string): Doc {
+  let groups = doc.groups;
+  let child = groups.find((g) => g.id === gid)!;
+  while (child.parent) {
+    const p = groups.find((g) => g.id === child.parent);
+    if (!p) break;
+    const x0 = Math.min(p.x, child.x - GPAD);
+    const y0 = Math.min(p.y, child.y - GPAD - GHEAD);
+    const x1 = Math.max(p.x + p.w, child.x + child.w + GPAD);
+    const y1 = Math.max(p.y + p.h, child.y + child.h + GPAD);
+    const grown = { ...p, x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+    groups = groups.map((g) => (g.id === p.id ? grown : g));
+    child = grown;
+  }
+  return { ...doc, groups };
 }
 
 /** G on frames / ⇧⌘G: remove the frames; their children move to their parent; cables on their clock jacks go. */
@@ -196,12 +215,23 @@ export function unframe(doc: Doc, _specs: Specs, gids: readonly string[]): Doc {
 }
 
 /** The frame a moved selection would land in (for the drop highlight): what its moved roots' centre falls in. */
-export function landingFrame(doc: Doc, specs: Specs, ids: readonly string[], dx: number, dy: number): string | null {
+export function landingFrame(
+  doc: Doc,
+  specs: Specs,
+  ids: readonly string[],
+  dx: number,
+  dy: number,
+): string | null {
   const roots = rootsOf(doc, ids);
   if (!roots.length) return null;
   const b = bounds(roots.map((id) => rectOf(doc, specs, id)));
   const area = roots.length === 1 && isGroupId(roots[0]!) ? b.w * b.h : 0;
-  return innermost(doc, { x: b.x + b.w / 2 + dx, y: b.y + b.h / 2 + dy }, area, new Set(withDescendants(doc, ids)));
+  return innermost(
+    doc,
+    { x: b.x + b.w / 2 + dx, y: b.y + b.h / 2 + dy },
+    area,
+    new Set(withDescendants(doc, ids)),
+  );
 }
 
 /** Drag an edge or corner: at least 352 × 96; everything is re-parented (growing over an object attaches it). */

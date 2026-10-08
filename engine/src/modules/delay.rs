@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "delay",
+        internal: false,
         label: "DELAY",
         desc: "echo",
         size: (5, 1),

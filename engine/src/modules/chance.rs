@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "chance",
+        internal: false,
         label: "CHANCE",
         desc: "bernoulli: each trigger to A or B",
         size: (3, 1),

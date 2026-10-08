@@ -6,6 +6,7 @@ use crate::spec::{choice, knob, port, Display, ModuleSpec, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "scope",
+        internal: false,
         label: "SCOPE",
         desc: "oscilloscope with thru outputs",
         size: (6, 2),

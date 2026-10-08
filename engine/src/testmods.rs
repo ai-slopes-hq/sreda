@@ -15,6 +15,7 @@ fn m(
 ) -> ModuleSpec {
     ModuleSpec {
         type_,
+        internal: false,
         label: type_,
         desc: "",
         size: (3, 1),

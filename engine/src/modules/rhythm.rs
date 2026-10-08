@@ -40,6 +40,7 @@ pub fn spec() -> ModuleSpec {
     });
     ModuleSpec {
         type_: "rhythm",
+        internal: false,
         label: "RHYTHM",
         desc: "16 pads: euclid or grid, accents · generative",
         size: (10, 2),

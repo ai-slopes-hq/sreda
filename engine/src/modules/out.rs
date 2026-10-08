@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Normal, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "out",
+        internal: false,
         label: "OUT",
         desc: "to speakers",
         size: (3, 1),

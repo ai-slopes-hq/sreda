@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "noise",
+        internal: false,
         label: "NOISE",
         desc: "white and pink",
         size: (3, 1),

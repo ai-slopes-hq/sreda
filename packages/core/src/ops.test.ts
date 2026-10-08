@@ -92,3 +92,7 @@ test('same-type modules are numbered in names', () => {
 test('a plain-object key is not a module type', () => {
   expect(() => addModule(emptyDoc, S, 'constructor', 0, 0)).toThrow(RuleError);
 });
+
+test('a frame clock cannot be added as a module', () => {
+  expect(() => addModule(emptyDoc, S, 'clock', 0, 0)).toThrow(RuleError);
+});

@@ -922,6 +922,28 @@ mod tests {
     }
 
     #[test]
+    fn a_nested_frame_takes_its_parents_clock_through_its_ratio() {
+        // node 0: the parent frame's clock, own clock on at 120 BPM; node 1: the child, clock off, ÷2
+        let parent = node("g1", "clock", &[], &[1.0, 120.0], vec![none(Kind::Trigger)]);
+        let mut clk = none(Kind::Trigger);
+        clk.normal = Some(NormalPlan::Own { node: 0, port: 0 });
+        clk.ratio = -2;
+        let child = node("g2", "clock", &[], &[0.0, 120.0], vec![clk]);
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![parent, child], chain(2))).unwrap();
+        let mut out = Vec::new();
+        for _ in 0..1600 {
+            e.process();
+            out.extend_from_slice(e.output(1, 0));
+        }
+        let r: Vec<usize> = (1..out.len()).filter(|&i| out[i] > 0.5 && out[i - 1] <= 0.5).collect();
+        assert!(r.len() >= 3, "{r:?}");
+        for w in r.windows(2) {
+            assert!((w[1] - w[0]).abs_diff(48_000) <= 2, "{r:?}");
+        }
+    }
+
+    #[test]
     fn a_cable_carries_samples() {
         let mut e = Engine::new(SR, 1);
         let gain = node(

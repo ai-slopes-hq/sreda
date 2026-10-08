@@ -2,7 +2,7 @@ import {
   addModule,
   chainOf,
   connect,
-  editFrame,
+  isGroupId,
   jackAt,
   landingFrame,
   moveObjects,
@@ -88,7 +88,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     [...st.doc.groups].sort((a, b) => chainOf(st.doc, a.id).length - chainOf(st.doc, b.id).length),
   );
   function roleOf(id: string, port: string, dir: 'in' | 'out'): Role {
-    const spec = specs[st.doc.modules.find((m) => m.id === id)!.type]!;
+    const m = st.doc.modules.find((x) => x.id === id);
+    if (!m) return 'trigger'; // a frame's CLK IN / CLK OUT
+    const spec = specs[m.type]!;
     if (dir === 'out') return spec.outputs.find((p) => p.id === port)!.role;
     return port.startsWith('@') ? 'mod' : spec.inputs.find((p) => p.id === port)!.role;
   }
@@ -141,8 +143,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   function fieldDown(id: string, port: string, field: FieldKind, e: PointerEvent): void {
     if (e.button !== 0) return;
     e.stopPropagation();
-    const m = s.current().modules.find((x) => x.id === id)!;
-    const v0 = field === 'att' ? (m.atts[port] ?? 1) : RATIOS.indexOf(m.ratios[port] ?? 1);
+    const doc = s.current();
+    const m = doc.modules.find((x) => x.id === id);
+    const ratio = m ? (m.ratios[port] ?? 1) : (doc.groups.find((g) => g.id === id)?.ratio ?? 1);
+    const v0 = field === 'att' ? (m?.atts[port] ?? 1) : RATIOS.indexOf(ratio);
     s.setState('editing', id);
     begin({ kind: 'field', id, port, field, at: client(e), v0, key: `field:${id}:${port}:${++strokes}` });
   }
@@ -223,7 +227,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           });
         else {
           const i = Math.min(RATIOS.length - 1, Math.max(0, d.v0 - Math.round(dy / 8)));
-          s.ratio(d.id, d.port, RATIOS[i]!, { key: d.key, stroke: true });
+          if (isGroupId(d.id)) s.frame(d.id, { ratio: RATIOS[i]! }, { key: d.key, stroke: true });
+          else s.ratio(d.id, d.port, RATIOS[i]!, { key: d.key, stroke: true });
         }
         break;
       }
@@ -282,11 +287,16 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     }
     const el = document.elementFromPoint(p.x, p.y);
     const jackEl = el?.closest('[data-jack]') as HTMLElement | null;
-    const modEl = el?.closest('[data-module]') as HTMLElement | null;
+    const modEl = el?.closest('[data-module],[data-frame]') as HTMLElement | null;
     if (jackEl && modEl) {
       try {
         s.commit(
-          connect(base, specs, [d.from.id, d.from.port], [modEl.dataset['module']!, jackEl.dataset['jack']!]),
+          connect(
+            base,
+            specs,
+            [d.from.id, d.from.port],
+            [modEl.dataset['module'] ?? modEl.dataset['frame']!, jackEl.dataset['jack']!],
+          ),
         );
       } catch (err) {
         if (!(err instanceof RuleError)) throw err;
@@ -328,7 +338,12 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
     for (const id of ids) {
       const r = rectOf(st.doc, specs, id);
-      [x0, y0, x1, y1] = [Math.min(x0, r.x), Math.min(y0, r.y), Math.max(x1, r.x + r.w), Math.max(y1, r.y + r.h)];
+      [x0, y0, x1, y1] = [
+        Math.min(x0, r.x),
+        Math.min(y0, r.y),
+        Math.max(x1, r.x + r.w),
+        Math.max(y1, r.y + r.h),
+      ];
     }
     const z = Math.min(
       1.5,
@@ -382,6 +397,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
 
   const listenText = () => {
     const l = st.listen;
+    const g = l && st.doc.groups.find((x) => x.id === l.id);
+    if (g) return `LISTENING · ${g.name} › CLK`;
     const m = l && st.doc.modules.find((x) => x.id === l.id);
     if (!l || !m) return null;
     const port = specs[m.type]!.outputs.find((p) => p.id === l.port);
@@ -414,12 +431,24 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
               group={g}
               selected={st.sel.includes(g.id)}
               drop={drop() === g.id}
+              cabledIn={cabledIn(g.id, 'clkIn')}
+              cabledOut={cabledOut(g.id, 'clkOut')}
+              normal={(() => {
+                const parent = g.parent && st.doc.groups.find((x) => x.id === g.parent);
+                return parent && !cabledIn(g.id, 'clkIn') ? `CLK IN ← ${parent.name} (normal)` : undefined;
+              })()}
+              listening={st.listen?.id === g.id}
+              readouts={st.audio && s.nodeOf(g.id) !== null ? s.layout().nodes[s.nodeOf(g.id)!] : undefined}
               act={{
                 headDown: (e) => moduleDown(g.id, e),
-                rename: (name) => s.edit((d) => editFrame(d, g.id, { name })),
-                tint: () => s.edit((d) => editFrame(d, g.id, { tint: (g.tint + 1) % TINTS })),
+                rename: (name) => s.frame(g.id, { name }, undefined),
+                tint: () => s.frame(g.id, { tint: (g.tint + 1) % TINTS }, undefined),
                 resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
                 hover: () => undefined,
+                clock: (c, merge) => s.frame(g.id, { clock: c }, merge),
+                jackDown: (port, e) => jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
+                fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
+                fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
               }}
             />
           )}

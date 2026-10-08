@@ -6,6 +6,7 @@ use crate::spec::{choice, knob, port, ModuleSpec, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "osc",
+        internal: false,
         label: "OSC",
         desc: "oscillator",
         size: (5, 1),

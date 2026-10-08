@@ -6,6 +6,7 @@ use crate::spec::{choice, knob, port, ModuleSpec, Normal, Role, Unit, When};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "slope",
+        internal: false,
         label: "SLOPE",
         desc: "rise / fall, cycle, slew",
         size: (5, 1),

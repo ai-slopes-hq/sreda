@@ -7,6 +7,7 @@ use crate::spec::{knob, port, ModuleSpec, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "fold",
+        internal: false,
         label: "FOLD",
         desc: "wavefolder",
         size: (4, 1),

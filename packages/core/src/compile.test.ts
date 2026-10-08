@@ -1,7 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
-import { compile } from './compile';
+import { clockNode, compile } from './compile';
+import { editFrame, frameSelection, unframe } from './frames';
 import { TRACE_LEN } from './plan';
 import { emptyDoc, starterDoc, type Doc } from './doc';
 import { addModule, connect, deleteObjects, removeCable, setAtt, setParam, setRatio } from './ops';
@@ -113,7 +114,7 @@ test('fixtures for the engine', () => {
   // every module type at once: a saw and a square clock feed every input of every module
   let all = addModule(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'osc', 0, 200).doc;
   all = setParam(setParam(all, SPECS, 'm1', 'wave', 2), SPECS, 'm2', 'wave', 3);
-  for (const type of Object.keys(SPECS)) {
+  for (const type of Object.keys(SPECS).filter((t) => !SPECS[t]!.internal)) {
     const added = addModule(all, SPECS, type, 400, 0);
     all = added.doc;
     for (const port of inputPorts(SPECS[type]!))
@@ -167,4 +168,39 @@ test('every node gets a state slot; a scope display gets a 1024-float trace', ()
   expect(layout.nodes.map((n) => n.trace === null)).toEqual([true, false, true]);
   expect(new Set(used).size).toBe(used.length);
   expect(Math.max(...used)).toBeLessThan(layout.size);
+});
+
+test('a frame compiles to a clock node after the modules; CLK OUT cables read it', () => {
+  const { doc: d0, ids } = build(S, ['fx', 'fx']);
+  const g = frameSelection(d0, S, [ids[0]!]);
+  let doc = editFrame(g.doc, g.id, { clock: { on: true, bpm: 128 } });
+  doc = connect(doc, S, [g.id, 'clkOut'], [ids[0]!, 'clk']);
+  doc = connect(doc, S, [ids[1]!, 'eoc'], [g.id, 'clkIn']);
+  const plan = compile(doc, S, 1);
+  expect(clockNode(doc, g.id)).toBe(2);
+  expect(plan.nodes[2]).toMatchObject({ id: g.id, type: 'clock', knobs: [], fixed: [1, 128] });
+  expect(plan.nodes[2]!.inputs).toEqual([
+    { sources: [{ node: 1, port: 1, late: false }], normal: null, kind: 'trigger', att: 1, ratio: 1 },
+  ]);
+  expect(plan.nodes[0]!.inputs[2]!.sources).toEqual([{ node: 2, port: 0, late: false }]);
+  expect(plan.layout.nodes).toHaveLength(3);
+  const l = plan.layout.nodes[2]!;
+  expect([l.trigs - l.knobs, l.outs - l.trigs, l.state - l.outs]).toEqual([0, 1, 1]);
+});
+
+test("a nested frame's CLK IN is normalled to its parent's clock, at its ratio; the parent runs first", () => {
+  const { doc: d0, ids } = build(S, ['fx']);
+  const outer = frameSelection(d0, S, ids);
+  const inner = frameSelection(outer.doc, S, ids);
+  const doc = editFrame(inner.doc, inner.id, { ratio: -2 });
+  // the inner frame comes after the outer one in doc.groups; put it first to check the order
+  const flipped = { ...doc, groups: [...doc.groups].reverse() };
+  const plan = compile(flipped, S, 1);
+  const [pi, ci] = [clockNode(flipped, outer.id), clockNode(flipped, inner.id)];
+  expect(plan.nodes[ci]!.inputs[0]).toMatchObject({ normal: { node: pi, port: 0 }, ratio: -2 });
+  const at = (n: number) => plan.steps.findIndex((s) => 'node' in s && s.node === n);
+  expect(at(pi)).toBeLessThan(at(ci));
+  // removing the parent takes the normal with it
+  const alone = unframe(doc, S, [outer.id]);
+  expect(compile(alone, S, 1).nodes[clockNode(alone, inner.id)]!.inputs[0]!.normal).toBeNull();
 });

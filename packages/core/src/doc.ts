@@ -121,7 +121,8 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
     if (!isObj(m) || typeof m['id'] !== 'string' || typeof m['type'] !== 'string') return null;
     const spec = specOf(specs, Object.hasOwn(RENAMED, m['type']) ? RENAMED[m['type']]! : m['type']);
     const parent = m['parent'] ?? null;
-    if (!spec || byId.has(m['id']) || gIds.has(m['id']) || !isNum(m['x']) || !isNum(m['y'])) return null;
+    if (!spec || spec.internal || byId.has(m['id']) || gIds.has(m['id']) || !isNum(m['x']) || !isNum(m['y']))
+      return null;
     if (parent !== null && typeof parent !== 'string') return null;
     const params = m['params'] ?? {};
     const atts = m['atts'] ?? {};
@@ -154,7 +155,8 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
       const toOk = isGroupId(t[0]) ? gIds.has(t[0]) && t[1] === 'clkIn' : byId.has(t[0]);
       if (!fromOk || !toOk) continue;
       if (!isGroupId(f[0]) && !specs[byId.get(f[0])!.type]!.outputs.some((p) => p.id === f[1])) return null;
-      if (!isGroupId(t[0]) && !inputPorts(specs[byId.get(t[0])!.type]!).some((p) => p.id === t[1])) return null;
+      if (!isGroupId(t[0]) && !inputPorts(specs[byId.get(t[0])!.type]!).some((p) => p.id === t[1]))
+        return null;
       outCables.push({ from: [f[0], f[1]], to: [t[0], t[1]] });
       continue;
     }

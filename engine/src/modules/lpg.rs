@@ -7,6 +7,7 @@ use crate::spec::{choice, knob, port, ModuleSpec, Normal, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "lpg",
+        internal: false,
         label: "LPG",
         desc: "low-pass gate and VCA",
         size: (4, 1),

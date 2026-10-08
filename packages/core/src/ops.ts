@@ -20,7 +20,7 @@ export function addModule(
   x: number,
   y: number,
 ): { doc: Doc; id: string } {
-  if (!specOf(specs, type)) throw new RuleError(`unknown module type ${type}`);
+  if (!specOf(specs, type) || specs[type]!.internal) throw new RuleError(`unknown module type ${type}`);
   const id = `m${doc.nextId}`;
   const m = blankModule(specs, type, id, snap(x), snap(y));
   return { doc: { ...doc, modules: [...doc.modules, m], nextId: doc.nextId + 1 }, id };

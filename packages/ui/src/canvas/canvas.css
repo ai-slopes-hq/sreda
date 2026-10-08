@@ -424,7 +424,8 @@
   pointer-events: none;
   z-index: 1;
 }
-.sr-ghosts .ghost-normal {
+.sr-ghosts .ghost-normal,
+.sr-cables .ghost-normal {
   fill: none;
   stroke-width: 1.3;
   stroke-dasharray: 3 4;
@@ -852,7 +853,9 @@
   background: #121210;
   border: 1px solid #8f897c;
   color: #e9e4d8;
-  font: 600 10px 'IBM Plex Mono', monospace;
+  font:
+    600 10px 'IBM Plex Mono',
+    monospace;
   letter-spacing: 0.12em;
   padding: 2px 4px;
   outline: none;
@@ -879,4 +882,56 @@
 }
 .sr-frame .sr-jack {
   pointer-events: auto;
+}
+.sr-gbtn {
+  height: 20px;
+  padding: 0 7px;
+  background: #121210;
+  border: 1px solid #3a3933;
+  border-radius: 2px;
+  color: #e9e4d8;
+  font:
+    500 9px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.sr-gbtn:hover {
+  border-color: #8f897c;
+}
+.sr-gbtn.on {
+  background: #e9e4d8;
+  color: #121210;
+  border-color: #e9e4d8;
+}
+.sr-bpm {
+  height: 20px;
+  line-height: 20px;
+  padding: 0 6px;
+  border: 1px solid #3a3933;
+  border-radius: 2px;
+  font-size: 9px;
+  color: #f5a524;
+  cursor: ns-resize;
+  white-space: nowrap;
+}
+.sr-bpm.dim {
+  color: #5d594f;
+}
+.sr-gfield {
+  position: absolute;
+  left: 10px;
+  top: 9px;
+  min-width: 18px;
+  height: 11px;
+  font-size: 9px;
+  line-height: 11px;
+  padding: 0 2px;
+  border-radius: 2px;
+  cursor: ns-resize;
+  pointer-events: auto;
+  z-index: 2;
+}
+.sr-gfield:hover {
+  background: #2a2924;
 }

@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "mix",
+        internal: false,
         label: "MIX",
         desc: "4 audio inputs",
         size: (4, 2),

@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Normal, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "uncertainty",
+        internal: false,
         label: "UNCERTAINTY",
         desc: "smooth, stepped, quantised random",
         size: (4, 1),

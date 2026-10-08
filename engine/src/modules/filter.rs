@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "filter",
+        internal: false,
         label: "FILTER",
         desc: "state-variable filter: LP, BP, HP at once",
         size: (4, 1),

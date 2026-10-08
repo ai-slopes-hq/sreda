@@ -4,11 +4,29 @@ import type { Doc } from './doc';
 import { READOUT_CAPACITY, TRACE_LEN, type InputPlan, type Plan, type PlanNode, type Step } from './plan';
 import { fromKnob, inputPorts, type ModuleSpec, type Specs } from './spec';
 
+/** A frame's clock node: frames are compiled after the modules, in document order. */
+export function clockNode(doc: Doc, gid: string): number {
+  return doc.modules.length + doc.groups.findIndex((g) => g.id === gid);
+}
+
 export function compile(doc: Doc, specs: Specs, seq: number): Plan {
-  const index = new Map(doc.modules.map((m, i) => [m.id, i]));
-  const specOf = (i: number): ModuleSpec => specs[doc.modules[i]!.type]!;
-  const n = doc.modules.length;
+  const nm = doc.modules.length;
+  const index = new Map([
+    ...doc.modules.map((m, i) => [m.id, i] as const),
+    ...doc.groups.map((g, k) => [g.id, nm + k] as const),
+  ]);
+  const specOf = (i: number): ModuleSpec => (i < nm ? specs[doc.modules[i]!.type]! : specs['clock']!);
+  const n = nm + doc.groups.length;
   const edges: number[][] = Array.from({ length: n }, () => []);
+  /** the plan source a cable's `from` end reads: a module's output, or a frame's clock */
+  const sourceOf = (c: { from: [string, string] }) => {
+    const from = index.get(c.from[0])!;
+    return {
+      node: from,
+      port: from < nm ? specOf(from).outputs.findIndex((o) => o.id === c.from[1]) : 0,
+      late: false,
+    };
+  };
 
   const nodes: PlanNode[] = doc.modules.map((m, i) => {
     const spec = specOf(i);
@@ -23,9 +41,9 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
       const sources = doc.cables
         .filter((c) => c.to[0] === m.id && c.to[1] === port.id)
         .map((c) => {
-          const from = index.get(c.from[0])!;
-          edges[from]!.push(i);
-          return { node: from, port: specOf(from).outputs.findIndex((o) => o.id === c.from[1]), late: false };
+          const src = sourceOf(c);
+          edges[src.node]!.push(i);
+          return src;
         });
       let normal: InputPlan['normal'] = null;
       const nm = sources.length ? undefined : spec.normals.find((x) => x.input === port.id);
@@ -49,6 +67,35 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
     );
     return { id: m.id, type: m.type, knobs, fixed, inputs, connectedOut };
   });
+  // each frame: a clock node; CLK IN takes its cables, else its parent frame's clock (through this frame's ratio)
+  doc.groups.forEach((g, k) => {
+    const i = nm + k;
+    const sources = doc.cables
+      .filter((c) => c.to[0] === g.id && c.to[1] === 'clkIn')
+      .map((c) => {
+        const src = sourceOf(c);
+        edges[src.node]!.push(i);
+        return src;
+      });
+    const parent = g.parent ? index.get(g.parent) : undefined;
+    if (parent !== undefined) edges[parent]!.push(i);
+    nodes.push({
+      id: g.id,
+      type: 'clock',
+      knobs: [],
+      fixed: [g.clock.on ? 1 : 0, g.clock.bpm],
+      inputs: [
+        {
+          sources,
+          normal: parent !== undefined ? { node: parent, port: 0 } : null,
+          kind: 'trigger',
+          att: 1,
+          ratio: g.ratio,
+        },
+      ],
+      connectedOut: [doc.cables.some((c) => c.from[0] === g.id)],
+    });
+  });
 
   const steps = order(n, edges);
   // inside a loop, an edge from a node that runs at or after its target is read one sample late
@@ -62,7 +109,7 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
   }
 
   let off = 2; // 0: seq, 1: the master peak
-  const layout = doc.modules.map((_, i) => {
+  const layout = nodes.map((_, i) => {
     const spec = specOf(i);
     const knobs = off;
     off += spec.params.filter((p) => p.kind === 'knob' && !p.hidden).length;

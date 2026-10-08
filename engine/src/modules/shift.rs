@@ -9,6 +9,7 @@ pub const MAX_PENDING: usize = 16;
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "shift",
+        internal: false,
         label: "SHIFT",
         desc: "delay triggers by part of the period · swing",
         size: (3, 1),

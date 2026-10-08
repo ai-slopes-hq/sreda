@@ -3,6 +3,7 @@
 pub mod abc;
 pub mod att;
 pub mod chance;
+pub mod clock;
 pub mod compare;
 pub mod complex;
 pub mod delay;

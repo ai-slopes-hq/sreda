@@ -110,7 +110,10 @@ test('resizing a frame over a module attaches it; the size is clamped to 352 × 
   const r = rectOf(g.doc, S, g.id);
   const grown = resizeFrame(g.doc, S, g.id, { ...r, w: 1000 });
   expect(parentOf(grown, ids[1]!)).toBe(g.id);
-  expect(rectOf(resizeFrame(g.doc, S, g.id, { ...r, w: 10, h: 10 }), S, g.id)).toMatchObject({ w: 352, h: 96 });
+  expect(rectOf(resizeFrame(g.doc, S, g.id, { ...r, w: 10, h: 10 }), S, g.id)).toMatchObject({
+    w: 352,
+    h: 96,
+  });
 });
 
 test('deleting a frame takes its contents and every cable touching them or its clock jacks', () => {
@@ -144,4 +147,18 @@ test('a frame inside a muted frame is muted', () => {
   const d = { ...g2.doc, groups: g2.doc.groups.map((g) => (g.id === g1.id ? { ...g, muted: true } : g)) };
   expect(effectiveMuted(d, g2.id)).toBe(true);
   expect(effectiveMuted(g2.doc, g2.id)).toBe(false);
+});
+
+test("framing a frame's only module grows the outer frame so the new one stays inside it, smaller", () => {
+  const { doc, ids } = mods(['src', 0, 0]);
+  const outer = frameSelection(doc, S, ids);
+  const inner = frameSelection(outer.doc, S, ids);
+  const o = rectOf(inner.doc, S, outer.id);
+  const i = rectOf(inner.doc, S, inner.id);
+  expect(i.x - o.x).toBeGreaterThanOrEqual(GPAD);
+  expect(i.y - o.y).toBeGreaterThanOrEqual(GPAD + GHEAD);
+  expect(o.x + o.w - (i.x + i.w)).toBeGreaterThanOrEqual(GPAD);
+  expect(o.y + o.h - (i.y + i.h)).toBeGreaterThanOrEqual(GPAD);
+  const moved = moveObjects(inner.doc, S, [inner.id], 0, 8);
+  expect(parentOf(moved, inner.id)).toBe(outer.id);
 });

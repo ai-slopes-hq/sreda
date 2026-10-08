@@ -30,6 +30,7 @@ test.each([
   ['a cable to a missing module', (d: Doc) => (d.cables[0]!.from = ['m9', 'out'])],
   ['a cable from an input', (d: Doc) => (d.cables[0]!.from = ['m2', 'in'])],
   ['a duplicated id', (d: Doc) => (d.modules[1]!.id = 'm1')],
+  ['a module of an internal type (a frame clock)', (d: Doc) => (d.modules[0]!.type = 'clock')],
   ['a frame with a non-numeric x', (d: Doc) => Object.assign(d, { groups: [{ ...frame('g5'), x: 'a' }] })],
 ])('rejects %s', (_name, breakIt) => {
   const d = good();

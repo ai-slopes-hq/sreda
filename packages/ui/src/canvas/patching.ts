@@ -22,6 +22,7 @@ function targets(specs: Specs, type: string, from: End): Port[] {
 export function pickerItems(specs: Specs, query: string, from: End | null): PickerItem[] {
   const q = query.trim().toLowerCase();
   const items = Object.values(specs)
+    .filter((s) => !s.internal)
     .filter(
       (s) =>
         !q || s.label.toLowerCase().includes(q) || s.type.includes(q) || s.desc.toLowerCase().includes(q),

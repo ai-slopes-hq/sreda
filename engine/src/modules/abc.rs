@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Normal, Role};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "abc",
+        internal: false,
         label: "A×B+C",
         desc: "multiply and add, 2 channels",
         size: (5, 2),

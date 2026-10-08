@@ -6,6 +6,7 @@ use crate::spec::{knob, port, ModuleSpec, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "follow",
+        internal: false,
         label: "FOLLOW",
         desc: "envelope follower: sound to CV and gate",
         size: (6, 1),

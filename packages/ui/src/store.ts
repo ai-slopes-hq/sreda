@@ -1,7 +1,9 @@
 // The session: the document (with undo), the view, hover and listening; every structural change compiles a plan
 // and sends it to the engine; a knob turn sends only a knob message.
 import {
+  clockNode,
   compile,
+  editFrame,
   fromKnob,
   History,
   inputPorts,
@@ -9,6 +11,7 @@ import {
   setParam,
   setRatio,
   type Doc,
+  type Group,
   type KnobParam,
   type Merge,
   type Plan,
@@ -51,18 +54,19 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
   // reactive: panels re-register their live readouts when a new plan moves the offsets
   const [layout, setLayout] = createSignal(plan.layout);
 
+  /** a module's plan node, or a frame's clock node */
   const nodeOf = (id: string): number | null => {
     const i = state.doc.modules.findIndex((m) => m.id === id);
-    return i < 0 ? null : i;
+    if (i >= 0) return i;
+    return state.doc.groups.some((g) => g.id === id) ? clockNode(state.doc, id) : null;
   };
 
   function sendListen(): void {
     const l = state.listen;
     const node = l ? nodeOf(l.id) : null;
+    const mod = node !== null ? state.doc.modules[node] : undefined;
     const port =
-      l && node !== null
-        ? specs[state.doc.modules[node]!.type]!.outputs.findIndex((p) => p.id === l.port)
-        : -1;
+      !l || node === null ? -1 : mod ? specs[mod.type]!.outputs.findIndex((p) => p.id === l.port) : 0;
     host?.post({ t: 'listen', target: node !== null && port >= 0 ? { node, port } : null });
   }
 
@@ -161,6 +165,26 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
           value: p.kind === 'knob' ? fromKnob(p, m.params[k]!) : m.params[k]!,
         });
       }
+    },
+    /**
+     * A frame's name, tint, clock or CLK IN ratio: the document, and messages to its clock node (no new plan).
+     * `muted` arrives in Task 3.
+     */
+    frame(
+      gid: string,
+      patch: Partial<Pick<Group, 'name' | 'tint' | 'muted' | 'ratio' | 'clock'>>,
+      merge: Merge,
+    ): void {
+      const doc = editFrame(history.current, gid, patch);
+      history.commit(doc, merge);
+      show(doc);
+      const node = nodeOf(gid);
+      if (node === null) return;
+      if (patch.clock) {
+        host?.post({ t: 'fixed', node, index: 0, value: patch.clock.on ? 1 : 0 });
+        host?.post({ t: 'fixed', node, index: 1, value: patch.clock.bpm });
+      }
+      if (patch.ratio !== undefined) host?.post({ t: 'ratio', node, input: 0, value: patch.ratio });
     },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {

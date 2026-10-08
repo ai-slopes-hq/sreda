@@ -8,6 +8,7 @@ use crate::spec::{choice, knob, port, ModuleSpec, Normal, Role, Unit};
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "complex",
+        internal: false,
         label: "COMPLEX",
         desc: "modulator + carrier",
         size: (6, 1),

@@ -27,7 +27,7 @@ pub enum InternalTag {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum NormalPlan {
-    /// one of the node's own outputs, read one sample late
+    /// a node's output (its own, or a parent frame's clock), read one sample late
     Own {
         node: usize,
         port: usize,

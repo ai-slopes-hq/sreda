@@ -81,6 +81,7 @@ pub fn spec() -> ModuleSpec {
     });
     ModuleSpec {
         type_: "stages",
+        internal: false,
         label: "STAGES",
         desc: "16 stages drawn as a contour: note, time, pulse, slide · generative",
         size: (10, 3),

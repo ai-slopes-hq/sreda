@@ -366,7 +366,11 @@ test('frames: G frames a box selection, dragging a module out detaches it, G unf
   const { app, page } = await launch();
   const osc = (await page.locator('[data-type=osc]').boundingBox())!;
   const out = (await page.locator('[data-type=out]').boundingBox())!;
-  await drag(page, { x: osc.x - 20, y: osc.y - 20 }, { x: out.x + out.width + 20, y: out.y + out.height + 20 });
+  await drag(
+    page,
+    { x: osc.x - 20, y: osc.y - 20 },
+    { x: out.x + out.width + 20, y: out.y + out.height + 20 },
+  );
   await page.keyboard.press('g');
   await expect(page.locator('.sr-frame')).toHaveCount(1);
   await expect(page.locator('.sr-frame .sr-gname')).toHaveText('GROUP 1');
@@ -379,8 +383,7 @@ test('frames: G frames a box selection, dragging a module out detaches it, G unf
   expect(d.modules[1]!.parent).toBeNull();
   expect(d.modules[0]!.parent).toBe(d.groups[0]!.id);
 
-  const head = (await page.locator('.sr-ghead').boundingBox())!;
-  await page.mouse.click(head.x + head.width - 30, head.y + head.height / 2);
+  await page.locator('.sr-gname').click();
   await page.keyboard.press('g');
   await expect(page.locator('.sr-frame')).toHaveCount(0);
   d = await fullDoc(page);
@@ -388,5 +391,66 @@ test('frames: G frames a box selection, dragging a module out detaches it, G unf
   expect(d.modules.map((m) => m.parent)).toEqual([null, null]);
   await page.keyboard.press('Meta+z');
   await expect(page.locator('.sr-frame')).toHaveCount(1);
+  await app.close();
+});
+
+/** rising edges of the `flash` class on an element over `ms` */
+const flashes = (page: Page, selector: string, ms: number) =>
+  page.evaluate(
+    ([sel, dur]) =>
+      new Promise<number>((done) => {
+        const el = document.querySelector(sel as string)!;
+        let n = 0;
+        let was = el.classList.contains('flash');
+        const t0 = performance.now();
+        const id = setInterval(() => {
+          const on = el.classList.contains('flash');
+          if (on && !was) n++;
+          was = on;
+          if (performance.now() - t0 > (dur as number)) {
+            clearInterval(id);
+            done(n);
+          }
+        }, 15);
+      }),
+    [selector, ms] as const,
+  );
+
+test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half as often', async () => {
+  const { app, page } = await launch();
+  await page.mouse.move(700, 600);
+  await page.keyboard.press('/');
+  await page.keyboard.type('lpg');
+  await page.keyboard.press('Enter');
+  await page.locator('[data-type=lpg] .sr-head').click();
+  await page.keyboard.press('g');
+  const outer = (await fullDoc(page)).groups[0]!.id;
+  await page.locator(`[data-frame=${outer}]`).getByText('+ CLOCK').click();
+  await drag(
+    page,
+    await center(page, page.locator(`[data-frame=${outer}] [data-jack=clkOut]`)),
+    await center(page, jack(page, 'lpg', 'ping')),
+  );
+  expect((await fullDoc(page)).cables).toContainEqual({
+    from: [outer, 'clkOut'],
+    to: [expect.any(String), 'ping'],
+  });
+  await page.mouse.click(1300, 880); // start audio
+  expect(await flashes(page, '[data-type=lpg] [data-jack=ping]', 1000)).toBeGreaterThanOrEqual(1);
+
+  // a frame inside it at ÷2 (drag its CLK IN ratio field down one step)
+  await page.locator('[data-type=lpg] .sr-head').click();
+  await page.keyboard.press('g');
+  const inner = (await fullDoc(page)).groups.find((g) => g.id !== outer)!.id;
+  expect((await fullDoc(page)).groups.find((g) => g.id === inner)!.parent).toBe(outer);
+  const f = await center(page, page.locator(`[data-frame=${inner}] [data-field=clkIn]`));
+  await drag(page, f, { x: f.x, y: f.y + 9 });
+  await expect(page.locator(`[data-frame=${inner}] [data-field=clkIn]`)).toHaveText('÷2');
+  const [a, b] = await Promise.all([
+    flashes(page, `[data-frame=${outer}] [data-jack=clkOut]`, 3000),
+    flashes(page, `[data-frame=${inner}] [data-jack=clkOut]`, 3000),
+  ]);
+  expect(Math.abs(a - 6)).toBeLessThanOrEqual(1);
+  expect(Math.abs(b - 3)).toBeLessThanOrEqual(1);
   await app.close();
 });

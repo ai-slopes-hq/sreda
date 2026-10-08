@@ -217,6 +217,9 @@ pub struct ModuleSpec {
     pub type_: &'static str,
     pub label: &'static str,
     pub desc: &'static str,
+    /// a module the UI never offers (a frame's clock)
+    #[serde(skip_serializing_if = "is_false")]
+    pub internal: bool,
     /// (HP, U)
     pub size: (u8, u8),
     pub inputs: Vec<Port>,

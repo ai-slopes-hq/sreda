@@ -18,6 +18,7 @@ pub const SCALES: [&[i32]; 8] = [
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
         type_: "quant",
+        internal: false,
         label: "QUANT",
         desc: "scale quantiser",
         size: (3, 1),
