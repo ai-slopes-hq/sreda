@@ -209,7 +209,8 @@ test("a nested frame's CLK IN is normalled to its parent's clock, at its ratio; 
   const flipped = { ...doc, groups: [...doc.groups].reverse() };
   const plan = compile(flipped, S, 1);
   const [pi, ci] = [clockNode(flipped, outer.id), clockNode(flipped, inner.id)];
-  expect(plan.nodes[ci]!.inputs[0]).toMatchObject({ normal: { node: pi, port: 0 }, ratio: -2 });
+  // the parent's clock has run already this sample: read as it is, not one sample late
+  expect(plan.nodes[ci]!.inputs[0]).toMatchObject({ normal: { node: pi, port: 0, late: false }, ratio: -2 });
   const at = (n: number) => plan.steps.findIndex((s) => 'node' in s && s.node === n);
   expect(at(pi)).toBeLessThan(at(ci));
   // removing the parent takes the normal with it
@@ -235,7 +236,7 @@ test('a cable leaving a frame is gated by it; one inside is not; an OUT inside i
   expect(plan.nodes[2]!.inputs[0]!.sources[0]!.gate).toBeUndefined();
   expect(plan.nodes[2]!.gate).toBe(0);
   expect(plan.nodes[1]!.gate).toBeUndefined();
-  expect(plan.frames).toEqual([{ muted: false, sources: [{ node: 0, port: 0 }], outs: [2] }]);
+  expect(plan.frames).toEqual([{ id: g1, muted: false, sources: [{ node: 0, port: 0 }], outs: [2] }]);
   // one float per frame, after the nodes
   const last = Math.max(...plan.layout.nodes.map((n) => n.state));
   expect(plan.layout.frames).toBe(last + 1);

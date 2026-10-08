@@ -28,8 +28,8 @@ struct Src {
 #[derive(Clone, Copy)]
 enum Norm {
     None,
-    /// an own output buffer, read one sample late
-    Own(usize),
+    /// another output buffer: its own (late: read one sample late) or a parent frame's clock (read as it is now)
+    Own(usize, bool),
     Value(f32),
     Internal,
 }
@@ -112,6 +112,9 @@ pub struct Engine {
     gain_buf: Vec<[f32; BLOCK]>,
     frames: Vec<FrameRt>,
     frames_at: usize,
+    /// the id of the frame behind each gain (`gains[k]`): the plan's frames, then frames gone from it whose modules
+    /// are still fading out
+    frame_ids: Vec<String>,
     /// tests: prepare every node sample by sample (the reference `prepare_block` must equal)
     #[cfg(test)]
     per_sample: bool,
@@ -175,8 +178,8 @@ fn prepare(
                 n += 1;
             }
             if n == 0 {
-                if let Norm::Own(b) = input.normal {
-                    input.scratch[0] = outs[b][(i + BLOCK - 1) % BLOCK];
+                if let Norm::Own(b, late) = input.normal {
+                    input.scratch[0] = outs[b][if late { (i + BLOCK - 1) % BLOCK } else { i }];
                     n = 1;
                 }
             }
@@ -186,7 +189,7 @@ fn prepare(
                 sum(outs, gains, &input.sources, i)
             } else {
                 match input.normal {
-                    Norm::Own(b) => outs[b][(i + BLOCK - 1) % BLOCK],
+                    Norm::Own(b, late) => outs[b][if late { (i + BLOCK - 1) % BLOCK } else { i }],
                     Norm::Value(x) => x,
                     Norm::None | Norm::Internal => 0.0,
                 }
@@ -238,8 +241,8 @@ fn prepare_block(slot: &mut Slot, outs: &[[f32; BLOCK]], gains: &[[f32; BLOCK]],
                     n += 1;
                 }
                 if n == 0 {
-                    if let Norm::Own(b) = input.normal {
-                        input.scratch[0] = outs[b][(i + BLOCK - 1) % BLOCK];
+                    if let Norm::Own(b, late) = input.normal {
+                        input.scratch[0] = outs[b][if late { (i + BLOCK - 1) % BLOCK } else { i }];
                         n = 1;
                     }
                 }
@@ -261,9 +264,9 @@ fn prepare_block(slot: &mut Slot, outs: &[[f32; BLOCK]], gains: &[[f32; BLOCK]],
                 }
             } else {
                 match input.normal {
-                    Norm::Own(b) => {
+                    Norm::Own(b, late) => {
                         for (i, r) in raw.iter_mut().enumerate() {
-                            *r = outs[b][(i + BLOCK - 1) % BLOCK];
+                            *r = outs[b][if late { (i + BLOCK - 1) % BLOCK } else { i }];
                         }
                     }
                     Norm::Value(x) => raw.fill(x),
@@ -355,6 +358,7 @@ impl Engine {
             gain_buf: Vec::new(),
             frames: Vec::new(),
             frames_at: 0,
+            frame_ids: Vec::new(),
             #[cfg(test)]
             per_sample: false,
             ctx: Ctx::new(sample_rate, seed),
@@ -434,7 +438,7 @@ impl Engine {
                         )));
                     }
                 }
-                if let Some(NormalPlan::Own { node: o, port }) = input.normal {
+                if let Some(NormalPlan::Own { node: o, port, .. }) = input.normal {
                     if o >= n || port >= specs[o].outputs.len() {
                         return Err(PlanError::Invalid(format!(
                             "{}: a normal out of range",
@@ -472,6 +476,48 @@ impl Engine {
                 return Err(PlanError::Invalid("steps out of range".into()));
             }
         }
+
+        // frame gains follow their frame by id: the plan's frames, then the old ones that went (their modules fade
+        // out still gated by them); `regate` maps an old gain index to the new one
+        let mut all_ids: Vec<String> = plan
+            .frames
+            .iter()
+            .enumerate()
+            .map(|(k, f)| {
+                if f.id.is_empty() {
+                    format!("#{k}")
+                } else {
+                    f.id.clone()
+                }
+            })
+            .collect();
+        for id in &self.frame_ids {
+            if !all_ids.contains(id) {
+                all_ids.push(id.clone());
+            }
+        }
+        let remap: Vec<u32> = self
+            .frame_ids
+            .iter()
+            .map(|id| {
+                all_ids
+                    .iter()
+                    .position(|x| x == id)
+                    .map_or(NO_GATE, |k| k as u32)
+            })
+            .collect();
+        // whether anything (a fading slot, a crossfading input) still reads a gain of a frame gone from the plan
+        let ghost_used = std::cell::Cell::new(false);
+        let regate = |g: u32| {
+            if g == NO_GATE {
+                return NO_GATE;
+            }
+            let r = remap.get(g as usize).copied().unwrap_or(NO_GATE);
+            if r != NO_GATE && r as usize >= nf {
+                ghost_used.set(true);
+            }
+            r
+        };
 
         // drop slots that finished fading; then map plan nodes to slots by id (and type)
         for p in 0..self.pool.len() {
@@ -585,14 +631,15 @@ impl Engine {
                     } + s.port;
                 }
                 for s in input.sources.iter_mut() {
-                    s.gate = NO_GATE; // frame indices belong to the new plan now
+                    s.gate = regate(s.gate);
                 }
                 input.old.clear();
                 input.xfade_left = 0;
-                if let Norm::Own(_) = input.normal {
+                if let Norm::Own(..) = input.normal {
                     input.normal = Norm::None;
                 }
             }
+            slot.gate = regate(slot.gate);
             self.pool[p] = Some(slot);
         }
 
@@ -630,9 +677,11 @@ impl Engine {
                     None => Norm::None,
                     Some(NormalPlan::Value { value }) => Norm::Value(value as f32),
                     Some(NormalPlan::Internal(_)) => Norm::Internal,
-                    Some(NormalPlan::Own { node: o, port }) => {
-                        Norm::Own(resolve(&self.pool, &slot, order[o], port))
-                    }
+                    Some(NormalPlan::Own {
+                        node: o,
+                        port,
+                        late,
+                    }) => Norm::Own(resolve(&self.pool, &slot, order[o], port), late),
                 };
                 let same = old_inputs.get(j).is_some_and(|o| {
                     o.sources.len() == sources.len()
@@ -674,11 +723,7 @@ impl Engine {
                             })
                             .map(|s| Src {
                                 buf: resolve(&self.pool, &slot, s.slot, s.port),
-                                gate: if (s.gate as usize) < nf {
-                                    s.gate
-                                } else {
-                                    NO_GATE
-                                },
+                                gate: regate(s.gate),
                                 ..*s
                             })
                             .collect();
@@ -732,23 +777,41 @@ impl Engine {
             })
             .collect();
         self.steps = self.place_retiring(live);
-        // frames: a gain kept by index glides to the plan's state; a new one starts there
+        // frames: a frame's gain glides to the plan's state (a new frame starts there); a frame gone from the plan
+        // keeps its gain while its modules fade out
         let mute_len = self.mute_len as f32;
-        self.gains = plan
-            .frames
+        let old_gains = std::mem::take(&mut self.gains);
+        let old = |id: &String| {
+            self.frame_ids
+                .iter()
+                .position(|x| x == id)
+                .and_then(|k| old_gains.get(k).copied())
+        };
+        if !ghost_used.get() {
+            all_ids.truncate(nf);
+        }
+        self.gains = all_ids
             .iter()
             .enumerate()
-            .map(|(k, f)| {
-                let target = if f.muted { 0.0 } else { 1.0 };
-                let cur = self.gains.get(k).map_or(target, |g| g.cur);
-                FrameGain {
-                    cur,
-                    target,
-                    step: (target - cur) / mute_len,
+            .map(|(k, id)| match plan.frames.get(k) {
+                Some(f) => {
+                    let target = if f.muted { 0.0 } else { 1.0 };
+                    let cur = old(id).map_or(target, |g| g.cur);
+                    FrameGain {
+                        cur,
+                        target,
+                        step: (target - cur) / mute_len,
+                    }
                 }
+                None => old(id).unwrap_or(FrameGain {
+                    cur: 1.0,
+                    target: 1.0,
+                    step: 0.0,
+                }),
             })
             .collect();
-        self.gain_buf = vec![[1.0; BLOCK]; nf];
+        self.gain_buf = vec![[1.0; BLOCK]; all_ids.len()];
+        self.frame_ids = all_ids;
         self.frames = plan
             .frames
             .iter()
@@ -843,10 +906,14 @@ impl Engine {
         guard(slot, &mut self.outs);
         let mine = self.ctx.master;
         self.ctx.master = saved;
+        // an OUT inside a frame still answers to that frame's mute while it fades
+        let gate = (slot.writes_master && slot.gate != NO_GATE)
+            .then(|| &self.gain_buf[slot.gate as usize]);
         for (ch, buf) in self.ctx.master.iter_mut().enumerate() {
             for (i, x) in buf.iter_mut().enumerate() {
-                *x +=
-                    mine[ch][i] * slot.fade_left.saturating_sub(i as u32) as f32 / fade_len as f32;
+                let g = gate.map_or(1.0, |g| g[i]);
+                *x += mine[ch][i] * g * slot.fade_left.saturating_sub(i as u32) as f32
+                    / fade_len as f32;
             }
         }
         slot.fade_left = slot.fade_left.saturating_sub(BLOCK as u32);
@@ -1175,6 +1242,7 @@ mod tests {
     }
     fn frame(muted: bool, sources: &[(usize, usize)], outs: &[usize]) -> FramePlan {
         FramePlan {
+            id: String::new(),
             muted,
             sources: sources
                 .iter()
@@ -1281,6 +1349,96 @@ mod tests {
         assert!(up.windows(2).all(|w| (w[1] - w[0]).abs() <= 0.01));
     }
 
+    fn framed(id: &str, muted: bool, sources: &[(usize, usize)], outs: &[usize]) -> FramePlan {
+        FramePlan {
+            id: id.into(),
+            ..frame(muted, sources, outs)
+        }
+    }
+
+    #[test]
+    fn a_frame_keeps_its_own_gain_when_another_frame_before_it_goes() {
+        // g2 is muted; its gated source must stay silent when g1 (unmuted, listed first) is deleted
+        let dc = node("a", "dc", &[dcv(1.0)], &[], vec![none(Kind::Cv)]);
+        let gain = |gate| {
+            node(
+                "b",
+                "gain",
+                &[0.5],
+                &[],
+                vec![input(vec![gated(0, gate)], Kind::Sum), none(Kind::Cv)],
+            )
+        };
+        let mut e = Engine::new(SR, 1);
+        let two = vec![
+            framed("g1", false, &[], &[]),
+            framed("g2", true, &[(0, 0)], &[]),
+        ];
+        e.apply(with_frames(
+            plan(1, vec![dc.clone(), gain(1)], chain(2)),
+            two,
+        ))
+        .unwrap();
+        assert!(peak(&gain_out(&mut e, 30)) < 1e-6);
+        e.apply(with_frames(
+            plan(2, vec![dc, gain(0)], chain(2)),
+            vec![framed("g2", true, &[(0, 0)], &[])],
+        ))
+        .unwrap();
+        assert!(peak(&gain_out(&mut e, 30)) < 1e-6, "the muted frame leaked");
+    }
+
+    #[test]
+    fn unframing_while_an_input_crossfades_from_a_gated_cable_is_safe() {
+        // a gated cable is re-routed in the same plan that removes its frame: the crossfade still reads that gain
+        let dc = node("a", "dc", &[dcv(1.0)], &[], vec![none(Kind::Cv)]);
+        let dc2 = node("c", "dc", &[dcv(0.5)], &[], vec![none(Kind::Cv)]);
+        let gain = |src: Source| {
+            node(
+                "b",
+                "gain",
+                &[0.5],
+                &[],
+                vec![input(vec![src], Kind::Sum), none(Kind::Cv)],
+            )
+        };
+        let mut e = Engine::new(SR, 1);
+        e.apply(with_frames(
+            plan(
+                1,
+                vec![dc.clone(), dc2.clone(), gain(gated(0, 0))],
+                chain(3),
+            ),
+            vec![framed("g1", true, &[(0, 0)], &[])],
+        ))
+        .unwrap();
+        run(&mut e, 30);
+        e.apply(plan(2, vec![dc, dc2, gain(src(1, false))], chain(3)))
+            .unwrap();
+        let o = gain_out(&mut e, 10);
+        assert!(o.iter().all(|x| x.is_finite() && *x <= 0.5 + 1e-6));
+    }
+
+    #[test]
+    fn deleting_a_muted_frames_out_stays_silent_while_it_fades() {
+        let mut o = out("o", 0, 1.0);
+        o.gate = Some(0);
+        let mut e = Engine::new(SR, 1);
+        e.apply(with_frames(
+            plan(1, vec![osc("s"), o], chain(2)),
+            vec![framed("g1", true, &[], &[1])],
+        ))
+        .unwrap();
+        run(&mut e, 30);
+        assert!(peak(&run(&mut e, 10)) < 1e-6);
+        // the frame and its OUT go: the OUT fades out over 10 ms, still muted
+        e.apply(plan(2, vec![osc("s")], chain(1))).unwrap();
+        assert!(
+            peak(&run(&mut e, 10)) < 1e-6,
+            "the muted OUT blipped while fading"
+        );
+    }
+
     #[test]
     fn the_frame_meter_reads_what_leaves_and_0_when_muted() {
         let mut e = gated_dc();
@@ -1317,7 +1475,10 @@ mod tests {
     #[test]
     fn preparing_a_block_at_once_equals_preparing_it_sample_by_sample() {
         for name in ["all-a", "all-b", "200", "frames"] {
-            let path = format!("{}/tests/fixtures/plan-{name}.json", env!("CARGO_MANIFEST_DIR"));
+            let path = format!(
+                "{}/tests/fixtures/plan-{name}.json",
+                env!("CARGO_MANIFEST_DIR")
+            );
             let plan = crate::plan::decode(&std::fs::read(path).unwrap()).unwrap();
             let mut fast = Engine::new(SR, 7);
             let mut slow = Engine::new(SR, 7);
@@ -1340,11 +1501,43 @@ mod tests {
     }
 
     #[test]
+    fn a_nested_frame_at_ratio_1_ticks_exactly_with_its_parent_at_any_tempo() {
+        // 130 BPM: beats of 22 153.8 samples start anywhere in a block, so pulses straddle block ends
+        let parent = node("g1", "clock", &[], &[1.0, 130.0], vec![none(Kind::Trigger)]);
+        let mut clk = none(Kind::Trigger);
+        clk.normal = Some(NormalPlan::Own {
+            node: 0,
+            port: 0,
+            late: false,
+        });
+        let child = node("g2", "clock", &[], &[0.0, 120.0], vec![clk]);
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![parent, child], chain(2))).unwrap();
+        let (mut p, mut c) = (Vec::new(), Vec::new());
+        for _ in 0..3000 {
+            e.process();
+            p.extend_from_slice(e.output(0, 0));
+            c.extend_from_slice(e.output(1, 0));
+        }
+        let rises = |s: &[f32]| {
+            (1..s.len())
+                .filter(|&i| s[i] > 0.5 && s[i - 1] <= 0.5)
+                .count()
+        };
+        assert!(rises(&p) >= 16);
+        assert_eq!(rises(&c), rises(&p));
+    }
+
+    #[test]
     fn a_nested_frame_takes_its_parents_clock_through_its_ratio() {
         // node 0: the parent frame's clock, own clock on at 120 BPM; node 1: the child, clock off, ÷2
         let parent = node("g1", "clock", &[], &[1.0, 120.0], vec![none(Kind::Trigger)]);
         let mut clk = none(Kind::Trigger);
-        clk.normal = Some(NormalPlan::Own { node: 0, port: 0 });
+        clk.normal = Some(NormalPlan::Own {
+            node: 0,
+            port: 0,
+            late: false,
+        });
         clk.ratio = -2;
         let child = node("g2", "clock", &[], &[0.0, 120.0], vec![clk]);
         let mut e = Engine::new(SR, 1);

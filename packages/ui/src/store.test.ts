@@ -174,7 +174,51 @@ test('a move in free space sends no plan; a move into a frame does; plans travel
   s.commit(moveObjects(s.current(), SPECS, ['m2'], 200, 0));
   expect(sent.filter((m) => m.t === 'plan')).toEqual([]);
   const g = s.current().groups[0]!;
-  s.commit(moveObjects(s.current(), SPECS, ['m2'], g.x + 40 - s.current().modules[1]!.x, g.y + 60 - s.current().modules[1]!.y));
+  s.commit(
+    moveObjects(
+      s.current(),
+      SPECS,
+      ['m2'],
+      g.x + 40 - s.current().modules[1]!.x,
+      g.y + 60 - s.current().modules[1]!.y,
+    ),
+  );
   expect(s.current().modules[1]!.parent).toBe(g.id);
   expect(sent.filter((m) => m.t === 'plan')).toHaveLength(1);
+});
+
+test('undo after a message-only edit (a knob, a mute) still puts the engine back: a plan goes out', async () => {
+  const { frameSelection } = await import('@sreda/core');
+  const framed = frameSelection(starterDoc(SPECS), SPECS, ['m1']);
+  const s = createSession(SPECS, framed.doc);
+  const { sent, asHost } = fakeHost();
+  s.attach(asHost);
+  sent.length = 0;
+  s.knob('m1', 'freq', 0.9, undefined);
+  s.undo();
+  expect(planOf(sent.filter((m) => m.t === 'plan').pop()).nodes[0]!.knobs[0]).toBe(
+    framed.doc.modules[0]!.params['freq'],
+  );
+  sent.length = 0;
+  s.frame(framed.id, { muted: true }, undefined);
+  s.undo();
+  expect(planOf(sent.filter((m) => m.t === 'plan').pop()).frames[0]!.muted).toBe(false);
+});
+
+test('a WIRES row picked by its cable index lets go when the cables change (an edit, an undo)', async () => {
+  const { addModule, connect } = await import('@sreda/core');
+  let doc = addModule(starterDoc(SPECS), SPECS, 'out', 600, 0).doc;
+  doc = connect(doc, SPECS, ['m1', 'out'], ['m3', 'l']);
+  const s = createSession(SPECS, doc);
+  s.setState('sidebar', { open: true, picked: 1, hover: 1 });
+  s.edit((d) => ({ ...d, cables: d.cables.slice(1) })); // the first cable goes: index 1 means nothing now
+  expect(s.state.sidebar.picked).toBeNull();
+  expect(s.state.sidebar.hover).toBeNull();
+  s.setState('sidebar', 'picked', 0);
+  s.undo();
+  expect(s.state.sidebar.picked).toBeNull();
+  // a knob turn leaves the cables alone: the pick stays
+  s.setState('sidebar', 'picked', 0);
+  s.knob('m1', 'freq', 0.3, undefined);
+  expect(s.state.sidebar.picked).toBe(0);
 });

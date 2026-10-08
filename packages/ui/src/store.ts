@@ -25,7 +25,7 @@ import {
 } from '@sreda/core';
 import { createSignal } from 'solid-js';
 import { createStore, reconcile } from 'solid-js/store';
-import { encodePlan } from '@sreda/protocol';
+import { encodePlan, type ToEngine } from '@sreda/protocol';
 import type { AudioHost } from './audio/host';
 import { scheduleSave } from './autosave';
 import { setLayoutSeq, setSource } from './live';
@@ -125,6 +125,8 @@ export function createSession(
   });
   /** the document last opened or saved: anything else is unsaved */
   let saved: Doc = initial;
+  /** the cables last shown (WIRES rows point into them) */
+  let shownCables = initial.cables;
   const history = new History(initial);
   let host: AudioHost | null = null;
   let seq = 0;
@@ -150,6 +152,14 @@ export function createSession(
 
   /** the document without positions and sizes: an edit that leaves it unchanged needs no new plan (a move) */
   let sentKey = '';
+  /**
+   * A knob, option, attenuverter, ratio, clock or mute message: the engine now differs from the last plan, so the
+   * next send (an undo, say) must not be skipped as "nothing structural changed".
+   */
+  function message(msg: ToEngine): void {
+    sentKey = '';
+    host?.post(msg);
+  }
   const structure = (d: Doc): string =>
     JSON.stringify([
       d.modules.map((m) => [m.id, m.type, m.parent, m.params, m.atts, m.ratios]),
@@ -161,8 +171,8 @@ export function createSession(
     if (!host) return;
     const key = structure(state.doc);
     if (!force && key === sentKey) return;
-    sentKey = key;
     plan = compile(state.doc, specs, ++seq);
+    sentKey = key;
     setLayoutSeq(seq);
     setLayout(plan.layout);
     host.post({ t: 'plan', seq, bytes: encodePlan(plan) });
@@ -170,6 +180,13 @@ export function createSession(
   }
 
   function show(doc: Doc): void {
+    // WIRES rows are cable indices: when the cables change they mean other cables, so let go of them
+    if (doc.cables !== shownCables) {
+      shownCables = doc.cables;
+      if (state.sidebar.picked !== null || state.sidebar.hover !== null || state.sidebar.ports)
+        setState('sidebar', { picked: null, hover: null, ports: null });
+      if (state.candidate) setState('candidate', null);
+    }
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
     setState('dirty', history.current !== saved);
     scheduleSave(doc, state.project);
@@ -245,13 +262,13 @@ export function createSession(
       for (const k of Object.keys(changes)) {
         const v = visible.findIndex((p) => p.id === k);
         if (v >= 0) {
-          host?.post({ t: 'knob', node, index: v, value: m.params[k]! });
+          message({ t: 'knob', node, index: v, value: m.params[k]! });
           continue;
         }
         const f = fixed.findIndex((p) => p.id === k);
         const p = fixed[f];
         if (!p) continue;
-        host?.post({
+        message({
           t: 'fixed',
           node,
           index: f,
@@ -274,15 +291,15 @@ export function createSession(
       const node = nodeOf(gid);
       if (node === null) return;
       if (patch.clock) {
-        host?.post({ t: 'fixed', node, index: 0, value: patch.clock.on ? 1 : 0 });
-        host?.post({ t: 'fixed', node, index: 1, value: patch.clock.bpm });
+        message({ t: 'fixed', node, index: 0, value: patch.clock.on ? 1 : 0 });
+        message({ t: 'fixed', node, index: 1, value: patch.clock.bpm });
       }
-      if (patch.ratio !== undefined) host?.post({ t: 'ratio', node, input: 0, value: patch.ratio });
+      if (patch.ratio !== undefined) message({ t: 'ratio', node, input: 0, value: patch.ratio });
       if (patch.muted !== undefined)
         // a frame inside a muted frame is muted too: tell the engine about every frame whose state changed
         doc.groups.forEach((g, frame) => {
           const on = effectiveMuted(doc, g.id);
-          if (on !== effectiveMuted(before, g.id)) host?.post({ t: 'mute', frame, on });
+          if (on !== effectiveMuted(before, g.id)) message({ t: 'mute', frame, on });
         });
     },
     /** A project replaces the canvas: one undo step; the speakers fade in over 200 ms. */
@@ -350,7 +367,7 @@ export function createSession(
       const m = state.doc.modules[node ?? -1];
       if (node === null || !m) return;
       const visible = specs[m.type]!.params.filter((p): p is KnobParam => p.kind === 'knob' && !p.hidden);
-      host?.post({
+      message({
         t: 'knob',
         node,
         index: visible.findIndex((p) => p.id === param),
@@ -366,7 +383,7 @@ export function createSession(
       const spec = specs[doc.modules.find((m) => m.id === id)!.type]!;
       const knob = spec.params.find((p) => '@' + p.id === port);
       const def = knob?.kind === 'knob' ? (knob.modDepth ?? 1) : 1;
-      if (at) host?.post({ t: 'att', ...at, value: v ?? def });
+      if (at) message({ t: 'att', ...at, value: v ?? def });
     },
     /** a ratio drag: the document and a ratio message */
     ratio(id: string, port: string, r: number, merge: Merge): void {
@@ -374,7 +391,7 @@ export function createSession(
       history.commit(doc, merge);
       show(doc);
       const at = inputIndex(id, port);
-      if (at) host?.post({ t: 'ratio', ...at, value: r });
+      if (at) message({ t: 'ratio', ...at, value: r });
     },
     /** show a document while a gesture is under way (no undo step, no save, no plan) */
     preview(doc: Doc): void {

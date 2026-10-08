@@ -30,7 +30,8 @@ export function App(): JSX.Element {
     window.__sreda = { doc: () => structuredClone(unwrap(s.state.doc)), readout: (i) => s.readout(i) };
     // dev builds: `__sreda.big()` in the console opens the 200-module patch (the smoothness check)
     if (import.meta.env.DEV)
-      window.__sreda.big = () => s.openProject(bigPatch(SPECS), { path: 'FACTORY/200 modules', factory: true });
+      window.__sreda.big = () =>
+        s.openProject(bigPatch(SPECS), { path: 'FACTORY/200 modules', factory: true });
     listenForFirstClick(s);
     return s;
   });

@@ -122,7 +122,8 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
       inputs: [
         {
           sources,
-          normal: parent !== undefined ? { node: parent, port: 0 } : null,
+          // the parent's clock runs first: read as it is now (one sample late only inside a loop, below)
+          normal: parent !== undefined ? { node: parent, port: 0, late: false } : null,
           kind: 'trigger',
           att: 1,
           ratio: g.ratio,
@@ -138,9 +139,13 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
     if (!('loop' in s)) continue;
     const pos = new Map(s.loop.map((v, j) => [v, j]));
     for (const v of s.loop)
-      for (const input of nodes[v]!.inputs)
+      for (const input of nodes[v]!.inputs) {
         for (const src of input.sources)
           if (pos.has(src.node) && pos.get(src.node)! >= pos.get(v)!) src.late = true;
+        const n = input.normal;
+        if (n && typeof n === 'object' && 'late' in n && pos.has(n.node) && pos.get(n.node)! >= pos.get(v)!)
+          n.late = true;
+      }
   }
 
   let off = 2; // 0: seq, 1: the master peak
@@ -245,6 +250,6 @@ function framePlans(doc: Doc, specs: Specs, index: Map<string, number>): FramePl
       if (!sources.some((s) => s.node === node && s.port === port)) sources.push({ node, port });
     }
     const outs = doc.modules.filter((m) => m.type === 'out' && inside.has(m.id)).map((m) => index.get(m.id)!);
-    return { muted: effectiveMuted(doc, g.id), sources, outs };
+    return { id: g.id, muted: effectiveMuted(doc, g.id), sources, outs };
   });
 }

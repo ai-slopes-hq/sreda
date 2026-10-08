@@ -8,7 +8,8 @@ export interface Source {
 }
 export interface InputPlan {
   sources: Source[];
-  normal: { node: number; port: number } | { value: number } | 'internal' | null;
+  /** a node's output (own: one sample late; a parent frame's clock: `late` false, it has run already) */
+  normal: { node: number; port: number; late?: boolean } | { value: number } | 'internal' | null;
   kind: 'sum' | 'cv' | 'trigger';
   att: number;
   ratio: number;
@@ -28,6 +29,8 @@ export interface PlanNode {
 }
 /** A frame, for mute and its meter: what leaves it (audio sources of leaving cables, OUT nodes inside). */
 export interface FramePlan {
+  /** the frame's id: the engine keeps its mute gain by it across plans */
+  id: string;
   muted: boolean;
   sources: { node: number; port: number }[];
   outs: number[];

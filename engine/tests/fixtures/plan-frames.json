@@ -166,7 +166,8 @@
           "sources": [],
           "normal": {
             "node": 3,
-            "port": 0
+            "port": 0,
+            "late": false
           },
           "kind": "trigger",
           "att": 1,
@@ -195,6 +196,7 @@
   ],
   "frames": [
     {
+      "id": "g4",
       "muted": false,
       "sources": [
         {
@@ -205,6 +207,7 @@
       "outs": [2]
     },
     {
+      "id": "g5",
       "muted": false,
       "sources": [
         {

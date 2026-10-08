@@ -9,14 +9,14 @@ test.each(projects.map((e) => [e.name, e] as const))(
   (_n, e) => {
     const { l, r } = renderDoc(e.build(SPECS), SPECS, 4);
     let peak = 0;
-  let finite = true;
-  for (const ch of [l, r])
-    for (const x of ch) {
-      finite &&= Number.isFinite(x);
-      peak = Math.max(peak, Math.abs(x));
-    }
-  expect(finite).toBe(true);
-  expect(peak).toBeGreaterThan(0.05);
+    let finite = true;
+    for (const ch of [l, r])
+      for (const x of ch) {
+        finite &&= Number.isFinite(x);
+        peak = Math.max(peak, Math.abs(x));
+      }
+    expect(finite).toBe(true);
+    expect(peak).toBeGreaterThan(0.05);
     expect(peak).toBeLessThanOrEqual(1);
   },
 );

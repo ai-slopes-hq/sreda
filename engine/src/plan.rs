@@ -30,10 +30,13 @@ pub enum InternalTag {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum NormalPlan {
-    /// a node's output (its own, or a parent frame's clock), read one sample late
+    /// a node's output: its own (read one sample late), or a parent frame's clock (`late` false when that clock has
+    /// already run this sample — it runs earlier)
     Own {
         node: usize,
         port: usize,
+        #[serde(default = "yes")]
+        late: bool,
     },
     Value {
         value: f64,
@@ -74,6 +77,9 @@ pub struct NodePort {
 /// A frame: its mute state and what its meter reads (the audio leaving it, the OUT nodes inside it).
 #[derive(Deserialize, Debug, Clone)]
 pub struct FramePlan {
+    /// the frame's id: a gain follows its frame across plans
+    #[serde(default)]
+    pub id: String,
     pub muted: bool,
     pub sources: Vec<NodePort>,
     pub outs: Vec<usize>,
@@ -126,6 +132,10 @@ pub enum PlanError {
     Decode(String),
     UnknownType(String),
     Invalid(String),
+}
+
+fn yes() -> bool {
+    true
 }
 
 pub fn decode(json: &[u8]) -> Result<Plan, PlanError> {
