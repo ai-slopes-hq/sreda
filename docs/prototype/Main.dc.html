@@ -285,7 +285,7 @@ body{margin:0;background:#121210}
 <sc-if value="{{hasListen}}" hint-placeholder-val="{{false}}">
 <button class="sr-listen" style="{{listenStyle}}" onPointerDown="{{stop}}" onClick="{{clearListen}}">{{listenText}}</button>
 </sc-if>
-<button class="sr-wires-btn {{wiresCls}}" style="{{wiresBtnStyle}}" onPointerDown="{{stop}}" onClick="{{onWires}}" title="wires (W)">WIRES</button>
+<button class="sr-wires-btn {{wiresCls}}" style="{{wiresBtnStyle}}" onPointerDown="{{stop}}" onClick="{{onWires}}" title="sidebar (W)">SIDEBAR</button>
 <button class="sr-save-btn" style="{{saveBtnStyle}}" onPointerDown="{{stop}}" onClick="{{onSaveProject}}" title="save project (⌘S)">SAVE</button>
 <button class="sr-new" style="{{newStyle}}" onPointerDown="{{stop}}" onClick="{{onNew}}">NEW</button>
 <sc-if value="{{hasSearch}}" hint-placeholder-val="{{false}}">
@@ -357,7 +357,7 @@ body{margin:0;background:#121210}
 </div>
 </div>
 </sc-if>
-<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · W WIRES · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · G FRAME / UNFRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
+<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · W SIDEBAR · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · G FRAME / UNFRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
 <div class="sr-zoom" style="{{zoomStyle}}" onPointerDown="{{stop}}">
 <button onClick="{{zoomOut}}" aria-label="Zoom out">−</button>
 <span>{{zoomText}}</span>

@@ -641,7 +641,7 @@ checks `validPath`, and checks that `fileFor`'s result starts with `root + sep`.
 
 **Chrome (`Chrome.tsx`):**
 - Top left: `SREDA` and the project path, with ` ●` while dirty.
-- Top right: `WIRES` (Task 9), `SAVE` and `NEW`.
+- Top right: `SIDEBAR` (Task 9), `SAVE` and `NEW`.
 - A zoom control at the bottom right: `− 100% +`.
 - A hint line at the bottom: the prototype's text, minus `SILENT PROTOTYPE`.
 
@@ -841,7 +841,7 @@ Listed dimmed, as information:
 - `muted: <FRAME>`.
 
 **Sidebar:**
-- W or the WIRES button toggles it; Esc closes it.
+- W or the SIDEBAR button (top right; spec revision 16) toggles it; Esc closes it.
 - It is docked right. The canvas element, the top-right buttons, the zoom control and the hint line end at its edge,
   because the canvas's right inset equals the width.
 - The width is 440 on open; dragging its left edge sets it within 320 … 70 % of the window.

@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 15 (Plan 3 clarifications: library over IPC, ⌘D modules only, groups from a jack, mute rule) · Status: approved
+Date: 2026-10-07 · Revision 16 (the top-right button that opens the sidebar is SIDEBAR; WIRES is its tab) · Status: approved
 
 ## Why
 
@@ -225,7 +225,7 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
 
 ## 5a. Sidebar and the WIRES editor
 
-- **Sidebar:** a panel docked on the right, hidden by default (W or the WIRES button opens and closes it; Esc closes
+- **Sidebar:** a panel docked on the right, hidden by default (W or the SIDEBAR button opens and closes it; Esc closes
   it). It does not cover the canvas: the canvas, the top-right buttons, the zoom control and the hint line end at its
   edge. It opens at a fixed width (440 px) with every new window and every opened project; within a session its
   left edge can be dragged (320 px … 70 % of the window). A tab row at its top holds its functions; the first and,
@@ -269,7 +269,7 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
   launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
-- Top right: **WIRES** (opens the sidebar, §5a), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
+- Top right: **SIDEBAR** (opens the sidebar, §5a; its first tab is WIRES), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
   canvas; an undo step). With the listen bar these are the only chrome.
 - **Library = a folder on disk.** The first save or open asks for a library folder once (a folder dialog; the
   main process keeps its path in the app's settings and reads and writes it with Node `fs`, §8). Inside it:
