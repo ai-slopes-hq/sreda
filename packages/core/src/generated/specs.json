@@ -1226,6 +1226,122 @@
     "normals": []
   },
   {
+    "type": "reverb",
+    "label": "REVERB",
+    "desc": "room, plate, hall; freeze",
+    "size": [
+      6,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "l",
+        "label": "L",
+        "role": "audio"
+      },
+      {
+        "id": "r",
+        "label": "R",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "size",
+        "label": "SIZE",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.5,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "decay",
+        "label": "DECAY",
+        "min": 0.1,
+        "max": 30.0,
+        "def": 2.0,
+        "taper": "exp",
+        "unit": "s",
+        "randomRange": [
+          0.5,
+          8.0
+        ]
+      },
+      {
+        "kind": "knob",
+        "id": "damp",
+        "label": "DAMP",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.4,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "pre",
+        "label": "PRE",
+        "min": 0.0,
+        "max": 0.25,
+        "def": 0.01,
+        "taper": "lin",
+        "unit": "s"
+      },
+      {
+        "kind": "knob",
+        "id": "mod",
+        "label": "MOD",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.2,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "mix",
+        "label": "MIX",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.35,
+        "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "type",
+        "label": "TYPE",
+        "options": [
+          "ROOM",
+          "PLATE",
+          "HALL"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "option",
+        "id": "freeze",
+        "label": "FREEZE",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 2,
+      "kind": "room"
+    }
+  },
+  {
     "type": "rhythm",
     "label": "RHYTHM",
     "desc": "16 pads: euclid or grid, accents · generative",
