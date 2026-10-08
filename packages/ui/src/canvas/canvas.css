@@ -1350,3 +1350,48 @@
   border-radius: 50%;
   flex: none;
 }
+/* REVERB's room (spec §7a) */
+.sr-room .d-mark {
+  fill: none;
+  stroke: #5d594f;
+  stroke-width: 1;
+}
+.sr-room .d-fill {
+  fill: #e9e4d8;
+  fill-opacity: 0.28;
+}
+.sr-room .d-shade {
+  fill: #121210;
+  fill-opacity: 0.55;
+}
+.sr-room .d-line {
+  fill: none;
+  stroke: #e9e4d8;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.sr-room .d-ring {
+  fill: none;
+  stroke: #8f897c;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+.sr-room .d-dot {
+  fill: #e9e4d8;
+}
+.sr-room.frozen .d-line,
+.sr-room.frozen .d-ring {
+  stroke: #f5a524;
+}
+.sr-room.frozen .d-fill {
+  fill: #f5a524;
+}
+.sr-dtag {
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #8f897c;
+  pointer-events: none;
+}

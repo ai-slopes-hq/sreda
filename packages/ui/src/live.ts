@@ -3,7 +3,7 @@
 import { createEffect, onCleanup } from 'solid-js';
 import { tracePaths } from './canvas/displays/trace';
 
-type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch';
+type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw';
 interface Entry {
   el: Element;
   kind: Kind;
@@ -12,8 +12,9 @@ interface Entry {
   until: number;
   /** a level bar's held peak */
   hold: number;
-  /** 'watch': called when the readout rises (a trigger count going up) */
-  onChange: (() => void) | undefined;
+  /** 'watch': called when the readout rises (a trigger count going up); 'draw': called every frame with the value
+   * (held, falling over 0.6 s) */
+  onChange: ((v: number) => void) | undefined;
   /** the plan whose layout `offset` belongs to: values are read only while the engine plays that plan */
   seq: number;
 }
@@ -33,7 +34,12 @@ export function setLayoutSeq(n: number): void {
 }
 
 /** level: a bar's width (22 px at full); meter: width in %; modDot: rotation of a knob's dot; flash: a trigger count changed. */
-export function register(el: Element, kind: Kind, offset: number, onChange?: () => void): () => void {
+export function register(
+  el: Element,
+  kind: Kind,
+  offset: number,
+  onChange?: (v: number) => void,
+): () => void {
   const e: Entry = { el, kind, offset, last: NaN, until: 0, hold: 0, onChange, seq: layoutSeq };
   entries.add(e);
   if (!running && typeof requestAnimationFrame === 'function') {
@@ -48,7 +54,7 @@ export function track(
   el: Element,
   kind: Kind,
   offset: () => number | undefined,
-  onChange?: () => void,
+  onChange?: (v: number) => void,
 ): void {
   createEffect(() => {
     const off = offset();
@@ -109,9 +115,14 @@ export function frame(now: number): void {
       case 'step':
         e.el.setAttribute('data-cur', String(Math.round(v)));
         break;
+      case 'draw':
+        // hold the peak, fall at full scale per 0.6 s
+        e.hold = Math.max(Math.min(1, v), e.hold - dt / 0.6);
+        e.onChange?.(e.hold);
+        break;
       case 'watch':
         // a rise of the count is an event; the first reading is a baseline and a reset to 0 is not one
-        if (!Number.isNaN(e.last) && v > e.last) e.onChange?.();
+        if (!Number.isNaN(e.last) && v > e.last) e.onChange?.(v);
         break;
     }
     e.last = v;

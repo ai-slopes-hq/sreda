@@ -17,6 +17,7 @@ import { Knob } from './Knob';
 import { Option } from './Option';
 import { Contour } from './displays/Contour';
 import { Pads } from './displays/Pads';
+import { Room } from './displays/Room';
 import { Scope } from './displays/Scope';
 
 export type FieldKind = 'att' | 'ratio';
@@ -195,6 +196,23 @@ export function Panel(props: PanelProps): JSX.Element {
           );
         }}
       </For>
+      <Show when={props.spec.display?.kind === 'room' && L().display}>
+        {(d) => (
+          <Room
+            x={d().x}
+            y={d().y}
+            w={d().w}
+            h={d().h}
+            type={(['ROOM', 'PLATE', 'HALL'] as const)[props.mod.params['type'] ?? 0] ?? 'ROOM'}
+            size={knobValue('size')}
+            decay={knobValue('decay')}
+            damp={knobValue('damp')}
+            pre={knobValue('pre') / 0.25}
+            freeze={(props.mod.params['freeze'] ?? 0) === 1}
+            state={props.readouts?.state}
+          />
+        )}
+      </Show>
       <Show when={props.spec.display?.kind === 'scope' && L().display}>
         {(d) => (
           <Scope

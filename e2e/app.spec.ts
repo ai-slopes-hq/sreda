@@ -807,3 +807,18 @@ test('WIRES: move an end from the port list, a new wire, rows light the canvas, 
   expect((await fullDoc(page)).cables).toEqual([{ from: ['m1', 'out'], to: [f, 'in'] }]);
   await app.close();
 });
+
+test("REVERB's room fills with the tail once audio runs", async () => {
+  const { app, page } = await launch();
+  const out = await center(page, jack(page, 'osc', 'out'));
+  await drag(page, out, { x: out.x + 120, y: out.y + 320 });
+  await page.keyboard.type('reverb');
+  await page.keyboard.press('Enter');
+  const fill = page.locator('[data-type=reverb] .sr-room .d-fill');
+  const empty = (await fill.boundingBox())?.height ?? 0;
+  await page.mouse.click(1300, 860); // start audio
+  await expect
+    .poll(async () => (await fill.boundingBox())?.height ?? 0, { timeout: 2000 })
+    .toBeGreaterThan(empty + 2);
+  await app.close();
+});
