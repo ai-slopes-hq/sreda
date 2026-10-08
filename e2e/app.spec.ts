@@ -6,10 +6,17 @@ import { _electron as electron, expect, test, type ElectronApplication, type Pag
 /** Each test gets its own user-data folder (IndexedDB), unless it passes one to reuse. */
 async function launch(
   dir = mkdtempSync(join(tmpdir(), 'sreda-e2e-')),
+  first: 'starter' | 'factory' = 'starter',
 ): Promise<{ app: ElectronApplication; page: Page; dir: string }> {
   const app = await electron.launch({
     args: ['packages/app'],
-    env: { ...process.env, SREDA_USER_DATA: dir, SREDA_E2E: '1' },
+    // tests start from the starter patch (OSC → OUT) unless they ask for the real first launch (Pulse)
+    env: {
+      ...process.env,
+      SREDA_USER_DATA: dir,
+      SREDA_E2E: '1',
+      ...(first === 'starter' ? { SREDA_FIRST: 'starter' } : {}),
+    },
   });
   const page = await app.firstWindow();
   await page.waitForFunction(() => '__sreda' in window);
@@ -521,5 +528,54 @@ test('WIRE FIX: ⌘G packs rows and routes wires at right angles; STACK packs fl
   expect((await fullDoc(page)).modules.map((m) => [m.x, m.y])).not.toEqual(before);
   await expect(fix).not.toHaveClass(/on/);
   await expect(page.locator('.sr-cables path.cable.routed')).toHaveCount(0);
+  await app.close();
+});
+
+test('the very first launch opens the factory project Pulse', async () => {
+  const { app, page } = await launch(undefined, 'factory');
+  await expect(page.locator('[data-type=lpg]')).toHaveCount(2);
+  await expect(page.locator('[data-type=noise]')).toHaveCount(1);
+  expect((await fullDoc(page)).modules.map((m) => m.type).sort()).toEqual([
+    'lpg',
+    'lpg',
+    'mix',
+    'noise',
+    'osc',
+    'osc',
+    'out',
+    'scope',
+  ]);
+  await app.close();
+});
+
+test('picker: a factory project replaces the canvas (⌘Z returns); a group dropped from a trigger output takes it into CLK IN', async () => {
+  const { app, page } = await launch();
+  await page.mouse.move(700, 500);
+  await page.keyboard.press('/');
+  await page.keyboard.press('Shift+Tab'); // ALL → PROJECTS
+  await page.keyboard.type('acid');
+  await expect(page.locator('.sr-pitem')).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.sr-frame .sr-gname')).toHaveText('ACID');
+  await expect(page.locator('[data-type=rhythm]')).toHaveCount(1);
+  await page.keyboard.press('Meta+z');
+  await expect(page.locator('[data-type=rhythm]')).toHaveCount(0);
+  expect((await fullDoc(page)).modules.map((m) => m.type)).toEqual(['osc', 'out']);
+
+  // a SLOPE, then from its EOC (a trigger) into empty space → GROUPS → vca-lpg
+  await page.mouse.move(400, 600);
+  await page.keyboard.press('/');
+  await page.keyboard.type('slope');
+  await page.keyboard.press('Enter');
+  const eoc = await center(page, jack(page, 'slope', 'eoc'));
+  await drag(page, eoc, { x: eoc.x + 200, y: eoc.y + 150 });
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab'); // ALL → MODULES → GROUPS
+  await page.keyboard.type('vca');
+  await page.keyboard.press('Enter');
+  const d = await fullDoc(page);
+  const g = d.groups.find((x) => x.name === 'VCA-LPG')!;
+  const slope = d.modules.find((m) => m.type === 'slope')!;
+  expect(d.cables).toContainEqual({ from: [slope.id, 'eoc'], to: [g.id, 'clkIn'] });
   await app.close();
 });

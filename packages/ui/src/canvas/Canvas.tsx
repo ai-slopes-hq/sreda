@@ -2,6 +2,7 @@ import {
   addModule,
   chainOf,
   connect,
+  FACTORY,
   isGroupId,
   jackAt,
   landingFrame,
@@ -31,7 +32,7 @@ import { Frame, type Edge } from './Frame';
 import { ROLE } from './glyphs';
 import { handleKey } from './keys';
 import { Panel, type FieldKind } from './Panel';
-import { placeFor, type End } from './patching';
+import { placeFor, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 import { Picker } from './Picker';
 import { panned } from './wheel';
 import './canvas.css';
@@ -64,7 +65,18 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   const [ghost, setGhost] = createSignal<{ a: Pt; b: Pt; role: Role } | null>(null);
   const [box, setBox] = createSignal<{ a: Pt; b: Pt } | null>(null);
   const [wiring, setWiring] = createSignal<'in' | 'out' | null>(null);
-  const [picker, setPicker] = createSignal<{ screen: Pt; at: Pt; from: JackEnd | null } | null>(null);
+  const [picker, setPicker] = createSignal<{
+    screen: Pt;
+    at: Pt;
+    from: JackEnd | null;
+    tab: PickerTab;
+  } | null>(null);
+  /** the groups and projects the picker offers */
+  const library: LibEntry[] = FACTORY.map((e) => ({
+    kind: e.kind,
+    path: `FACTORY/${e.name}`,
+    factory: true,
+  }));
   /** the frame a dragged selection would land in */
   const [drop, setDrop] = createSignal<string | null>(null);
   let drag: Drag | null = null;
@@ -327,13 +339,25 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     }
     // released on empty canvas: a picked-up cable is gone; a new one asks what to add here
     if (d.picked) s.commit(base);
-    else setPicker({ screen: p, at: toCanvas(p), from: d.from });
+    else setPicker({ screen: p, at: toCanvas(p), from: d.from, tab: 'ALL' });
   }
 
-  function place(type: string): void {
+  /** the picker's choice: a module (placed, wired from the jack it came from), a group, or a project */
+  function place(item: PickerItem): void {
     const pk = picker();
     if (!pk) return;
     setPicker(null);
+    if (item.kind !== 'module') {
+      const entry = item.factory ? FACTORY.find((e) => `FACTORY/${e.name}` === item.path) : undefined;
+      if (!entry) return;
+      const doc = entry.build(specs);
+      if (item.kind === 'project') {
+        s.openProject(doc, { path: item.path, factory: item.factory });
+        fit(false);
+      } else s.placeGroup(doc, pk.at, pk.from);
+      return;
+    }
+    const type = item.type;
     const where = placeFor(specs, type, pk.from, pk.at);
     const added = addModule(s.current(), specs, type, where.x, where.y);
     let doc = added.doc;
@@ -401,7 +425,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       specs,
       pickerOpen: () => !!picker(),
       closePicker: () => setPicker(null),
-      openPicker: (at) => setPicker({ screen: at, at: toCanvas(at), from: null }),
+      openPicker: (at, tab = 'ALL') => setPicker({ screen: at, at: toCanvas(at), from: null, tab }),
+      middle: () => ({ x: innerWidth / 2 - 150, y: innerHeight / 3 }),
       pointer: () => pointer,
       fit,
       setSpace: (on) => (space = on),
@@ -438,7 +463,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       onPointerMove={(e) => (pointer = client(e))}
       onDblClick={(e) => {
         if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
-        setPicker({ screen: client(e), at: toCanvas(client(e)), from: null });
+        setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
       }}
     >
       <div
@@ -555,6 +580,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             x={Math.min(pk().screen.x, innerWidth - 300)}
             y={Math.min(pk().screen.y, innerHeight - 340)}
             from={pk().from}
+            library={library}
+            tab={pk().tab}
             pick={place}
             close={() => setPicker(null)}
           />

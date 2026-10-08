@@ -1,5 +1,5 @@
 // The canvas autosaves to IndexedDB 500 ms after the last edit; opening the app resumes it (spec §6, §9).
-import { starterDoc, validateDoc, type Doc, type Specs } from '@sreda/core';
+import { validateDoc, type Doc, type Specs } from '@sreda/core';
 
 const DB = 'sreda';
 const STORE = 'session';
@@ -27,26 +27,28 @@ function request<T>(
   });
 }
 
-/** The saved canvas, or the starter patch on a first launch; an unreadable save is kept under `backup-<time>`. */
-export async function loadSaved(specs: Specs): Promise<{ doc: Doc; notice: string | null }> {
+/** The saved canvas, or `first` on a first launch; an unreadable save is kept under `backup-<time>`. */
+export async function loadSaved(
+  specs: Specs,
+  first: Doc,
+): Promise<{ doc: Doc; notice: string | null; fresh: boolean }> {
   try {
     const db = await open();
     const raw = await request<unknown>(db, 'readonly', (s) => s.get(KEY));
-    if (raw === undefined) return { doc: starterDoc(specs), notice: null };
+    if (raw === undefined) return { doc: first, notice: null, fresh: true };
     let doc: Doc | null = null;
     try {
       doc = validateDoc(raw, specs);
     } catch {
       doc = null;
     }
-    if (doc) return { doc, notice: null };
+    if (doc) return { doc, notice: null, fresh: false };
     // keep the unreadable save, and replace it so the next launch opens quietly
-    const starter = starterDoc(specs);
     await request(db, 'readwrite', (s) => s.put(raw, `backup-${new Date().toISOString()}`));
-    await request(db, 'readwrite', (s) => s.put(starter, KEY));
-    return { doc: starter, notice: CORRUPT_NOTICE };
+    await request(db, 'readwrite', (s) => s.put(first, KEY));
+    return { doc: first, notice: CORRUPT_NOTICE, fresh: true };
   } catch {
-    return { doc: starterDoc(specs), notice: null };
+    return { doc: first, notice: null, fresh: true };
   }
 }
 

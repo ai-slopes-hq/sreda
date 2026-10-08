@@ -2,6 +2,8 @@ import { expect, test } from 'vitest';
 import { emptyDoc, type Doc } from './doc';
 import {
   descendants,
+  extractGroup,
+  mergeDoc,
   packFrame,
   RGAP,
   setLayout,
@@ -228,4 +230,28 @@ test('a WIRE FIX frame re-packs when a module is dropped into it, and when its l
   const empty = rectOf(settle(settled, out, S), S, g.id);
   expect(empty).toMatchObject({ w: 352, h: 96 });
   expect(Object.values(empty).every(Number.isFinite)).toBe(true);
+});
+
+test('extractGroup takes a frame with everything inside and the cables among them; mergeDoc places it with fresh ids', () => {
+  const { doc: d0, ids } = mods(['src', 0, 0], ['fx', 400, 0], ['sink', 3000, 0]);
+  let doc = connect(d0, S, [ids[0]!, 'out'], [ids[1]!, 'in']);
+  doc = connect(doc, S, [ids[1]!, 'out'], [ids[2]!, 'l']); // leaves the frame
+  const g1 = frameSelection(doc, S, [ids[0]!, ids[1]!]);
+  const g2 = frameSelection(g1.doc, S, [ids[1]!]);
+  const group = extractGroup(g2.doc, g1.id);
+  expect(group.modules.map((m) => m.id).sort()).toEqual([ids[0], ids[1]].sort());
+  expect(group.groups.map((g) => g.id).sort()).toEqual([g1.id, g2.id].sort());
+  expect(group.cables).toEqual([{ from: [ids[0], 'out'], to: [ids[1], 'in'] }]);
+  expect(group.groups.find((g) => g.id === g1.id)!.parent).toBeNull();
+
+  const { doc: twice, map } = mergeDoc(g2.doc, group, 5000, 0);
+  const fresh = Object.values(map);
+  expect(fresh).toHaveLength(4);
+  const before = new Set([...g2.doc.modules.map((m) => m.id), ...g2.doc.groups.map((g) => g.id)]);
+  expect(fresh.some((id) => before.has(id))).toBe(false);
+  expect(new Set(fresh).size).toBe(4);
+  expect(twice.cables).toContainEqual({ from: [map[ids[0]!], 'out'], to: [map[ids[1]!], 'in'] });
+  expect(twice.groups.find((g) => g.id === map[g2.id])!.parent).toBe(map[g1.id]);
+  expect(rectOf(twice, S, map[g1.id]!).x).toBe(rectOf(g2.doc, S, g1.id).x + 5000);
+  expect(twice.nextId).toBeGreaterThan(Math.max(...fresh.map((id) => Number(id.slice(1)))));
 });

@@ -1,28 +1,42 @@
 import type { Specs } from '@sreda/core';
 import { createEffect, createMemo, createSignal, For, onMount, type JSX } from 'solid-js';
-import { pickerItems, type End } from './patching';
+import { pickerItems, TABS, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 
 export interface PickerProps {
   specs: Specs;
   /** screen position */
   x: number;
   y: number;
-  /** a drag from a jack: only modules it can connect to, the same role first */
+  /** a drag from a jack: only modules it can connect to (the same role first) and groups */
   from: End | null;
-  pick(type: string): void;
+  /** the groups and projects on offer (factory and library) */
+  library: LibEntry[];
+  /** the tab it opens on */
+  tab: PickerTab;
+  /** REPLACE mode: the replaced module's name (modules only) */
+  replace?: string | null;
+  pick(item: PickerItem): void;
   close(): void;
 }
 
-/** Type-ahead module search: ↑ / ↓, Enter places, Esc closes; the list scrolls. */
+/** One picker for modules, groups and projects (spec §6): tabs (Tab / ⇧Tab), type-ahead, ↑ / ↓, Enter, Esc. */
 export function Picker(props: PickerProps): JSX.Element {
   const [q, setQ] = createSignal('');
   const [idx, setIdx] = createSignal(0);
-  const items = createMemo(() => pickerItems(props.specs, q(), props.from));
+  const [tab, setTab] = createSignal<PickerTab>(props.tab);
+  const items = createMemo(() =>
+    pickerItems(props.specs, q(), props.from, {
+      tab: tab(),
+      replace: !!props.replace,
+      library: props.library,
+    }),
+  );
   let input: HTMLInputElement | undefined;
   let list: HTMLDivElement | undefined;
   onMount(() => input?.focus());
   createEffect(() => {
     q();
+    tab();
     setIdx(0);
   });
   createEffect(() => list?.children[idx()]?.scrollIntoView({ block: 'nearest' }));
@@ -32,13 +46,19 @@ export function Picker(props: PickerProps): JSX.Element {
     const n = items().length;
     if (e.key === 'ArrowDown') setIdx((idx() + 1) % Math.max(1, n));
     else if (e.key === 'ArrowUp') setIdx((idx() + n - 1) % Math.max(1, n));
-    else if (e.key === 'Enter') {
+    else if (e.key === 'Tab' && !props.replace) {
+      const i = TABS.indexOf(tab());
+      setTab(TABS[(i + (e.shiftKey ? TABS.length - 1 : 1)) % TABS.length]!);
+    } else if (e.key === 'Enter') {
       const it = items()[idx()];
-      if (it) props.pick(it.type);
+      if (it) props.pick(it);
     } else if (e.key === 'Escape') props.close();
     else return;
     e.preventDefault();
   }
+
+  const placeholder = () =>
+    props.replace ? `REPLACE ${props.replace}` : props.from ? 'ADD AND WIRE…' : 'SEARCH…';
 
   return (
     <div
@@ -47,10 +67,24 @@ export function Picker(props: PickerProps): JSX.Element {
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
+      <div class="sr-ptabs">
+        <For each={props.replace ? (['MODULES'] as PickerTab[]) : TABS}>
+          {(t) => (
+            <button
+              class="sr-ptab"
+              classList={{ on: tab() === t || !!props.replace }}
+              onPointerDown={(e) => e.preventDefault()}
+              onClick={() => setTab(t)}
+            >
+              {t}
+            </button>
+          )}
+        </For>
+      </div>
       <input
         ref={(el) => (input = el)}
         class="sr-search"
-        placeholder={props.from ? 'ADD AND WIRE…' : 'ADD MODULE…'}
+        placeholder={placeholder()}
         value={q()}
         onInput={(e) => setQ(e.currentTarget.value)}
         onKeyDown={key}
@@ -62,12 +96,17 @@ export function Picker(props: PickerProps): JSX.Element {
             <button
               class="sr-pitem"
               classList={{ on: i() === idx() }}
+              data-kind={it.kind}
               onMouseEnter={() => setIdx(i())}
               onPointerDown={(e) => e.preventDefault()}
-              onClick={() => props.pick(it.type)}
+              onClick={() => props.pick(it)}
             >
               <span class="sr-pname">{it.label}</span>
-              <span class="sr-pdesc">{it.desc}</span>
+              <span class="sr-pdesc">
+                {it.kind === 'module'
+                  ? it.desc
+                  : `${it.folder ? it.folder + ' · ' : ''}${it.kind.toUpperCase()}`}
+              </span>
             </button>
           )}
         </For>

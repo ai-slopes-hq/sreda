@@ -392,3 +392,53 @@ export function settle(before: Doc, after: Doc, specs: Specs, also: readonly str
     .filter((id) => also.includes(id) || (a.get(id) ?? []).sort().join() !== (b.get(id) ?? []).sort().join());
   return changed.length ? repackRoutes(after, specs, changed) : after;
 }
+
+/** A frame with everything inside it and the cables among those (cables from outside stay behind); as a document. */
+export function extractGroup(doc: Doc, gid: string): Doc {
+  const ids = new Set([gid, ...descendants(doc, gid)]);
+  return {
+    version: 1,
+    modules: doc.modules.filter((m) => ids.has(m.id)),
+    groups: doc.groups.filter((g) => ids.has(g.id)).map((g) => (g.id === gid ? { ...g, parent: null } : g)),
+    cables: doc.cables.filter((c) => ids.has(c.from[0]) && ids.has(c.to[0])),
+    nextId: doc.nextId,
+  };
+}
+
+/** Copy a document into `doc` with fresh ids, moved by (dx, dy). Returns the new ids by old id. */
+export function mergeDoc(
+  doc: Doc,
+  src: Doc,
+  dx: number,
+  dy: number,
+): { doc: Doc; map: Record<string, string> } {
+  let next = doc.nextId;
+  const map: Record<string, string> = {};
+  for (const m of src.modules) map[m.id] = `m${next++}`;
+  for (const g of src.groups) map[g.id] = `g${next++}`;
+  const re = (id: string | null) => (id === null ? null : (map[id] ?? null));
+  return {
+    doc: {
+      ...doc,
+      nextId: next,
+      modules: [
+        ...doc.modules,
+        ...src.modules.map((m) => ({ ...m, id: map[m.id]!, x: m.x + dx, y: m.y + dy, parent: re(m.parent) })),
+      ],
+      groups: [
+        ...doc.groups,
+        ...src.groups.map((g) => ({ ...g, id: map[g.id]!, x: g.x + dx, y: g.y + dy, parent: re(g.parent) })),
+      ],
+      cables: [
+        ...doc.cables,
+        ...src.cables
+          .filter((c) => map[c.from[0]] && map[c.to[0]])
+          .map((c) => ({
+            from: [map[c.from[0]]!, c.from[1]] as [string, string],
+            to: [map[c.to[0]]!, c.to[1]] as [string, string],
+          })),
+      ],
+    },
+    map,
+  };
+}

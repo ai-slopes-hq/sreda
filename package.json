@@ -16,6 +16,7 @@
     "lint": "eslint . && cargo clippy --all-targets -- -D warnings",
     "wasm": "cargo build -p sreda-engine --release --target wasm32-unknown-unknown && mkdir -p engine/pkg && cp target/wasm32-unknown-unknown/release/sreda_engine.wasm engine/pkg/sreda_engine.wasm",
     "specs": "cargo run -q -p sreda-engine --bin export-specs > packages/core/src/generated/specs.json",
+    "render": "tsx scripts/render.ts",
     "e2e": "pnpm build && playwright test",
     "check": "pnpm typecheck && pnpm lint && pnpm test:rust && pnpm wasm && pnpm test",
     "format": "prettier --write ."

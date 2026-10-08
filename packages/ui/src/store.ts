@@ -3,6 +3,10 @@
 import {
   clockNode,
   compile,
+  connect,
+  mergeDoc,
+  recomputeParents,
+  settle,
   editFrame,
   effectiveMuted,
   fromKnob,
@@ -14,6 +18,7 @@ import {
   type Doc,
   type Group,
   type KnobParam,
+  type Role,
   type Merge,
   type Plan,
   type Specs,
@@ -34,9 +39,16 @@ export interface Session {
   listen: { id: string; port: string } | null;
   notice: string | null;
   audio: boolean;
+  /** the open project's library path (factory ones are read-only) */
+  project: { path: string; factory: boolean } | null;
 }
 
-export function createSession(specs: Specs, initial: Doc, notice: string | null = null) {
+export function createSession(
+  specs: Specs,
+  initial: Doc,
+  notice: string | null = null,
+  project: Session['project'] = null,
+) {
   // the store gets copies: Solid updates its objects in place, and history snapshots must stay untouched
   const [state, setState] = createStore<Session>({
     doc: structuredClone(initial),
@@ -47,6 +59,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
     listen: null,
     notice,
     audio: false,
+    project,
   });
   const history = new History(initial);
   let host: AudioHost | null = null;
@@ -114,6 +127,7 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
       setSource(h.readouts);
       setState('audio', true);
       send();
+      h.post({ t: 'fade', ms: 200 }); // the patch fades in
     },
     commit(doc: Doc, merge?: Merge): void {
       history.commit(doc, merge);
@@ -192,6 +206,32 @@ export function createSession(specs: Specs, initial: Doc, notice: string | null 
           const on = effectiveMuted(doc, g.id);
           if (on !== effectiveMuted(before, g.id)) host?.post({ t: 'mute', frame, on });
         });
+    },
+    /** A project replaces the canvas: one undo step; the speakers fade in over 200 ms. */
+    openProject(doc: Doc, project: { path: string; factory: boolean }): void {
+      setState('project', project);
+      this.commit(doc);
+      host?.post({ t: 'fade', ms: 200 });
+    },
+    /**
+     * A group lands with its frame's top-left at `at`, with fresh ids, in whatever frame it lands in; opened from a
+     * trigger output, that output is cabled into the group's CLK IN. Selects it.
+     */
+    placeGroup(
+      src: Doc,
+      at: { x: number; y: number },
+      from: { id: string; port: string; dir: 'in' | 'out'; role: Role } | null,
+    ): void {
+      const top = src.groups.find((g) => g.parent === null);
+      if (!top) return;
+      const before = history.current;
+      const { doc: merged, map } = mergeDoc(before, src, Math.round(at.x - top.x), Math.round(at.y - top.y));
+      const gid = map[top.id]!;
+      let doc = recomputeParents(merged, specs, [gid], Object.values(map));
+      if (from?.dir === 'out' && from.role === 'trigger')
+        doc = connect(doc, specs, [from.id, from.port], [gid, 'clkIn']);
+      this.commit(settle(before, doc, specs));
+      setState('sel', [gid]);
     },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {

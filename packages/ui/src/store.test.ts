@@ -123,3 +123,36 @@ test('muting a frame mutes its children: mute messages, no plan; undo restores t
   const last = sent.filter((m) => m.t === 'plan').pop();
   expect(last?.t === 'plan' && last.plan.frames.map((f) => f.muted)).toEqual([false, false]);
 });
+
+test('opening a project replaces the canvas in one undo step and fades in', async () => {
+  const { FACTORY } = await import('@sreda/core');
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { sent, asHost } = fakeHost();
+  s.attach(asHost);
+  sent.length = 0;
+  const acid = FACTORY.find((e) => e.name === 'acid')!.build(SPECS);
+  s.openProject(acid, { path: 'FACTORY/acid', factory: true });
+  expect(s.state.doc.groups.map((g) => g.name)).toEqual(['ACID']);
+  expect(s.state.project).toEqual({ path: 'FACTORY/acid', factory: true });
+  expect(sent.map((m) => m.t)).toEqual(['plan', 'listen', 'fade']);
+  s.undo();
+  expect(s.current()).toEqual(starterDoc(SPECS));
+});
+
+test('a group lands with its frame top-left at the drop point, fresh ids; from a trigger output into its CLK IN', async () => {
+  const { FACTORY } = await import('@sreda/core');
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const voice = FACTORY.find((e) => e.name === 'vca-lpg')!.build(SPECS);
+  s.placeGroup(voice, { x: 1000, y: 400 }, { id: 'm1', port: 'out', dir: 'out', role: 'trigger' });
+  s.placeGroup(voice, { x: 1000, y: 1400 }, null);
+  const d = s.current();
+  expect(d.groups).toHaveLength(2);
+  expect(d.groups.map((g) => [g.x, g.y])).toEqual([
+    [1000, 400],
+    [1000, 1400],
+  ]);
+  const ids = [...d.modules.map((m) => m.id), ...d.groups.map((g) => g.id)];
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(d.cables).toContainEqual({ from: ['m1', 'out'], to: [d.groups[0]!.id, 'clkIn'] });
+  expect(d.cables.filter((c) => c.to[1] === 'clkIn')).toHaveLength(1);
+});

@@ -6,11 +6,18 @@ export interface End {
   dir: 'in' | 'out';
   role: Role;
 }
-export interface PickerItem {
-  type: string;
-  label: string;
-  desc: string;
+export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS' | 'PROJECTS';
+export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS', 'PROJECTS'];
+export type PickerItem =
+  | { kind: 'module'; type: string; label: string; desc: string }
+  | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean };
+/** a group or project the picker can offer: factory paths are 'FACTORY/<name>' */
+export interface LibEntry {
+  kind: 'group' | 'project';
+  path: string;
+  factory: boolean;
 }
+type ModuleItem = Extract<PickerItem, { kind: 'module' }>;
 
 /** Ports a cable from `from` can end on. */
 function targets(specs: Specs, type: string, from: End): Port[] {
@@ -18,9 +25,45 @@ function targets(specs: Specs, type: string, from: End): Port[] {
   return from.dir === 'out' ? inputPorts(spec) : spec.outputs;
 }
 
-/** Modules matching the query; from a jack, only those with a port of the other direction, the same role first. */
-export function pickerItems(specs: Specs, query: string, from: End | null): PickerItem[] {
+/**
+ * What the picker lists on a tab: modules matching the query (from a jack, only those with a port of the other
+ * direction, the same role first), then groups, then projects (factory ones first, then by path; the query matches names and folders). From a
+ * jack there are no projects; in REPLACE mode only modules.
+ */
+export function pickerItems(
+  specs: Specs,
+  query: string,
+  from: End | null,
+  o: { tab: PickerTab; replace: boolean; library: LibEntry[] },
+): PickerItem[] {
   const q = query.trim().toLowerCase();
+  const out: PickerItem[] = [];
+  if (o.tab === 'ALL' || o.tab === 'MODULES') out.push(...moduleItems(specs, q, from));
+  if (o.replace) return out;
+  for (const kind of ['group', 'project'] as const) {
+    if (o.tab !== 'ALL' && o.tab !== (kind === 'group' ? 'GROUPS' : 'PROJECTS')) continue;
+    if (kind === 'project' && from) continue;
+    out.push(
+      ...o.library
+        .filter((e) => e.kind === kind && (!q || e.path.toLowerCase().includes(q)))
+        // factory entries first, then the library's
+        .sort((a, b) => Number(b.factory) - Number(a.factory) || a.path.localeCompare(b.path))
+        .map((e) => {
+          const i = e.path.lastIndexOf('/');
+          return {
+            kind,
+            path: e.path,
+            label: e.path.slice(i + 1),
+            folder: i > 0 ? e.path.slice(0, i) : '',
+            factory: e.factory,
+          };
+        }),
+    );
+  }
+  return out;
+}
+
+function moduleItems(specs: Specs, q: string, from: End | null): ModuleItem[] {
   const items = Object.values(specs)
     .filter((s) => !s.internal)
     .filter(
@@ -28,9 +71,9 @@ export function pickerItems(specs: Specs, query: string, from: End | null): Pick
         !q || s.label.toLowerCase().includes(q) || s.type.includes(q) || s.desc.toLowerCase().includes(q),
     )
     .filter((s) => !from || targets(specs, s.type, from).length > 0)
-    .map((s) => ({ type: s.type, label: s.label, desc: s.desc }));
+    .map((s) => ({ kind: 'module' as const, type: s.type, label: s.label, desc: s.desc }));
   const sameRole = (t: string) => (from && targets(specs, t, from).some((p) => p.role === from.role) ? 0 : 1);
-  const starts = (i: PickerItem) => (q && i.label.toLowerCase().startsWith(q) ? 0 : 1);
+  const starts = (i: ModuleItem) => (q && i.label.toLowerCase().startsWith(q) ? 0 : 1);
   return items.sort(
     (a, b) => sameRole(a.type) - sameRole(b.type) || starts(a) - starts(b) || a.label.localeCompare(b.label),
   );

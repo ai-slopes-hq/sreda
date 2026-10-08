@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
-import { app, BrowserWindow, protocol, session } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, session } from 'electron';
 
 // Every response carries COOP / COEP so the renderer is cross-origin isolated (SharedArrayBuffer).
 const ISOLATION = {
@@ -75,6 +75,8 @@ void app.whenReady().then(() => {
     callback({ responseHeaders: headers });
   });
   serveRenderer();
+  // e2e runs open the starter patch on a first launch, not the factory project Pulse
+  ipcMain.handle('sreda:first', () => (process.env['SREDA_FIRST'] === 'starter' ? 'starter' : null));
   createWindow();
 });
 

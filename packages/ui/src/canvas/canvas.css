@@ -952,3 +952,25 @@
 .sr-frame.muted {
   opacity: 0.4;
 }
+.sr-ptabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 4px 0;
+}
+.sr-ptab {
+  flex: 1;
+  height: 20px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: #8f897c;
+  font:
+    500 9px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.sr-ptab.on {
+  color: #e9e4d8;
+  border-bottom-color: #e9e4d8;
+}

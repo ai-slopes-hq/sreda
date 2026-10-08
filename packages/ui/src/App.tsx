@@ -1,9 +1,10 @@
-import { SPECS } from '@sreda/core';
+import { FACTORY, SPECS, starterDoc } from '@sreda/core';
 import { createResource, Show, type JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { AudioHost } from './audio/host';
 import { loadSaved } from './autosave';
 import { Canvas } from './canvas/Canvas';
+import './library';
 import { createSession, type SessionApi } from './store';
 
 declare global {
@@ -13,11 +14,18 @@ declare global {
   }
 }
 
-/** Resumes the autosaved canvas (or opens the starter patch); the first click anywhere starts audio. */
+/**
+ * Resumes the autosaved canvas; a first launch opens the factory project Pulse (e2e runs: the starter patch). The
+ * first click anywhere starts audio.
+ */
 export function App(): JSX.Element {
   const [session] = createResource(async () => {
-    const { doc, notice } = await loadSaved(SPECS);
-    const s = createSession(SPECS, doc, notice);
+    const starter = (await window.sreda?.first().catch(() => null)) === 'starter';
+    const pulse = FACTORY.find((e) => e.name === 'pulse')!;
+    const first = starter ? starterDoc(SPECS) : pulse.build(SPECS);
+    const { doc, notice, fresh } = await loadSaved(SPECS, first);
+    const project = fresh && !starter ? { path: 'FACTORY/pulse', factory: true } : null;
+    const s = createSession(SPECS, doc, notice, project);
     window.__sreda = { doc: () => structuredClone(unwrap(s.state.doc)), readout: (i) => s.readout(i) };
     listenForFirstClick(s);
     return s;
