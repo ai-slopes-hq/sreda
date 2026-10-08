@@ -23,7 +23,8 @@ docs/prototype/Main.dc.html` also drives the canvas through 32 states and gestur
 
 ## Republishing the live artifact
 
-The artifact holds these files under `project/` (`project/Main.dc.html`, …, `project/canvas.json`). To update it
-from the repo, publish with the Artifact tool: `url` = the artifact above, `file_path` = the board you changed (or
-`docs/prototype/canvas.json`), and `files` mapping `project/<name>` → `docs/prototype/<name>` for every changed file.
+The artifact holds these files under `project/` (`project/Main.dc.html`, …, `project/canvas.json`). A published path
+may not contain the word `prototype`, so copy the changed boards to `<scratch>/proto/project/<name>` and publish with
+the Artifact tool: `url` = the artifact above, `root` = `<scratch>/proto`, `file_path` = the copied board (it is
+served at its path under `root`; more boards go in `files` as `project/<name>` → `project/<name>`).
 Bump `SAVE_KEY` / `LIB_KEY` in `Main.dc.html` when a change makes old saved state unusable.
