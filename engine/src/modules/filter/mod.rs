@@ -2,16 +2,20 @@
 //! nonlinear models; changing MODEL crossfades 10 ms from the old model to the new one. The nonlinear models (LADDER,
 //! DIODE, SK) run at 2× through the shared half-band oversampler.
 
+mod comb;
 mod ladder;
 mod sk;
 mod svf;
+mod vowel;
 
 use crate::dsp::{Ctx, Dsp, Io};
 use crate::shaping::Os2x;
 use crate::spec::{choice, knob, port, ModuleSpec, Role, Unit};
+use comb::Comb;
 use ladder::Ladder;
 use sk::Sk;
 use svf::Svf;
+use vowel::Vowel;
 
 pub fn spec() -> ModuleSpec {
     ModuleSpec {
@@ -62,6 +66,8 @@ const SVF: usize = 0;
 const LADDER: usize = 1;
 const DIODE: usize = 2;
 const SK: usize = 3;
+const COMB: usize = 4;
+const VOWEL: usize = 5;
 const MODELS: usize = 6;
 
 /// A nonlinear model at 2×: its own down-samplers, one per output.
@@ -107,11 +113,15 @@ pub struct Filter {
     ladder: Oversampled<Ladder<4>>,
     diode: Oversampled<Ladder<3>>,
     sk: Oversampled<Sk>,
+    comb: Comb,
+    vowel: Vowel,
     up: Os2x,
     model: usize,
     /// the model being faded out, and the samples left
     old: usize,
     fade_left: u32,
+    /// the first block takes its model as it is (a new FILTER does not fade in from the SVF)
+    started: bool,
 }
 
 impl Filter {
@@ -123,10 +133,13 @@ impl Filter {
             ladder: Oversampled::default(),
             diode: Oversampled::default(),
             sk: Oversampled::default(),
+            comb: Comb::new(sample_rate),
+            vowel: Vowel::default(),
             up: Os2x::new(),
             model: SVF,
             old: SVF,
             fade_left: 0,
+            started: false,
         }
     }
 
@@ -144,7 +157,8 @@ impl Filter {
             (LADDER, Some(u)) => self.ladder.process(u, fc, res, drive, sr),
             (DIODE, Some(u)) => self.diode.process(u, fc, res, drive, sr),
             (SK, Some(u)) => self.sk.process(u, fc, res, drive, sr),
-            // COMB and VOWEL arrive in their own task; until then they are the SVF
+            (COMB, _) => self.comb.process(x, fc, res, drive, sr),
+            (VOWEL, _) => self.vowel.process(x, fc, res, drive, sr),
             _ => self.svf.process(x, fc, res, drive, sr),
         }
     }
@@ -157,6 +171,11 @@ const fn oversampled(m: usize) -> bool {
 impl Dsp for Filter {
     fn process(&mut self, io: &mut Io, _ctx: &mut Ctx, from: usize, to: usize) {
         let model = (io.fixed[0].round().max(0.0) as usize).min(MODELS - 1);
+        if !self.started {
+            self.started = true;
+            self.model = model;
+            self.old = model;
+        }
         for i in from..to {
             if model != self.model {
                 self.old = self.model;
@@ -185,11 +204,16 @@ impl Dsp for Filter {
     }
 
     fn reset(&mut self) {
-        let (model, sr) = (self.model, self.sample_rate);
-        *self = Filter::new(sr);
-        self.model = model;
-        self.old = model;
+        // in place: reset runs on the audio thread (the NaN guard) and must not allocate the comb's lines again
+        self.svf.reset();
         self.ladder.reset();
+        self.diode.reset();
+        self.sk.reset();
+        self.comb.reset();
+        self.vowel.reset();
+        self.up.reset();
+        self.fade_left = 0;
+        self.old = self.model;
     }
 }
 
@@ -383,6 +407,110 @@ mod tests {
                 "{}",
                 NAMES[m]
             );
+        }
+    }
+
+    /// Welch-averaged magnitude of `s` at each of `freqs` (Hann segments of 4800 samples)
+    fn spectrum(s: &[f32], freqs: &[f64], sr: f64) -> Vec<f64> {
+        let seg = 4800;
+        freqs
+            .iter()
+            .map(|hz| {
+                let mut acc = 0.0;
+                let mut n = 0;
+                for start in (0..s.len() - seg).step_by(seg / 2) {
+                    let (mut re, mut im) = (0.0, 0.0);
+                    for i in 0..seg {
+                        let w = 0.5 - 0.5 * (std::f64::consts::TAU * i as f64 / seg as f64).cos();
+                        let a = std::f64::consts::TAU * hz * i as f64 / sr;
+                        re += s[start + i] as f64 * w * a.cos();
+                        im -= s[start + i] as f64 * w * a.sin();
+                    }
+                    acc += (re * re + im * im).sqrt();
+                    n += 1;
+                }
+                acc / n as f64
+            })
+            .collect()
+    }
+    fn noise_through(
+        model: usize,
+        cutoff: f64,
+        res: f64,
+        seconds: f64,
+    ) -> (Vec<f32>, Vec<Vec<f32>>) {
+        let sr = 48_000.0;
+        let mut b = Bench::new(sr, 2, &[cutoff, res, 0.0], &[model as f64], 3);
+        b.connected_in = vec![true, false];
+        let mut r = crate::dsp::Rng::new(9);
+        let mut x = Vec::new();
+        let o = b.run(
+            &mut Filter::new(sr),
+            (seconds * sr) as usize / BLOCK,
+            |_, i, inp| {
+                inp[0][i] = ((r.next_f64() * 2.0 - 1.0) * 0.3) as f32;
+                x.push(inp[0][i]);
+            },
+        );
+        (x, o)
+    }
+    fn db(a: f64, b: f64) -> f64 {
+        20.0 * (a / b).log10()
+    }
+
+    #[test]
+    fn comb_peaks_at_the_harmonics_and_its_odd_twin_at_the_odd_halves() {
+        let (x, o) = noise_through(COMB, 200.0, 0.9, 3.0);
+        let lp = spectrum(&o[LP], &[200.0, 300.0, 400.0, 500.0, 600.0], 48_000.0);
+        for (peak, trough) in [(0, 1), (2, 1), (2, 3), (4, 3)] {
+            assert!(db(lp[peak], lp[trough]) >= 10.0, "LP {lp:?}");
+        }
+        let bp = spectrum(&o[BP], &[100.0, 200.0, 300.0, 400.0, 500.0], 48_000.0);
+        for (peak, trough) in [(0, 1), (2, 1), (2, 3), (4, 3)] {
+            assert!(db(bp[peak], bp[trough]) >= 10.0, "BP {bp:?}");
+        }
+        for (n, (h, l)) in o[HP].iter().zip(&o[LP]).enumerate() {
+            assert!(
+                (h - (l - x[n])).abs() < 1e-6,
+                "HP is the comb minus dry at {n}"
+            );
+        }
+    }
+
+    /// the frequencies (in 25 Hz steps over 200…4000 Hz) of the three largest local maxima of a spectrum
+    fn three_peaks(s: &[f32]) -> Vec<f64> {
+        let freqs: Vec<f64> = (8..=160).map(|k| k as f64 * 25.0).collect();
+        let m = spectrum(s, &freqs, 48_000.0);
+        let mut maxima: Vec<(f64, f64)> = (1..m.len() - 1)
+            .filter(|&k| m[k] >= m[k - 1] && m[k] >= m[k + 1])
+            .map(|k| (freqs[k], m[k]))
+            .collect();
+        maxima.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        let mut top: Vec<f64> = maxima.iter().take(3).map(|p| p.0).collect();
+        top.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        top
+    }
+
+    #[test]
+    fn vowel_morphs_from_a_to_u_across_cut() {
+        let near = |got: &[f64], want: [f64; 3]| {
+            got.iter().zip(want).all(|(g, w)| (g - w).abs() <= 0.1 * w)
+        };
+        let (_, a) = noise_through(VOWEL, 20.0, 0.7, 3.0);
+        let pa = three_peaks(&a[LP]);
+        assert!(near(&pa, [800.0, 1150.0, 2900.0]), "A: {pa:?}");
+        let (_, u) = noise_through(VOWEL, 20_000.0, 0.7, 3.0);
+        let pu = three_peaks(&u[LP]);
+        assert!(near(&pu, [325.0, 700.0, 2530.0]), "U: {pu:?}");
+    }
+
+    #[test]
+    fn comb_and_vowel_stay_finite_at_full_resonance() {
+        for m in [COMB, VOWEL] {
+            let (_, o) = noise_through(m, 300.0, 1.0, 2.0);
+            assert!(o
+                .iter()
+                .all(|s| s.iter().all(|x| x.is_finite() && x.abs() < 100.0)));
         }
     }
 
