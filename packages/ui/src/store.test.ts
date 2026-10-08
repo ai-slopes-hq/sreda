@@ -1,9 +1,13 @@
 // @vitest-environment happy-dom
-import { SPECS, starterDoc } from '@sreda/core';
+import { SPECS, starterDoc, type Plan } from '@sreda/core';
 import type { FromEngine, ToEngine } from '@sreda/protocol';
 import { expect, test } from 'vitest';
 import type { AudioHost } from './audio/host';
 import { createSession } from './store';
+
+/** a posted plan message's plan (it travels as UTF-8 JSON bytes) */
+const planOf = (m: ToEngine | undefined): Plan =>
+  JSON.parse(new TextDecoder().decode(m?.t === 'plan' ? m.bytes : new Uint8Array())) as Plan;
 
 function fakeHost() {
   const sent: ToEngine[] = [];
@@ -22,7 +26,7 @@ test('a plan the engine refuses shows a notice', () => {
   s.attach(asHost);
   const plan = sent.find((m) => m.t === 'plan');
   expect(plan).toBeDefined();
-  host.onMessage?.({ t: 'applied', seq: plan!.t === 'plan' ? plan!.plan.seq : 0, code: 2 });
+  host.onMessage?.({ t: 'applied', seq: plan!.t === 'plan' ? plan!.seq : 0, code: 2 });
   expect(s.state.notice).toBe('THE ENGINE REFUSED THE PATCH (2) — THE PREVIOUS ONE KEEPS PLAYING');
 });
 
@@ -87,7 +91,7 @@ test('frame clock edits go as messages to its clock node; undo restores through 
   const plans = sent.filter((m) => m.t === 'plan');
   expect(plans).toHaveLength(3);
   const last = plans[2]!;
-  expect(last.t === 'plan' && last.plan.nodes[2]!.fixed).toEqual([1, 120]);
+  expect(planOf(last).nodes[2]!.fixed).toEqual([1, 120]);
 });
 
 test('a frame CLK OUT can be listened to', async () => {
@@ -121,7 +125,7 @@ test('muting a frame mutes its children: mute messages, no plan; undo restores t
   s.undo();
   s.undo();
   const last = sent.filter((m) => m.t === 'plan').pop();
-  expect(last?.t === 'plan' && last.plan.frames.map((f) => f.muted)).toEqual([false, false]);
+  expect(planOf(last).frames.map((f) => f.muted)).toEqual([false, false]);
 });
 
 test('opening a project replaces the canvas in one undo step and fades in', async () => {
@@ -155,4 +159,22 @@ test('a group lands with its frame top-left at the drop point, fresh ids; from a
   expect(new Set(ids).size).toBe(ids.length);
   expect(d.cables).toContainEqual({ from: ['m1', 'out'], to: [d.groups[0]!.id, 'clkIn'] });
   expect(d.cables.filter((c) => c.to[1] === 'clkIn')).toHaveLength(1);
+});
+
+test('a move in free space sends no plan; a move into a frame does; plans travel as bytes', async () => {
+  const { frameSelection, moveObjects, addModule } = await import('@sreda/core');
+  const withFrame = frameSelection(addModule(starterDoc(SPECS), SPECS, 'osc', 0, 2000).doc, SPECS, ['m3']);
+  const s = createSession(SPECS, withFrame.doc);
+  const { sent, asHost } = fakeHost();
+  s.attach(asHost);
+  const first = sent.find((m) => m.t === 'plan')!;
+  expect(first.t === 'plan' && first.bytes).toBeInstanceOf(Uint8Array);
+  expect(planOf(first).nodes).toHaveLength(4);
+  sent.length = 0;
+  s.commit(moveObjects(s.current(), SPECS, ['m2'], 200, 0));
+  expect(sent.filter((m) => m.t === 'plan')).toEqual([]);
+  const g = s.current().groups[0]!;
+  s.commit(moveObjects(s.current(), SPECS, ['m2'], g.x + 40 - s.current().modules[1]!.x, g.y + 60 - s.current().modules[1]!.y));
+  expect(s.current().modules[1]!.parent).toBe(g.id);
+  expect(sent.filter((m) => m.t === 'plan')).toHaveLength(1);
 });

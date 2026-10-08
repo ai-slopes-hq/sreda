@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
+import { bigPatch } from './bigpatch';
 import { clockNode, compile } from './compile';
 import { editFrame, frameSelection, unframe } from './frames';
 import { TRACE_LEN } from './plan';
@@ -156,6 +157,7 @@ test('fixtures for the engine', () => {
     'scope-a': compile(scoped, SPECS, 3),
     'scope-b': compile(rerouted, SPECS, 4),
     frames: compile(nestedFrames(), SPECS, 7),
+    '200': compile(bigPatch(SPECS), SPECS, 8),
   };
   expect(plans['self-fm'].steps).toEqual([{ loop: [0] }, { node: 1 }]);
   if (process.env['UPDATE_FIXTURES']) {
@@ -261,3 +263,20 @@ function nestedFrames(): Doc {
   d = editFrame(d, g2.id, { ratio: -2 });
   return connect(d, SPECS, [g2.id, 'clkOut'], [ids[0]!, 'sync']);
 }
+
+test('the 200-module patch validates, compiles, and compiles in under 10 ms', async () => {
+  const { validateDoc } = await import('./doc');
+  const doc = bigPatch(SPECS);
+  expect(doc.modules).toHaveLength(200);
+  expect(doc.groups).toHaveLength(20);
+  expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)).toEqual(doc);
+  const times: number[] = [];
+  for (let i = 0; i < 6; i++) {
+    const t = performance.now();
+    compile(doc, SPECS, i);
+    times.push(performance.now() - t);
+  }
+  times.shift(); // the first run warms up
+  times.sort((a, b) => a - b);
+  expect(times[2]).toBeLessThan(10);
+});

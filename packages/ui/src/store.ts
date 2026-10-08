@@ -25,6 +25,7 @@ import {
 } from '@sreda/core';
 import { createSignal } from 'solid-js';
 import { createStore, reconcile } from 'solid-js/store';
+import { encodePlan } from '@sreda/protocol';
 import type { AudioHost } from './audio/host';
 import { scheduleSave } from './autosave';
 import { setLayoutSeq, setSource } from './live';
@@ -147,11 +148,24 @@ export function createSession(
     host?.post({ t: 'listen', target: node !== null && port >= 0 ? { node, port } : null });
   }
 
-  function send(): void {
+  /** the document without positions and sizes: an edit that leaves it unchanged needs no new plan (a move) */
+  let sentKey = '';
+  const structure = (d: Doc): string =>
+    JSON.stringify([
+      d.modules.map((m) => [m.id, m.type, m.parent, m.params, m.atts, m.ratios]),
+      d.cables,
+      d.groups.map((g) => [g.id, g.parent, g.ratio, g.muted, g.clock]),
+    ]);
+
+  function send(force = false): void {
+    if (!host) return;
+    const key = structure(state.doc);
+    if (!force && key === sentKey) return;
+    sentKey = key;
     plan = compile(state.doc, specs, ++seq);
     setLayoutSeq(seq);
     setLayout(plan.layout);
-    host?.post({ t: 'plan', plan });
+    host.post({ t: 'plan', seq, bytes: encodePlan(plan) });
     sendListen(); // a new plan clears listening in the engine
   }
 
@@ -190,7 +204,7 @@ export function createSession(
       h.onError = () => setState('notice', 'THE AUDIO ENGINE STOPPED — RESTART THE APP');
       setSource(h.readouts);
       setState('audio', true);
-      send();
+      send(true);
       h.post({ t: 'fade', ms: 200 }); // the patch fades in
     },
     commit(doc: Doc, merge?: Merge): void {

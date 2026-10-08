@@ -1,4 +1,4 @@
-import { FACTORY, SPECS, starterDoc } from '@sreda/core';
+import { bigPatch, FACTORY, SPECS, starterDoc } from '@sreda/core';
 import { createResource, Show, type JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { AudioHost } from './audio/host';
@@ -10,7 +10,7 @@ import { createSession, type SessionApi } from './store';
 declare global {
   interface Window {
     /** for e2e tests: the current document and the readout buffer */
-    __sreda?: { doc(): unknown; readout(i: number): number };
+    __sreda?: { doc(): unknown; readout(i: number): number; big?(): void };
   }
 }
 
@@ -28,6 +28,9 @@ export function App(): JSX.Element {
     const project = !saved.fresh ? saved.project : starter ? null : { path: 'FACTORY/pulse', factory: true };
     const s = createSession(SPECS, doc, notice, project);
     window.__sreda = { doc: () => structuredClone(unwrap(s.state.doc)), readout: (i) => s.readout(i) };
+    // dev builds: `__sreda.big()` in the console opens the 200-module patch (the smoothness check)
+    if (import.meta.env.DEV)
+      window.__sreda.big = () => s.openProject(bigPatch(SPECS), { path: 'FACTORY/200 modules', factory: true });
     listenForFirstClick(s);
     return s;
   });

@@ -2,7 +2,8 @@
 import type { Plan } from '@sreda/core';
 
 export type ToEngine =
-  | { t: 'plan'; plan: Plan }
+  /** a plan as UTF-8 JSON, encoded on the main thread; its buffer is transferred */
+  | { t: 'plan'; seq: number; bytes: Uint8Array }
   | { t: 'knob'; node: number; index: number; value: number }
   /** an option's index or a hidden knob in real units, at its index among the node's fixed values */
   | { t: 'fixed'; node: number; index: number; value: number }
@@ -15,3 +16,8 @@ export type ToEngine =
   | { t: 'fade'; ms: number };
 
 export type FromEngine = { t: 'applied'; seq: number; code: 0 | 1 | 2 };
+
+/** A plan as the bytes the engine decodes (encoded here, on the main thread, never in the worklet). */
+export function encodePlan(plan: Plan): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(plan));
+}

@@ -23,6 +23,10 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Pin matrix module** (2026-10-07): an EMS Synthi-style routing module on the canvas (4×4 pins, modulatable and
   switchable by trigger) — a creative module, separate from the wire editor.
 
+- **Choosing a skin** (2026-10-08): spec §1a defines skins and records six skins (DEFAULT, ANNABIOSIS, KANAGAWA, TOUCH, NORD, TOKYO NIGHT). Later: move every
+  colour literal in the UI into the §1a tokens (today `canvas.css` has only the role tokens; `Frame.tsx` keeps
+  `TINT_FILL`), then a way to pick the skin (app-wide, not per document).
+
 ## Deep backlog
 
 - **Panels in rows / rails** (2026-10-07): a canvas-wide HP × U lattice with rails between rows, like a case.
@@ -34,10 +38,10 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 ## From the Plan 1 review (deferred, 2026-10-07)
 
-- **Cables at 200 modules** (spec §8): `Cables.tsx` rebuilds every path on each move preview and calls `layoutPanel`
-  uncached; memoise layouts per type and recompute only the wires touching moved modules. Before Plan 3's benchmark.
-- **Plans on the audio thread:** `JSON.stringify` + a hand UTF-8 encoder run in the worklet, and position-only edits
-  send a plan; encode with `TextEncoder` on the main thread, transfer bytes, skip plans for moves.
+- ~~**Cables at 200 modules**~~ — done in Plan 3 (memoised layouts and cable geometry; a move recomputes only its
+  wires).
+- ~~**Plans on the audio thread**~~ — done in Plan 3 (encoded on the main thread, bytes transferred; no plan for a
+  move that changes nothing structural).
 - **Meters:** level bars have no hold / 300 ms decay and sample one block in six; trigger flashes last 80 ms, not 120.
 - **Master after a runaway:** the DC blocker state can hold ~1e34 and pin the output near full scale for seconds once
   the runaway stops (possible with Plan 2's MIX / ATT / A×B+C); clamp the master input to about ±16.
@@ -46,7 +50,7 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   crossfades and trigger inputs.
 - **Autosave:** an edit in the last 500 ms before quitting is lost; each save opens a new IndexedDB connection.
 - **Small UI:** Shift mid-knob-drag jumps (re-base the drag); clicking one module of a multi-selection keeps the
-  selection; the cable gradient is 0→1, not spec §1's 40 / 20 / 40.
+  selection. (~~The cable gradient~~ is 40 / 20 / 40 since Plan 3.)
 - **Hardening:** the app:// path check uses `startsWith(root)` without a separator; no `will-navigate` /
   `setWindowOpenHandler` guard; no production CSP; `package.json` uses `^` ranges, not exact pins; the WASM path is not
   tested at 44.1 kHz any more (add `renderDoc(…, 44100)`).

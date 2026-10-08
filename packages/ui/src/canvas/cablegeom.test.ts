@@ -79,3 +79,13 @@ test('cableAt finds a cable within the threshold', () => {
   expect(cableAt(geoms, { x: 300, y: y + 6 }, 6)).toBe(0);
   expect(cableAt(geoms, { x: 300, y: y + 7 }, 6)).toBeNull();
 });
+
+test('in the 200-module patch, a move preview of one module recomputes only its own cables', async () => {
+  const { bigPatch, SPECS } = await import('@sreda/core');
+  const doc = bigPatch(SPECS);
+  cableGeoms(doc, SPECS);
+  const fold = doc.modules.find((m) => m.type === 'fold')!;
+  const before = geomStats.computed;
+  cableGeoms(moveObjects(doc, SPECS, [fold.id], 40, 16), SPECS);
+  expect(geomStats.computed - before).toBeLessThanOrEqual(4);
+});

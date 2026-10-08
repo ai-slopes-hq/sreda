@@ -45,6 +45,8 @@ export class AudioHost {
   }
 
   post(msg: ToEngine): void {
-    this.node.port.postMessage(msg);
+    // a plan's bytes move to the audio thread without a copy
+    if (msg.t === 'plan') this.node.port.postMessage(msg, [msg.bytes.buffer]);
+    else this.node.port.postMessage(msg);
   }
 }

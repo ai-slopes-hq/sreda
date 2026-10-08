@@ -8,6 +8,8 @@ export interface WasmEngine {
   /** 0 = applied, 1 = not decodable or invalid, 2 = an unknown module type; on non-zero the old plan keeps playing */
   apply(plan: Plan): 0 | 1 | 2;
   applyJson(json: string): 0 | 1 | 2;
+  /** a plan as UTF-8 JSON bytes (what the worklet receives) */
+  applyBytes(bytes: Uint8Array): 0 | 1 | 2;
   knob(node: number, index: number, value: number): void;
   fixed(node: number, index: number, value: number): void;
   att(node: number, input: number, value: number): void;
@@ -39,19 +41,6 @@ interface Exports {
   engine_readouts_len(e: number): number;
 }
 
-/** UTF-8 without TextEncoder (the AudioWorklet scope has none). */
-function utf8(s: string): Uint8Array {
-  const out: number[] = [];
-  for (const ch of s) {
-    const c = ch.codePointAt(0)!;
-    if (c < 0x80) out.push(c);
-    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
-    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-    else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-  }
-  return Uint8Array.from(out);
-}
-
 class Engine implements WasmEngine {
   private readonly out = { l: new Float32Array(0), r: new Float32Array(0) };
   private outKey: ArrayBuffer | null = null;
@@ -70,7 +59,10 @@ class Engine implements WasmEngine {
   }
 
   applyJson(json: string): 0 | 1 | 2 {
-    const bytes = utf8(json);
+    return this.applyBytes(new TextEncoder().encode(json));
+  }
+
+  applyBytes(bytes: Uint8Array): 0 | 1 | 2 {
     const ptr = this.x.engine_alloc(bytes.length);
     new Uint8Array(this.x.memory.buffer, ptr, bytes.length).set(bytes);
     return this.x.engine_apply(this.e, ptr, bytes.length) as 0 | 1 | 2;

@@ -106,3 +106,15 @@ fn frames_gated_cables_and_mute_toggles_allocate_nothing() {
     }
     assert_eq!(allocs() - before, 0);
 }
+
+#[test]
+fn the_200_module_patch_allocates_nothing() {
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(fixture("200")).unwrap();
+    e.process();
+    let before = allocs();
+    for _ in 0..750 {
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+}

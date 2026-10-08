@@ -32,7 +32,7 @@ class SredaProcessor extends AudioWorkletProcessor {
   private receive(msg: ToEngine): void {
     switch (msg.t) {
       case 'plan': {
-        const reply: FromEngine = { t: 'applied', seq: msg.plan.seq, code: this.engine.apply(msg.plan) };
+        const reply: FromEngine = { t: 'applied', seq: msg.seq, code: this.engine.applyBytes(msg.bytes) };
         this.port.postMessage(reply);
         break;
       }

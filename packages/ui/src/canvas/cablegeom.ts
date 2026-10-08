@@ -73,7 +73,22 @@ export function roundPath(pts: Pt[], r: number): string {
  * channel above its row, along the trunk (the frame's left channel) to the channel above the target's row, and down
  * the channel on the target's left into the jack (a knob's mod jack: straight down from the channel above).
  */
-function routePts(doc: Doc, specs: Specs, c: Cable, lane: number, gx: number, gid: string): Pt[] {
+/** Is there a module of the frame in the same row between a cable's two ends? (Then it cannot go straight across.) */
+function between(doc: Doc, specs: Specs, c: Cable, gid: string): boolean {
+  const ra = rectOf(doc, specs, c.from[0]);
+  const rb = rectOf(doc, specs, c.to[0]);
+  return doc.modules.some(
+    (m) =>
+      m.parent === gid &&
+      m.id !== c.from[0] &&
+      m.id !== c.to[0] &&
+      m.y === ra.y &&
+      m.x >= ra.x + ra.w &&
+      m.x < rb.x,
+  );
+}
+
+function routePts(doc: Doc, specs: Specs, c: Cable, lane: number, gx: number, blocked: boolean): Pt[] {
   const a = jackAt(doc, specs, c.from[0], c.from[1]);
   const b = jackAt(doc, specs, c.to[0], c.to[1]);
   const ra = rectOf(doc, specs, c.from[0]);
@@ -83,16 +98,7 @@ function routePts(doc: Doc, specs: Specs, c: Cable, lane: number, gx: number, gi
   const yb = rb.y - lane;
   const mod = c.to[1].startsWith('@');
   const xEnd = mod ? b.x : rb.x - lane;
-  const between = doc.modules.some(
-    (m) =>
-      m.parent === gid &&
-      m.id !== c.from[0] &&
-      m.id !== c.to[0] &&
-      m.y === ra.y &&
-      m.x >= ra.x + ra.w &&
-      m.x < rb.x,
-  );
-  if (!mod && ra.y === rb.y && rb.x >= ra.x + ra.w && !between) {
+  if (!mod && ra.y === rb.y && rb.x >= ra.x + ra.w && !blocked) {
     if (a.y === b.y) return [a, b];
     const xm = (ra.x + ra.w + rb.x) / 2;
     return [a, { x: xm, y: a.y }, { x: xm, y: b.y }, b];
@@ -111,17 +117,10 @@ function routePts(doc: Doc, specs: Specs, c: Cable, lane: number, gx: number, gi
 const memo = new Map<string, CableGeom>();
 
 export function cableGeoms(doc: Doc, specs: Specs): CableGeom[] {
-  // WIRE FIX frames: their direct child modules, and a signature of where those sit (a route depends on the row)
+  // WIRE FIX frames and their direct child modules (a routed cable runs between two of them)
   const routes = doc.groups
     .filter((g) => g.layout === 'route')
-    .map((g) => {
-      const kids = doc.modules.filter((m) => m.parent === g.id);
-      return {
-        g,
-        set: new Set(kids.map((m) => m.id)),
-        sig: kids.map((m) => `${m.id}:${m.x},${m.y}`).join(';'),
-      };
-    });
+    .map((g) => ({ g, set: new Set(doc.modules.filter((m) => m.parent === g.id).map((m) => m.id)) }));
   const lanes = new Map<string, number>();
   const used = new Set<string>();
   const out: CableGeom[] = [];
@@ -138,14 +137,16 @@ export function cableGeoms(doc: Doc, specs: Specs): CableGeom[] {
     }
     const a = jackAt(doc, specs, c.from[0], c.from[1]);
     const b = jackAt(doc, specs, c.to[0], c.to[1]);
+    // a route depends on where its two ends sit (their jacks), its lane, the frame's trunk and the row between them
+    const blocked = route ? between(doc, specs, c, route.g.id) : false;
     const key = route
-      ? `${c.from.join('.')}|${c.to.join('.')}|${route.g.id}@${route.g.x}|${lane}|${route.sig}`
+      ? `${c.from.join('.')}|${c.to.join('.')}|${a.x},${a.y}|${b.x},${b.y}|${route.g.id}@${route.g.x}|${lane}|${blocked}`
       : `${c.from.join('.')}|${c.to.join('.')}|${a.x},${a.y}|${b.x},${b.y}`;
     used.add(key);
     let geom = memo.get(key);
     if (!geom || geom.from !== from || geom.to !== to) {
       geomStats.computed++;
-      const pts = route ? routePts(doc, specs, c, lane, route.g.x, route.g.id) : bezPts(a, b);
+      const pts = route ? routePts(doc, specs, c, lane, route.g.x, blocked) : bezPts(a, b);
       geom = {
         key,
         cable: c,

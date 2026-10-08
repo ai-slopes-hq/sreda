@@ -27,6 +27,14 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
   const specOf = (i: number): ModuleSpec => (i < nm ? specs[doc.modules[i]!.type]! : specs['clock']!);
   const n = nm + doc.groups.length;
   const edges: number[][] = Array.from({ length: n }, () => []);
+  // cables by input (`id\0port`), and the outputs that have any: looked up, never searched
+  const into = new Map<string, Cable[]>();
+  const used = new Set<string>();
+  for (const c of doc.cables) {
+    const k = c.to[0] + '\0' + c.to[1];
+    into.set(k, [...(into.get(k) ?? []), c]);
+    used.add(c.from[0] + '\0' + c.from[1]);
+  }
   const frameIndex = new Map(doc.groups.map((g, k) => [g.id, k]));
   const chains = new Map<string, string[]>();
   const chain = (id: string): string[] => {
@@ -62,13 +70,11 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
       else if (p.kind === 'option') fixed.push(m.params[p.id] ?? 0);
     }
     const inputs: InputPlan[] = inputPorts(spec).map((port) => {
-      const sources = doc.cables
-        .filter((c) => c.to[0] === m.id && c.to[1] === port.id)
-        .map((c) => {
-          const src = sourceOf(c);
-          edges[src.node]!.push(i);
-          return src;
-        });
+      const sources = (into.get(m.id + '\0' + port.id) ?? []).map((c) => {
+        const src = sourceOf(c);
+        edges[src.node]!.push(i);
+        return src;
+      });
       let normal: InputPlan['normal'] = null;
       const nm = sources.length ? undefined : spec.normals.find((x) => x.input === port.id);
       if (nm?.kind === 'own' && (!nm.when || m.params[nm.when.param] === nm.when.value)) {
@@ -86,9 +92,7 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
         ratio: m.ratios[port.id] ?? 1,
       };
     });
-    const connectedOut = spec.outputs.map((o) =>
-      doc.cables.some((c) => c.from[0] === m.id && c.from[1] === o.id),
-    );
+    const connectedOut = spec.outputs.map((o) => used.has(m.id + '\0' + o.id));
     const gate = m.type === 'out' && m.parent ? frameIndex.get(m.parent) : undefined;
     return {
       id: m.id,
@@ -103,13 +107,11 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
   // each frame: a clock node; CLK IN takes its cables, else its parent frame's clock (through this frame's ratio)
   doc.groups.forEach((g, k) => {
     const i = nm + k;
-    const sources = doc.cables
-      .filter((c) => c.to[0] === g.id && c.to[1] === 'clkIn')
-      .map((c) => {
-        const src = sourceOf(c);
-        edges[src.node]!.push(i);
-        return src;
-      });
+    const sources = (into.get(g.id + '\0clkIn') ?? []).map((c) => {
+      const src = sourceOf(c);
+      edges[src.node]!.push(i);
+      return src;
+    });
     const parent = g.parent ? index.get(g.parent) : undefined;
     if (parent !== undefined) edges[parent]!.push(i);
     nodes.push({
@@ -126,7 +128,7 @@ export function compile(doc: Doc, specs: Specs, seq: number): Plan {
           ratio: g.ratio,
         },
       ],
-      connectedOut: [doc.cables.some((c) => c.from[0] === g.id)],
+      connectedOut: [used.has(g.id + '\0clkOut')],
     });
   });
 
@@ -230,11 +232,12 @@ function order(n: number, edges: number[][]): Step[] {
 
 /** Per frame: muted (itself or a parent), the audio sources whose cables leave it, and the OUT nodes inside it. */
 function framePlans(doc: Doc, specs: Specs, index: Map<string, number>): FramePlan[] {
+  const byId = new Map(doc.modules.map((m) => [m.id, m]));
   return doc.groups.map((g) => {
     const inside = new Set(descendants(doc, g.id));
     const sources: FramePlan['sources'] = [];
     for (const c of doc.cables) {
-      const m = doc.modules.find((x) => x.id === c.from[0]);
+      const m = byId.get(c.from[0]);
       if (!m || !inside.has(m.id) || inside.has(c.to[0]) || c.to[0] === g.id) continue;
       const port = specs[m.type]!.outputs.findIndex((o) => o.id === c.from[1]);
       if (specs[m.type]!.outputs[port]?.role !== 'audio') continue;

@@ -52,6 +52,9 @@ struct KnobRt {
     cur: f64,
     target: f64,
     step: f64,
+    /// the last position converted and its value: a steady knob skips `from_knob` (a `powf` on exp tapers)
+    last_pos: f64,
+    last_value: f32,
 }
 
 struct Slot {
@@ -109,6 +112,9 @@ pub struct Engine {
     gain_buf: Vec<[f32; BLOCK]>,
     frames: Vec<FrameRt>,
     frames_at: usize,
+    /// tests: prepare every node sample by sample (the reference `prepare_block` must equal)
+    #[cfg(test)]
+    per_sample: bool,
     ctx: Ctx,
     master: Master,
     /// stable slot indices: plans refer to slots through `order`
@@ -208,7 +214,98 @@ fn prepare(
                     k.cur = k.target;
                 }
             }
-            slot.par[j - n_in][i] = from_knob(&k.spec, k.cur + raw as f64) as f32;
+            let pos = k.cur + raw as f64;
+            if pos != k.last_pos {
+                k.last_pos = pos;
+                k.last_value = from_knob(&k.spec, pos) as f32;
+            }
+            slot.par[j - n_in][i] = k.last_value;
+        }
+    }
+}
+
+/// A whole block of a slot's prepared inputs and knob values: the same arithmetic as `prepare` sample by sample,
+/// input by input, so the loops run tight (a node outside a feedback loop reads nothing late).
+fn prepare_block(slot: &mut Slot, outs: &[[f32; BLOCK]], gains: &[[f32; BLOCK]], fade_len: u32) {
+    let n_in = slot.n_in;
+    let mut raw = [0.0f32; BLOCK];
+    for (j, input) in slot.inputs.iter_mut().enumerate() {
+        if let Some(t) = input.trig.as_mut() {
+            for (i, r) in raw.iter_mut().enumerate() {
+                let mut n = 0;
+                for s in &input.sources {
+                    input.scratch[n] = read(outs, gains, s, i);
+                    n += 1;
+                }
+                if n == 0 {
+                    if let Norm::Own(b) = input.normal {
+                        input.scratch[0] = outs[b][(i + BLOCK - 1) % BLOCK];
+                        n = 1;
+                    }
+                }
+                *r = t.sample(&input.scratch[..n]);
+            }
+        } else {
+            if !input.sources.is_empty() {
+                raw.fill(0.0);
+                for s in &input.sources {
+                    if s.gate == NO_GATE && !s.late {
+                        for (r, x) in raw.iter_mut().zip(&outs[s.buf]) {
+                            *r += *x;
+                        }
+                    } else {
+                        for (i, r) in raw.iter_mut().enumerate() {
+                            *r += read(outs, gains, s, i);
+                        }
+                    }
+                }
+            } else {
+                match input.normal {
+                    Norm::Own(b) => {
+                        for (i, r) in raw.iter_mut().enumerate() {
+                            *r = outs[b][(i + BLOCK - 1) % BLOCK];
+                        }
+                    }
+                    Norm::Value(x) => raw.fill(x),
+                    Norm::None | Norm::Internal => raw.fill(0.0),
+                }
+            }
+            let mut i = 0;
+            while input.xfade_left > 0 && i < BLOCK {
+                let t = 1.0 - input.xfade_left as f32 / fade_len as f32;
+                raw[i] = sum(outs, gains, &input.old, i) * (1.0 - t) + raw[i] * t;
+                input.xfade_left -= 1;
+                i += 1;
+            }
+            if input.kind == Kind::Cv {
+                let att = input.att as f32;
+                for r in raw.iter_mut() {
+                    *r *= att;
+                }
+            }
+        }
+        if j < n_in {
+            slot.inbuf[j] = raw;
+        } else {
+            let k = &mut slot.knobs[j - n_in];
+            let par = &mut slot.par[j - n_in];
+            for (p, r) in par.iter_mut().zip(&raw) {
+                if k.cur != k.target {
+                    k.cur += k.step;
+                    if (k.step > 0.0 && k.cur >= k.target)
+                        || (k.step < 0.0 && k.cur <= k.target)
+                        || k.step == 0.0
+                    {
+                        k.cur = k.target;
+                    }
+                }
+                let pos = k.cur + *r as f64;
+                if pos != k.last_pos {
+                    k.last_pos = pos;
+                    k.last_value = from_knob(&k.spec, pos) as f32;
+                }
+                *p = k.last_value;
+            }
         }
     }
 }
@@ -258,6 +355,8 @@ impl Engine {
             gain_buf: Vec::new(),
             frames: Vec::new(),
             frames_at: 0,
+            #[cfg(test)]
+            per_sample: false,
             ctx: Ctx::new(sample_rate, seed),
             master: Master::new(sample_rate),
             pool: Vec::new(),
@@ -613,6 +712,8 @@ impl Engine {
                         cur,
                         target,
                         step: (target - cur) / fade_len as f64,
+                        last_pos: f64::NAN,
+                        last_value: 0.0,
                     }
                 })
                 .collect();
@@ -842,8 +943,16 @@ impl Engine {
             match st {
                 StepRt::Node(p) => {
                     let slot = self.pool[*p].as_mut().unwrap();
-                    for i in 0..BLOCK {
-                        prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
+                    #[cfg(test)]
+                    let reference = self.per_sample;
+                    #[cfg(not(test))]
+                    let reference = false;
+                    if reference {
+                        for i in 0..BLOCK {
+                            prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
+                        }
+                    } else {
+                        prepare_block(slot, &self.outs, &self.gain_buf, fade_len);
                     }
                     if slot.writes_master && slot.gate != NO_GATE {
                         // an OUT inside a frame: its speaker output through the frame's gain
@@ -1203,6 +1312,31 @@ mod tests {
         assert!(peak(&run(&mut e, 40)) < 0.001);
         assert!(peak(e.output(0, 0)) > 0.5, "the source keeps running");
         assert_eq!(e.readouts()[meter], 0.0);
+    }
+
+    #[test]
+    fn preparing_a_block_at_once_equals_preparing_it_sample_by_sample() {
+        for name in ["all-a", "all-b", "200", "frames"] {
+            let path = format!("{}/tests/fixtures/plan-{name}.json", env!("CARGO_MANIFEST_DIR"));
+            let plan = crate::plan::decode(&std::fs::read(path).unwrap()).unwrap();
+            let mut fast = Engine::new(SR, 7);
+            let mut slow = Engine::new(SR, 7);
+            slow.per_sample = true;
+            fast.apply(plan.clone()).unwrap();
+            slow.apply(plan).unwrap();
+            for b in 0..400 {
+                if b == 100 {
+                    // a glide and a mute mid-run
+                    fast.knob(0, 0, 0.9);
+                    slow.knob(0, 0, 0.9);
+                    fast.mute(0, true);
+                    slow.mute(0, true);
+                }
+                let a = *fast.process().0;
+                let c = *slow.process().0;
+                assert_eq!(a, c, "{name}: block {b} differs");
+            }
+        }
     }
 
     #[test]
