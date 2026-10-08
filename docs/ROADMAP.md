@@ -34,9 +34,9 @@ of a creative tool; nothing of its UI is ported.
   allocates nothing; a minute of audio takes 2.6 % of real time natively.
 - **2026-10-08** — Plan 3 written (11 tasks; spec revision 15 clarifies the library over IPC, ⌘D, groups from a
   jack, the mute rule). Executing on branch `plan-3-organisation`; progress ledger in
-  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. Tasks 1–6 done (frames, frame clocks, MUTE + frame
-  meter, STACK / WIRE FIX, factory patches + picker tabs, library folder + SAVE / NEW); Task 6 waits at its
-  checkpoint; next is Task 7 (wire hover, cable focus, insert into a cable).
+  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. Tasks 1–8 done (frames, frame clocks, MUTE + frame
+  meter, STACK / WIRE FIX, factory patches + picker tabs, library folder + SAVE / NEW, wire hover / focus / insert,
+  magnets / replace / ⌘D / R); Task 8 waits at its checkpoint; next is Task 9 (the sidebar and WIRES).
 
 ## The road (vertical slices: something to hear at every stage)
 
