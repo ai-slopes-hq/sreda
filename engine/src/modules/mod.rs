@@ -19,6 +19,7 @@ pub mod out;
 pub mod quant;
 pub mod reverb;
 pub mod rhythm;
+pub mod sampler;
 pub mod scope;
 pub mod shift;
 pub mod slope;

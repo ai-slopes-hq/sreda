@@ -3,7 +3,7 @@
 import { createEffect, onCleanup } from 'solid-js';
 import { tracePaths } from './canvas/displays/trace';
 
-type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw';
+type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw' | 'playhead';
 interface Entry {
   el: Element;
   kind: Kind;
@@ -119,6 +119,10 @@ export function frame(now: number): void {
         // hold the peak, fall at full scale per 0.6 s
         e.hold = Math.max(Math.min(1, v), e.hold - dt / 0.6);
         e.onChange?.(e.hold);
+        break;
+      case 'playhead':
+        // a position 0…1 (−1: nothing playing), handed on when it moves
+        if (v !== e.last) e.onChange?.(v);
         break;
       case 'watch':
         // a rise of the count is an event; the first reading is a baseline and a reset to 0 is not one

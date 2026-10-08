@@ -43,6 +43,9 @@ const MODULES: &[Entry] = &[
     ("rhythm", rhythm::spec, |sr| {
         Box::new(rhythm::Rhythm::new(sr))
     }),
+    ("sampler", sampler::spec, |sr| {
+        Box::new(sampler::Sampler::new(sr))
+    }),
     ("scope", scope::spec, |sr| Box::new(scope::Scope::new(sr))),
     ("shift", shift::spec, |sr| Box::new(shift::Shift::new(sr))),
     ("slope", slope::spec, |sr| Box::new(slope::Slope::new(sr))),

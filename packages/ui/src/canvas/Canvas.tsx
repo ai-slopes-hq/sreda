@@ -43,7 +43,7 @@ import { Sidebar } from '../sidebar/Sidebar';
 import { Frame, type Edge } from './Frame';
 import { bez, ROLE } from './glyphs';
 import { handleKey } from './keys';
-import { Panel, type FieldKind } from './Panel';
+import { Panel, type FieldKind, type SampleView } from './Panel';
 import { placeFor, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 import { Picker } from './Picker';
 import { panned } from './wheel';
@@ -129,6 +129,18 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   };
 
   const jackPos = (id: string, port: string): Pt => jackAt(st.doc, specs, id, port);
+  /** a module's sample as its display shows it (re-read when the registry changes) */
+  const sampleView = (path: string | undefined): SampleView | undefined => {
+    if (!path) return undefined;
+    void st.samplesVersion;
+    const info = s.samples.info(path);
+    return {
+      path,
+      missing: s.samples.status(path) === 'missing',
+      peaks: s.samples.peaks(path),
+      hits: info ? info.hits.map((h) => ({ at: h.at / info.frames, strength: h.strength })) : [],
+    };
+  };
   /** inside a muted frame (a muted frame's own header is not dimmed) */
   const dimmed = (id: string) =>
     chainOf(st.doc, id).some((g) => g !== id && st.doc.groups.find((x) => x.id === g)?.muted);
@@ -716,6 +728,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   end={wireEnds().includes(m.id)}
                   candidate={st.candidate?.id === m.id ? st.candidate.port : null}
                   dim={dimmed(m.id)}
+                  sample={sampleView(m.sample)}
                   act={{
                     knob: (param, k, merge) => s.knob(m.id, param, k, merge),
                     option: (param, v, merge) => s.params(m.id, { [param]: v }, merge),

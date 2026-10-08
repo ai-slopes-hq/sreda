@@ -18,7 +18,12 @@ impl Sample {
         Sample {
             channels: [l, r],
             frames,
-            hits: h.as_chunks::<2>().0.iter().map(|p| (p[0] as usize, p[1])).collect(),
+            hits: h
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|p| (p[0] as usize, p[1]))
+                .collect(),
         }
     }
 }

@@ -1395,3 +1395,33 @@
   color: #8f897c;
   pointer-events: none;
 }
+/* SAMPLER's wave (spec §7a) */
+.sr-wave-box {
+  cursor: pointer;
+}
+.sr-wave .d-fill {
+  fill: #e9e4d8;
+  fill-opacity: 0.55;
+}
+.sr-wave .d-shade {
+  fill: #121210;
+  fill-opacity: 0.7;
+}
+.sr-wave .d-mark {
+  fill: none;
+  stroke: #f5a524;
+  stroke-opacity: 0.8;
+  stroke-width: 1;
+}
+.sr-wave .d-ring {
+  fill: none;
+  stroke: #f5a524;
+  stroke-width: 1.5;
+}
+.sr-dtag.left {
+  left: 6px;
+  right: auto;
+}
+.sr-wave-box.missing .sr-dtag {
+  color: #f5a524;
+}

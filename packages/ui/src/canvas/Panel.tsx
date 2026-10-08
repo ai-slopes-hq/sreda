@@ -18,6 +18,7 @@ import { Option } from './Option';
 import { Contour } from './displays/Contour';
 import { Pads } from './displays/Pads';
 import { Room } from './displays/Room';
+import { Wave } from './displays/Wave';
 import { Scope } from './displays/Scope';
 
 export type FieldKind = 'att' | 'ratio';
@@ -41,6 +42,17 @@ export interface PanelActions {
   editParams?(changes: Record<string, number>, merge?: Merge): void;
   /** the module's DICE input fired (the patch changes, no undo step) */
   diceInput?(): void;
+  /** LOAD, or a click on a sample display: choose this module's sample */
+  load?(): void;
+}
+
+/** What a sample display shows of the module's sample. */
+export interface SampleView {
+  path: string;
+  missing: boolean;
+  peaks: Float32Array | null;
+  /** hits as 0…1 of the file, with their strength */
+  hits: { at: number; strength: number }[];
 }
 
 export interface PanelProps {
@@ -65,6 +77,8 @@ export interface PanelProps {
   end?: boolean;
   /** a WIRES port list points at this port: an amber ring */
   candidate?: string | null;
+  /** SAMPLER / GRAINS: the module's sample (undefined: none chosen) */
+  sample?: SampleView | undefined;
 }
 
 /** A module drawn by the panel grammar from its spec: jacks in the side columns, knobs, the mode strip. */
@@ -73,6 +87,12 @@ export function Panel(props: PanelProps): JSX.Element {
   const knobs = () => props.spec.params.filter((p): p is KnobParam => p.kind === 'knob' && !p.hidden);
   const options = () => props.spec.params.filter((p): p is OptionParam => p.kind === 'option' && !p.hidden);
   const actions = () => props.spec.params.filter((p) => p.kind === 'action');
+  /** SAMPLER's SLICES reads SENS (0…1, the same knob position) while AUTO is on */
+  const shown = (p: KnobParam): KnobParam => {
+    if (p.id !== 'slices' || props.spec.type !== 'sampler' || props.mod.params['auto'] !== 1) return p;
+    const { step: _step, ...rest } = p;
+    return { ...rest, label: 'SENS', min: 0, max: 1 };
+  };
   const knobValue = (id: string) => {
     const p = props.spec.params.find((x) => x.id === id);
     return p?.kind === 'knob' ? fromKnob(p, props.mod.params[id] ?? 0) : 0;
@@ -189,13 +209,40 @@ export function Panel(props: PanelProps): JSX.Element {
               data-action={p.id}
               style={{ left: c().x + 4 + 'px', top: c().y + 6 + 'px', width: c().w - 8 + 'px' }}
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => props.act.action?.(p.id)}
+              onClick={() => (p.id === 'load' ? props.act.load?.() : props.act.action?.(p.id))}
             >
               {p.label}
             </button>
           );
         }}
       </For>
+      <Show when={props.spec.display?.kind === 'wave' && L().display}>
+        {(d) => {
+          const opt = (id: string) => props.mod.params[id] ?? 0;
+          // AUTO cuts at the hits at least 1 − SENS strong (SENS reads SLICES' knob position)
+          const sens = () => props.mod.params['slices'] ?? 0;
+          return (
+            <Wave
+              x={d().x}
+              y={d().y}
+              w={d().w}
+              h={d().h}
+              peaks={props.sample?.peaks ?? null}
+              path={props.sample?.path}
+              missing={props.sample?.missing ?? false}
+              mode={opt('mode')}
+              rev={opt('rev') === 1}
+              auto={opt('auto') === 1}
+              start={knobValue('start')}
+              len={knobValue('len')}
+              slices={knobValue('slices')}
+              hits={(props.sample?.hits ?? []).filter((h) => h.strength >= 1 - sens()).map((h) => h.at)}
+              state={props.readouts?.state}
+              onLoad={() => props.act.load?.()}
+            />
+          );
+        }}
+      </Show>
       <Show when={props.spec.display?.kind === 'room' && L().display}>
         {(d) => (
           <Room
@@ -333,7 +380,7 @@ export function Panel(props: PanelProps): JSX.Element {
           return (
             <>
               <Knob
-                param={p}
+                param={shown(p)}
                 value={props.mod.params[p.id] ?? 0}
                 x={c().x}
                 y={c().y}

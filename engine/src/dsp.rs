@@ -155,8 +155,30 @@ pub mod bench {
             outputs: usize,
             blocks: usize,
         ) {
+            Self::blockwise_equals_per_sample_with(
+                make,
+                |_| {},
+                inputs,
+                par,
+                fixed,
+                outputs,
+                blocks,
+            )
+        }
+
+        /// The same, with `setup` preparing the context first (samples in the pool).
+        pub fn blockwise_equals_per_sample_with(
+            make: impl Fn() -> Box<dyn Dsp>,
+            setup: impl Fn(&mut Ctx),
+            inputs: &[Vec<f32>],
+            par: &[f64],
+            fixed: &[f64],
+            outputs: usize,
+            blocks: usize,
+        ) {
             let run = |per_sample: bool| {
                 let mut b = Bench::new(48_000.0, inputs.len(), par, fixed, outputs);
+                setup(&mut b.ctx);
                 b.connected_in = inputs.iter().map(|s| !s.is_empty()).collect();
                 let mut dsp = make();
                 let mut res = vec![Vec::new(); outputs];

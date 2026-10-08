@@ -1815,6 +1815,165 @@
     }
   },
   {
+    "type": "sampler",
+    "label": "SAMPLER",
+    "desc": "one-shot, loop, slices",
+    "size": [
+      8,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      },
+      {
+        "id": "pitch",
+        "label": "PTCH",
+        "role": "pitch"
+      },
+      {
+        "id": "slice",
+        "label": "SLICE",
+        "role": "mod"
+      },
+      {
+        "id": "start",
+        "label": "START",
+        "role": "mod"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "l",
+        "label": "L",
+        "role": "audio"
+      },
+      {
+        "id": "r",
+        "label": "R",
+        "role": "audio"
+      },
+      {
+        "id": "eoc",
+        "label": "EOC",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "pitch",
+        "label": "PITCH",
+        "min": -24.0,
+        "max": 24.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "knob",
+        "id": "start",
+        "label": "START",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "len",
+        "label": "LEN",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "dec",
+        "label": "DEC",
+        "min": 0.01,
+        "max": 10.0,
+        "def": 10.0,
+        "taper": "exp",
+        "unit": "s"
+      },
+      {
+        "kind": "knob",
+        "id": "lvl",
+        "label": "LVL",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.8,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "slices",
+        "label": "SLICES",
+        "min": 2.0,
+        "max": 64.0,
+        "def": 8.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "option",
+        "id": "mode",
+        "label": "MODE",
+        "options": [
+          "ONE",
+          "LOOP",
+          "SLICE"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "option",
+        "id": "rev",
+        "label": "REV",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "option",
+        "id": "auto",
+        "label": "AUTO",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "action",
+        "id": "load",
+        "label": "LOAD"
+      },
+      {
+        "kind": "knob",
+        "id": "sample",
+        "label": "SAMPLE",
+        "min": -1.0,
+        "max": 1000000.0,
+        "def": -1.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 4,
+      "kind": "wave"
+    }
+  },
+  {
     "type": "scope",
     "label": "SCOPE",
     "desc": "oscilloscope with thru outputs",

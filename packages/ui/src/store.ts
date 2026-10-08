@@ -55,6 +55,8 @@ export interface Session {
   candidate: { id: string; port: string } | null;
   /** sample paths the library could not read (spec §7a: MISSING) */
   missing: string[];
+  /** bumps when a sample is loaded, refused or found missing (displays re-read the registry) */
+  samplesVersion: number;
 }
 
 /** The sidebar (spec §5a): docked right, WIRES its only tab for now. */
@@ -126,6 +128,7 @@ export function createSession(
     },
     candidate: null,
     missing: [],
+    samplesVersion: 0,
   });
   /** the document last opened or saved: anything else is unsaved */
   let saved: Doc = initial;
@@ -142,6 +145,7 @@ export function createSession(
         (p) => samples.status(p) === 'missing',
       );
       if (missing.join('\0') !== state.missing.join('\0')) setState('missing', missing);
+      setState('samplesVersion', (v) => v + 1);
       send();
     },
   });
