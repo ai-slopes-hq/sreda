@@ -24,10 +24,12 @@ import {
   type Role,
   type Specs,
 } from '@sreda/core';
-import { createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
 import { diceModule } from '../dice';
+import { libraryActions } from '../library';
 import { Cables } from './Cables';
+import { Chrome } from './Chrome';
 import { Frame, type Edge } from './Frame';
 import { ROLE } from './glyphs';
 import { handleKey } from './keys';
@@ -71,12 +73,19 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     from: JackEnd | null;
     tab: PickerTab;
   } | null>(null);
-  /** the groups and projects the picker offers */
-  const library: LibEntry[] = FACTORY.map((e) => ({
+  const lib = libraryActions(s, specs);
+  void lib.refresh();
+  /** the groups and projects the picker offers: the factory's, then the library folder's */
+  const factory: LibEntry[] = FACTORY.map((e) => ({
     kind: e.kind,
     path: `FACTORY/${e.name}`,
     factory: true,
   }));
+  const library = () => [...factory, ...st.library];
+  // the folder may have changed in the Finder: list it again whenever the picker opens
+  createEffect(() => {
+    if (picker()) void lib.refresh();
+  });
   /** the frame a dragged selection would land in */
   const [drop, setDrop] = createSignal<string | null>(null);
   let drag: Drag | null = null;
@@ -348,13 +357,13 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     if (!pk) return;
     setPicker(null);
     if (item.kind !== 'module') {
-      const entry = item.factory ? FACTORY.find((e) => `FACTORY/${e.name}` === item.path) : undefined;
-      if (!entry) return;
-      const doc = entry.build(specs);
-      if (item.kind === 'project') {
-        s.openProject(doc, { path: item.path, factory: item.factory });
-        fit(false);
-      } else s.placeGroup(doc, pk.at, pk.from);
+      void lib.read(item).then((doc) => {
+        if (!doc) return;
+        if (item.kind === 'project') {
+          s.openProject(doc, { path: item.path, factory: item.factory });
+          fit(false);
+        } else s.placeGroup(doc, pk.at, pk.from);
+      });
       return;
     }
     const type = item.type;
@@ -401,6 +410,15 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     viewChanged();
   }
 
+  /** the zoom control: by a factor around the middle of the canvas, or back to 100 % */
+  function zoomBy(f: number | null): void {
+    const v = st.view;
+    const z = f === null ? 1 : Math.min(ZOOM.max, Math.max(ZOOM.min, v.z * f));
+    const [cx, cy] = [innerWidth / 2, innerHeight / 2];
+    s.setState('view', { x: cx - ((cx - v.x) * z) / v.z, y: cy - ((cy - v.y) * z) / v.z, z });
+    viewChanged();
+  }
+
   function wheel(e: WheelEvent): void {
     e.preventDefault();
     const v = st.view;
@@ -430,6 +448,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       pointer: () => pointer,
       fit,
       setSpace: (on) => (space = on),
+      lib,
     });
   window.addEventListener('keydown', key);
   window.addEventListener('keyup', key);
@@ -501,6 +520,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   const d = s.current();
                   s.commit(settle(d, packFrame(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []));
                 },
+                save: () => lib.saveGroup(g.id),
                 fix: () => {
                   const d = s.current();
                   const next = setLayout(d, specs, g.id, g.layout === 'route' ? 'free' : 'route');
@@ -580,7 +600,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             x={Math.min(pk().screen.x, innerWidth - 300)}
             y={Math.min(pk().screen.y, innerHeight - 340)}
             from={pk().from}
-            library={library}
+            library={library()}
             tab={pk().tab}
             pick={place}
             close={() => setPicker(null)}
@@ -594,6 +614,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           </div>
         )}
       </Show>
+      <Chrome session={s} lib={lib} zoom={zoomBy} />
       <Show when={!st.audio}>
         <div class="sr-line">CLICK TO START AUDIO</div>
       </Show>

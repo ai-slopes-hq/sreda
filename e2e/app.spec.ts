@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
@@ -7,7 +7,8 @@ import { _electron as electron, expect, test, type ElectronApplication, type Pag
 async function launch(
   dir = mkdtempSync(join(tmpdir(), 'sreda-e2e-')),
   first: 'starter' | 'factory' = 'starter',
-): Promise<{ app: ElectronApplication; page: Page; dir: string }> {
+  library = mkdtempSync(join(tmpdir(), 'sreda-lib-')),
+): Promise<{ app: ElectronApplication; page: Page; dir: string; library: string }> {
   const app = await electron.launch({
     args: ['packages/app'],
     // tests start from the starter patch (OSC → OUT) unless they ask for the real first launch (Pulse)
@@ -15,12 +16,13 @@ async function launch(
       ...process.env,
       SREDA_USER_DATA: dir,
       SREDA_E2E: '1',
+      SREDA_LIBRARY: library,
       ...(first === 'starter' ? { SREDA_FIRST: 'starter' } : {}),
     },
   });
   const page = await app.firstWindow();
   await page.waitForFunction(() => '__sreda' in window);
-  return { app, page, dir };
+  return { app, page, dir, library };
 }
 
 type Sreda = {
@@ -577,5 +579,59 @@ test('picker: a factory project replaces the canvas (⌘Z returns); a group drop
   const g = d.groups.find((x) => x.name === 'VCA-LPG')!;
   const slope = d.modules.find((m) => m.type === 'slope')!;
   expect(d.cables).toContainEqual({ from: [slope.id, 'eoc'], to: [g.id, 'clkIn'] });
+  await app.close();
+});
+
+test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then ⌘Z restores', async () => {
+  const { app, page, library } = await launch();
+  await page.keyboard.press('Meta+s');
+  await page.getByLabel('Name').fill('jam');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.sr-brand')).toHaveText('SREDAjam');
+  expect(existsSync(join(library, 'projects', 'jam.sreda.json'))).toBe(true);
+  await page.getByText('NEW', { exact: true }).click();
+  await expect(page.locator('.sr-mod')).toHaveCount(0);
+  await page.keyboard.press('Meta+z');
+  await expect(page.locator('.sr-mod')).toHaveCount(2);
+  await page.getByText('NEW', { exact: true }).click();
+  await page.keyboard.press('Meta+o');
+  await page.keyboard.type('jam');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.sr-mod')).toHaveCount(2);
+  await expect(page.locator('.sr-brand')).toHaveText('SREDAjam');
+  await app.close();
+});
+
+test('library: ⌘S on a selected frame saves a group; the picker places it twice with fresh ids', async () => {
+  const { app, page, library } = await launch();
+  const osc = (await page.locator('[data-type=osc]').boundingBox())!;
+  await drag(
+    page,
+    { x: osc.x - 20, y: osc.y - 20 },
+    { x: osc.x + osc.width + 20, y: osc.y + osc.height + 20 },
+  );
+  await page.keyboard.press('g');
+  await page.keyboard.press('Meta+s');
+  await expect(page.getByLabel('Name')).toHaveValue('group 1');
+  await page.getByLabel('Name').fill('kit/drums');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => existsSync(join(library, 'groups', 'kit', 'drums.sreda-group.json'))).toBe(true);
+  for (const at of [
+    { x: 300, y: 700 },
+    { x: 900, y: 700 },
+  ]) {
+    await page.mouse.move(at.x, at.y);
+    await page.keyboard.press('/');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('drums');
+    await expect(page.locator('.sr-pitem')).toHaveCount(1);
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('.sr-frame')).toHaveCount(3);
+  const d = await fullDoc(page);
+  const ids = [...d.modules.map((m) => m.id), ...d.groups.map((g) => g.id)];
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(d.modules.filter((m) => m.type === 'osc')).toHaveLength(3);
   await app.close();
 });

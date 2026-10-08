@@ -34,6 +34,8 @@ export interface FrameActions {
   stack(): void;
   /** WIRE FIX on / off */
   fix(): void;
+  /** save the frame as a group */
+  save(): void;
 }
 
 export interface FrameProps {
@@ -203,6 +205,14 @@ export function Frame(props: FrameProps): JSX.Element {
               onClick={() => props.act.fix()}
             >
               FIX
+            </button>
+            <button
+              class="sr-gbtn"
+              title="save as a group (⌘S)"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.save()}
+            >
+              SAVE
             </button>
             <button
               class="sr-gbtn"

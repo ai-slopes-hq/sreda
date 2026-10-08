@@ -23,8 +23,9 @@ export function App(): JSX.Element {
     const starter = (await window.sreda?.first().catch(() => null)) === 'starter';
     const pulse = FACTORY.find((e) => e.name === 'pulse')!;
     const first = starter ? starterDoc(SPECS) : pulse.build(SPECS);
-    const { doc, notice, fresh } = await loadSaved(SPECS, first);
-    const project = fresh && !starter ? { path: 'FACTORY/pulse', factory: true } : null;
+    const saved = await loadSaved(SPECS, first);
+    const { doc, notice } = saved;
+    const project = !saved.fresh ? saved.project : starter ? null : { path: 'FACTORY/pulse', factory: true };
     const s = createSession(SPECS, doc, notice, project);
     window.__sreda = { doc: () => structuredClone(unwrap(s.state.doc)), readout: (i) => s.readout(i) };
     listenForFirstClick(s);

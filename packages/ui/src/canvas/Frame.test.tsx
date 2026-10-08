@@ -34,6 +34,7 @@ function frame(g: Partial<Group> = {}, cabledIn = false) {
     mute: () => calls.push('mute'),
     stack: () => calls.push('stack'),
     fix: () => calls.push('fix'),
+    save: () => calls.push('save'),
   };
   const r = render(() => (
     <Frame

@@ -31,36 +31,49 @@ function request<T>(
 export async function loadSaved(
   specs: Specs,
   first: Doc,
-): Promise<{ doc: Doc; notice: string | null; fresh: boolean }> {
+): Promise<{ doc: Doc; notice: string | null; fresh: boolean; project: Project }> {
   try {
     const db = await open();
     const raw = await request<unknown>(db, 'readonly', (s) => s.get(KEY));
-    if (raw === undefined) return { doc: first, notice: null, fresh: true };
+    if (raw === undefined) return { doc: first, notice: null, fresh: true, project: null };
+    // { doc, project } since Plan 3; a bare document before
+    const saved =
+      typeof raw === 'object' && raw !== null && 'doc' in raw
+        ? (raw as { doc: unknown; project?: unknown })
+        : null;
+    const project = saved ? readProject(saved.project) : null;
     let doc: Doc | null = null;
     try {
-      doc = validateDoc(raw, specs);
+      doc = validateDoc(saved ? saved.doc : raw, specs);
     } catch {
       doc = null;
     }
-    if (doc) return { doc, notice: null, fresh: false };
+    if (doc) return { doc, notice: null, fresh: false, project };
     // keep the unreadable save, and replace it so the next launch opens quietly
     await request(db, 'readwrite', (s) => s.put(raw, `backup-${new Date().toISOString()}`));
-    await request(db, 'readwrite', (s) => s.put(first, KEY));
-    return { doc: first, notice: CORRUPT_NOTICE, fresh: true };
+    await request(db, 'readwrite', (s) => s.put({ doc: first, project: null }, KEY));
+    return { doc: first, notice: CORRUPT_NOTICE, fresh: true, project: null };
   } catch {
-    return { doc: first, notice: null, fresh: true };
+    return { doc: first, notice: null, fresh: true, project: null };
   }
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-/** Save 500 ms after the last call. */
-export function scheduleSave(doc: Doc): void {
+type Project = { path: string; factory: boolean } | null;
+function readProject(x: unknown): Project {
+  if (typeof x !== 'object' || x === null) return null;
+  const p = x as { path?: unknown; factory?: unknown };
+  return typeof p.path === 'string' ? { path: p.path, factory: p.factory === true } : null;
+}
+
+/** Save the canvas and its project name 500 ms after the last call. */
+export function scheduleSave(doc: Doc, project: Project): void {
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
     open()
-      .then((db) => request(db, 'readwrite', (s) => s.put(doc, KEY)))
+      .then((db) => request(db, 'readwrite', (s) => s.put({ doc, project }, KEY)))
       .catch(() => undefined); // no storage (tests) or a full disk: the canvas keeps playing
   }, 500);
 }

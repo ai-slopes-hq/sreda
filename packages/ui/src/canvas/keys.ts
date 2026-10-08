@@ -1,5 +1,6 @@
 // The canvas keyboard (spec §4, §5): undo, delete, Esc, `/`, F, G.
 import { deleteObjects, frameSelection, isGroupId, settle, unframe, type Specs } from '@sreda/core';
+import type { LibraryApi } from '../library';
 import type { SessionApi } from '../store';
 import type { PickerTab } from './patching';
 
@@ -17,6 +18,7 @@ export interface KeyCtx {
   pointer(): Pt;
   fit(selection: boolean): void;
   setSpace(on: boolean): void;
+  lib: LibraryApi;
 }
 
 /** Wrap the selection in a new frame and select it. */
@@ -64,6 +66,10 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     if (k.pickerOpen()) k.closePicker();
     else if (s.state.listen) s.setListen(null);
     else s.setState('sel', []);
+  } else if (meta && key === 's') {
+    e.preventDefault();
+    if (e.shiftKey) k.lib.saveAs();
+    else void k.lib.save();
   } else if (meta && key === 'o') {
     e.preventDefault();
     k.openPicker(k.middle(), 'PROJECTS');

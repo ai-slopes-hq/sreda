@@ -28,6 +28,7 @@ import { createStore, reconcile } from 'solid-js/store';
 import type { AudioHost } from './audio/host';
 import { scheduleSave } from './autosave';
 import { setLayoutSeq, setSource } from './live';
+import type { LibEntry } from './canvas/patching';
 
 export interface Session {
   doc: Doc;
@@ -41,6 +42,22 @@ export interface Session {
   audio: boolean;
   /** the open project's library path (factory ones are read-only) */
   project: { path: string; factory: boolean } | null;
+  /** changed since it was opened or saved (the `●` by the project name) */
+  dirty: boolean;
+  /** the name field of a save in progress */
+  saving: Saving | null;
+  /** the library folder's groups and projects (factory ones are added by the picker) */
+  library: LibEntry[];
+}
+
+/** A save waiting for its name: `confirm` holds a name that exists and is to be replaced on the next Enter. */
+export interface Saving {
+  kind: 'group' | 'project';
+  /** the frame being saved as a group */
+  gid?: string;
+  name: string;
+  confirm?: string;
+  invalid?: boolean;
 }
 
 export function createSession(
@@ -60,7 +77,12 @@ export function createSession(
     notice,
     audio: false,
     project,
+    dirty: false,
+    saving: null,
+    library: [],
   });
+  /** the document last opened or saved: anything else is unsaved */
+  let saved: Doc = initial;
   const history = new History(initial);
   let host: AudioHost | null = null;
   let seq = 0;
@@ -94,7 +116,8 @@ export function createSession(
 
   function show(doc: Doc): void {
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
-    scheduleSave(doc);
+    setState('dirty', history.current !== saved);
+    scheduleSave(doc, state.project);
     // selection and listening follow what still exists
     const ids = new Set([...doc.modules.map((m) => m.id), ...doc.groups.map((g) => g.id)]);
     if (state.sel.some((id) => !ids.has(id)))
@@ -211,7 +234,17 @@ export function createSession(
     openProject(doc: Doc, project: { path: string; factory: boolean }): void {
       setState('project', project);
       this.commit(doc);
+      this.markSaved();
       host?.post({ t: 'fade', ms: 200 });
+    },
+    /** the current document is what is saved now */
+    markSaved(): void {
+      saved = history.current;
+      setState('dirty', false);
+    },
+    setProject(project: Session['project']): void {
+      setState('project', project);
+      scheduleSave(history.current, project);
     },
     /**
      * A group lands with its frame's top-left at `at`, with fresh ids, in whatever frame it lands in; opened from a

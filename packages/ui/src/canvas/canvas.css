@@ -974,3 +974,127 @@
   color: #e9e4d8;
   border-bottom-color: #e9e4d8;
 }
+/* the chrome (spec §6) */
+.sr-brand {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  color: #8f897c;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.sr-brand .sr-path {
+  margin-left: 14px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: #b9b3a6;
+}
+.sr-brand .sr-dirty {
+  letter-spacing: 0;
+  color: #b9b3a6;
+}
+.sr-tbtns {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  gap: 6px;
+}
+.sr-tbtn {
+  height: 30px;
+  padding: 0 14px;
+  background: #1b1b18;
+  border: 1px solid #3a3933;
+  border-radius: 3px;
+  color: #e9e4d8;
+  font:
+    600 11px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+.sr-tbtn:hover {
+  border-color: #8f897c;
+}
+.sr-tbtn.on {
+  background: #e9e4d8;
+  color: #121210;
+}
+.sr-save {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 6px 0 12px;
+  background: #1b1b18;
+  border: 1px solid #8f897c;
+  border-radius: 3px;
+  font:
+    500 10px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.08em;
+  color: #8f897c;
+  z-index: 22;
+}
+.sr-save input {
+  width: 240px;
+  background: #121210;
+  border: 1px solid #3a3933;
+  color: #e9e4d8;
+  font:
+    500 11px 'IBM Plex Mono',
+    monospace;
+  padding: 4px 6px;
+  outline: none;
+}
+.sr-save input.invalid {
+  border-color: #e5484d;
+}
+.sr-hint {
+  position: absolute;
+  left: 20px;
+  right: 140px;
+  bottom: 14px;
+  font-size: 10px;
+  color: #8f897c;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sr-zoom {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 10px;
+  color: #8f897c;
+}
+.sr-zoom button {
+  width: 24px;
+  height: 22px;
+  background: #1b1b18;
+  border: 1px solid #3a3933;
+  border-radius: 2px;
+  color: #e9e4d8;
+  font:
+    500 12px 'IBM Plex Mono',
+    monospace;
+  cursor: pointer;
+  padding: 0;
+}
+.sr-zoom span {
+  width: 40px;
+  text-align: center;
+  cursor: pointer;
+}

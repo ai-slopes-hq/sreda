@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
-import { app, BrowserWindow, ipcMain, protocol, session } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, protocol, session } from 'electron';
+import { existsEntry, listLibrary, readEntry, writeEntry, type Kind } from './library';
 
 // Every response carries COOP / COEP so the renderer is cross-origin isolated (SharedArrayBuffer).
 const ISOLATION = {
@@ -65,6 +66,60 @@ function createWindow(): void {
   else void win.loadURL('app://sreda/index.html');
 }
 
+// The library folder: SREDA_LIBRARY (e2e) or the one chosen once, remembered in <userData>/settings.json.
+const settingsFile = () => join(app.getPath('userData'), 'settings.json');
+async function libraryFolder(): Promise<string | null> {
+  let folder = process.env['SREDA_LIBRARY'] ?? null;
+  if (!folder)
+    try {
+      folder = (JSON.parse(await readFile(settingsFile(), 'utf8')) as { library?: string }).library ?? null;
+    } catch {
+      folder = null;
+    }
+  if (!folder) return null;
+  try {
+    return (await stat(folder)).isDirectory() ? folder : null;
+  } catch {
+    return null; // the folder was moved or deleted: ask again
+  }
+}
+async function root(): Promise<string> {
+  const folder = await libraryFolder();
+  if (!folder) throw new Error('no library folder');
+  return folder;
+}
+const kindOf = (k: unknown): Kind => {
+  if (k !== 'group' && k !== 'project') throw new Error('bad kind');
+  return k;
+};
+const pathOf = (p: unknown): string => {
+  if (typeof p !== 'string') throw new Error('bad path');
+  return p; // library.ts refuses invalid paths and anything outside the folder
+};
+
+function serveLibrary(): void {
+  ipcMain.handle('library:folder', () => libraryFolder());
+  ipcMain.handle('library:choose', async () => {
+    const r = await dialog.showOpenDialog({
+      title: 'Choose a library folder',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    const folder = r.canceled ? null : (r.filePaths[0] ?? null);
+    if (folder) await writeFile(settingsFile(), JSON.stringify({ library: folder }, null, 2));
+    return folder;
+  });
+  ipcMain.handle('library:list', async () => listLibrary(await root()));
+  ipcMain.handle('library:read', async (_e, kind: unknown, path: unknown) =>
+    readEntry(await root(), kindOf(kind), pathOf(path)),
+  );
+  ipcMain.handle('library:exists', async (_e, kind: unknown, path: unknown) =>
+    existsEntry(await root(), kindOf(kind), pathOf(path)),
+  );
+  ipcMain.handle('library:write', async (_e, kind: unknown, path: unknown, doc: unknown) =>
+    writeEntry(await root(), kindOf(kind), pathOf(path), doc),
+  );
+}
+
 void app.whenReady().then(() => {
   // Add the isolation headers to responses that lack them (a duplicated header value breaks isolation).
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -75,6 +130,7 @@ void app.whenReady().then(() => {
     callback({ responseHeaders: headers });
   });
   serveRenderer();
+  serveLibrary();
   // e2e runs open the starter patch on a first launch, not the factory project Pulse
   ipcMain.handle('sreda:first', () => (process.env['SREDA_FIRST'] === 'starter' ? 'starter' : null));
   createWindow();
