@@ -33,7 +33,9 @@ of a creative tool; nothing of its UI is ported.
   fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 2 review"). Every module type in one plan
   allocates nothing; a minute of audio takes 2.6 % of real time natively.
 - **2026-10-08** — Plan 3 written (11 tasks; spec revision 15 clarifies the library over IPC, ⌘D, groups from a
-  jack, the mute rule). **Next:** execute Plan 3 natively from Task 1, on a branch `plan-3-organisation`.
+  jack, the mute rule). Executing on branch `plan-3-organisation`; progress ledger in
+  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. **Task 1 (frames) done** — waiting at its checkpoint;
+  next is Task 2 (frame clocks).
 
 ## The road (vertical slices: something to hear at every stage)
 
