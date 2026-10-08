@@ -74,6 +74,8 @@ export function blankModule(specs: Specs, type: string, id: string, x: number, y
 
 /** Module types that were renamed: old saves open under the new name. */
 const RENAMED: Record<string, string> = { sah: 'snh' };
+/** Outputs that were renamed, by module type: DELAY's `out` became `l` (Plan 4). */
+const RENAMED_OUTPUTS: Record<string, Record<string, string>> = { delay: { out: 'l' } };
 
 const isObj = (x: unknown): x is Record<string, unknown> =>
   typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -147,8 +149,11 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
   const outCables: Cable[] = [];
   for (const c of cables) {
     if (!isObj(c)) return null;
-    const [f, t] = [c['from'], c['to']];
-    if (!isEnd(f) || !isEnd(t)) return null;
+    const [f0, t] = [c['from'], c['to']];
+    if (!isEnd(f0) || !isEnd(t)) return null;
+    // outputs that were renamed: old cables follow
+    const renamed = RENAMED_OUTPUTS[byId.get(f0[0])?.type ?? '']?.[f0[1]];
+    const f: [string, string] = renamed ? [f0[0], renamed] : f0;
     // a frame's clock jacks: cables to a frame that is not there are dropped
     if (isGroupId(f[0]) || isGroupId(t[0])) {
       const fromOk = isGroupId(f[0]) ? gIds.has(f[0]) && f[1] === 'clkOut' : byId.has(f[0]);

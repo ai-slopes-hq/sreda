@@ -181,3 +181,21 @@ test('a Plan 3 FILTER (CUT and RES only) opens as an SVF with DRV 0', () => {
   )!;
   expect(d.modules[0]!.params).toMatchObject({ cutoff: 0.6, res: 0.3, drive: 0, model: 0 });
 });
+
+test("a Plan 3 DELAY's `out` cables move to `l`", () => {
+  const d = validateDoc(
+    {
+      version: 1,
+      modules: [
+        { id: 'm1', type: 'delay', x: 0, y: 0, parent: null, params: {}, atts: {}, ratios: {} },
+        { id: 'm2', type: 'out', x: 400, y: 0, parent: null, params: {}, atts: {}, ratios: {} },
+      ],
+      cables: [{ from: ['m1', 'out'], to: ['m2', 'l'] }],
+      groups: [],
+      nextId: 3,
+    },
+    SPECS,
+  )!;
+  expect(d).not.toBeNull();
+  expect(d.cables).toEqual([{ from: ['m1', 'l'], to: ['m2', 'l'] }]);
+});

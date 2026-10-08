@@ -1921,10 +1921,12 @@ mod tests {
         let delay = node(
             "d",
             "delay",
-            &[0.55, 1.0, 0.5],
-            &[],
+            &[0.55, 1.0, 0.5, 0.0],
+            &[0.0, 0.0],
             vec![
                 input(vec![src(0, false), src(1, true)], Kind::Sum),
+                none(Kind::Trigger),
+                none(Kind::Cv),
                 none(Kind::Cv),
                 none(Kind::Cv),
                 none(Kind::Cv),

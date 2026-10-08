@@ -43,7 +43,8 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
       S.wire(cx, 'out', fo, 'in');
       S.wire(fo, 'out', fl, 'in');
       S.wire(fl, 'lp', dl, 'in');
-      S.wire(dl, 'out', o, 'l');
+      S.wire(dl, 'l', o, 'l');
+      S.wire(dl, 'r', o, 'r');
       S.wire(un, 'smooth', fo, '@fold');
       S.att(fo, '@fold', 0.3);
       S.wire(sl, 'out', fl, '@cutoff');
@@ -171,7 +172,8 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
       S.wire(os, 'out', fl, 'in');
       S.wire(fl, 'lp', va, 'in');
       S.wire(va, 'out', dl, 'in');
-      S.wire(dl, 'out', o, 'l');
+      S.wire(dl, 'l', o, 'l');
+      S.wire(dl, 'r', o, 'r');
       S.wire(ef, 'out', fl, '@cutoff');
       S.att(fl, '@cutoff', 0.35);
       S.wire(ec, 'out', fl, '@cutoff');

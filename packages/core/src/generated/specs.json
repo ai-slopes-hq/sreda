@@ -500,9 +500,9 @@
   {
     "type": "delay",
     "label": "DELAY",
-    "desc": "echo",
+    "desc": "echo: digital, tape, spring",
     "size": [
-      5,
+      6,
       1
     ],
     "inputs": [
@@ -510,12 +510,22 @@
         "id": "in",
         "label": "IN",
         "role": "audio"
+      },
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
       }
     ],
     "outputs": [
       {
-        "id": "out",
-        "label": "OUT",
+        "id": "l",
+        "label": "L",
+        "role": "audio"
+      },
+      {
+        "id": "r",
+        "label": "R",
         "role": "audio"
       }
     ],
@@ -551,6 +561,36 @@
         "max": 1.0,
         "def": 0.3,
         "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "char",
+        "label": "CHAR",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "type",
+        "label": "TYPE",
+        "options": [
+          "DIGI",
+          "TAPE",
+          "SPRING"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "option",
+        "id": "ping",
+        "label": "PING",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
       }
     ],
     "normals": []

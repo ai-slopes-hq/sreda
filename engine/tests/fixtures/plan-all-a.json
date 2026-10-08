@@ -593,8 +593,8 @@
     {
       "id": "m8",
       "type": "delay",
-      "knobs": [0.7504085870087361, 0.4210526315789474, 0.3],
-      "fixed": [],
+      "knobs": [0.7504085870087361, 0.4210526315789474, 0.3, 0],
+      "fixed": [0, 0],
       "inputs": [
         {
           "sources": [
@@ -606,6 +606,32 @@
           ],
           "normal": null,
           "kind": "sum",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 1,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "trigger",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
           "att": 1,
           "ratio": 1
         },
@@ -649,7 +675,7 @@
           "ratio": 1
         }
       ],
-      "connectedOut": [false]
+      "connectedOut": [false, false]
     },
     {
       "id": "m9",
@@ -2035,7 +2061,7 @@
   ],
   "frames": [],
   "layout": {
-    "size": 1191,
+    "size": 1194,
     "nodes": [
       {
         "knobs": 2,
@@ -2088,145 +2114,145 @@
       },
       {
         "knobs": 51,
-        "trigs": 54,
-        "outs": 54,
-        "state": 55,
+        "trigs": 55,
+        "outs": 56,
+        "state": 58,
         "trace": null
       },
       {
-        "knobs": 56,
-        "trigs": 59,
-        "outs": 59,
-        "state": 60,
+        "knobs": 59,
+        "trigs": 62,
+        "outs": 62,
+        "state": 63,
         "trace": null
       },
       {
-        "knobs": 61,
-        "trigs": 64,
-        "outs": 64,
-        "state": 67,
+        "knobs": 64,
+        "trigs": 67,
+        "outs": 67,
+        "state": 70,
         "trace": null
       },
       {
-        "knobs": 68,
-        "trigs": 70,
-        "outs": 70,
-        "state": 71,
+        "knobs": 71,
+        "trigs": 73,
+        "outs": 73,
+        "state": 74,
         "trace": null
       },
       {
-        "knobs": 72,
-        "trigs": 76,
-        "outs": 76,
-        "state": 78,
+        "knobs": 75,
+        "trigs": 79,
+        "outs": 79,
+        "state": 81,
         "trace": null
       },
       {
-        "knobs": 79,
-        "trigs": 81,
-        "outs": 82,
-        "state": 83,
+        "knobs": 82,
+        "trigs": 84,
+        "outs": 85,
+        "state": 86,
         "trace": null
       },
       {
-        "knobs": 84,
-        "trigs": 88,
-        "outs": 88,
-        "state": 89,
-        "trace": null
-      },
-      {
-        "knobs": 90,
+        "knobs": 87,
         "trigs": 91,
         "outs": 91,
-        "state": 93,
+        "state": 92,
         "trace": null
       },
       {
-        "knobs": 94,
-        "trigs": 97,
-        "outs": 98,
-        "state": 99,
+        "knobs": 93,
+        "trigs": 94,
+        "outs": 94,
+        "state": 96,
         "trace": null
       },
       {
-        "knobs": 100,
-        "trigs": 101,
+        "knobs": 97,
+        "trigs": 100,
         "outs": 101,
-        "state": 101,
+        "state": 102,
         "trace": null
       },
       {
-        "knobs": 102,
-        "trigs": 103,
-        "outs": 103,
+        "knobs": 103,
+        "trigs": 104,
+        "outs": 104,
         "state": 104,
         "trace": null
       },
       {
         "knobs": 105,
-        "trigs": 109,
-        "outs": 112,
-        "state": 115,
+        "trigs": 106,
+        "outs": 106,
+        "state": 107,
         "trace": null
       },
       {
-        "knobs": 116,
-        "trigs": 119,
-        "outs": 120,
-        "state": 122,
-        "trace": 123
-      },
-      {
-        "knobs": 1147,
-        "trigs": 1148,
-        "outs": 1149,
-        "state": 1150,
+        "knobs": 108,
+        "trigs": 112,
+        "outs": 115,
+        "state": 118,
         "trace": null
       },
       {
-        "knobs": 1151,
-        "trigs": 1154,
-        "outs": 1155,
-        "state": 1158,
+        "knobs": 119,
+        "trigs": 122,
+        "outs": 123,
+        "state": 125,
+        "trace": 126
+      },
+      {
+        "knobs": 1150,
+        "trigs": 1151,
+        "outs": 1152,
+        "state": 1153,
         "trace": null
       },
       {
-        "knobs": 1159,
-        "trigs": 1159,
-        "outs": 1160,
+        "knobs": 1154,
+        "trigs": 1157,
+        "outs": 1158,
         "state": 1161,
         "trace": null
       },
       {
         "knobs": 1162,
-        "trigs": 1163,
-        "outs": 1165,
-        "state": 1169,
+        "trigs": 1162,
+        "outs": 1163,
+        "state": 1164,
         "trace": null
       },
       {
-        "knobs": 1170,
-        "trigs": 1172,
-        "outs": 1175,
-        "state": 1178,
+        "knobs": 1165,
+        "trigs": 1166,
+        "outs": 1168,
+        "state": 1172,
         "trace": null
       },
       {
-        "knobs": 1179,
-        "trigs": 1180,
-        "outs": 1182,
-        "state": 1183,
+        "knobs": 1173,
+        "trigs": 1175,
+        "outs": 1178,
+        "state": 1181,
         "trace": null
       },
       {
-        "knobs": 1184,
-        "trigs": 1186,
-        "outs": 1187,
-        "state": 1190,
+        "knobs": 1182,
+        "trigs": 1183,
+        "outs": 1185,
+        "state": 1186,
+        "trace": null
+      },
+      {
+        "knobs": 1187,
+        "trigs": 1189,
+        "outs": 1190,
+        "state": 1193,
         "trace": null
       }
     ],
-    "frames": 1191
+    "frames": 1194
   }
 }
