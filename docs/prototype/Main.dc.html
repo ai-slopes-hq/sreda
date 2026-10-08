@@ -443,7 +443,7 @@ var SPECS = {
     ins: [P('in', 'audio'), P('adv', 'trigger'), P('reset', 'trigger', 'RST'), P('addr', 'mod')],
     outs: [P('out1', 'audio', 'OUT1'), P('out2', 'audio', 'OUT2'), P('out3', 'audio', 'OUT3'), P('out4', 'audio', 'OUT4')], params: [K('len', 'LEN', 2, 4, 4, { step: 1 }), O('mode', 'MODE', ['SEQ', 'RAND'])] },
   compare: { label: 'COMPARE', desc: 'signal to gate', cols: 1, ins: [P('in', 'audio')], outs: [P('out', 'trigger', 'GATE')], params: [K('thr', 'THR', -1, 1, 0)] },
-  sah: { label: 'S&H', desc: 'sample and hold', cols: 0, ins: [P('in', 'audio'), P('trig', 'trigger')], outs: [P('out', 'mod')], params: [],
+  snh: { label: 'S&H', desc: 'sample and hold', cols: 0, ins: [P('in', 'audio'), P('trig', 'trigger')], outs: [P('out', 'mod')], params: [],
     normals: [{ input: 'in', internal: 'noise' }] },
   quant: { label: 'QUANT', desc: 'scale quantiser', cols: 2, ins: [P('in', 'pitch')], outs: [P('out', 'pitch')],
     params: [Object.assign(O('scale', 'SCALE', ['CHR', 'MAJ', 'MIN', 'DOR', 'PHR', 'PMIN', 'PMAJ', 'WHL']), { glyph: 'scale' }), K('root', 'ROOT', 0, 11, 0, { step: 1, unit: 'note' })] },
@@ -467,7 +467,7 @@ var SPECS = {
     normals: [{ input: 'r', internal: 'L' }] }
 };
 
-var SIZES = { osc: [5, 1], complex: [6, 1], noise: [3, 1], uncertainty: [4, 1], slope: [5, 1], lpg: [4, 1], filter: [4, 1], fold: [4, 1], stages: [10, 3], compare: [3, 1], sah: [2, 1], quant: [3, 1], mix: [4, 2], att: [6, 2], abc: [5, 2], delay: [5, 1], scope: [6, 2], out: [3, 1], rhythm: [10, 2], chance: [3, 1], shift: [3, 1], follow: [6, 1], 'switch': [4, 2], spread: [4, 2] };
+var SIZES = { osc: [5, 1], complex: [6, 1], noise: [3, 1], uncertainty: [4, 1], slope: [5, 1], lpg: [4, 1], filter: [4, 1], fold: [4, 1], stages: [10, 3], compare: [3, 1], snh: [2, 1], quant: [3, 1], mix: [4, 2], att: [6, 2], abc: [5, 2], delay: [5, 1], scope: [6, 2], out: [3, 1], rhythm: [10, 2], chance: [3, 1], shift: [3, 1], follow: [6, 1], 'switch': [4, 2], spread: [4, 2] };
 Object.keys(SIZES).forEach(function (t) { SPECS[t].size = SIZES[t]; });
 
 function fromK(p, k) { k = clamp(k, 0, 1); var v = p.exp ? p.min * Math.pow(p.max / p.min, k) : p.min + (p.max - p.min) * k; if (p.step) v = Math.round(v / p.step) * p.step; return v; }
@@ -749,7 +749,7 @@ var SEEDS = [
   } },
   { name: 'ratchet', build: function (S) {
     var sl = S.add('slope', 0, 0, { rise: 0.003, fall: 0.2, cycle: 1 });
-    var sh = S.add('sah', 336, 0, {});
+    var sh = S.add('snh', 336, 0, {});
     var os = S.add('osc', 336, 160, { freq: 220, wave: 0 });
     var lp = S.add('lpg', 672, 64, { decay: 0.15 });
     var o = S.add('out', 960, 64, {});
@@ -1092,7 +1092,7 @@ Sim.prototype.step = function (doc, dt, now) {
         break;
       }
       case 'compare': set('out', V('in') > Pv.thr ? 1 : 0); break;
-      case 'sah': if (T('trig')) st.hold = cabs('in') ? V('in') : Math.random() * 2 - 1; set('out', st.hold); break;
+      case 'snh': if (T('trig')) st.hold = cabs('in') ? V('in') : Math.random() * 2 - 1; set('out', st.hold); break;
       case 'quant': {
         var sc = SCALES[Pv.scale], root = Math.round(Pv.root), semi = V('in') * 12 - root, oct = Math.floor(semi / 12), r = semi - oct * 12, best = 0, bd = 99;
         sc.concat([12]).forEach(function (d) { var dd = Math.abs(r - d); if (dd < bd) { bd = dd; best = d; } });

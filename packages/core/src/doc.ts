@@ -56,6 +56,9 @@ export function blankModule(specs: Specs, type: string, id: string, x: number, y
   return { id, type, x, y, parent: null, params: defaultParams(specs, type), atts: {}, ratios: {} };
 }
 
+/** Module types that were renamed: old saves open under the new name. */
+const RENAMED: Record<string, string> = { sah: 'snh' };
+
 const isObj = (x: unknown): x is Record<string, unknown> =>
   typeof x === 'object' && x !== null && !Array.isArray(x);
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
@@ -76,7 +79,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
   const byId = new Map<string, ModuleDoc>();
   for (const m of modules) {
     if (!isObj(m) || typeof m['id'] !== 'string' || typeof m['type'] !== 'string') return null;
-    const spec = specOf(specs, m['type']);
+    const spec = specOf(specs, Object.hasOwn(RENAMED, m['type']) ? RENAMED[m['type']]! : m['type']);
     if (!spec || byId.has(m['id']) || !isNum(m['x']) || !isNum(m['y']) || m['parent'] !== null) return null;
     const params = m['params'] ?? {};
     const atts = m['atts'] ?? {};

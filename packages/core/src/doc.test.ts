@@ -81,3 +81,17 @@ test('ratios outside the allowed set are dropped; attenuverters are clamped', ()
   expect(v.modules[1]!.ratios).toEqual({});
   expect(v.modules[1]!.atts).toEqual({ cv: 1, x: -1 });
 });
+
+test('a module saved under an old type name (sah) opens as its new one (snh)', () => {
+  const d = validateDoc(
+    {
+      version: 1,
+      modules: [{ id: 'm1', type: 'sah', x: 0, y: 0, parent: null, params: {}, atts: {}, ratios: {} }],
+      cables: [],
+      groups: [],
+      nextId: 2,
+    },
+    SPECS,
+  )!;
+  expect(d.modules[0]!.type).toBe('snh');
+});

@@ -38,10 +38,10 @@ const MODULES: &[Entry] = &[
     ("rhythm", rhythm::spec, |sr| {
         Box::new(rhythm::Rhythm::new(sr))
     }),
-    ("sah", sah::spec, |_| Box::new(sah::Snh::default())),
     ("scope", scope::spec, |sr| Box::new(scope::Scope::new(sr))),
     ("shift", shift::spec, |sr| Box::new(shift::Shift::new(sr))),
     ("slope", slope::spec, |sr| Box::new(slope::Slope::new(sr))),
+    ("snh", snh::spec, |_| Box::new(snh::Snh::default())),
     ("spread", switch::spread_spec, |sr| {
         Box::new(switch::Switch::new(sr, true))
     }),

@@ -1517,42 +1517,6 @@
     }
   },
   {
-    "type": "sah",
-    "label": "S&H",
-    "desc": "sample and hold",
-    "size": [
-      2,
-      1
-    ],
-    "inputs": [
-      {
-        "id": "in",
-        "label": "IN",
-        "role": "audio"
-      },
-      {
-        "id": "trig",
-        "label": "TRIG",
-        "role": "trigger"
-      }
-    ],
-    "outputs": [
-      {
-        "id": "out",
-        "label": "OUT",
-        "role": "mod"
-      }
-    ],
-    "params": [],
-    "normals": [
-      {
-        "kind": "internal",
-        "input": "in",
-        "internal": "noise"
-      }
-    ]
-  },
-  {
     "type": "scope",
     "label": "SCOPE",
     "desc": "oscilloscope with thru outputs",
@@ -1780,6 +1744,42 @@
           "param": "cycle",
           "value": 1
         }
+      }
+    ]
+  },
+  {
+    "type": "snh",
+    "label": "S&H",
+    "desc": "sample and hold",
+    "size": [
+      2,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      },
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "OUT",
+        "role": "mod"
+      }
+    ],
+    "params": [],
+    "normals": [
+      {
+        "kind": "internal",
+        "input": "in",
+        "internal": "noise"
       }
     ]
   },
