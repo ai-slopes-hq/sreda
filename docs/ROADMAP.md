@@ -13,8 +13,7 @@ of a creative tool; nothing of its UI is ported.
 | What | Where |
 |---|---|
 | The design (approved, revision 18) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
-| Plan 3 (being executed) | `docs/superpowers/plans/2026-10-08-3-organisation.md` |
-| Plans 1 and 2 (done) | `docs/superpowers/plans/2026-10-07-1-foundation.md`, `…-2-modules.md` |
+| Plans 1–3 (done) | `docs/superpowers/plans/2026-10-07-1-foundation.md`, `…-2-modules.md`, `2026-10-08-3-organisation.md` |
 | Ideas for later | `docs/backlog.md` |
 | The clickable prototype and its headless checks | `docs/prototype/` (see its README; live artifact linked there) |
 | Repo rules for Claude | `CLAUDE.md` |
@@ -32,14 +31,13 @@ of a creative tool; nothing of its UI is ported.
   pads), DICE and the generators, glyphs, normal ghosts, fixed-value messages. Reviewed by a fresh reviewer; its
   fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 2 review"). Every module type in one plan
   allocates nothing; a minute of audio takes 2.6 % of real time natively.
-- **2026-10-08** — Plan 3 written (11 tasks; spec revision 15 clarifies the library over IPC, ⌘D, groups from a
-  jack, the mute rule). Executing on branch `plan-3-organisation`; progress ledger in
-  `.superpowers/sdd/2026-10-08-3-organisation/progress.md`. All 11 tasks done (frames, frame clocks, MUTE + frame
-  meter, STACK / WIRE FIX, factory patches + picker tabs, library folder + SAVE / NEW, wire hover / focus / insert,
-  magnets / replace / ⌘D / R, the sidebar + WIRES, WIRES rewiring + canvas link, 200 modules in real time:
-  16.7 % natively, 35.6 % in WASM); Task 11 waits at its checkpoint; next is the final whole-branch review, then
-  the merge. Spec revision 16: the top-right button is SIDEBAR. Spec revision 18: skins (§1a) — DEFAULT, ANNABIOSIS, KANAGAWA, TOUCH, NORD, TOKYO NIGHT written down; choosing a skin is in the
-  backlog, nothing in code yet.
+- **Plan 3 done and merged into `main`** (2026-10-08): frames (G, clocks, MUTE, STACK / WIRE FIX), factory projects
+  and groups with picker tabs, the library folder (SAVE / NEW / ⌘S / ⌘O), wire hover / focus / insert, magnets /
+  replace / ⌘D / R, the sidebar with WIRES, and a 200-module patch in real time (16.6 % natively, ~36 % in WASM).
+  Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 3 review").
+  Spec revision 16: the top-right button is SIDEBAR. **The first build is complete.**
+- **Next:** milestone 2, the sound pack (spec §7a) — its own plan; skins (§1a, revision 18 in progress) are written
+  down only.
 
 ## The road (vertical slices: something to hear at every stage)
 
@@ -48,7 +46,7 @@ of a creative tool; nothing of its UI is ported.
 | **A. Sound** — scaffold; Rust engine → WASM → AudioWorklet → speakers | Plan 1, Tasks 1–2 | a 220 Hz test tone after a click — **checkpoint: listen** | done, merged |
 | **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | done, merged |
 | **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (`2026-10-07-2-modules.md`) | the 24 first-build modules | done, merged |
-| **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 (`2026-10-08-3-organisation.md`) | the first build complete | planned |
+| **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 (`2026-10-08-3-organisation.md`) | the first build complete | done, merged |
 | **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | its own plan | spec §7a | — |
 
 **Plan 2 order** (chosen so real patches come together early): SCOPE (see signals) → LPG, SLOPE, NOISE (*Pulse*) →
