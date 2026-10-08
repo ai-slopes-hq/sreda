@@ -1,8 +1,12 @@
 import {
   addModule,
   chainOf,
+  canInsert,
   connect,
   FACTORY,
+  insertIntoCable,
+  portLabel,
+  withDescendants,
   isGroupId,
   jackAt,
   landingFrame,
@@ -29,6 +33,7 @@ import type { SessionApi } from '../store';
 import { diceModule } from '../dice';
 import { libraryActions } from '../library';
 import { Cables } from './Cables';
+import { cableAt, cableGeoms } from './cablegeom';
 import { Chrome } from './Chrome';
 import { Frame, type Edge } from './Frame';
 import { ROLE } from './glyphs';
@@ -51,7 +56,7 @@ type Pt = { x: number; y: number };
 type Drag =
   | { kind: 'pan'; at: Pt; vx: number; vy: number }
   | { kind: 'wire'; from: JackEnd; picked: Cable | null; at: Pt; moved: boolean }
-  | { kind: 'move'; ids: string[]; at: Pt; base: Doc; moved: boolean }
+  | { kind: 'move'; ids: string[]; at: Pt; base: Doc; moved: boolean; insert: Cable | null }
   | { kind: 'resize'; id: string; edge: Edge; at: Pt; base: Doc; r0: Rect; moved: boolean }
   | { kind: 'box'; at: Pt; add: string[] }
   | { kind: 'field'; id: string; port: string; field: FieldKind; at: Pt; v0: number; key: string };
@@ -122,7 +127,45 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     return port.startsWith('@') ? 'mod' : spec.inputs.find((p) => p.id === port)!.role;
   }
 
+  const geoms = createMemo(() => cableGeoms(st.doc, specs));
+  /** the wire under the pointer (within 6 screen px) and where the pointer is, for the tag */
+  const [hovered, setHovered] = createSignal<{ cable: Cable; at: Pt } | null>(null);
+  /** the cable a dragged module would go into */
+  const [insert, setInsert] = createSignal<Cable | null>(null);
+  /** the modules at both ends of the hovered wire (outlined) */
+  const wireEnds = () => {
+    const h = hovered();
+    return h ? [h.cable.from[0], h.cable.to[0]] : [];
+  };
+  /** cable focus: the hovered module's cables, or every cable touching anything in the hovered frame */
+  const focus = createMemo(() => {
+    const id = st.hover;
+    if (!id) return null;
+    const set = new Set(isGroupId(id) ? withDescendants(st.doc, [id]) : [id]);
+    return (c: Cable) => set.has(c.from[0]) || set.has(c.to[0]);
+  });
+  function hoverWires(e: PointerEvent): void {
+    pointer = client(e);
+    if (drag || (e.target as Element).closest?.('.sr-picker, .sr-menu, input')) {
+      if (hovered()) setHovered(null);
+      return;
+    }
+    const i = cableAt(geoms(), toCanvas(pointer), 6 / st.view.z);
+    const cable = i === null ? null : geoms()[i]!.cable;
+    const h = hovered();
+    if (!cable) {
+      if (h) setHovered(null);
+    } else if (!h || h.cable !== cable || far(h.at, pointer)) setHovered({ cable, at: pointer });
+  }
+  const wireTag = () => {
+    const h = hovered();
+    if (!h) return null;
+    const c = h.cable;
+    return `${portLabel(st.doc, specs, c.from[0], c.from[1])}  →  ${portLabel(st.doc, specs, c.to[0], c.to[1])}`;
+  };
+
   function begin(d: Drag): void {
+    setHovered(null);
     drag = d;
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -164,7 +207,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     if (e.shiftKey) sel = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
     else if (!sel.includes(id)) sel = [id];
     s.setState('sel', sel);
-    begin({ kind: 'move', ids: sel, at: client(e), base: s.current(), moved: false });
+    begin({ kind: 'move', ids: sel, at: client(e), base: s.current(), moved: false, insert: null });
   }
 
   function fieldDown(id: string, port: string, field: FieldKind, e: PointerEvent): void {
@@ -212,6 +255,15 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         const [dx, dy] = [(p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z];
         s.preview(moveObjects(d.base, specs, d.ids, dx, dy));
         setDrop(landingFrame(d.base, specs, d.ids, dx, dy));
+        // a lone free module over a cable (within 8 screen px of the pointer) would go into it
+        const id = d.ids[0]!;
+        d.insert = null;
+        if (d.ids.length === 1 && canInsert(d.base, specs, id)) {
+          const gs = cableGeoms(d.base, specs).filter((g) => g.cable.from[0] !== id && g.cable.to[0] !== id);
+          const hit = cableAt(gs, toCanvas(p), 8 / st.view.z);
+          d.insert = hit === null ? null : gs[hit]!.cable;
+        }
+        setInsert(d.insert);
         break;
       }
       case 'resize': {
@@ -276,6 +328,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       finishWire(d, p);
     } else if (d.kind === 'move') {
       setDrop(null);
+      setInsert(null);
       if (d.moved) {
         const moved = moveObjects(
           d.base,
@@ -290,7 +343,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             const o = doc.modules.find((m) => m.id === id) ?? doc.groups.find((g) => g.id === id);
             return o?.parent ? [o.parent] : [];
           });
-        s.commit(settle(d.base, moved, specs, [...parents(d.base), ...parents(moved)]));
+        const doc = d.insert ? insertIntoCable(moved, specs, d.ids[0]!, d.insert) : moved;
+        s.commit(settle(d.base, doc, specs, [...parents(d.base), ...parents(moved)]));
       }
     } else if (d.kind === 'resize') {
       if (d.moved) s.commit(settle(d.base, resizeFrame(d.base, specs, d.id, resized(d, p)), specs));
@@ -472,14 +526,18 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   return (
     <div
       class="sr-canvas"
-      classList={{ 'wiring-out': wiring() === 'out', 'wiring-in': wiring() === 'in' }}
+      classList={{
+        'wiring-out': wiring() === 'out',
+        'wiring-in': wiring() === 'in',
+        'hovering-wire': !!hovered(),
+      }}
       style={{
         'background-size': `${16 * st.view.z}px ${16 * st.view.z}px`,
         'background-position': `${st.view.x}px ${st.view.y}px`,
       }}
       onWheel={wheel}
       onPointerDown={rootDown}
-      onPointerMove={(e) => (pointer = client(e))}
+      onPointerMove={hoverWires}
       onDblClick={(e) => {
         if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
         setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
@@ -510,7 +568,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 rename: (name) => s.frame(g.id, { name }, undefined),
                 tint: () => s.frame(g.id, { tint: (g.tint + 1) % TINTS }, undefined),
                 resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
-                hover: () => undefined,
+                hover: (on) => s.setState('hover', on ? g.id : st.hover === g.id ? null : st.hover),
                 clock: (c, merge) => s.frame(g.id, { clock: c }, merge),
                 jackDown: (port, e) => jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
                 fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
@@ -545,6 +603,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 listening={st.listen?.id === m.id ? st.listen.port : null}
                 readouts={st.audio && node() !== null ? s.layout().nodes[node()!] : undefined}
                 closeEpoch={closeEpoch()}
+                end={wireEnds().includes(m.id)}
                 dim={dimmed(m.id)}
                 act={{
                   knob: (param, k, merge) => s.knob(m.id, param, k, merge),
@@ -567,7 +626,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             );
           }}
         </For>
-        <Cables doc={st.doc} specs={specs} />
+        <Cables
+          doc={st.doc}
+          specs={specs}
+          geoms={geoms()}
+          hover={hovered()?.cable ?? null}
+          focus={focus()}
+          insert={insert()}
+        />
         <Show when={ghost()}>
           {(g) => (
             <svg class="sr-cables">
@@ -610,6 +676,16 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       <Show when={listenText()}>
         {(t) => (
           <div class="sr-listen" onPointerDown={(e) => e.stopPropagation()} onClick={() => s.setListen(null)}>
+            {t()}
+          </div>
+        )}
+      </Show>
+      <Show when={wireTag()}>
+        {(t) => (
+          <div
+            class="sr-wtag"
+            style={{ left: hovered()!.at.x + 14 + 'px', top: hovered()!.at.y + 14 + 'px' }}
+          >
             {t()}
           </div>
         )}

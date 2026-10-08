@@ -58,6 +58,8 @@ export interface PanelProps {
   closeEpoch?: number;
   /** inside a muted frame: drawn at 40 % */
   dim?: boolean;
+  /** at one end of the hovered wire: outlined in amber */
+  end?: boolean;
 }
 
 /** A module drawn by the panel grammar from its spec: jacks in the side columns, knobs, the mode strip. */
@@ -113,7 +115,7 @@ export function Panel(props: PanelProps): JSX.Element {
   return (
     <div
       class="sr-mod"
-      classList={{ sel: !!props.selected, muted: !!props.dim }}
+      classList={{ sel: !!props.selected, muted: !!props.dim, 'wire-end': !!props.end }}
       data-module={props.mod.id}
       data-type={props.mod.type}
       ref={(el) => track(el, 'step', () => props.readouts?.state)}

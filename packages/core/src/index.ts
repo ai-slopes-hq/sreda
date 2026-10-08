@@ -9,3 +9,4 @@ export * from './panel';
 export * from './generators';
 export * from './frames';
 export * from './factory/index';
+export * from './wires';

@@ -128,3 +128,35 @@ export function setRatio(doc: Doc, id: string, port: string, r: number): Doc {
     return { ...m, ratios };
   });
 }
+
+/** The role a cable end reads or writes; a frame's clock jacks are triggers. */
+function roleOfEnd(doc: Doc, specs: Specs, [id, port]: [string, string]): string | undefined {
+  if (doc.groups.some((g) => g.id === id)) return 'trigger';
+  const spec = specs[doc.modules.find((m) => m.id === id)?.type ?? ''];
+  return spec && [...spec.outputs, ...inputPorts(spec)].find((p) => p.id === port)?.role;
+}
+
+/** A module can go into a cable while it has inputs and outputs and no cables of its own. */
+export function canInsert(doc: Doc, specs: Specs, id: string): boolean {
+  const m = doc.modules.find((x) => x.id === id);
+  const spec = m && specs[m.type];
+  if (!spec || !spec.inputs.length || !spec.outputs.length) return false;
+  return !doc.cables.some((c) => c.from[0] === id || c.to[0] === id);
+}
+
+/**
+ * Split a cable with a module (spec §4): the source → the module's first input of the source's role (else its first
+ * input); the module's first output of the target's role (else its first output) → the old target.
+ */
+export function insertIntoCable(doc: Doc, specs: Specs, id: string, cable: Cable): Doc {
+  const spec = specs[doc.modules.find((m) => m.id === id)!.type]!;
+  const from = roleOfEnd(doc, specs, cable.from);
+  const to = roleOfEnd(doc, specs, cable.to);
+  const inp = spec.inputs.find((p) => p.role === from) ?? spec.inputs[0]!;
+  const out = spec.outputs.find((p) => p.role === to) ?? spec.outputs[0]!;
+  const rest = removeCable(doc, cable);
+  return {
+    ...rest,
+    cables: [...rest.cables, { from: cable.from, to: [id, inp.id] }, { from: [id, out.id], to: cable.to }],
+  };
+}

@@ -635,3 +635,36 @@ test('library: ⌘S on a selected frame saves a group; the picker places it twic
   expect(d.modules.filter((m) => m.type === 'osc')).toHaveLength(3);
   await app.close();
 });
+
+test('wire hover names both ends; a free FILTER dropped on the cable goes into it; ⌘Z undoes', async () => {
+  const { app, page } = await launch();
+  const a = await center(page, jack(page, 'osc', 'out'));
+  const b = await center(page, jack(page, 'out', 'l'));
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  await page.mouse.move(mid.x, mid.y + 3);
+  await expect(page.locator('.sr-wtag')).toBeVisible();
+  expect(await page.locator('.sr-wtag').evaluate((el) => el.textContent)).toBe('OSC › OUT  →  OUT › L');
+  await expect(page.locator('[data-type=osc]')).toHaveClass(/wire-end/);
+
+  // a FILTER placed in free space, then dragged by its name so the pointer lands on the cable
+  await page.mouse.move(400, 700);
+  await page.keyboard.press('/');
+  await page.keyboard.type('filter');
+  await page.keyboard.press('Enter');
+  const head = await center(page, page.locator('[data-type=filter] .sr-head'));
+  await page.mouse.move(head.x, head.y);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i++)
+    await page.mouse.move(head.x + ((mid.x - head.x) * i) / 10, head.y + ((mid.y - head.y) * i) / 10);
+  await expect(page.locator('.sr-cables path.cable.insert')).toHaveCount(1);
+  await page.mouse.up();
+  const d = await fullDoc(page);
+  const f = d.modules.find((m) => m.type === 'filter')!.id;
+  expect(d.cables).toEqual([
+    { from: ['m1', 'out'], to: [f, 'in'] },
+    { from: [f, 'lp'], to: ['m2', 'l'] },
+  ]);
+  await page.keyboard.press('Meta+z');
+  expect((await fullDoc(page)).cables).toEqual([{ from: ['m1', 'out'], to: ['m2', 'l'] }]);
+  await app.close();
+});

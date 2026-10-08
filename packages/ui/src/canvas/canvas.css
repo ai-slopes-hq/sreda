@@ -1098,3 +1098,38 @@
   text-align: center;
   cursor: pointer;
 }
+/* wire hover and cable focus (spec §4) */
+.sr-cables.hovering .cable {
+  stroke-opacity: 0.15;
+}
+.sr-cables.focusing .cable {
+  stroke-opacity: 0.2;
+}
+.sr-cables .cable.lit {
+  stroke-opacity: 1;
+  stroke-width: 2.5;
+}
+.sr-cables.hovering .cable.lit {
+  stroke-width: 3;
+}
+.sr-cables .cable.insert {
+  stroke-opacity: 1;
+  stroke-width: 4;
+  stroke: #f5a524;
+}
+.sr-mod.wire-end {
+  box-shadow: 0 0 0 1.5px #f5a524;
+}
+.sr-wtag {
+  position: absolute;
+  padding: 3px 7px;
+  background: #1b1b18;
+  border: 1px solid #3a3933;
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #e9e4d8;
+  white-space: pre;
+  pointer-events: none;
+  z-index: 30;
+}

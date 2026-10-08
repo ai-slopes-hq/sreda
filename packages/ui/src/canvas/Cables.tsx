@@ -1,6 +1,6 @@
-import { jackAt, type Doc, type Specs } from '@sreda/core';
-import { createMemo, For, Show, type JSX } from 'solid-js';
-import { cableGeoms } from './cablegeom';
+import { jackAt, type Cable, type Doc, type Specs } from '@sreda/core';
+import { For, Show, type JSX } from 'solid-js';
+import type { CableGeom } from './cablegeom';
 import { bez, ROLE } from './glyphs';
 
 /**
@@ -8,8 +8,19 @@ import { bez, ROLE } from './glyphs';
  * cable between two roles changes colour along its length (40 % source, a blend, 40 % input). A nested frame whose
  * CLK IN reads its parent's clock shows that normal as a faint dashed line.
  */
-export function Cables(props: { doc: Doc; specs: Specs }): JSX.Element {
-  const geoms = createMemo(() => cableGeoms(props.doc, props.specs));
+export function Cables(props: {
+  doc: Doc;
+  specs: Specs;
+  geoms: CableGeom[];
+  /** wire hover: this cable full and thicker, the rest at 15 % */
+  hover: Cable | null;
+  /** cable focus (a hovered module or frame): these full, the rest at 20 % */
+  focus: ((c: Cable) => boolean) | null;
+  /** the cable a dragged module would go into */
+  insert: Cable | null;
+}): JSX.Element {
+  const same = (a: Cable, b: Cable | null) =>
+    !!b && a.from[0] === b.from[0] && a.from[1] === b.from[1] && a.to[0] === b.to[0] && a.to[1] === b.to[1];
   const normals = () =>
     props.doc.groups.flatMap((g) =>
       g.parent &&
@@ -24,9 +35,9 @@ export function Cables(props: { doc: Doc; specs: Specs }): JSX.Element {
         : [],
     );
   return (
-    <svg class="sr-cables">
+    <svg class="sr-cables" classList={{ hovering: !!props.hover, focusing: !props.hover && !!props.focus }}>
       <For each={normals()}>{(d) => <path class="ghost-normal" d={d} stroke={ROLE.trigger} />}</For>
-      <For each={geoms()}>
+      <For each={props.geoms}>
         {(g, i) => {
           const p = () => g.pts[0]!;
           const q = () => g.pts[g.pts.length - 1]!;
@@ -49,7 +60,11 @@ export function Cables(props: { doc: Doc; specs: Specs }): JSX.Element {
               </Show>
               <path
                 class="cable"
-                classList={{ routed: !!g.routed }}
+                classList={{
+                  routed: !!g.routed,
+                  lit: same(g.cable, props.hover) || (!props.hover && !!props.focus?.(g.cable)),
+                  insert: same(g.cable, props.insert),
+                }}
                 d={g.d}
                 stroke={g.from === g.to ? ROLE[g.from] : `url(#cg${i()})`}
               />

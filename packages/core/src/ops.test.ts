@@ -3,7 +3,9 @@ import { emptyDoc } from './doc';
 import { nameOf } from './names';
 import {
   addModule,
+  canInsert,
   connect,
+  insertIntoCable,
   deleteObjects,
   moveObjects,
   removeCable,
@@ -95,4 +97,31 @@ test('a plain-object key is not a module type', () => {
 
 test('a frame clock cannot be added as a module', () => {
   expect(() => addModule(emptyDoc, S, 'clock', 0, 0)).toThrow(RuleError);
+});
+
+test('a free module inserted into a cable splits it: source → its input, its output → the old target', async () => {
+  const { SPECS, starterDoc } = await import('./index');
+  const added = addModule(starterDoc(SPECS), SPECS, 'filter', 600, 400);
+  const cable = added.doc.cables[0]!;
+  expect(canInsert(added.doc, SPECS, added.id)).toBe(true);
+  const d = insertIntoCable(added.doc, SPECS, added.id, cable);
+  expect(d.cables).toEqual([
+    { from: ['m1', 'out'], to: [added.id, 'in'] },
+    { from: [added.id, 'lp'], to: ['m2', 'l'] },
+  ]);
+  expect(canInsert(d, SPECS, added.id)).toBe(false);
+  expect(canInsert(d, SPECS, 'm1')).toBe(false);
+});
+
+test('inserting into a trigger cable prefers trigger ports', () => {
+  const { doc, src, fx } = two();
+  const third = addModule(doc, S, 'fx', 600, 0);
+  const d0 = connect(third.doc, S, [fx, 'eoc'], [third.id, 'clk']);
+  const mid = addModule(d0, S, 'fx', 300, 300);
+  const d = insertIntoCable(mid.doc, S, mid.id, d0.cables[0]!);
+  expect(d.cables).toEqual([
+    { from: [fx, 'eoc'], to: [mid.id, 'clk'] },
+    { from: [mid.id, 'eoc'], to: [third.id, 'clk'] },
+  ]);
+  void src;
 });
