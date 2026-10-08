@@ -476,3 +476,50 @@ test('MUTE: a framed voice goes silent and comes back', async () => {
   await expect.poll(master).toBeGreaterThan(0.05);
   await app.close();
 });
+
+test('WIRE FIX: ⌘G packs rows and routes wires at right angles; STACK packs flush and turns FIX off', async () => {
+  const { app, page } = await launch();
+  // OSC → FILTER (added wired from OSC's output), OSC → OUT
+  const out = await center(page, jack(page, 'osc', 'out'));
+  await drag(page, out, { x: out.x + 100, y: out.y + 320 });
+  await page.keyboard.type('filter');
+  await page.keyboard.press('Enter');
+  const all = await page
+    .locator('.sr-mod')
+    .evaluateAll((els) =>
+      els.map((e) => e.getBoundingClientRect()).map((r) => [r.left, r.top, r.right, r.bottom]),
+    );
+  const x0 = Math.min(...all.map((r) => r[0]!)) - 20;
+  const y0 = Math.min(...all.map((r) => r[1]!)) - 20;
+  await drag(
+    page,
+    { x: x0, y: y0 },
+    { x: Math.max(...all.map((r) => r[2]!)) + 20, y: Math.max(...all.map((r) => r[3]!)) + 20 },
+  );
+  await page.keyboard.press('Meta+g');
+  const fix = page.locator('.sr-frame').getByText('FIX', { exact: true });
+  await expect(fix).toHaveClass(/on/);
+  const ds = await page
+    .locator('.sr-cables path.cable.routed')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('d')!));
+  expect(ds.length).toBeGreaterThanOrEqual(1);
+  for (const d of ds) {
+    expect(d).toMatch(/^[MLQ0-9.\s-]+$/);
+    // every straight segment is horizontal or vertical
+    const cmds = [...d.matchAll(/([MLQ])([^MLQ]*)/g)].map(
+      (m) => [m[1]!, m[2]!.trim().split(/\s+/).map(Number)] as const,
+    );
+    let at = [0, 0];
+    for (const [c, n] of cmds) {
+      const end = [n[n.length - 2]!, n[n.length - 1]!];
+      if (c === 'L') expect(Math.abs(end[0]! - at[0]!) < 0.6 || Math.abs(end[1]! - at[1]!) < 0.6).toBe(true);
+      at = end;
+    }
+  }
+  const before = (await fullDoc(page)).modules.map((m) => [m.x, m.y]);
+  await page.locator('.sr-frame').getByText('STACK').click();
+  expect((await fullDoc(page)).modules.map((m) => [m.x, m.y])).not.toEqual(before);
+  await expect(fix).not.toHaveClass(/on/);
+  await expect(page.locator('.sr-cables path.cable.routed')).toHaveCount(0);
+  await app.close();
+});

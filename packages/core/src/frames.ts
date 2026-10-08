@@ -164,7 +164,7 @@ export function frameSelection(doc: Doc, specs: Specs, ids: readonly string[]): 
     parent,
     ratio: 1,
     tint: 0,
-    layout: 'free',
+    layout: 'route',
     muted: false,
     clock: { on: false, bpm: 120 },
   };
@@ -175,7 +175,9 @@ export function frameSelection(doc: Doc, specs: Specs, ids: readonly string[]): 
     groups: [...doc.groups.map((g) => (set.has(g.id) ? { ...g, parent: id } : g)), group],
     modules: doc.modules.map((m) => (set.has(m.id) ? { ...m, parent: id } : m)),
   };
-  return { doc: growToHold(framed, id), id };
+  // WIRE FIX is on by default: pack it, then the WIRE FIX frames around it
+  const packed = packFrame(framed, specs, id, 'route');
+  return { doc: repackRoutes(growToHold(packed, id), specs, parent ? [parent] : []), id };
 }
 
 /**
@@ -254,4 +256,139 @@ export function editFrame(
 /** Muted itself or inside a muted frame. */
 export function effectiveMuted(doc: Doc, gid: string): boolean {
   return chainOf(doc, gid).some((id) => doc.groups.find((g) => g.id === id)?.muted);
+}
+
+const snapUp = (v: number): number => Math.ceil(v / 8) * 8;
+/** the height of 1U: a row holds what starts within half of it */
+const U = 144;
+
+/** A frame's direct children in reading order: rows by position (a new row past half a 1U), then x. */
+function readingOrder(doc: Doc, specs: Specs, gid: string): { id: string; r: Rect }[] {
+  const kids = [
+    ...doc.modules.filter((m) => m.parent === gid).map((m) => m.id),
+    ...doc.groups.filter((g) => g.parent === gid).map((g) => g.id),
+  ]
+    .map((id) => ({ id, r: rectOf(doc, specs, id) }))
+    .sort((a, b) => a.r.y - b.r.y || a.r.x - b.r.x);
+  const rows: { top: number; items: { id: string; r: Rect }[] }[] = [];
+  for (const k of kids) {
+    const cur = rows[rows.length - 1];
+    if (!cur || k.r.y >= cur.top + U / 2) rows.push({ top: k.r.y, items: [k] });
+    else cur.items.push(k);
+  }
+  return rows.flatMap((row) => row.items.sort((a, b) => a.r.x - b.r.x));
+}
+
+/**
+ * The width a frame packs into depends only on what it holds (so repeated presses give the same result): about 1.6 ×
+ * the side of a square of the children's area with WIRE FIX's channels, at least the widest child.
+ */
+function packWidth(order: { r: Rect }[]): number {
+  let area = 0;
+  let widest = 0;
+  for (const k of order) {
+    area += (k.r.w + RGAP) * (k.r.h + RGAP);
+    widest = Math.max(widest, k.r.w);
+  }
+  return Math.max(widest, snapUp(Math.sqrt(area) * 1.6));
+}
+
+/** Move an object and, for a frame, everything inside it. */
+function shift(doc: Doc, id: string, dx: number, dy: number): Doc {
+  if (!dx && !dy) return doc;
+  const set = new Set([id, ...(isGroupId(id) ? descendants(doc, id) : [])]);
+  return {
+    ...doc,
+    modules: doc.modules.map((m) => (set.has(m.id) ? { ...m, x: m.x + dx, y: m.y + dy } : m)),
+    groups: doc.groups.map((g) => (set.has(g.id) ? { ...g, x: g.x + dx, y: g.y + dy } : g)),
+  };
+}
+
+/**
+ * STACK and WIRE FIX pack the same rows (breaks at `packWidth`): `gap` between children and `pad` around them, rows
+ * top-aligned; then the frame fits its content with the same margin on all four sides. An empty frame is the minimum.
+ */
+function packRows(doc: Doc, specs: Specs, gid: string, gap: number, pad: number): Doc {
+  const g0 = doc.groups.find((g) => g.id === gid)!;
+  const order = readingOrder(doc, specs, gid);
+  if (!order.length)
+    return { ...doc, groups: doc.groups.map((g) => (g.id === gid ? { ...g, ...FRAME_MIN } : g)) };
+  const inner = packWidth(order);
+  const rows: (typeof order)[] = [[]];
+  let used = 0;
+  for (const k of order) {
+    if (used > 0 && used + k.r.w > inner) {
+      rows.push([]);
+      used = 0;
+    }
+    rows[rows.length - 1]!.push(k);
+    used += k.r.w + RGAP;
+  }
+  let d = doc;
+  let y = g0.y + GHEAD + pad;
+  for (const row of rows) {
+    let x = g0.x + pad;
+    let rowH = 0;
+    for (const k of row) {
+      d = shift(d, k.id, x - k.r.x, y - k.r.y);
+      x += k.r.w + gap;
+      rowH = Math.max(rowH, k.r.h);
+    }
+    y += rowH + gap;
+  }
+  // fit: the same margin on the right and at the bottom as on the left and at the top (the height is exact: the
+  // 28 px header is off the 8 px grid)
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const id of descendants(d, gid)) {
+    const r = rectOf(d, specs, id);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  const w = Math.max(FRAME_MIN.w, snapUp(x1 + pad - g0.x));
+  const h = Math.max(FRAME_MIN.h, y1 + pad - g0.y);
+  return { ...d, groups: d.groups.map((g) => (g.id === gid ? { ...g, w, h } : g)) };
+}
+
+/** STACK (flush inside 16 px; WIRE FIX off) or WIRE FIX (32 px channels around and between; routed wires). */
+export function packFrame(doc: Doc, specs: Specs, gid: string, mode: 'stack' | 'route'): Doc {
+  const packed =
+    mode === 'stack' ? packRows(doc, specs, gid, 0, GPAD) : packRows(doc, specs, gid, RGAP, RGAP);
+  const layout = mode === 'stack' ? 'free' : 'route';
+  return { ...packed, groups: packed.groups.map((g) => (g.id === gid ? { ...g, layout } : g)) };
+}
+
+/** FIX on packs the frame; FIX off keeps the layout and returns to curves. */
+export function setLayout(doc: Doc, specs: Specs, gid: string, layout: 'free' | 'route'): Doc {
+  if (layout === 'route') return packFrame(doc, specs, gid, 'route');
+  return { ...doc, groups: doc.groups.map((g) => (g.id === gid ? { ...g, layout } : g)) };
+}
+
+/** Re-pack the WIRE FIX frames among `gids` and around them, innermost first. */
+export function repackRoutes(doc: Doc, specs: Specs, gids: readonly string[]): Doc {
+  const all = new Set<string>();
+  for (const gid of gids) for (const g of chainOf(doc, gid)) all.add(g);
+  const depth = (id: string) => chainOf(doc, id).length;
+  let d = doc;
+  for (const gid of [...all].sort((a, b) => depth(b) - depth(a)))
+    if (d.groups.find((g) => g.id === gid)?.layout === 'route') d = packFrame(d, specs, gid, 'route');
+  return d;
+}
+
+/**
+ * After an action: re-pack the WIRE FIX frames whose direct children changed between `before` and `after`, and the
+ * frames in `also` (a module moved within one), with their WIRE FIX parents.
+ */
+export function settle(before: Doc, after: Doc, specs: Specs, also: readonly string[] = []): Doc {
+  const kids = (doc: Doc) => {
+    const out = new Map<string, string[]>();
+    for (const o of [...doc.modules, ...doc.groups])
+      if (o.parent) out.set(o.parent, [...(out.get(o.parent) ?? []), o.id]);
+    return out;
+  };
+  const [a, b] = [kids(before), kids(after)];
+  const changed = after.groups
+    .map((g) => g.id)
+    .filter((id) => also.includes(id) || (a.get(id) ?? []).sort().join() !== (b.get(id) ?? []).sort().join());
+  return changed.length ? repackRoutes(after, specs, changed) : after;
 }

@@ -32,6 +32,8 @@ function frame(g: Partial<Group> = {}, cabledIn = false) {
     fieldDown: () => calls.push('field'),
     fieldReset: () => calls.push('reset'),
     mute: () => calls.push('mute'),
+    stack: () => calls.push('stack'),
+    fix: () => calls.push('fix'),
   };
   const r = render(() => (
     <Frame
@@ -120,4 +122,15 @@ test('M mutes; lit while on, and the tools stay visible while it is on; a muted 
   expect(muted.container.querySelector('.sr-swatch')).not.toBeNull();
   expect(muted.container.querySelector('.sr-frame')!.classList.contains('muted')).toBe(false);
   expect(muted.container.querySelector('.sr-gmeter')).not.toBeNull();
+});
+
+test('STACK and FIX are frame tools; FIX is lit, and the tools stay, while WIRE FIX is on', () => {
+  const routed = frame({ layout: 'route' });
+  expect(routed.getByText('FIX').classList.contains('on')).toBe(true);
+  fireEvent.click(routed.getByText('STACK'));
+  fireEvent.click(routed.getByText('FIX'));
+  expect(routed.calls).toEqual(['stack', 'fix']);
+  routed.unmount();
+  const free = frame();
+  expect(free.queryByText('FIX')).toBeNull();
 });

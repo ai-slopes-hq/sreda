@@ -24,6 +24,15 @@ export interface PanelLayout {
  * left, actions from the right; 1 HP a button, 2 HP for a `▾` list with words). Positions are panel-relative.
  */
 export function layoutPanel(spec: ModuleSpec): PanelLayout {
+  let L = layouts.get(spec);
+  if (!L) layouts.set(spec, (L = computeLayout(spec)));
+  return L;
+}
+
+/** layouts per spec object: computed once (specs never change at run time) */
+const layouts = new WeakMap<ModuleSpec, PanelLayout>();
+
+function computeLayout(spec: ModuleSpec): PanelLayout {
   const visible = spec.params.filter((p) => p.kind === 'action' || !p.hidden);
   const knobs = visible.filter((p) => p.kind === 'knob');
   const modes = visible.filter((p) => p.kind !== 'knob');

@@ -6,6 +6,9 @@ import {
   jackAt,
   landingFrame,
   moveObjects,
+  packFrame,
+  setLayout,
+  settle,
   mulberry32,
   nameOf,
   rectOf,
@@ -252,10 +255,24 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       finishWire(d, p);
     } else if (d.kind === 'move') {
       setDrop(null);
-      if (d.moved)
-        s.commit(moveObjects(d.base, specs, d.ids, (p.x - d.at.x) / st.view.z, (p.y - d.at.y) / st.view.z));
+      if (d.moved) {
+        const moved = moveObjects(
+          d.base,
+          specs,
+          d.ids,
+          (p.x - d.at.x) / st.view.z,
+          (p.y - d.at.y) / st.view.z,
+        );
+        // the WIRE FIX frames a module left, landed in or moved within re-pack
+        const parents = (doc: Doc) =>
+          d.ids.flatMap((id) => {
+            const o = doc.modules.find((m) => m.id === id) ?? doc.groups.find((g) => g.id === id);
+            return o?.parent ? [o.parent] : [];
+          });
+        s.commit(settle(d.base, moved, specs, [...parents(d.base), ...parents(moved)]));
+      }
     } else if (d.kind === 'resize') {
-      if (d.moved) s.commit(resizeFrame(d.base, specs, d.id, resized(d, p)));
+      if (d.moved) s.commit(settle(d.base, resizeFrame(d.base, specs, d.id, resized(d, p)), specs));
     } else if (d.kind === 'box') setBox(null);
     else if (d.kind === 'field') s.setState('editing', null);
   }
@@ -455,6 +472,15 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
                 fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
                 mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
+                stack: () => {
+                  const d = s.current();
+                  s.commit(settle(d, packFrame(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []));
+                },
+                fix: () => {
+                  const d = s.current();
+                  const next = setLayout(d, specs, g.id, g.layout === 'route' ? 'free' : 'route');
+                  s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
+                },
               }}
             />
           )}

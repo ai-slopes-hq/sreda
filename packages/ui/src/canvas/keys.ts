@@ -1,5 +1,5 @@
 // The canvas keyboard (spec §4, §5): undo, delete, Esc, `/`, F, G.
-import { deleteObjects, frameSelection, isGroupId, unframe, type Specs } from '@sreda/core';
+import { deleteObjects, frameSelection, isGroupId, settle, unframe, type Specs } from '@sreda/core';
 import type { SessionApi } from '../store';
 
 type Pt = { x: number; y: number };
@@ -28,7 +28,8 @@ function frame(k: KeyCtx): void {
 function unframeSelected(k: KeyCtx): void {
   const gids = k.s.state.sel.filter(isGroupId);
   if (!gids.length) return;
-  k.s.commit(unframe(k.s.current(), k.specs, gids));
+  const before = k.s.current();
+  k.s.commit(settle(before, unframe(before, k.specs, gids), k.specs));
   k.s.setState('sel', []);
 }
 
@@ -54,7 +55,8 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     else frame(k);
   } else if (!meta && (e.key === 'Backspace' || e.key === 'Delete') && s.state.sel.length) {
     e.preventDefault();
-    s.commit(deleteObjects(s.current(), s.state.sel));
+    const before = s.current();
+    s.commit(settle(before, deleteObjects(before, s.state.sel), k.specs));
   } else if (e.key === 'Escape') {
     if (k.pickerOpen()) k.closePicker();
     else if (s.state.listen) s.setListen(null);
