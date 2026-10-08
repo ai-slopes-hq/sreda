@@ -49,6 +49,7 @@ export function fmt(p: KnobParam, v: number): string {
           : (v / 1000).toFixed(1) + 'k';
   if (p.unit === 's') return v < 1 ? Math.round(v * 1000) + 'ms' : v.toFixed(2) + 's';
   if (p.unit === 'note') return NOTES[Math.round(v) % 12]!;
+  if (p.unit === 'db') return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1) + 'dB';
   if (p.step) return '' + Math.round(v);
   return (v < 0 ? '−' : '') + Math.abs(v).toFixed(2);
 }

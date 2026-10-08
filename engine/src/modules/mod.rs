@@ -7,6 +7,7 @@ pub mod clock;
 pub mod compare;
 pub mod complex;
 pub mod delay;
+pub mod drive;
 pub mod filter;
 pub mod fold;
 pub mod follow;

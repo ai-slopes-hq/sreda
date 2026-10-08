@@ -36,6 +36,7 @@ pub enum Unit {
     Hz,
     S,
     Note,
+    Db,
 }
 
 fn is_false(b: &bool) -> bool {

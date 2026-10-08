@@ -23,6 +23,7 @@ const MODULES: &[Entry] = &[
         Box::new(complex::Complex::new(sr))
     }),
     ("delay", delay::spec, |sr| Box::new(delay::Delay::new(sr))),
+    ("drive", drive::spec, |sr| Box::new(drive::Drive::new(sr))),
     ("filter", filter::spec, |sr| {
         Box::new(filter::Filter::new(sr))
     }),
