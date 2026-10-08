@@ -1,5 +1,16 @@
-import { RATIOS, type Specs } from '@sreda/core';
-import { createMemo, For, Show, type JSX } from 'solid-js';
+import {
+  allPorts,
+  connect,
+  RATIOS,
+  removeCable,
+  RuleError,
+  withDescendants,
+  type Specs,
+  type WirePort,
+} from '@sreda/core';
+import { createEffect, createMemo, For, on, Show, type JSX } from 'solid-js';
+import type { PortsState } from '../store';
+import { PortList } from './PortList';
 import { fmtAtt, fmtRat, ROLE } from '../canvas/glyphs';
 import type { SessionApi } from '../store';
 import { wireSections, type WireRow } from './rows';
@@ -13,6 +24,86 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
   const sections = createMemo(() =>
     wireSections(st.doc, props.specs, { q: st.sidebar.q, selOnly: st.sidebar.selOnly, sel: st.sel }),
   );
+
+  let box: HTMLDivElement | undefined;
+  const selected = createMemo(() => new Set(withDescendants(st.doc, st.sel)));
+  // selecting on the canvas scrolls the first of its wires into view
+  createEffect(
+    on(
+      () => st.sel,
+      () => queueMicrotask(() => box?.querySelector('.sr-wrow.sel')?.scrollIntoView({ block: 'nearest' })),
+      { defer: true },
+    ),
+  );
+
+  /** replace (a store set would merge into the open list's state, and the list would not re-render) */
+  function openPorts(p: PortsState): void {
+    s.setState('sidebar', 'ports', null);
+    s.setState('sidebar', 'ports', p);
+  }
+  function closePorts(): void {
+    s.setState('sidebar', 'ports', null);
+    s.setState('candidate', null);
+  }
+  /** the port list's choice: move that end of the wire, or build a new wire (an output, then an input) */
+  function pick(p: WirePort): void {
+    const ps = st.sidebar.ports;
+    if (!ps) return;
+    const end: [string, string] = [p.id, p.port];
+    if (ps.index === 'new' && ps.end === 'from') {
+      openPorts({ index: 'new', end: 'to', fixed: end });
+      return;
+    }
+    const fixed = ps.fixed ? ([...ps.fixed] as [string, string]) : null;
+    const index = ps.index;
+    const which = ps.end;
+    closePorts();
+    try {
+      if (index === 'new') s.edit((d) => connect(d, props.specs, fixed!, end));
+      else {
+        const cable = st.doc.cables[index];
+        if (!cable) return;
+        const c = { from: [...cable.from] as [string, string], to: [...cable.to] as [string, string] };
+        s.edit((d) => {
+          const rest = removeCable(d, c);
+          return which === 'to'
+            ? connect(rest, props.specs, c.from, end)
+            : connect(rest, props.specs, end, c.to);
+        });
+      }
+    } catch (err) {
+      if (!(err instanceof RuleError)) throw err;
+    }
+  }
+  /** the port list for the open end: inputs when choosing a destination, outputs for a source */
+  function portList(): JSX.Element {
+    const ps = st.sidebar.ports!;
+    const dir = ps.end === 'to' ? 'in' : 'out';
+    const fixed = ps.fixed;
+    const otherRole = fixed
+      ? allPorts(st.doc, props.specs, dir === 'in' ? 'out' : 'in').find(
+          (x) => x.id === fixed[0] && x.port === fixed[1],
+        )?.role
+      : undefined;
+    const title =
+      ps.index === 'new'
+        ? ps.end === 'from'
+          ? 'NEW WIRE: FROM…'
+          : 'NEW WIRE: TO…'
+        : ps.end === 'to'
+          ? 'MOVE TO…'
+          : 'MOVE FROM…';
+    return (
+      <PortList
+        ports={allPorts(st.doc, props.specs, dir)}
+        otherRole={otherRole ?? null}
+        title={title}
+        pick={pick}
+        candidate={(p) => s.setState('candidate', p ? { id: p.id, port: p.port } : null)}
+        close={closePorts}
+      />
+    );
+  }
 
   /** set a row's value: an attenuverter (null resets), or a ratio (a frame's CLK IN too) */
   function setValue(
@@ -57,7 +148,7 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
   }
 
   return (
-    <div class="sr-wires">
+    <div class="sr-wires" ref={(el) => (box = el)}>
       <For each={sections()}>
         {(sec) => {
           const closed = () => !!st.sidebar.closed[sec.key];
@@ -95,41 +186,88 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
                       }
                     >
                       {(w) => (
-                        <div
-                          class="sr-wrow"
-                          style={{ 'padding-left': 10 + sec.depth * 14 + 'px' }}
-                          data-wire={w().index}
-                        >
-                          <span class="dot" style={{ background: ROLE[w().from] }} />
-                          <span class="dot" style={{ background: ROLE[w().to] }} />
-                          <span class="text">{w().text}</span>
-                          <span
-                            class="value"
-                            classList={{ off: !w().value || w().value!.v === w().value!.def }}
-                            onPointerDown={(e) => valueDown(w(), e)}
-                            onWheel={(e) => valueWheel(w(), e)}
-                            onDblClick={() => w().value && setValue(w(), null, undefined)}
-                          >
-                            {w().value
-                              ? w().value!.kind === 'att'
-                                ? fmtAtt(w().value!.v)
-                                : fmtRat(w().value!.v)
-                              : ''}
-                          </span>
-                          <button
-                            class="x"
-                            aria-label="Remove wire"
-                            onClick={() =>
-                              s.edit((d) => ({ ...d, cables: d.cables.filter((_, i) => i !== w().index) }))
+                        <>
+                          <div
+                            class="sr-wrow"
+                            classList={{
+                              on: st.sidebar.picked === w().index,
+                              sel: selected().has(w().cable.from[0]) || selected().has(w().cable.to[0]),
+                            }}
+                            style={{ 'padding-left': 10 + sec.depth * 14 + 'px' }}
+                            data-wire={w().index}
+                            onMouseEnter={() => s.setState('sidebar', 'hover', w().index)}
+                            onMouseLeave={() =>
+                              st.sidebar.hover === w().index && s.setState('sidebar', 'hover', null)
                             }
+                            onClick={() => s.setState('sidebar', 'picked', w().index)}
                           >
-                            ✕
-                          </button>
-                        </div>
+                            <span class="dot" style={{ background: ROLE[w().from] }} />
+                            <span class="dot" style={{ background: ROLE[w().to] }} />
+                            <span class="text">
+                              <span
+                                class="port"
+                                data-end="from"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openPorts({ index: w().index, end: 'from', fixed: w().cable.to });
+                                }}
+                              >
+                                {w().fromLabel}
+                              </span>
+                              {'  →  '}
+                              <span
+                                class="port"
+                                data-end="to"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openPorts({ index: w().index, end: 'to', fixed: w().cable.from });
+                                }}
+                              >
+                                {w().toLabel}
+                              </span>
+                            </span>
+                            <span
+                              class="value"
+                              classList={{ off: !w().value || w().value!.v === w().value!.def }}
+                              onPointerDown={(e) => valueDown(w(), e)}
+                              onWheel={(e) => valueWheel(w(), e)}
+                              onDblClick={() => w().value && setValue(w(), null, undefined)}
+                            >
+                              {w().value
+                                ? w().value!.kind === 'att'
+                                  ? fmtAtt(w().value!.v)
+                                  : fmtRat(w().value!.v)
+                                : ''}
+                            </span>
+                            <button
+                              class="x"
+                              aria-label="Remove wire"
+                              onClick={() =>
+                                s.edit((d) => ({ ...d, cables: d.cables.filter((_, i) => i !== w().index) }))
+                              }
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <Show when={st.sidebar.ports?.index === w().index && st.sidebar.ports} keyed>
+                            {(_ps) => portList()}
+                          </Show>
+                        </>
                       )}
                     </Show>
                   )}
                 </For>
+                <Show when={sec.key === 'between'}>
+                  <button
+                    class="sr-newwire"
+                    onClick={() => openPorts({ index: 'new', end: 'from', fixed: null })}
+                  >
+                    + new wire
+                  </button>
+                  <Show when={st.sidebar.ports?.index === 'new' && st.sidebar.ports} keyed>
+                    {(_ps) => portList()}
+                  </Show>
+                </Show>
               </Show>
             </div>
           );

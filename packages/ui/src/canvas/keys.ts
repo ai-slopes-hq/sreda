@@ -11,6 +11,7 @@ import {
 } from '@sreda/core';
 import type { LibraryApi } from '../library';
 import type { SessionApi } from '../store';
+import { wireSections } from '../sidebar/rows';
 import type { PickerTab } from './patching';
 
 type Pt = { x: number; y: number };
@@ -47,6 +48,14 @@ function unframeSelected(k: KeyCtx): void {
   k.s.setState('sel', []);
 }
 
+/** the wire rows WIRES shows (filter, SELECTION and collapsed sections applied), as cable indices */
+function visibleWires(k: KeyCtx): number[] {
+  const st = k.s.state;
+  return wireSections(st.doc, k.specs, { q: st.sidebar.q, selOnly: st.sidebar.selOnly, sel: st.sel })
+    .filter((sec) => !st.sidebar.closed[sec.key])
+    .flatMap((sec) => sec.rows.flatMap((r) => (r.kind === 'wire' ? [r.index] : [])));
+}
+
 export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
   if (e.target instanceof HTMLInputElement) return;
   if (e.code === 'Space') k.setSpace(e.type === 'keydown');
@@ -67,6 +76,40 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     const sel = s.state.sel;
     if (sel.length && sel.every(isGroupId)) unframeSelected(k);
     else frame(k);
+  } else if (s.state.sidebar.open && !meta && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    // WIRES: walk the wire rows that are showing
+    e.preventDefault();
+    const rows = visibleWires(k);
+    if (!rows.length) return;
+    const at = rows.indexOf(s.state.sidebar.picked ?? -1);
+    const next =
+      at < 0
+        ? e.key === 'ArrowDown'
+          ? 0
+          : rows.length - 1
+        : (at + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length;
+    s.setState('sidebar', 'picked', rows[next]!);
+  } else if (s.state.sidebar.open && !meta && e.key === 'Enter' && s.state.sidebar.picked !== null) {
+    // WIRES: the port list for the picked wire's input end
+    const cable = s.current().cables[s.state.sidebar.picked];
+    if (!cable) return;
+    e.preventDefault();
+    s.setState('sidebar', 'ports', {
+      index: s.state.sidebar.picked,
+      end: 'to',
+      fixed: [cable.from[0], cable.from[1]],
+    });
+  } else if (
+    s.state.sidebar.open &&
+    !meta &&
+    (e.key === 'Backspace' || e.key === 'Delete') &&
+    s.state.sidebar.picked !== null
+  ) {
+    // WIRES: remove the picked wire
+    e.preventDefault();
+    const i = s.state.sidebar.picked;
+    s.setState('sidebar', 'picked', null);
+    s.edit((d) => ({ ...d, cables: d.cables.filter((_, j) => j !== i) }));
   } else if (!meta && (e.key === 'Backspace' || e.key === 'Delete') && s.state.sel.length) {
     e.preventDefault();
     const before = s.current();

@@ -62,6 +62,8 @@ export interface PanelProps {
   dim?: boolean;
   /** at one end of the hovered wire: outlined in amber */
   end?: boolean;
+  /** a WIRES port list points at this port: an amber ring */
+  candidate?: string | null;
 }
 
 /** A module drawn by the panel grammar from its spec: jacks in the side columns, knobs, the mode strip. */
@@ -225,6 +227,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 y={j().y}
                 filled={props.cabledIn(port.id)}
                 normalled={normalled(port.id)}
+                ring={props.candidate === port.id}
                 title={normalTitle(port.id, port.label)}
                 onPointerDown={(e) => props.act.jackDown?.(port.id, 'in', port.role, e)}
                 ref={(el) => {
@@ -281,6 +284,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 y={j().y}
                 filled={props.cabledOut(port.id)}
                 listening={props.listening === port.id}
+                ring={props.candidate === port.id}
                 onPointerDown={(e) => props.act.jackDown?.(port.id, 'out', port.role, e)}
               />
               <div
@@ -331,6 +335,7 @@ export function Panel(props: PanelProps): JSX.Element {
                 x={mj().x}
                 y={mj().y}
                 filled={props.cabledIn('@' + p.id)}
+                ring={props.candidate === '@' + p.id}
                 mod
                 onPointerDown={(e) => props.act.jackDown?.('@' + p.id, 'in', 'mod', e)}
               />

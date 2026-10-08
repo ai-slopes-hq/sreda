@@ -19,6 +19,8 @@ export interface WireRow {
   index: number;
   cable: Cable;
   text: string;
+  fromLabel: string;
+  toLabel: string;
   from: Role;
   to: Role;
   /** the destination's attenuverter or ratio; audio inputs have none */
@@ -82,13 +84,17 @@ export function wireSections(
   const add = (key: string, row: Row) => rows.set(key, [...(rows.get(key) ?? []), row]);
 
   doc.cables.forEach((cable, index) => {
-    const text = `${portLabel(doc, specs, cable.from[0], cable.from[1])}  →  ${portLabel(doc, specs, cable.to[0], cable.to[1])}`;
+    const fromLabel = portLabel(doc, specs, cable.from[0], cable.from[1]);
+    const toLabel = portLabel(doc, specs, cable.to[0], cable.to[1]);
+    const text = `${fromLabel}  →  ${toLabel}`;
     if (!keep(text, [cable.from[0], cable.to[0]])) return;
     add(wireSection(doc, cable), {
       kind: 'wire',
       index,
       cable,
       text,
+      fromLabel,
+      toLabel,
       from: roleOut(doc, specs, cable.from[0], cable.from[1]),
       to: roleIn(doc, specs, cable.to[0], cable.to[1]),
       value: valueOf(doc, specs, cable.to),

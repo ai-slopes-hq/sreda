@@ -49,6 +49,8 @@ export interface Session {
   /** the library folder's groups and projects (factory ones are added by the picker) */
   library: LibEntry[];
   sidebar: SidebarState;
+  /** the port a WIRES port list points at: ringed on the canvas */
+  candidate: { id: string; port: string } | null;
 }
 
 /** The sidebar (spec §5a): docked right, WIRES its only tab for now. */
@@ -63,6 +65,18 @@ export interface SidebarState {
   closed: Record<string, boolean>;
   /** the wire row picked with a click or ↑ / ↓ (an index into doc.cables) */
   picked: number | null;
+  /** the wire row under the pointer */
+  hover: number | null;
+  /** the port list open on a row's end (or `+ new wire`); `fixed` is the end that stays */
+  ports: PortsState | null;
+}
+
+export interface PortsState {
+  /** the wire being moved, or a new wire */
+  index: number | 'new';
+  /** the end being chosen */
+  end: 'from' | 'to';
+  fixed: [string, string] | null;
 }
 export const SIDEBAR_WIDTH = 440;
 
@@ -96,7 +110,17 @@ export function createSession(
     dirty: false,
     saving: null,
     library: [],
-    sidebar: { open: false, width: SIDEBAR_WIDTH, selOnly: false, q: '', closed: {}, picked: null },
+    sidebar: {
+      open: false,
+      width: SIDEBAR_WIDTH,
+      selOnly: false,
+      q: '',
+      closed: {},
+      picked: null,
+      hover: null,
+      ports: null,
+    },
+    candidate: null,
   });
   /** the document last opened or saved: anything else is unsaved */
   let saved: Doc = initial;

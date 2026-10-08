@@ -760,3 +760,50 @@ test('WIRES: W opens the sidebar beside the canvas; sections, problems, a value 
   await expect(page.locator('.sr-side')).toBeHidden();
   await app.close();
 });
+
+test('WIRES: move an end from the port list, a new wire, rows light the canvas, keys, SELECTION', async () => {
+  const { app, page } = await launch();
+  await page.mouse.move(500, 700);
+  await page.keyboard.press('/');
+  await page.keyboard.type('filter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('w');
+  const rows = page.locator('.sr-wrow[data-wire]');
+  await expect(rows).toHaveCount(1);
+
+  // hovering the row lights its cable and outlines both modules
+  await rows.first().hover();
+  await expect(page.locator('.sr-cables path.cable.lit')).toHaveCount(1);
+  await expect(page.locator('[data-type=out]')).toHaveClass(/wire-end/);
+
+  // the destination port → the port list → `r` ⏎: the cable ends at OUT › R
+  await rows.first().locator('.port[data-end=to]').click();
+  await page.keyboard.type('r');
+  await page.keyboard.press('Enter');
+  expect((await fullDoc(page)).cables).toEqual([{ from: ['m1', 'out'], to: ['m2', 'r'] }]);
+
+  // + new wire: OSC › OUT, then FILTER › IN
+  await page.getByText('+ new wire').click();
+  await page.keyboard.type('osc › out');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('filter › in');
+  await page.keyboard.press('Enter');
+  const f = (await fullDoc(page)).modules.find((m) => m.type === 'filter')!.id;
+  expect((await fullDoc(page)).cables).toContainEqual({ from: ['m1', 'out'], to: [f, 'in'] });
+
+  // SELECTION with OSC selected: only OSC's wires (both of them here); with the FILTER selected: one
+  await page.locator('[data-type=filter] .sr-head').click();
+  await page.getByText('SELECTION', { exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('FILTER › IN');
+  await page.getByText('SELECTION', { exact: true }).click();
+
+  // ↓ picks the first row, Backspace removes its wire
+  await page.mouse.click(1200, 820); // the canvas has the keys (and nothing is selected)
+  await page.keyboard.press('ArrowDown');
+  const first = await rows.first().getAttribute('data-wire');
+  expect(first).toBe('0');
+  await page.keyboard.press('Backspace');
+  expect((await fullDoc(page)).cables).toEqual([{ from: ['m1', 'out'], to: [f, 'in'] }]);
+  await app.close();
+});

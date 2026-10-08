@@ -30,17 +30,18 @@ import {
   type Role,
   type Specs,
 } from '@sreda/core';
-import { createEffect, createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
 import { diceModule } from '../dice';
 import { libraryActions } from '../library';
 import { Cables } from './Cables';
 import { cableAt, cableGeoms } from './cablegeom';
 import { magnet, type Snap } from './magnets';
+import { animateView, glideTo } from './glide';
 import { Chrome } from './Chrome';
 import { Sidebar } from '../sidebar/Sidebar';
 import { Frame, type Edge } from './Frame';
-import { ROLE } from './glyphs';
+import { bez, ROLE } from './glyphs';
 import { handleKey } from './keys';
 import { Panel, type FieldKind } from './Panel';
 import { placeFor, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
@@ -149,10 +150,54 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   /** the cable a dragged module would go into */
   const [insert, setInsert] = createSignal<Cable | null>(null);
   /** the modules at both ends of the hovered wire (outlined) */
-  const wireEnds = () => {
+  /** the wire lit on the canvas: the one under the pointer, else the WIRES row hovered or picked */
+  const litCable = (): Cable | null => {
     const h = hovered();
-    return h ? [h.cable.from[0], h.cable.to[0]] : [];
+    if (h) return h.cable;
+    const i = st.sidebar.open ? (st.sidebar.hover ?? st.sidebar.picked) : null;
+    return i === null ? null : (st.doc.cables[i] ?? null);
   };
+  /** the modules outlined in amber: both ends of the lit wire, and a port list's candidate */
+  const wireEnds = () => {
+    const c = litCable();
+    return [...(c ? [c.from[0], c.to[0]] : []), ...(st.candidate ? [st.candidate.id] : [])];
+  };
+  /** a port list's dashed preview: from the end that stays to the candidate */
+  const preview = () => {
+    const f = st.sidebar.ports?.fixed;
+    const c = st.candidate;
+    if (!f || !c || !st.sidebar.open) return null;
+    const a = jackPos(f[0], f[1]);
+    const b = jackPos(c.id, c.port);
+    // the fixed end is an output when the input is being chosen
+    return st.sidebar.ports!.end === 'to' ? bez(a, b) : bez(b, a);
+  };
+  // a candidate (or a picked row) off-screen for 250 ms: the view glides to centre its module (220 ms, zoom kept)
+  let glideTimer: ReturnType<typeof setTimeout> | undefined;
+  let stopGlide = () => {};
+  createEffect(
+    on(
+      () => [st.candidate?.id, st.sidebar.picked] as const,
+      ([cand, picked]) => {
+        clearTimeout(glideTimer);
+        const id =
+          cand ?? (picked !== null && picked !== undefined ? st.doc.cables[picked]?.to[0] : undefined);
+        if (!id || !st.sidebar.open) return;
+        glideTimer = setTimeout(() => {
+          if (!st.doc.modules.some((m) => m.id === id) && !st.doc.groups.some((g) => g.id === id)) return;
+          const to = glideTo(st.view, rectOf(st.doc, specs, id), { x: 0, y: 0, w: W(), h: H() });
+          if (!to) return;
+          stopGlide();
+          stopGlide = animateView({ ...st.view }, to, 220, (v) => s.setState('view', v));
+        }, 250);
+      },
+      { defer: true },
+    ),
+  );
+  onCleanup(() => {
+    clearTimeout(glideTimer);
+    stopGlide();
+  });
   /** cable focus: the hovered module's cables, or every cable touching anything in the hovered frame */
   const focus = createMemo(() => {
     const id = st.hover;
@@ -598,6 +643,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         onWheel={wheel}
         onPointerDown={rootDown}
         onPointerMove={hoverWires}
+        onPointerLeave={() => setHovered(null)}
         onDblClick={(e) => {
           if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
           setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
@@ -668,6 +714,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   readouts={st.audio && node() !== null ? s.layout().nodes[node()!] : undefined}
                   closeEpoch={closeEpoch()}
                   end={wireEnds().includes(m.id)}
+                  candidate={st.candidate?.id === m.id ? st.candidate.port : null}
                   dim={dimmed(m.id)}
                   act={{
                     knob: (param, k, merge) => s.knob(m.id, param, k, merge),
@@ -734,10 +781,17 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             doc={st.doc}
             specs={specs}
             geoms={geoms()}
-            hover={hovered()?.cable ?? null}
+            hover={litCable()}
             focus={focus()}
             insert={insert()}
           />
+          <Show when={preview()}>
+            {(d) => (
+              <svg class="sr-cables">
+                <path class="preview" d={d()} />
+              </svg>
+            )}
+          </Show>
           <Show when={ghost()}>
             {(g) => (
               <svg class="sr-cables">

@@ -15,6 +15,8 @@ export interface JackProps {
   mod?: boolean;
   /** this output is being listened to */
   listening?: boolean;
+  /** a WIRES port list's candidate: an amber ring */
+  ring?: boolean;
   title?: string | undefined;
   ref?: (el: HTMLDivElement) => void;
   onPointerDown?: (e: PointerEvent) => void;
@@ -39,7 +41,11 @@ export function Jack(props: JackProps): JSX.Element {
         'border-color': ROLE[props.role],
         'border-style': props.normalled ? 'dashed' : 'solid',
         background: props.filled ? ROLE[props.role] : '#121210',
-        'box-shadow': props.listening ? `0 0 0 2px #121210, 0 0 0 3.5px ${ROLE[props.role]}` : undefined,
+        'box-shadow': props.ring
+          ? '0 0 0 2px #121210, 0 0 0 3.5px #f5a524'
+          : props.listening
+            ? `0 0 0 2px #121210, 0 0 0 3.5px ${ROLE[props.role]}`
+            : undefined,
       }}
     />
   );
