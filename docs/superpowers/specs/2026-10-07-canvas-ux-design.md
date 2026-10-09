@@ -543,7 +543,8 @@ Stereo outputs are two mono outputs (cables stay mono).
   - **A loaded display is a cursor and a scrub** (revision 25). SAMPLER in ONE / LOOP: a click on the waveform moves
     START there (one undo step); pressing and dragging scrubs — the file plays at the point under the pointer, its
     speed and direction following the pointer (1 ms fades in and out, the position gliding over 10 ms so a jerky
-    pointer stays smooth), heard through the module's own outputs at LVL; START follows and stays where the pointer
+    pointer stays smooth; a pointer at rest fades to silence, like a stopped record — the scrub voice has its own 25 Hz
+    high-pass), heard through the module's own outputs at LVL; START follows and stays where the pointer
     is released (the whole gesture one undo step). The scrub is a voice of its own beside the triggered ones; while it
     sounds TRIG still plays. In SLICE a click plays the slice under the pointer (START unchanged) and a drag scrubs
     the whole file. GRAINS: a click or drag moves POS (one undo step per gesture); the grain cloud follows the pointer;

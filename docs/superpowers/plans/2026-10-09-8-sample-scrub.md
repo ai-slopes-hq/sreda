@@ -45,7 +45,7 @@ a dedicated `fixed` slot — implementer's choice, documented), drag → scrub; 
 dragging, one commit on release; LIVE positions relative to the head as the display draws them); an empty display
 still opens the dialog), tests, e2e.
 
-- [ ] **Step 1: Failing tests:** Rust — scrub at 0.5 on a ramp sample sounds the ramp's value near 0.5 within 20 ms;
+- [ ] **Step 1: Failing tests:** Rust — scrub at rest decays below 0.01 within ~150 ms (a 25 Hz high-pass on the scrub voice — changed in review);
   scrub moving 0.2 → 0.8 over 100 ms produces a rising ramp with no step > 0.05; scrub −1 → silence within 2 ms; a
   scrub voice beside a triggered voice sums; Review Focus 2 — the sample replaced by a shorter one mid-scrub → finite,
   no panic; `alloc.rs` with scrub messages zero. core — Review Focus 3: compile gives −1 for `scrub`; `validateDoc`
