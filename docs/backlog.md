@@ -30,10 +30,7 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - ~~**FOLD sounds weak**~~ Done in Plan 10 (SINE / TRI / WRAP / CHEB, ×40, matched loudness).
 - ~~**FILTER models are not convincing**~~ Done in Plan 11.
 - **FOLD's knob reads `4.00`**: show it as `×4.0`.
-- **More factory presets** (2026-10-10): groups and projects for common starting points — a kick, a snare, hats,
-  noisy techno drums, an acid line, ambient chaotic bells, a pad, a drone, a granular cloud, an FM bass… — built from
-  the current modules (DRIVE / FOLD / FILTER models, REVERB, GRAINS on LIVE) like the existing factory ones; later DICE
-  could draw voices from them.
+- ~~**More factory presets**~~ Done in Plan 13.
 - ~~**DICE for the whole project**~~ Done in Plan 12.
 - ~~**DRIVE sounds poor and its modes are alike**~~ Done in Plan 9 (seven models, BIAS, matched loudness); tuning
   against Ableton renders waits for `projects/refs/drive/`.

@@ -82,7 +82,11 @@ of a creative tool; nothing of its UI is ported.
 - **Plan 12 done and merged into `main`** (2026-10-10), spec revision 29: DICE at the top right
   beside NEW (spec revision 30) throws a random playable patch — rhythmic (drums, bass, lead, synced FX) or ambient (drone, pad or bells, long delay,
   big reverb, sometimes GRAINS on LIVE) — tested to sound on every seed.
-- **Next:** choose the next milestone (candidates in `docs/backlog.md`: more factory presets, recording and export).
+- **Plan 13 done and merged into `main`** (2026-10-10), spec revision 31: 13 factory groups (kick, snare, hats, clap,
+  noisy techno drums, fm bass, reese, pluck, chaotic bells, pad, drone, grain cloud, frozen space) and 4 projects
+  (techno, ambient bells, dub, generative), built from shared voices in `factory/voices.ts`, each tested to sound.
+  Also fixed: a hot reload in `pnpm dev` left the previous audio host playing under the new one.
+- **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 
 ## The road (vertical slices: something to hear at every stage)
 
