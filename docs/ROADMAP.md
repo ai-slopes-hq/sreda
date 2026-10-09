@@ -56,10 +56,14 @@ of a creative tool; nothing of its UI is ported.
   kept in `settings.json`); the mixer — OUT mute / solo, the master fader (listening and audition skip it), the MIX
   tab with a strip per OUT. Subagent-driven, token-lean; final review fixes in; deferred items in `docs/backlog.md`
   ("From the Plan 6 review").
-- **Plan 7 done on the branch `plan-7-library`** (2026-10-09), spec revision 23, awaiting the final review and the
-  user's check: sample analysis in a worker, unloading unused samples, ⌘O any project file (⌘S writes it back),
-  File › Import Samples…, the LIBRARY sidebar tab (PROJECTS / GROUPS / SAMPLES: click, hover to audition, drag onto
-  the canvas). Next: the final whole-branch review, one fix wave, the user's hands-on check, then merge.
+- **Plan 7 done and merged into `main`** (2026-10-09), spec revisions 23–24: sample analysis in a Web Worker (no UI
+  freeze on long files); samples unnamed for 30 s are unloaded (registry and engine pool); ⌘O opens any project file
+  and ⌘S saves it back, also after a relaunch; File › Import Samples… (⇧⌘I); the LIBRARY tab (PROJECTS, GROUPS,
+  SAMPLES); LOAD / a click on a sample display open the system file dialog; the picker has ALL · MODULES · GROUPS (no
+  PROJECTS, no SAMPLES, S free). Subagent-driven, token-lean; final review fixes in; deferred items in
+  `docs/backlog.md` ("From the Plan 7 review").
+- **Next:** choose the next milestone (candidates in `docs/backlog.md`: FOLD and FILTER models from listening, the
+  FILTER cutoff animation, sends to shared effects, recording and export).
 
 ## The road (vertical slices: something to hear at every stage)
 
