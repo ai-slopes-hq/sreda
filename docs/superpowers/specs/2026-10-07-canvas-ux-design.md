@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 25 (§7a: a loaded sample display takes a click as the cursor and a drag as a scrub; LOAD alone loads another file) · Status: approved
+Date: 2026-10-07 · Revision 26 (§7a: DRIVE gets seven models — SOFT, TUBE, OD, DIST, FUZZ, RECT, DIGI — and a BIAS knob; 6×1) · Status: approved
 
 ## Why
 
@@ -509,7 +509,7 @@ Stereo outputs are two mono outputs (cables stay mono).
 | Module | Size | Inputs | Knobs | Mode strip | Outputs |
 |---|---|---|---|---|---|
 | **FILTER** (upgrade) | 5×1 | in (audio), pitch (pitch: tracks the cutoff; COMB's tuning) | CUT, RES, DRV (gain into the nonlinear models) | MODEL ▾ SVF / LADDER / DIODE / SK / COMB / VOWEL, drawn as a response glyph | lp, bp, hp |
-| **DRIVE** | 5×1 | in (audio) | GAIN (to +24 dB), TONE, MIX | MODE ▾ SAT / OD / FUZZ | out |
+| **DRIVE** | 6×1 | in (audio) | GAIN (to +36 dB), BIAS, TONE, MIX | MODEL ▾ SOFT / TUBE / OD / DIST / FUZZ / RECT / DIGI | out |
 | **DELAY** (upgrade) | 6×1 | in (audio), clk (trigger) | TIME, FB, MIX, CHAR | TYPE ▾ DIGI / TAPE / SPRING · PING | l, r |
 | **REVERB** | 6×2, display 2 lanes | in (audio) | SIZE, DECAY, DAMP, PRE, MOD, MIX | TYPE ▾ ROOM / PLATE / HALL · FREEZE | l, r |
 | **SAMPLER** | 8×2 | trig (trigger), pitch (pitch), slice (mod), start (mod) | PITCH (±24 st), START, LEN, DEC, LVL, SLICES (2–64; SENS while AUTO) | MODE ▾ ONE / LOOP / SLICE · REV · AUTO · LOAD (right) | l, r, eoc (trigger) |
@@ -520,8 +520,25 @@ Stereo outputs are two mono outputs (cables stay mono).
   ladder; SK the MS-20's Sallen-Key pair; COMB tuned by CUT + PITCH, LP = positive feedback, BP = negative, HP = comb
   minus dry; VOWEL formants morphing A-E-I-O-U on CUT, LP = all formants, BP = the first, HP = the upper ones.
   DRV drives the nonlinear models (ADAA, 2× oversampling); NOTCH is dropped (four outputs do not fit 1U).
-- **DRIVE:** SAT a soft tape-like curve, OD an asymmetric tube-like one, FUZZ a hard clip with bias; TONE a tilt EQ
-  after the curve; output level compensated so GAIN changes character more than loudness; ADAA, 2× oversampling.
+- **DRIVE** (revision 26, after listening: the three old modes sounded alike). Seven models with distinct
+  characters, references Ableton's Saturator, Pedal and Roar:
+  - **SOFT** — a soft sine curve: warm, rounded, almost no grit (Saturator Soft Sine).
+  - **TUBE** — an asymmetric triode-like curve: even harmonics, soft compression, a slight sag on loud passages.
+  - **OD** — a pedal overdrive: a mid-boosting pre-emphasis before a soft diode clip, de-emphasis after; mid-forward
+    (Pedal Overdrive).
+  - **DIST** — high gain into a hard op-amp clip, dense and compressed (Pedal Distortion).
+  - **FUZZ** — a heavily biased transistor fuzz: squared-off, with the quiet tail gating and sputtering (Pedal Fuzz).
+  - **RECT** — rectification: BIAS blends half-wave (0) to full-wave (1), an octave up and metallic.
+  - **DIGI** — a hard digital clip: flat, harsh, no softening.
+  - **BIAS** (−1…1) shifts the signal into the curve: asymmetry and even harmonics (RECT: the half / full blend); its
+    DC is removed after the curve. **GAIN** 0…36 dB into the curve. **TONE** a tilt after the curve (each model voices
+    its own range: OD and DIST a mid-focused tone stack, the others a tilt around 800 Hz). **MIX** dry / wet, the dry
+    path delayed to match.
+  - The output level is matched across models and gains (within ±1.5 dB RMS on a sine and on drums at the same GAIN),
+    so changing model changes character, not loudness. ADAA where the curve allows, 2× oversampling always.
+  - Old documents: MODE SAT / OD / FUZZ open as SOFT / OD / FUZZ.
+  - Models are tuned by ear and against reference renders of those devices (a 110 Hz sine and a drum loop),
+    comparing harmonic levels.
 - **DELAY types:** DIGI clean, CHAR = bit depth and sample-rate reduction; TAPE wow and flutter, saturation and
   high-frequency loss on every repeat, CHAR = wear; SPRING a dispersive allpass chain (the chirp), CHAR = drip.
   PING alternates repeats between L and R. With CLK patched, TIME snaps to divisions of its period (1/16 … 4).
