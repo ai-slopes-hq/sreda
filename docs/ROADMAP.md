@@ -45,14 +45,14 @@ of a creative tool; nothing of its UI is ported.
   Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 4 review").
   **Milestone 2 is complete.**
   Spec revision 18 (skins, §1a, written down only) and revision 19 (how the sound pack was built, §7a) are in.
-- **Plan 5 done on `plan-5-frames`** (2026-10-09), spec revisions 20–21: STACK packs densely (skyline, reading
+- **Plan 5 done and merged into `main`** (2026-10-09), spec revisions 20–21: STACK packs densely (skyline, reading
   order) and is the one managed layout (WIRE FIX removed; old FIX frames open stacked); dragging a STACK frame's width
   re-packs it live; cables are drawn behind (stubs; whole on hover, on the hovered or selected module / frame, in
   WIRES); frames collapse to a block with a jack per crossing port (C / ⇧C, `▾` / `▸`). Executed with subagents
   (token-lean); reviewed per task and as a whole branch; deferred items in `docs/backlog.md` ("From the Plan 5
   review").
-- **Next:** the user's hands-on check (STACK and stubs on `rand melody`, ⇧C on a project with groups), then merge
-  `plan-5-frames` into `main`.
+- **Next:** choose the next milestone (candidates in `docs/backlog.md`: the system mixer for every OUT, skin
+  switching from §1a, the Plan 4 / Plan 5 backlog items).
 
 ## The road (vertical slices: something to hear at every stage)
 
