@@ -42,6 +42,8 @@ export interface SredaBridge {
     readSample(path: string): Promise<ArrayBuffer>;
     /** a file dialog (multi-select) for audio files, each copied into samples/; returns their paths */
     importFromDialog(): Promise<string[]>;
+    /** a file dialog for one audio file, copied into samples/ (asks for the library folder first); its path, null on cancel */
+    pickOne(): Promise<string | null>;
     /** writes a dropped audio file into samples/ under a free name; returns its path */
     importSample(name: string, bytes: ArrayBuffer): Promise<string>;
   };

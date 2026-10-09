@@ -129,6 +129,16 @@ async function root(): Promise<string> {
   if (!folder) throw new Error('no library folder');
   return folder;
 }
+/** the folder dialog: the chosen folder is remembered as the library */
+async function chooseFolder(): Promise<string | null> {
+  const r = await dialog.showOpenDialog({
+    title: 'Choose a library folder',
+    properties: ['openDirectory', 'createDirectory'],
+  });
+  const folder = r.canceled ? null : (r.filePaths[0] ?? null);
+  if (folder) await mergeSettings(settingsFile(), { library: folder });
+  return folder;
+}
 const kindOf = (k: unknown): Kind => {
   if (k !== 'group' && k !== 'project') throw new Error('bad kind');
   return k;
@@ -163,15 +173,7 @@ function serveLibrary(): void {
     (await projectFiles).save(path, doc),
   );
   ipcMain.handle('library:folder', () => libraryFolder());
-  ipcMain.handle('library:choose', async () => {
-    const r = await dialog.showOpenDialog({
-      title: 'Choose a library folder',
-      properties: ['openDirectory', 'createDirectory'],
-    });
-    const folder = r.canceled ? null : (r.filePaths[0] ?? null);
-    if (folder) await mergeSettings(settingsFile(), { library: folder });
-    return folder;
-  });
+  ipcMain.handle('library:choose', () => chooseFolder());
   ipcMain.handle('settings:skin', () => readSkin(settingsFile()));
   ipcMain.handle('settings:setSkin', (_e, name: unknown) => writeSkin(settingsFile(), name));
   ipcMain.handle('library:list', async () => listLibrary(await root()));
@@ -192,20 +194,25 @@ function serveLibrary(): void {
     return importSample(await root(), pathOf(name), bytes);
   });
   // File › Import Samples…: audio files picked in a dialog (e2e: SREDA_E2E_IMPORT, comma-separated paths)
-  ipcMain.handle('library:importFromDialog', async () => {
-    const folder = await root();
-    let files: string[];
+  const pickAudio = async (title: string, multi: boolean): Promise<string[]> => {
     const stub = e2e ? process.env['SREDA_E2E_IMPORT'] : undefined;
-    if (stub) files = stub.split(',').filter(Boolean);
-    else {
-      const r = await dialog.showOpenDialog({
-        title: 'Import samples',
-        properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Audio', extensions: SAMPLE_EXT.map((x) => x.slice(1)) }],
-      });
-      files = r.canceled ? [] : r.filePaths;
-    }
-    return importFiles(folder, files);
+    if (stub) return stub.split(',').filter(Boolean);
+    const r = await dialog.showOpenDialog({
+      title,
+      properties: multi ? ['openFile', 'multiSelections'] : ['openFile'],
+      filters: [{ name: 'Audio', extensions: SAMPLE_EXT.map((x) => x.slice(1)) }],
+    });
+    return r.canceled ? [] : r.filePaths;
+  };
+  ipcMain.handle('library:importFromDialog', async () =>
+    importFiles(await root(), await pickAudio('Import samples', true)),
+  );
+  // LOAD on a SAMPLER / GRAINS: one audio file, copied into samples/; the library folder is asked for first
+  ipcMain.handle('samples:pickOne', async () => {
+    const folder = (await libraryFolder()) ?? (await chooseFolder());
+    if (!folder) return null;
+    const files = await pickAudio('Load a sample', false);
+    return (await importFiles(folder, files.slice(0, 1)))[0] ?? null;
   });
 }
 

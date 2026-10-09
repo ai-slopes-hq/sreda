@@ -6,12 +6,11 @@ export interface End {
   dir: 'in' | 'out';
   role: Role;
 }
-export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS' | 'SAMPLES';
-export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS', 'SAMPLES'];
+export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS';
+export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS'];
 export type PickerItem =
   | { kind: 'module'; type: string; label: string; desc: string }
-  | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean }
-  | { kind: 'sample'; path: string; label: string; folder: string };
+  | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean };
 /** a group or project the picker can offer: factory paths are 'FACTORY/<name>' */
 export interface LibEntry {
   kind: 'group' | 'project';
@@ -35,24 +34,12 @@ export function pickerItems(
   specs: Specs,
   query: string,
   from: End | null,
-  o: { tab: PickerTab; replace: boolean; library: LibEntry[]; samples?: string[] },
+  o: { tab: PickerTab; replace: boolean; library: LibEntry[] },
 ): PickerItem[] {
   const q = query.trim().toLowerCase();
   const out: PickerItem[] = [];
   if (o.tab === 'ALL' || o.tab === 'MODULES') out.push(...moduleItems(specs, q, from));
   if (o.replace) return out;
-  // samples only on their own tab, never from a jack (spec §7a)
-  if (o.tab === 'SAMPLES') {
-    if (from) return out;
-    const split = (path: string) => {
-      const i = path.lastIndexOf('/');
-      return { label: path.slice(i + 1), folder: i > 0 ? path.slice(0, i) : '' };
-    };
-    return (o.samples ?? [])
-      .filter((p) => !q || p.toLowerCase().includes(q))
-      .map((path) => ({ kind: 'sample' as const, path, ...split(path) }))
-      .sort((a, b) => a.folder.localeCompare(b.folder) || a.label.localeCompare(b.label));
-  }
   // projects open through ⌘O (files) — they are not offered here
   for (const kind of ['group'] as const) {
     if (o.tab !== 'ALL' && o.tab !== 'GROUPS') continue;

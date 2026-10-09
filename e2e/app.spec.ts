@@ -1064,16 +1064,51 @@ type SampleMod = { id: string; type: string; sample?: string };
 const samplers = async (page: Page) =>
   ((await doc(page)).modules as unknown as SampleMod[]).filter((m) => m.type === 'sampler');
 
-test('S → kick ⏎ places a SAMPLER with that sample; triggered, it sounds; LOAD changes it, ⌘Z restores', async () => {
-  const { app, page } = await launch(undefined, 'starter', libraryWithSamples());
+/** a source folder with the given sample files (the file dialog's stub picks from it); returns their paths */
+function sourceFiles(names: string[]): string[] {
+  const src = mkdtempSync(join(tmpdir(), 'sreda-src-'));
+  return names.map((n) => {
+    const f = join(src, n);
+    writeFileSync(f, wav(0.3, n.startsWith('kick') ? 110 : 220));
+    return f;
+  });
+}
+/** / sampler ⏎ places an empty SAMPLER at the pointer */
+async function placeSampler(page: Page): Promise<void> {
   await page.mouse.move(700, 650);
-  await page.keyboard.press('s');
-  await expect(page.locator('.sr-ptab.on')).toHaveText('SAMPLES');
-  await page.keyboard.type('kick');
-  await expect(page.locator('.sr-pitem')).toHaveCount(1);
+  await page.keyboard.press('/');
+  await page.keyboard.type('sampler');
   await page.keyboard.press('Enter');
-  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/kick.wav');
+  await expect(page.locator('[data-type=sampler]')).toHaveCount(1);
+}
+
+test('LOAD on a SAMPLER copies the picked file into samples/ and loads it; ⌘Z clears it; the display click does the same; S does nothing', async () => {
+  const [kick] = sourceFiles(['kick.wav']);
+  const { app, page, library } = await launch(undefined, 'starter', libraryWithSamples(), undefined, [kick!]);
+  await page.keyboard.press('s');
+  await expect(page.locator('.sr-picker')).toBeHidden();
+  await placeSampler(page);
+  await page.locator('[data-type=sampler] [data-action=load]').click();
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kick.wav');
   await expect(page.locator('[data-type=sampler] .sr-dtag')).toHaveText(/^kick\.wav/);
+  expect(existsSync(join(library, 'samples', 'kick.wav'))).toBe(true);
+  expect(await page.locator('.sr-picker').count()).toBe(0);
+  await page.keyboard.press('Meta+z');
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBeUndefined();
+  // a click on the empty display does the same
+  await page.locator('[data-type=sampler] .sr-wave-box').click();
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kick 2.wav');
+  await page.keyboard.press('Meta+z');
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBeUndefined();
+  await app.close();
+});
+
+test('a loaded SAMPLER, triggered, sounds', async () => {
+  const [kick] = sourceFiles(['kick.wav']);
+  const { app, page } = await launch(undefined, 'starter', libraryWithSamples(), undefined, [kick!]);
+  await placeSampler(page);
+  await page.locator('[data-type=sampler] [data-action=load]').click();
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kick.wav');
   // OSC's saw into TRIG, SAMPLER L into OUT L (in place of OSC)
   await drag(
     page,
@@ -1088,13 +1123,6 @@ test('S → kick ⏎ places a SAMPLER with that sample; triggered, it sounds; LO
   await page.mouse.click(1300, 880); // start audio
   const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
   await expect.poll(master, { timeout: 2000 }).toBeGreaterThan(0.05);
-  // LOAD → snare
-  await page.locator('[data-type=sampler] [data-action=load]').click();
-  await page.keyboard.type('snare');
-  await page.keyboard.press('Enter');
-  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/snare.wav');
-  await page.keyboard.press('Meta+z');
-  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/kick.wav');
   await app.close();
 });
 
@@ -1128,12 +1156,8 @@ test('File › Import Samples…: with a SAMPLER selected the first file loads i
   expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((i) => i.label))).toEqual(
     expect.arrayContaining(['File', 'Edit', 'View', 'Window']),
   );
-  // S → kick ⏎ places a SAMPLER and selects it
-  await page.mouse.move(700, 650);
-  await page.keyboard.press('s');
-  await page.keyboard.type('kick');
-  await page.keyboard.press('Enter');
-  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/kick.wav');
+  // / sampler ⏎ places a SAMPLER and selects it
+  await placeSampler(page);
   await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('importSamples')!.click());
   await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('zap.wav');
   await expect(page.locator('[data-type=sampler] .sr-dtag')).toHaveText(/^zap\.wav/);

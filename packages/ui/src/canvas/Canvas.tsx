@@ -98,11 +98,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     tab: PickerTab;
     /** REPLACE mode: the module being replaced */
     replace?: string;
-    /** LOAD: the module whose sample is being chosen */
-    forModule?: string;
   } | null>(null);
-  /** the library's samples (listed again whenever the picker opens) */
-  const [samples, setSamples] = createSignal<string[]>([]);
   const lib = libraryActions(s, specs);
   void lib.refresh();
   /** the groups and projects the picker offers: the factory's, then the library folder's */
@@ -114,24 +110,16 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   const library = () => [...factory, ...st.library];
   // the folder may have changed in the Finder: list it again whenever the picker opens
   createEffect(() => {
-    if (!picker()) return;
-    void lib.refresh();
-    void window.sreda?.library
-      .samples()
-      .then(setSamples)
-      .catch(() => setSamples([]));
+    if (picker()) void lib.refresh();
   });
-  /** audition: the highlighted SAMPLES row plays 120 ms after it is highlighted; anything else stops it */
-  let auditionTimer: ReturnType<typeof setTimeout> | undefined;
-  let auditioned: string | null = null;
-  function highlight(item: PickerItem | null): void {
-    clearTimeout(auditionTimer);
-    const path = item?.kind === 'sample' ? item.path : null;
-    if (path === auditioned) return;
-    if (auditioned) void s.samples.audition(null);
-    auditioned = path;
-    if (!path) return;
-    auditionTimer = setTimeout(() => void s.samples.audition(path), 120);
+  /** LOAD (a button or a click on the display): the file dialog, then the module has that sample (one undo step) */
+  function loadInto(id: string): void {
+    const bridge = window.sreda;
+    if (!bridge) return;
+    void bridge.library
+      .pickOne()
+      .then((path) => path && s.setSample(id, path))
+      .catch(() => s.setState('notice', 'THE SAMPLE COULD NOT BE LOADED'));
   }
   /** a module gets a sample, or a SAMPLER with it lands at `at` */
   function useSample(path: string, target: string | undefined, at: Pt): void {
@@ -659,10 +647,6 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       s.setState('sel', [id]);
       return;
     }
-    if (item.kind === 'sample') {
-      useSample(item.path, pk.forModule, pk.at);
-      return;
-    }
     if (item.kind !== 'module') {
       void lib.read(item).then((doc) => {
         if (!doc) return;
@@ -899,14 +883,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                       if (param === 'dice') s.params(m.id, diced(m.id), undefined);
                     },
                     editParams: (changes, merge) => s.params(m.id, changes, merge),
-                    load: () =>
-                      setPicker({
-                        screen: pointer,
-                        at: { x: m.x, y: m.y },
-                        from: null,
-                        tab: 'SAMPLES',
-                        forModule: m.id,
-                      }),
+                    load: () => loadInto(m.id),
                     diceInput: () => s.params(m.id, diced(m.id), undefined, false),
                   }}
                 />
@@ -997,8 +974,6 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
               library={library()}
               tab={pk.tab}
               replace={pk.replace ? nameOf(st.doc, specs, pk.replace) : null}
-              samples={samples()}
-              highlight={highlight}
               pick={place}
               close={() => setPicker(null)}
             />

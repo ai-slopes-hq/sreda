@@ -1,5 +1,5 @@
 import type { Specs } from '@sreda/core';
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onMount, type JSX } from 'solid-js';
 import { pickerItems, TABS, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 
 export interface PickerProps {
@@ -15,10 +15,6 @@ export interface PickerProps {
   tab: PickerTab;
   /** REPLACE mode: the replaced module's name (modules only) */
   replace?: string | null;
-  /** the library's samples (the SAMPLES tab) */
-  samples?: string[];
-  /** the highlighted row changed (null: none, or the picker closed): SAMPLES auditions it */
-  highlight?(item: PickerItem | null): void;
   pick(item: PickerItem): void;
   close(): void;
 }
@@ -33,19 +29,10 @@ export function Picker(props: PickerProps): JSX.Element {
       tab: tab(),
       replace: !!props.replace,
       library: props.library,
-      samples: props.samples ?? [],
     }),
   );
-  /** the tabs on offer: modules only when replacing, no SAMPLES from a jack */
-  const tabs = (): PickerTab[] =>
-    props.replace ? ['MODULES'] : props.from ? TABS.filter((t) => t !== 'SAMPLES') : TABS;
-  /** the highlight is announced once the user moves it (↑ / ↓ or the pointer), not on opening */
-  const [moved, setMoved] = createSignal(false);
-  createEffect(() => {
-    const it = items()[idx()] ?? null;
-    if (moved()) props.highlight?.(it);
-  });
-  onCleanup(() => props.highlight?.(null));
+  /** the tabs on offer: modules only when replacing */
+  const tabs = (): PickerTab[] => (props.replace ? ['MODULES'] : TABS);
   let input: HTMLInputElement | undefined;
   let list: HTMLDivElement | undefined;
   onMount(() => input?.focus());
@@ -60,10 +47,8 @@ export function Picker(props: PickerProps): JSX.Element {
     e.stopPropagation();
     const n = items().length;
     if (e.key === 'ArrowDown') {
-      setMoved(true);
       setIdx((idx() + 1) % Math.max(1, n));
     } else if (e.key === 'ArrowUp') {
-      setMoved(true);
       setIdx((idx() + n - 1) % Math.max(1, n));
     } else if (e.key === 'Tab' && !props.replace) {
       const t = tabs();
@@ -118,7 +103,6 @@ export function Picker(props: PickerProps): JSX.Element {
               classList={{ on: i() === idx() }}
               data-kind={it.kind}
               onMouseEnter={() => {
-                setMoved(true);
                 setIdx(i());
               }}
               onPointerDown={(e) => e.preventDefault()}

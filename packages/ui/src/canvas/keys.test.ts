@@ -35,3 +35,11 @@ test('Enter on a picked wire hidden in a collapsed frame expands it', () => {
   key('Enter');
   expect(collapsed()).toBe(false);
 });
+
+test('S does nothing: samples are chosen with LOAD, not the picker', () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const opened: unknown[] = [];
+  const k = { s, specs: SPECS, openPicker: (...a: unknown[]) => opened.push(a) } as unknown as KeyCtx;
+  handleKey(new KeyboardEvent('keydown', { key: 's' }), k);
+  expect(opened).toEqual([]);
+});

@@ -51,6 +51,7 @@ function fakeBridge(folder: string | null = '/lib') {
         throw new Error('no samples');
       },
       importFromDialog: async () => disk.imported,
+      pickOne: async () => null,
       importSample: async (name) => name,
     },
   };
@@ -205,7 +206,11 @@ test('Import Samples: a selected SAMPLER gets the first file (one undo step); no
 
   s.setState('sel', []);
   await lib.importSamples();
-  expect(s.state.sidebar).toMatchObject({ open: true, tab: 'LIBRARY', highlight: ['kick.wav', 'kick 2.wav'] });
+  expect(s.state.sidebar).toMatchObject({
+    open: true,
+    tab: 'LIBRARY',
+    highlight: ['kick.wav', 'kick 2.wav'],
+  });
   expect(s.current().modules.find((m) => m.id === added.id)?.sample).toBeUndefined();
 });
 

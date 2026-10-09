@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('sreda', {
     samples: (): Promise<string[]> => ipcRenderer.invoke('library:samples'),
     readSample: (path: string): Promise<ArrayBuffer> => ipcRenderer.invoke('library:readSample', path),
     importFromDialog: (): Promise<string[]> => ipcRenderer.invoke('library:importFromDialog'),
+    pickOne: (): Promise<string | null> => ipcRenderer.invoke('samples:pickOne'),
     importSample: (name: string, bytes: ArrayBuffer): Promise<string> =>
       ipcRenderer.invoke('library:importSample', name, bytes),
   },

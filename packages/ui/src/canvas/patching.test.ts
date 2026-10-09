@@ -36,7 +36,7 @@ test('placing puts the chosen port at the drop point, preferring the same role',
 });
 
 test('tabs: ALL lists modules and groups, GROUPS only groups; there is no PROJECTS tab (⌘O opens files)', () => {
-  expect(TABS).toEqual(['ALL', 'MODULES', 'GROUPS', 'SAMPLES']);
+  expect(TABS).toEqual(['ALL', 'MODULES', 'GROUPS']);
   expect(types(pickerItems(S, '', null, o('ALL')))).toEqual([
     'fx',
     'sink',
@@ -65,22 +65,4 @@ test('from a jack: modules and groups, never projects; REPLACE: modules only', (
     'drums/kit',
   ]);
   expect(types(pickerItems(S, '', null, o('ALL', true)))).toEqual(['fx', 'sink', 'src']);
-});
-
-test('the SAMPLES tab lists only samples (folder and name); from a jack or in REPLACE mode there are none', () => {
-  const samples = ['kit/kick.wav', 'breaks/amen.wav', 'pad.flac'];
-  const so = (tab: PickerTab, replace = false) => ({ ...o(tab, replace), samples });
-  const items = pickerItems(S, '', null, so('SAMPLES'));
-  expect(items.map((i) => i.kind)).toEqual(['sample', 'sample', 'sample']);
-  expect(items.map((i) => (i.kind === 'sample' ? `${i.folder}|${i.label}` : ''))).toEqual([
-    '|pad.flac',
-    'breaks|amen.wav',
-    'kit|kick.wav',
-  ]);
-  expect(pickerItems(S, 'kick', null, so('SAMPLES')).map((i) => i.kind === 'sample' && i.path)).toEqual([
-    'kit/kick.wav',
-  ]);
-  expect(pickerItems(S, '', { dir: 'out', role: 'audio' }, so('SAMPLES'))).toEqual([]);
-  expect(pickerItems(S, '', null, so('SAMPLES', true)).every((i) => i.kind === 'module')).toBe(true);
-  expect(pickerItems(S, '', null, so('ALL')).some((i) => i.kind === 'sample')).toBe(false);
 });
