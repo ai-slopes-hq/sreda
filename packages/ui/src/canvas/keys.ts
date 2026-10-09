@@ -96,7 +96,12 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
       gids,
       gids.some((id) => !doc.groups.find((g) => g.id === id)?.collapsed),
     );
-  } else if (s.state.sidebar.open && s.state.sidebar.tab === 'WIRES' && !meta && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+  } else if (
+    s.state.sidebar.open &&
+    s.state.sidebar.tab === 'WIRES' &&
+    !meta &&
+    (e.key === 'ArrowDown' || e.key === 'ArrowUp')
+  ) {
     // WIRES: walk the wire rows that are showing
     e.preventDefault();
     const rows = visibleWires(k);
@@ -110,7 +115,13 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
         : (at + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length;
     // only the pick: a collapsed frame opens on a click or Enter, not while walking
     s.pickRow(rows[next]!);
-  } else if (s.state.sidebar.open && s.state.sidebar.tab === 'WIRES' && !meta && e.key === 'Enter' && s.state.sidebar.picked !== null) {
+  } else if (
+    s.state.sidebar.open &&
+    s.state.sidebar.tab === 'WIRES' &&
+    !meta &&
+    e.key === 'Enter' &&
+    s.state.sidebar.picked !== null
+  ) {
     // WIRES: the port list for the picked wire's input end
     const cable = s.current().cables[s.state.sidebar.picked];
     if (!cable) return;
@@ -181,7 +192,7 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     else void k.lib.save();
   } else if (meta && key === 'o') {
     e.preventDefault();
-    k.openPicker(k.middle(), 'PROJECTS');
+    void k.lib.open().then((opened) => opened && k.fit(false));
   } else if (e.key === '/' && !meta) {
     e.preventDefault();
     k.openPicker(k.pointer());

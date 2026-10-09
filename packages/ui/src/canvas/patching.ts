@@ -6,8 +6,8 @@ export interface End {
   dir: 'in' | 'out';
   role: Role;
 }
-export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS' | 'PROJECTS' | 'SAMPLES';
-export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS', 'PROJECTS', 'SAMPLES'];
+export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS' | 'SAMPLES';
+export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS', 'SAMPLES'];
 export type PickerItem =
   | { kind: 'module'; type: string; label: string; desc: string }
   | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean }
@@ -28,8 +28,8 @@ function targets(specs: Specs, type: string, from: End): Port[] {
 
 /**
  * What the picker lists on a tab: modules matching the query (from a jack, only those with a port of the other
- * direction, the same role first), then groups, then projects (factory ones first, then by path; the query matches names and folders). From a
- * jack there are no projects; in REPLACE mode only modules.
+ * direction, the same role first), then groups (factory ones first, then by path; the query matches names and folders). In REPLACE mode only
+ * modules.
  */
 export function pickerItems(
   specs: Specs,
@@ -53,9 +53,9 @@ export function pickerItems(
       .map((path) => ({ kind: 'sample' as const, path, ...split(path) }))
       .sort((a, b) => a.folder.localeCompare(b.folder) || a.label.localeCompare(b.label));
   }
-  for (const kind of ['group', 'project'] as const) {
-    if (o.tab !== 'ALL' && o.tab !== (kind === 'group' ? 'GROUPS' : 'PROJECTS')) continue;
-    if (kind === 'project' && from) continue;
+  // projects open through ⌘O (files) — they are not offered here
+  for (const kind of ['group'] as const) {
+    if (o.tab !== 'ALL' && o.tab !== 'GROUPS') continue;
     out.push(
       ...o.library
         .filter((e) => e.kind === kind && (!q || e.path.toLowerCase().includes(q)))

@@ -67,9 +67,7 @@ export async function existsEntry(root: string, kind: Kind, path: string): Promi
 export async function writeEntry(root: string, kind: Kind, path: string, doc: unknown): Promise<void> {
   const file = fileFor(root, kind, path);
   await mkdir(join(file, '..'), { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await writeFile(tmp, JSON.stringify(doc, null, 2) + '\n');
-  await rename(tmp, file);
+  await writeJsonAtomic(file, doc);
 }
 
 /** The audio files the sample pool reads (spec §7a). */
@@ -138,4 +136,28 @@ export async function importSample(
       return name;
     }
   }
+}
+
+/** Replace a file with a document: written to a temporary file, renamed over it. */
+export async function writeJsonAtomic(file: string, doc: unknown): Promise<void> {
+  const tmp = `${file}.${process.pid}.tmp`;
+  await writeFile(tmp, JSON.stringify(doc, null, 2) + '\n');
+  await rename(tmp, file);
+}
+
+/** Project files outside the library: only a path `open` handed out in this run may be written back. */
+export function openedFiles() {
+  const opened = new Set<string>();
+  return {
+    /** the file's parsed JSON; its path may be saved to from now on */
+    async open(file: string): Promise<{ path: string; doc: unknown }> {
+      const doc: unknown = JSON.parse(await readFile(file, 'utf8'));
+      opened.add(file);
+      return { path: file, doc };
+    },
+    async save(path: unknown, doc: unknown): Promise<void> {
+      if (typeof path !== 'string' || !opened.has(path)) throw new Error('not an opened project file');
+      await writeJsonAtomic(path, doc);
+    },
+  };
 }

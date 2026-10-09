@@ -1,4 +1,13 @@
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
@@ -8,6 +17,8 @@ async function launch(
   dir = mkdtempSync(join(tmpdir(), 'sreda-e2e-')),
   first: 'starter' | 'factory' = 'starter',
   library = mkdtempSync(join(tmpdir(), 'sreda-lib-')),
+  /** SREDA_E2E_OPEN: the file ⌘O opens in place of the dialog */
+  open?: string,
 ): Promise<{ app: ElectronApplication; page: Page; dir: string; library: string }> {
   const app = await electron.launch({
     args: ['packages/app'],
@@ -17,6 +28,7 @@ async function launch(
       SREDA_USER_DATA: dir,
       SREDA_E2E: '1',
       SREDA_LIBRARY: library,
+      ...(open ? { SREDA_E2E_OPEN: open } : {}),
       ...(first === 'starter' ? { SREDA_FIRST: 'starter' } : {}),
     },
   });
@@ -702,12 +714,10 @@ test('the very first launch opens the factory project Pulse', async () => {
 test('picker: a factory project replaces the canvas (⌘Z returns); a group dropped from a trigger output takes it into CLK IN', async () => {
   const { app, page } = await launch();
   await page.mouse.move(700, 500);
-  await page.keyboard.press('/');
-  await page.keyboard.press('Shift+Tab'); // ALL → SAMPLES
-  await page.keyboard.press('Shift+Tab'); // → PROJECTS
-  await page.keyboard.type('acid');
-  await expect(page.locator('.sr-pitem')).toHaveCount(1);
-  await page.keyboard.press('Enter');
+  // no PROJECTS tab any more (Task 5 brings them back under LIBRARY): open through the e2e hook
+  await page.evaluate(() =>
+    (window as unknown as { __sreda: { openFactory(n: string): void } }).__sreda.openFactory('acid'),
+  );
   await expect(page.locator('.sr-frame .sr-gname')).toHaveText('ACID');
   await expect(page.locator('[data-type=rhythm]')).toHaveCount(1);
   await page.keyboard.press('Meta+z');
@@ -733,7 +743,13 @@ test('picker: a factory project replaces the canvas (⌘Z returns); a group drop
 });
 
 test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then ⌘Z restores', async () => {
-  const { app, page, library } = await launch();
+  const library = mkdtempSync(join(tmpdir(), 'sreda-lib-'));
+  const { app, page } = await launch(
+    undefined,
+    'starter',
+    library,
+    join(library, 'projects', 'jam.sreda.json'),
+  );
   await page.keyboard.press('Meta+s');
   await page.getByLabel('Name').fill('jam');
   await page.keyboard.press('Enter');
@@ -745,10 +761,35 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await expect(page.locator('.sr-mod')).toHaveCount(2);
   await page.getByText('NEW', { exact: true }).click();
   await page.keyboard.press('Meta+o');
-  await page.keyboard.type('jam');
-  await page.keyboard.press('Enter');
   await expect(page.locator('.sr-mod')).toHaveCount(2);
-  await expect(page.locator('.sr-brand')).toHaveText('SREDAjam');
+  await expect(page.locator('.sr-brand')).toHaveText('SREDAjam.sreda.json');
+  await app.close();
+});
+
+test('⌘O opens a project file outside the library; ⌘S writes it back there, not into the library', async () => {
+  const library = mkdtempSync(join(tmpdir(), 'sreda-lib-'));
+  const elsewhere = mkdtempSync(join(tmpdir(), 'sreda-elsewhere-'));
+  const file = join(elsewhere, 'tune.sreda.json');
+  // a project saved once, then moved out of the library
+  const first = await launch(undefined, 'starter', library);
+  await first.page.keyboard.press('Meta+s');
+  await first.page.getByLabel('Name').fill('seed');
+  await first.page.keyboard.press('Enter');
+  await expect.poll(() => existsSync(join(library, 'projects', 'seed.sreda.json'))).toBe(true);
+  await first.app.close();
+  copyFileSync(join(library, 'projects', 'seed.sreda.json'), file);
+  rmSync(join(library, 'projects', 'seed.sreda.json'));
+  const before = readFileSync(file, 'utf8');
+
+  const { app, page } = await launch(undefined, 'starter', library, file);
+  await page.keyboard.press('Meta+o');
+  await expect(page.locator('.sr-brand')).toContainText('tune.sreda.json');
+  await dragKnob(page, 'osc', 'freq', -60);
+  await expect(page.locator('.sr-dirty')).toHaveCount(1);
+  await page.keyboard.press('Meta+s');
+  await expect(page.locator('.sr-dirty')).toHaveCount(0);
+  expect(readFileSync(file, 'utf8')).not.toBe(before);
+  expect(readdirSync(join(library, 'projects'))).toEqual([]);
   await app.close();
 });
 

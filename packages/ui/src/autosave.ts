@@ -60,11 +60,14 @@ export async function loadSaved(
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-type Project = { path: string; factory: boolean } | null;
+type Project = { path: string; factory: boolean; file?: true } | null;
 function readProject(x: unknown): Project {
   if (typeof x !== 'object' || x === null) return null;
-  const p = x as { path?: unknown; factory?: unknown };
-  return typeof p.path === 'string' ? { path: p.path, factory: p.factory === true } : null;
+  const p = x as { path?: unknown; factory?: unknown; file?: unknown };
+  if (typeof p.path !== 'string') return null;
+  return p.file === true
+    ? { path: p.path, factory: false, file: true }
+    : { path: p.path, factory: p.factory === true };
 }
 
 /** Save the canvas and its project name 500 ms after the last call. */

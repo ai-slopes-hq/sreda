@@ -46,8 +46,8 @@ export interface Session {
   listen: { id: string; port: string } | null;
   notice: string | null;
   audio: boolean;
-  /** the open project's library path (factory ones are read-only) */
-  project: { path: string; factory: boolean } | null;
+  /** the open project: its library path (factory ones are read-only), or `file` for an absolute path from ⌘O */
+  project: { path: string; factory: boolean; file?: true } | null;
   /** changed since it was opened or saved (the `●` by the project name) */
   dirty: boolean;
   /** the name field of a save in progress */
@@ -371,7 +371,8 @@ export function createSession(
         });
     },
     /** A project replaces the canvas: one undo step; the speakers fade in over 200 ms. */
-    openProject(doc: Doc, project: { path: string; factory: boolean }): void {
+    openProject(doc: Doc, project: NonNullable<Session['project']>): void {
+      setState('project', null); // a store set would merge into the old project (a stale `file`)
       setState('project', project);
       // the sidebar opens at its fixed width with every opened project
       setState('sidebar', { width: SIDEBAR_WIDTH, picked: null });
@@ -385,6 +386,7 @@ export function createSession(
       setState('dirty', false);
     },
     setProject(project: Session['project']): void {
+      setState('project', null);
       setState('project', project);
       scheduleSave(history.current, project);
     },

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { TEST_SPECS as S } from '../../../core/src/testspecs';
-import { pickerItems, placeFor, type LibEntry, type PickerTab } from './patching';
+import { pickerItems, placeFor, TABS, type LibEntry, type PickerTab } from './patching';
 
 const LIB: LibEntry[] = [
   { kind: 'project', path: 'FACTORY/acid', factory: true },
@@ -35,24 +35,23 @@ test('placing puts the chosen port at the drop point, preferring the same role',
   expect(placeFor(S, 'src', null, { x: 100, y: 100 })).toMatchObject({ port: null, x: 100, y: 100 });
 });
 
-test('tabs: ALL lists modules, groups and projects; GROUPS and PROJECTS only theirs', () => {
+test('tabs: ALL lists modules and groups, GROUPS only groups; there is no PROJECTS tab (⌘O opens files)', () => {
+  expect(TABS).toEqual(['ALL', 'MODULES', 'GROUPS', 'SAMPLES']);
   expect(types(pickerItems(S, '', null, o('ALL')))).toEqual([
     'fx',
     'sink',
     'src',
     'FACTORY/303 voice',
     'drums/kit',
-    'FACTORY/acid',
   ]);
   expect(types(pickerItems(S, '', null, o('GROUPS')))).toEqual(['FACTORY/303 voice', 'drums/kit']);
-  expect(types(pickerItems(S, '', null, o('PROJECTS')))).toEqual(['FACTORY/acid']);
-  const acid = pickerItems(S, '', null, o('PROJECTS'))[0]!;
-  expect(acid).toMatchObject({ kind: 'project', label: 'acid', folder: 'FACTORY', factory: true });
+  const kit = pickerItems(S, '', null, o('GROUPS'))[1]!;
+  expect(kit).toMatchObject({ kind: 'group', label: 'kit', folder: 'drums', factory: false });
 });
 
 test('the query searches names and folders', () => {
-  expect(types(pickerItems(S, 'acid', null, o('ALL')))).toEqual(['FACTORY/acid']);
-  expect(types(pickerItems(S, 'factory', null, o('ALL')))).toEqual(['FACTORY/303 voice', 'FACTORY/acid']);
+  expect(types(pickerItems(S, 'acid', null, o('ALL')))).toEqual([]);
+  expect(types(pickerItems(S, 'factory', null, o('ALL')))).toEqual(['FACTORY/303 voice']);
   expect(types(pickerItems(S, 'drums', null, o('GROUPS')))).toEqual(['drums/kit']);
 });
 
@@ -65,7 +64,6 @@ test('from a jack: modules and groups, never projects; REPLACE: modules only', (
     'FACTORY/303 voice',
     'drums/kit',
   ]);
-  expect(pickerItems(S, '', from, o('PROJECTS'))).toEqual([]);
   expect(types(pickerItems(S, '', null, o('ALL', true)))).toEqual(['fx', 'sink', 'src']);
 });
 

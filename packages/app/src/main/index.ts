@@ -6,6 +6,7 @@ import {
   importSample,
   listLibrary,
   listSamples,
+  openedFiles,
   readEntry,
   readSample,
   writeEntry,
@@ -108,7 +109,23 @@ const pathOf = (p: unknown): string => {
   return p; // library.ts refuses invalid paths and anything outside the folder
 };
 
+const projectFiles = openedFiles();
+
 function serveLibrary(): void {
+  // ⌘O: any project file on disk (e2e: SREDA_E2E_OPEN stands in for the dialog)
+  ipcMain.handle('project:open', async () => {
+    let file = process.env['SREDA_E2E_OPEN'] ?? null;
+    if (!file) {
+      const r = await dialog.showOpenDialog({
+        title: 'Open a project',
+        properties: ['openFile'],
+        filters: [{ name: 'SREDA project', extensions: ['json'] }],
+      });
+      file = r.canceled ? null : (r.filePaths[0] ?? null);
+    }
+    return file ? projectFiles.open(file) : null;
+  });
+  ipcMain.handle('project:save', (_e, path: unknown, doc: unknown) => projectFiles.save(path, doc));
   ipcMain.handle('library:folder', () => libraryFolder());
   ipcMain.handle('library:choose', async () => {
     const r = await dialog.showOpenDialog({

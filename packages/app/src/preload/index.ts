@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('sreda', {
     skin: (): Promise<string | null> => ipcRenderer.invoke('settings:skin'),
     setSkin: (name: string): Promise<void> => ipcRenderer.invoke('settings:setSkin', name),
   },
+  project: {
+    open: (): Promise<{ path: string; doc: unknown } | null> => ipcRenderer.invoke('project:open'),
+    save: (path: string, doc: unknown): Promise<void> => ipcRenderer.invoke('project:save', path, doc),
+  },
   library: {
     folder: (): Promise<string | null> => ipcRenderer.invoke('library:folder'),
     choose: (): Promise<string | null> => ipcRenderer.invoke('library:choose'),

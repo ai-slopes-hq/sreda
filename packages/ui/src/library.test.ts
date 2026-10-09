@@ -8,10 +8,21 @@ function fakeBridge(folder: string | null = '/lib') {
   const files = new Map<string, unknown>();
   const key = (kind: string, path: string) => `${kind}:${path}`;
   const calls: string[] = [];
+  const disk = {
+    opened: null as { path: string; doc: unknown } | null,
+    saved: [] as { path: string; doc: unknown }[],
+  };
   let chosen = folder;
   const bridge: SredaBridge = {
     first: async () => null,
     settings: { skin: async () => null, setSkin: async () => {} },
+    project: {
+      open: async () => disk.opened,
+      save: async (path, doc) => {
+        calls.push(`file ${path}`);
+        disk.saved.push({ path, doc: structuredClone(doc) });
+      },
+    },
     library: {
       folder: async () => chosen,
       choose: async () => {
@@ -41,7 +52,7 @@ function fakeBridge(folder: string | null = '/lib') {
       importSample: async (name) => name,
     },
   };
-  return { bridge, files, calls };
+  return { bridge, files, calls, disk };
 }
 
 test('names follow the library path rule', () => {
@@ -126,4 +137,43 @@ test('NEW clears the canvas as an undo step and makes the project unnamed', () =
   expect(s.state.project).toBeNull();
   s.undo();
   expect(s.current().modules).toHaveLength(2);
+});
+
+test('⌘O opens a project file: a document replaces the canvas; ⌘S writes back to that file, save as goes to the library', async () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { bridge, calls, disk, files } = fakeBridge();
+  const lib = libraryActions(s, SPECS, bridge);
+  expect(await lib.open()).toBe(false); // a cancelled dialog
+  const pulse = FACTORY.find((e) => e.name === 'pulse')!.build(SPECS);
+  disk.opened = { path: '/x/y/jam.sreda.json', doc: structuredClone(pulse) };
+  expect(await lib.open()).toBe(true);
+  expect(s.state.project).toEqual({ path: '/x/y/jam.sreda.json', factory: false, file: true });
+  expect(s.state.dirty).toBe(false);
+  s.commit(setParam(s.current(), SPECS, pulse.modules[0]!.id, 'freq', 0.2));
+  expect(s.state.dirty).toBe(true);
+  await lib.save();
+  expect(s.state.saving).toBeNull();
+  expect(calls).toEqual(['file /x/y/jam.sreda.json']);
+  expect(disk.saved[0]!.doc).toEqual(s.current());
+  expect(s.state.dirty).toBe(false);
+  lib.saveAs();
+  expect(s.state.saving).toMatchObject({ kind: 'project', name: '' });
+  await lib.submit('sets/copy');
+  expect(calls).toEqual(['file /x/y/jam.sreda.json', 'write project sets/copy']);
+  expect(files.has('project:sets/copy')).toBe(true);
+  expect(s.state.project).toEqual({ path: 'sets/copy', factory: false });
+});
+
+test('⌘O on something that is not a SREDA document leaves the session alone and says so', async () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { bridge, disk } = fakeBridge();
+  const lib = libraryActions(s, SPECS, bridge);
+  const before = s.current();
+  disk.opened = { path: '/x/notes.sreda.json', doc: { hello: 'world' } };
+  expect(await lib.open()).toBe(false);
+  expect(s.state.notice).toBe('NOTES.SREDA.JSON COULD NOT BE OPENED');
+  expect(s.current()).toBe(before);
+  expect(s.state.project).toBeNull();
+  s.undo();
+  expect(s.current()).toBe(before);
 });

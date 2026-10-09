@@ -7,6 +7,7 @@ import {
   importSample,
   listLibrary,
   listSamples,
+  openedFiles,
   readEntry,
   readSample,
   writeEntry,
@@ -93,4 +94,21 @@ test('sample names the library cannot read back are not listed; an imported long
   const name = await importSample(root, 'y'.repeat(150) + '.wav', new Uint8Array([1]));
   expect(name.length).toBeLessThanOrEqual(90);
   expect(Buffer.from(await readSample(root, name))[0]).toBe(1);
+});
+
+test('project.save writes only to a path that project.open returned in this run, atomically', async () => {
+  const dir = tmp();
+  const file = join(dir, 'x.sreda.json');
+  const other = join(dir, 'other.sreda.json');
+  writeFileSync(file, '{"a":1}');
+  writeFileSync(other, '{"a":1}');
+  const files = openedFiles();
+  await expect(files.save(file, { a: 2 })).rejects.toThrow();
+  expect(await files.open(file)).toEqual({ path: file, doc: { a: 1 } });
+  await expect(files.save(other, { a: 2 })).rejects.toThrow();
+  await expect(files.save(42, { a: 2 })).rejects.toThrow();
+  expect(JSON.parse(readFileSync(other, 'utf8'))).toEqual({ a: 1 });
+  await files.save(file, { a: 2 });
+  expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ a: 2 });
+  await expect(files.open(join(dir, 'missing.json'))).rejects.toThrow();
 });

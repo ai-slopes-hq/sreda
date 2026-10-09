@@ -1,5 +1,5 @@
 import { Show, type JSX } from 'solid-js';
-import type { LibraryApi } from '../library';
+import { fileName, type LibraryApi } from '../library';
 import type { SessionApi } from '../store';
 
 const HINT =
@@ -26,7 +26,9 @@ export function Chrome(props: {
     <>
       <div class="sr-brand">
         SREDA
-        <Show when={st.project}>{(p) => <span class="sr-path">{p().path}</span>}</Show>
+        <Show when={st.project}>
+          {(p) => <span class="sr-path">{p().file ? fileName(p().path) : p().path}</span>}
+        </Show>
         <Show when={st.dirty}>
           <span class="sr-dirty"> ●</span>
         </Show>

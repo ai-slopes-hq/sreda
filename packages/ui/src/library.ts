@@ -15,6 +15,12 @@ export interface SredaBridge {
     /** remembered in <userData>/settings.json beside the library folder */
     setSkin(name: string): Promise<void>;
   };
+  project: {
+    /** ⌘O: a file dialog, then the file's parsed JSON; null when cancelled; throws on bad JSON */
+    open(): Promise<{ path: string; doc: unknown } | null>;
+    /** writes back to a path `open` returned in this run (main refuses any other) */
+    save(path: string, doc: unknown): Promise<void>;
+  };
   library: {
     /** the remembered folder, if it still exists */
     folder(): Promise<string | null>;
@@ -49,6 +55,9 @@ export function validPath(path: string): boolean {
       .every((s) => s.length > 0 && s.length <= 100 && s !== '.' && s !== '..' && !/[\\\0]/.test(s))
   );
 }
+
+/** the last segment of an absolute path */
+export const fileName = (path: string): string => path.slice(path.search(/[^/\\]*$/));
 
 /** Save, save as, save a frame as a group, open, NEW — against the library folder. */
 export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge | undefined = window.sreda) {
@@ -97,6 +106,15 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       const sel = s.state.sel;
       if (sel.length === 1 && isGroupId(sel[0]!)) return saveGroup(sel[0]!);
       const p = s.state.project;
+      if (p?.file) {
+        try {
+          await bridge!.project.save(p.path, s.current());
+          s.markSaved();
+        } catch {
+          s.setState('notice', `${fileName(p.path).toUpperCase()} COULD NOT BE SAVED`);
+        }
+        return;
+      }
       if (p && !p.factory) {
         if (await write('project', p.path, s.current())) s.markSaved();
         return;
@@ -106,7 +124,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
     /** ⇧⌘S: always asks for a name */
     saveAs(): void {
       const p = s.state.project;
-      setSaving({ kind: 'project', name: p && !p.factory ? p.path : '' });
+      setSaving({ kind: 'project', name: p && !p.factory && !p.file ? p.path : '' });
     },
     /** Enter in the name field: an invalid name stays; an existing one asks once to be replaced */
     async submit(name: string): Promise<void> {
@@ -148,6 +166,25 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       }
       if (!doc) s.setState('notice', `${entry.path.toUpperCase()} COULD NOT BE OPENED`);
       return doc;
+    },
+    /** ⌘O: any project file; true when it replaced the canvas */
+    async open(): Promise<boolean> {
+      if (!bridge) return false;
+      let file: { path: string; doc: unknown } | null;
+      try {
+        file = await bridge.project.open();
+      } catch {
+        s.setState('notice', 'THE FILE COULD NOT BE OPENED');
+        return false;
+      }
+      if (!file) return false;
+      const doc = validateDoc(file.doc, specs);
+      if (!doc) {
+        s.setState('notice', `${fileName(file.path).toUpperCase()} COULD NOT BE OPENED`);
+        return false;
+      }
+      s.openProject(doc, { path: file.path, factory: false, file: true });
+      return true;
     },
     /** NEW: an empty canvas (an undo step), the project unnamed */
     clear(): void {
