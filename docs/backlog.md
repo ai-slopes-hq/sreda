@@ -90,3 +90,12 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **`applyJson` uses `TextEncoder`**, which the AudioWorklet scope lacks; the worklet only calls `applyBytes` today.
 - **`openProject`** resets `sidebar.picked` but not `ports` / `hover` (they are cleared when the cables change, which
   covers most cases).
+
+## From the Plan 4 review (deferred, 2026-10-09)
+
+- **Onsets run on the renderer's main thread:** a 10-minute stereo file is ~230 M multiply-adds, about a second of
+  frozen UI on load. Move `onsets` (and the AIFF render) to a worker, or run it in chunks.
+- **Loaded samples stay for the session:** the registry keeps raw bytes and decoded floats, the engine keeps its copy,
+  and `Sample::from_planar` copies the staging buffer (`to_vec`) instead of taking it; WASM memory never shrinks. Evict
+  samples no open document names, and hand the staging buffer over without a copy. (Audition no longer adds to this:
+  it decodes on the side into slot 0.)

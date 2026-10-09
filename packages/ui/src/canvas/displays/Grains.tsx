@@ -12,7 +12,7 @@ const PEAKS = 512;
 export function grainsPaths(
   w: number,
   h: number,
-  o: { grains: ArrayLike<number>; head: number; live: boolean; pos: number },
+  o: { grains: ArrayLike<number>; head: number; live: boolean; frozen?: boolean; pos: number },
 ) {
   let dots = '';
   let k = 0;
@@ -24,10 +24,15 @@ export function grainsPaths(
     dots += `M${(g * w - 2.5).toFixed(1)} ${y} a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0 `;
   }
   const X = (v: number) => (v * w).toFixed(1);
+  // the region being written: just behind the head, wrapping round the ring; none while frozen
+  const rect = (a: number, b: number) => `M${X(a)} 0 H${X(b)} V${h} H${X(a)} Z`;
+  const from = o.head - 0.07;
   const shade =
-    o.live && o.head >= 0
-      ? `M${X(Math.max(0, o.head - 0.07))} 0 H${X(o.head)} V${h} H${X(Math.max(0, o.head - 0.07))} Z`
-      : '';
+    !o.live || o.frozen || o.head < 0
+      ? ''
+      : from >= 0
+        ? rect(from, o.head)
+        : `${rect(0, o.head)} ${rect(1 + from, 1)}`;
   // LIVE reads relative to the head: POS 1 is the newest audio, POS 0 eight seconds before it
   const p = Math.min(1, Math.max(0, o.pos));
   const at = o.live && o.head >= 0 ? (((o.head - (1 - p)) % 1) + 1) % 1 : p;
@@ -75,6 +80,7 @@ export function Grains(props: {
       grains: buf.subarray(off + 1, off + 1 + GRAINS),
       head: buf[off] ?? -1,
       live: props.live,
+      frozen: props.frozen,
       pos: props.pos,
     });
     dots?.setAttribute('d', p.dots);

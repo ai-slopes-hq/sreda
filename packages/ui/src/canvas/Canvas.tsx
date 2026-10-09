@@ -124,14 +124,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     clearTimeout(auditionTimer);
     const path = item?.kind === 'sample' ? item.path : null;
     if (path === auditioned) return;
-    if (auditioned) s.samples.audition(null);
+    if (auditioned) void s.samples.audition(null);
     auditioned = path;
     if (!path) return;
-    auditionTimer = setTimeout(() => {
-      void s.samples.load(path).then(() => {
-        if (auditioned === path) s.samples.audition(path);
-      });
-    }, 120);
+    auditionTimer = setTimeout(() => void s.samples.audition(path), 120);
   }
   /** a module gets a sample, or a SAMPLER with it lands at `at` */
   function useSample(path: string, target: string | undefined, at: Pt): void {

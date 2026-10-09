@@ -97,7 +97,8 @@ export async function listSamples(root: string): Promise<string[]> {
     }
     for (const e of entries) {
       if (e.isDirectory()) await walk(join(dir, e.name), `${prefix}${e.name}/`);
-      else if (isSample(e.name)) out.push(prefix + e.name);
+      // only names the library can read back (as for groups and projects: ≤ 100 characters, no `\`)
+      else if (isSample(e.name) && validPath(prefix + e.name)) out.push(prefix + e.name);
     }
   };
   await walk(join(root, 'samples'), '');
@@ -119,7 +120,11 @@ export async function importSample(
   const base = basename(name);
   if (!isSample(base)) throw new Error(`not an audio file: ${name}`);
   const ext = extname(base);
-  const stem = basename(base, ext);
+  // a name the library can read back: no `\`, short enough to take a ` 99` suffix
+  const stem =
+    basename(base, ext)
+      .replace(/[\\\0]/g, '_')
+      .slice(0, 90 - ext.length) || 'sample';
   await mkdir(join(root, 'samples'), { recursive: true });
   for (let n = 1; ; n++) {
     const name = n === 1 ? stem + ext : `${stem} ${n}${ext}`;

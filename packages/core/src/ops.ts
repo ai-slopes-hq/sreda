@@ -173,6 +173,8 @@ export function replaceModule(doc: Doc, specs: Specs, oldId: string, type: strin
   if (!old || !so || !sn || sn.internal) throw new RuleError(`cannot replace ${oldId} by ${type}`);
   const id = `m${doc.nextId}`;
   const m: ModuleDoc = { ...blankModule(specs, type, id, old.x, old.y), parent: old.parent };
+  // SAMPLER ↔ GRAINS: both take a sample
+  if (old.sample && sn.params.some((p) => p.id === 'sample')) m.sample = old.sample;
   for (const p of sn.params) {
     const op = so.params.find((q) => q.id === p.id && q.kind === p.kind);
     if (!op || p.kind === 'action' || op.kind === 'action') continue;

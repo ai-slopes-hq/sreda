@@ -106,3 +106,57 @@ test('samples loaded before the engine attaches are posted when it does, decoded
   expect(rates).toEqual([48_000, 44_100]);
   expect(posted).toHaveLength(1);
 });
+
+test('a missing sample is tried again when asked for again (the file is back)', async () => {
+  let there = false;
+  const r = createSampleRegistry({
+    read: async () => {
+      if (!there) throw new Error('ENOENT');
+      return new ArrayBuffer(8);
+    },
+    decode: async (_b, _n, rate) => decoded(1, 10, rate),
+    notice: () => {},
+    changed: () => {},
+  });
+  await r.load('kick.wav');
+  expect(r.status('kick.wav')).toBe('missing');
+  there = true;
+  await r.load('kick.wav');
+  expect(r.status('kick.wav')).toBe('ready');
+});
+
+test('a decode that finishes after the engine attached at another rate decodes again at its rate', async () => {
+  let release: () => void = () => {};
+  const rates: number[] = [];
+  const posted: ToEngine[] = [];
+  const r = createSampleRegistry({
+    read: async () => new ArrayBuffer(8),
+    decode: async (_b, _n, rate) => {
+      rates.push(rate);
+      if (rates.length === 1) await new Promise<void>((res) => (release = res));
+      return decoded(1, 10, rate);
+    },
+    notice: () => {},
+    changed: () => {},
+  });
+  const p = r.load('pad.wav');
+  await flush();
+  r.attach((m) => posted.push(m), 44_100);
+  release();
+  await p;
+  expect(rates).toEqual([48_000, 44_100]);
+  expect(r.info('pad.wav')!.rate).toBe(44_100);
+});
+
+test('audition decodes on the side into slot 0 and keeps nothing; ids of samples start at 1', async () => {
+  const { r, posted } = setup();
+  await r.audition('kit/hat.wav');
+  expect(posted.map((m) => [m.t, 'id' in m ? m.id : null])).toEqual([
+    ['sample', 0],
+    ['audition', 0],
+  ]);
+  expect(r.status('kit/hat.wav')).toBeUndefined();
+  expect(r.id('kit/kick.wav')).toBeGreaterThan(0);
+  await r.audition(null);
+  expect(posted.at(-1)).toEqual({ t: 'audition', id: null });
+});

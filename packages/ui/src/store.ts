@@ -141,14 +141,18 @@ export function createSession(
     read: (path) => window.sreda?.library.readSample(path) ?? Promise.reject(new Error('no library')),
     notice: (text) => setState('notice', text),
     changed: () => {
-      const missing = [...new Set(state.doc.modules.flatMap((m) => (m.sample ? [m.sample] : [])))].filter(
-        (p) => samples.status(p) === 'missing',
-      );
-      if (missing.join('\0') !== state.missing.join('\0')) setState('missing', missing);
+      updateMissing();
       setState('samplesVersion', (v) => v + 1);
       send();
     },
   });
+  /** WIRES' MISSING rows: the document's samples the registry could not read */
+  function updateMissing(): void {
+    const missing = [...new Set(state.doc.modules.flatMap((m) => (m.sample ? [m.sample] : [])))].filter(
+      (p) => samples.status(p) === 'missing',
+    );
+    if (missing.join('\0') !== state.missing.join('\0')) setState('missing', missing);
+  }
   /** a module's sample as the engine's pool id (−1: none, or missing) */
   const sampleId = (path: string) => (samples.status(path) === 'missing' ? -1 : samples.id(path));
   samples.loadDoc(initial);
@@ -220,6 +224,7 @@ export function createSession(
     }
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
     samples.loadDoc(doc);
+    updateMissing(); // an undo can bring back a module whose sample is known to be missing
     setState('dirty', history.current !== saved);
     scheduleSave(doc, state.project);
     // selection and listening follow what still exists
@@ -264,7 +269,6 @@ export function createSession(
       show(doc);
       send();
     },
-    /** a change made by the patch itself (a DICE input): shown, saved and played, but not an undo step */
     /** a module's sample (one undo step; the sample loads and the plan follows) */
     setSample(id: string, path: string): void {
       const doc: Doc = {
@@ -275,6 +279,7 @@ export function createSession(
       show(doc);
       send();
     },
+    /** a change made by the patch itself (a DICE input): shown, saved and played, but not an undo step */
     replaceDoc(doc: Doc): void {
       history.replace(doc);
       show(doc);

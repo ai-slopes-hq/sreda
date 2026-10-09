@@ -68,12 +68,18 @@ export function Wave(
 ): JSX.Element {
   const paths = () => wavePaths(props.w, props.h, props);
   const file = () => props.path?.split('/').pop() ?? '';
+  /** AUTO's slices: the hits inside the region, as the engine counts them */
+  const autoSlices = () => {
+    const a = Math.min(1, Math.max(0, props.start));
+    const b = Math.min(1, a + props.len * (1 - a));
+    return props.hits.filter((t) => t > a && t < b).length + 1;
+  };
   const tag = () => {
     if (!props.path) return 'NO SAMPLE · CLICK TO LOAD';
     if (props.missing) return `MISSING · ${file()}`;
     const mode =
       props.mode === 2
-        ? `${props.auto ? props.hits.filter((t) => t > props.start).length + 1 : Math.round(props.slices)} SLICES`
+        ? `${props.auto ? autoSlices() : Math.round(props.slices)} SLICES`
         : (MODES[props.mode] ?? 'ONE');
     return [file(), mode, props.mode === 2 && props.auto ? 'AUTO' : '', props.rev ? 'REV' : '']
       .filter(Boolean)

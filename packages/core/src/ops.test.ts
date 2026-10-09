@@ -17,6 +17,7 @@ import {
   setParam,
   setRatio,
 } from './ops';
+import { SPECS } from './spec';
 import { TEST_SPECS as S } from './testspecs';
 
 function two() {
@@ -198,4 +199,13 @@ test('R sets every visible knob within its random range and leaves options and h
     expect(v).toBeLessThanOrEqual(hi + 1e-9);
   }
   expect(after['freq']).not.toBe(before['freq']);
+});
+
+test('replacing a SAMPLER by GRAINS keeps its sample; by OSC drops it', () => {
+  const added = addModule(emptyDoc, SPECS, 'sampler', 0, 0);
+  const doc = { ...added.doc, modules: added.doc.modules.map((m) => ({ ...m, sample: 'pads/air.wav' })) };
+  const g = replaceModule(doc, SPECS, added.id, 'grains');
+  expect(g.doc.modules.find((m) => m.id === g.id)!.sample).toBe('pads/air.wav');
+  const o = replaceModule(doc, SPECS, added.id, 'osc');
+  expect(o.doc.modules.find((m) => m.id === o.id)!.sample).toBeUndefined();
 });

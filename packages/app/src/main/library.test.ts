@@ -83,3 +83,14 @@ test('importing a file copies it into samples/ under a free name', async () => {
   expect(await importSample(root, '../../evil.wav', boom)).toBe('evil.wav');
   await expect(importSample(root, 'readme.txt', boom)).rejects.toThrow();
 });
+
+test('sample names the library cannot read back are not listed; an imported long name is shortened', async () => {
+  const root = tmp();
+  mkdirSync(join(root, 'samples'), { recursive: true });
+  writeFileSync(join(root, 'samples', 'x'.repeat(120) + '.wav'), 'x');
+  writeFileSync(join(root, 'samples', 'ok.wav'), 'x');
+  expect(await listSamples(root)).toEqual(['ok.wav']);
+  const name = await importSample(root, 'y'.repeat(150) + '.wav', new Uint8Array([1]));
+  expect(name.length).toBeLessThanOrEqual(90);
+  expect(Buffer.from(await readSample(root, name))[0]).toBe(1);
+});

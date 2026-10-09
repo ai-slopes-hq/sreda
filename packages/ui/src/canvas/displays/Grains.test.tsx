@@ -13,6 +13,11 @@ test('one dot per grain that plays (a negative position is an idle slot); POS is
 test('LIVE shades the region being written, just behind the head', () => {
   const p = grainsPaths(200, 60, { grains: [], head: 0.5, live: true, pos: 1 });
   expect(p.shade).toBe('M86.0 0 H100.0 V60 H86.0 Z');
+  expect(grainsPaths(200, 60, { grains: [], head: 0.5, live: true, frozen: true, pos: 1 }).shade).toBe('');
+  // near the start of the ring the region wraps to its end
+  expect(grainsPaths(200, 60, { grains: [], head: 0.02, live: true, pos: 1 }).shade).toBe(
+    'M0.0 0 H4.0 V60 H0.0 Z M190.0 0 H200.0 V60 H190.0 Z',
+  );
   // POS 0.75 with the head at 0.5: a quarter of the buffer behind it
   expect(grainsPaths(200, 60, { grains: [], head: 0.5, live: true, pos: 0.75 }).ring).toBe('M50.0 0 V60');
 });

@@ -39,7 +39,12 @@ export function Picker(props: PickerProps): JSX.Element {
   /** the tabs on offer: modules only when replacing, no SAMPLES from a jack */
   const tabs = (): PickerTab[] =>
     props.replace ? ['MODULES'] : props.from ? TABS.filter((t) => t !== 'SAMPLES') : TABS;
-  createEffect(() => props.highlight?.(items()[idx()] ?? null));
+  /** the highlight is announced once the user moves it (↑ / ↓ or the pointer), not on opening */
+  const [moved, setMoved] = createSignal(false);
+  createEffect(() => {
+    const it = items()[idx()] ?? null;
+    if (moved()) props.highlight?.(it);
+  });
   onCleanup(() => props.highlight?.(null));
   let input: HTMLInputElement | undefined;
   let list: HTMLDivElement | undefined;
@@ -54,9 +59,13 @@ export function Picker(props: PickerProps): JSX.Element {
   function key(e: KeyboardEvent): void {
     e.stopPropagation();
     const n = items().length;
-    if (e.key === 'ArrowDown') setIdx((idx() + 1) % Math.max(1, n));
-    else if (e.key === 'ArrowUp') setIdx((idx() + n - 1) % Math.max(1, n));
-    else if (e.key === 'Tab' && !props.replace) {
+    if (e.key === 'ArrowDown') {
+      setMoved(true);
+      setIdx((idx() + 1) % Math.max(1, n));
+    } else if (e.key === 'ArrowUp') {
+      setMoved(true);
+      setIdx((idx() + n - 1) % Math.max(1, n));
+    } else if (e.key === 'Tab' && !props.replace) {
       const t = tabs();
       const i = t.indexOf(tab());
       setTab(t[(i + (e.shiftKey ? t.length - 1 : 1)) % t.length]!);
@@ -108,7 +117,10 @@ export function Picker(props: PickerProps): JSX.Element {
               class="sr-pitem"
               classList={{ on: i() === idx() }}
               data-kind={it.kind}
-              onMouseEnter={() => setIdx(i())}
+              onMouseEnter={() => {
+                setMoved(true);
+                setIdx(i());
+              }}
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => props.pick(it)}
             >

@@ -256,7 +256,7 @@ impl Dsp for Delay {
             }
             // what is recorded: PING sends L's repeats to R and R's back to L; TAPE records through its head
             let (in_l, in_r) = if ping {
-                (x + fb * wr, wl)
+                (x + fb * wr, fb * wl)
             } else {
                 (x + fb * wl, 0.0)
             };
@@ -388,6 +388,31 @@ mod tests {
         assert!(big(&o[0], 2400) && !big(&o[1], 2400), "first repeat left");
         assert!(big(&o[1], 4800) && !big(&o[0], 4800), "second repeat right");
         assert!(big(&o[0], 7200) && !big(&o[1], 7200), "third repeat left");
+    }
+
+    #[test]
+    fn ping_takes_fb_off_every_repeat() {
+        // FB 0.5: L 1, R 0.5, L 0.25; FB 0: one echo only
+        let o = run(
+            48_000.0,
+            [0.05, 0.5, 1.0, 0.0],
+            [0.0, 1.0],
+            80,
+            impulse,
+            None,
+        );
+        let at = |s: &[f32], k: usize| s[k].abs().max(s[k + 1].abs());
+        assert!((at(&o[1], 4800) / at(&o[0], 2400) - 0.5).abs() < 0.02);
+        assert!((at(&o[0], 7200) / at(&o[0], 2400) - 0.25).abs() < 0.02);
+        let o = run(
+            48_000.0,
+            [0.05, 0.0, 1.0, 0.0],
+            [0.0, 1.0],
+            80,
+            impulse,
+            None,
+        );
+        assert!(at(&o[0], 2400) > 0.5 && at(&o[1], 4800) < 1e-6);
     }
 
     #[test]

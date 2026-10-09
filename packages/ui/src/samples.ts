@@ -20,6 +20,8 @@ export interface DecodedSample {
 }
 
 const MAX_S = 600;
+/** the engine's pool slot the audition uses (replaced each time, so browsing keeps one sample in memory) */
+const AUDITION_ID = 0;
 const COLUMNS = 512;
 
 /** The largest |x| of each of 512 columns, over the channels. */
@@ -106,14 +108,14 @@ export interface SampleRegistry {
   id(path: string): number;
   status(path: string): SampleStatus | undefined;
   peaks(path: string): Float32Array | null;
-  /** reads, decodes and sends a path (once per session; again after `forget`) */
+  /** reads, decodes and sends a path (once per session; a missing or refused one is tried again) */
   load(path: string): Promise<void>;
   /** loads every path a document names */
   loadDoc(doc: Doc): void;
   /** the engine is there: everything ready goes to it, decoded again if its rate differs */
   attach(post: (msg: ToEngine) => void, rate: number): void;
-  /** plays a loaded sample in place of the mix (null stops) */
-  audition(path: string | null): void;
+  /** plays a sample in place of the mix (null stops); decoded on the side, never kept */
+  audition(path: string | null): Promise<void>;
   /** the frames and rate of a ready sample */
   info(path: string): { frames: number; rate: number; hits: { at: number; strength: number }[] } | null;
 }
@@ -133,32 +135,39 @@ export function createSampleRegistry(o: {
   const pending = new Map<string, Promise<void>>();
   let post: ((msg: ToEngine) => void) | null = null;
   let rate = 48_000;
+  /** the audition's turn: a newer audition (or a stop) makes an older decode give up */
+  let turn = 0;
 
   const name = (path: string) => (path.split('/').pop() ?? path).toUpperCase();
   const id = (path: string) => {
-    if (!ids.has(path)) ids.set(path, ids.size);
+    // id 0 is the audition's slot
+    if (!ids.has(path)) ids.set(path, ids.size + 1);
     return ids.get(path)!;
   };
-  const send = (path: string, s: DecodedSample) => {
+  const send = (path: string | null, s: DecodedSample) => {
     if (!post) return;
     const channels = s.channels.slice(0, 2).map((c) => c.slice());
     post({
       t: 'sample',
-      id: id(path),
+      id: path === null ? AUDITION_ID : id(path),
       channels,
       hits: Uint32Array.from(s.hits, (h) => h.at),
       strengths: Float32Array.from(s.hits, (h) => h.strength),
     });
   };
-  const decodeAt = async (path: string, b: ArrayBuffer) => {
+  const decodeAt = async (path: string, b: ArrayBuffer): Promise<void> => {
     try {
-      const s = check(await decode(b.slice(0), path, rate));
+      const at = rate;
+      const s = check(await decode(b.slice(0), path, at));
+      // the engine attached at another rate while this decoded: again, at its rate
+      if (rate !== at) return decodeAt(path, b);
       ready.set(path, s);
       status.set(path, 'ready');
       send(path, s);
     } catch (e) {
       status.delete(path);
       bytes.delete(path);
+      ready.delete(path);
       o.notice(`${name(path)} — ${e instanceof SampleError ? e.message : 'CANNOT BE DECODED'}`);
     }
     o.changed();
@@ -166,7 +175,8 @@ export function createSampleRegistry(o: {
 
   const load = (path: string): Promise<void> => {
     const known = pending.get(path);
-    if (known) return known;
+    // a missing or refused sample is tried again (the file may be back, or replaced)
+    if (known && (status.get(path) === 'loading' || status.get(path) === 'ready')) return known;
     status.set(path, 'loading');
     id(path);
     const p = (async () => {
@@ -206,8 +216,22 @@ export function createSampleRegistry(o: {
         else void decodeAt(path, bytes.get(path)!);
       }
     },
-    audition(path) {
-      post?.({ t: 'audition', id: path && ready.has(path) ? id(path) : null });
+    async audition(path) {
+      const mine = ++turn;
+      if (!path) {
+        post?.({ t: 'audition', id: null });
+        return;
+      }
+      try {
+        const b = bytes.get(path) ?? (await o.read(path));
+        if (mine !== turn) return;
+        const s = check(await decode(b.slice(0), path, rate));
+        if (mine !== turn || !post) return;
+        send(null, s);
+        post({ t: 'audition', id: AUDITION_ID });
+      } catch {
+        // a file that will not play is simply not heard
+      }
     },
   };
 }
