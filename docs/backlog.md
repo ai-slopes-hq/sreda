@@ -27,6 +27,15 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   colour literal in the UI into the §1a tokens (today `canvas.css` has only the role tokens; `Frame.tsx` keeps
   `TINT_FILL`), then a way to pick the skin (app-wide, not per document).
 
+- **FOLD sounds weak** (2026-10-09, from listening): it adds almost no level and few harmonics, and its modes
+  barely differ. Rework against a reference wavefolder (Ableton's Saturator / Roar folding, Bitwig's wavefolder, a
+  Buchla 259 / Serge-style folder): more gain into the fold, clearly different curves per mode, matched loudness.
+- **FILTER models are not convincing** (2026-10-09, from listening): SK (MS-20), LADDER and DIODE do not sound like
+  their originals and differ too little from each other (and from SVF). Compare against references (Moog ladder,
+  TB-303 diode, MS-20 Sallen-Key) and re-tune drive, resonance and the self-oscillation character per model.
+- **FILTER cutoff animation** (2026-10-09): the response glyph on the panel follows the live cutoff (and resonance)
+  with modulation applied, schematically — the curve moves, no waveform.
+
 - **A system mixer for every OUT** (2026-10-09): a patch may hold several OUT modules (one per group or voice), all
   summed into the master today. A mixer that sees every OUT in the project — a strip per OUT (named after its module
   or frame) with level, mute, solo and a meter, then the master — probably as a sidebar tab next to WIRES. Open:
