@@ -2,8 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** STACK packs a frame densely as a frame mode, dragging a STACK / FIX frame's width re-packs it live, and any
-frame collapses to a block showing only its connections (C / ⇧C), so a project of many groups reads at a glance.
+**Goal:** STACK packs a frame densely (the one managed layout; WIRE FIX is removed), dragging a STACK frame's width
+re-packs it live, cables are drawn behind (stubs, whole on hover / focus / WIRES), and any frame collapses to a block
+showing only its connections (C / ⇧C), so a project of many groups reads at a glance.
 
 **Architecture:** Everything geometric lives in `packages/core/src/frames.ts` (packing, widths, the collapsed block and
 where a hidden port's cables end); the UI draws what core computes: `Frame.tsx` draws the block, `cablegeom.ts`
@@ -12,7 +13,8 @@ the gestures and keys.
 
 **Tech Stack:** TypeScript (core), SolidJS (ui), Vitest, Playwright + Electron (e2e).
 
-**Spec:** `docs/superpowers/specs/2026-10-07-canvas-ux-design.md`, revision 20, §5 (STACK, the packing width, WIRE
+**Spec:** `docs/superpowers/specs/2026-10-07-canvas-ux-design.md`, revision 21 (Tasks 1–2 were written against
+revision 20 and keep FIX until Task 3 removes it), §4 (cables drawn behind), §5 (STACK, the packing width, WIRE
 FIX, Collapse) and §4 (keys).
 
 ## Global Constraints
@@ -122,7 +124,55 @@ FIX, Collapse) and §4 (keys).
   FIX; drop a module into the stacked frame.
 - [ ] **Step 5:** Commit `feat: STACK and FIX toggles, live re-pack on resize`.
 
-### Task 3: Collapsed frames (core)
+### Task 3: WIRE FIX removed; STACK is the default managed layout (spec revision 21)
+
+**Files:**
+- Modify: `packages/core/src/doc.ts` (`Layout = 'free' | 'stack'`; `validateDoc` reads `'route'` as `'stack'`),
+  `packages/core/src/frames.ts` (drop the `'route'` packing, `RGAP` rows, `packWidth`; `frameSelection` and factory
+  `build.ts` start frames as `'stack'`; after migration the open document's former FIX frames are packed as STACK),
+  `packages/ui/src/canvas/cablegeom.ts` (drop routing: `routePts`, `between`, lanes, `routed`),
+  `packages/ui/src/canvas/Frame.tsx` (no FIX button), `packages/ui/src/canvas/Canvas.tsx` (no FIX handler, magnets
+  gap always 0), `packages/ui/src/canvas/Cables.tsx` (no `routed` class), `canvas.css`, tests and e2e that exercise
+  WIRE FIX.
+
+**Interfaces:** Produces `Layout = 'free' | 'stack'`; `setLayout(doc, specs, gid, 'free' | 'stack')`.
+
+- [ ] **Step 1: Failing tests:**
+  - core: a Plan 3 document with a `'route'` frame validates with `layout: 'stack'`, its children in the same reading
+    order, packed densely (no overlap, 16 px padding); ⌘G (`frameSelection`) makes a `'stack'` frame; every factory
+    project's frames are `'stack'`.
+  - `cablegeom.test.ts`: every cable is a curve (no `routed` geometry remains).
+  - e2e: the WIRE FIX test becomes `⌘G frames start stacked; STACK toggles off and on` (no `FIX` button exists).
+- [ ] **Step 2:** → FAIL. **Step 3:** Implement (delete, don't keep dead code). **Step 4:** `pnpm check && pnpm e2e`
+  → PASS.
+- [ ] **Step 5:** Commit `feat: remove WIRE FIX; STACK is the default managed layout`.
+
+### Task 4: Cables drawn behind — stubs, whole on hover, focus and in WIRES
+
+**Files:**
+- Modify: `packages/ui/src/canvas/cablegeom.ts` (`stubs(geom): { a: string; b: string }` — the first and last 14 px
+  of the cable's own path as two SVG paths; a stub hit-test within 6 screen px), `packages/ui/src/canvas/Cables.tsx`
+  (each cable draws its two stubs always, its whole path only when `whole(c)`), `packages/ui/src/canvas/Canvas.tsx`
+  (`whole(c)`: the sidebar open on WIRES; or an end in the hovered or a selected module, or inside the hovered or a
+  selected frame; or the hovered cable; or the WIRES row hovered / picked; or the insert candidate; hovering a stub
+  sets the hovered cable and shows the existing wire tag), `canvas.css` (stubs fade from the cable colour to
+  transparent), `Cables.test.tsx` (new), `e2e/app.spec.ts`.
+
+**Interfaces:** Consumes `CableGeom` (`pts`, `d`, `from`, `to`, `cable`).
+
+- [ ] **Step 1: Failing tests:**
+  - `Cables.test.tsx`: two cables, `whole` false for both → two `.stub` paths per cable and no `.cable` path; `whole`
+    true for one → that one's `.cable` path is drawn; each stub's length is 14 ± 1 px along the path.
+  - e2e `cables show as stubs; hovering a stub, a module or opening WIRES shows them whole`: starter patch → no
+    `path.cable` visible, two `.stub`; hover OSC → one `path.cable`; move away → none; hover the stub at OUT's L →
+    one `path.cable` and the tag `OSC › OUT  →  OUT › L`; W (sidebar) → one `path.cable` while it is open; dragging
+    from OSC's output still draws the dragged cable whole.
+- [ ] **Step 2:** → FAIL. **Step 3:** Implement. **Step 4:** `pnpm check && pnpm e2e` → PASS.
+- [ ] **Checkpoint for the user (stop):** `rand melody`: STACK, width drag, the canvas with stubs, hover to see
+  cables, WIRES to see all.
+- [ ] **Step 5:** Commit `feat: cables drawn behind — stubs, whole on hover, focus and in WIRES`.
+
+### Task 5: Collapsed frames (core)
 
 **Files:**
 - Modify: `packages/core/src/doc.ts` (`Group.collapsed: boolean`, default false; `validateDoc` reads
@@ -166,7 +216,7 @@ FIX, Collapse) and §4 (keys).
 - [ ] **Step 2:** → FAIL. **Step 3:** Implement. **Step 4:** `pnpm test packages/core` → PASS.
 - [ ] **Step 5:** Commit `feat: collapsed frames in core — blocks, their jacks, hidden cables`.
 
-### Task 4: Collapsed frames on the canvas; C / ⇧C
+### Task 6: Collapsed frames on the canvas; C / ⇧C
 
 **Files:**
 - Modify: `packages/ui/src/canvas/Frame.tsx` (the block: header with name, meter, CLK in / out, M, `▸`; a jack row
@@ -174,12 +224,12 @@ FIX, Collapse) and §4 (keys).
   `data-jack` = the port, so dropping a cable on it connects to the inner port; a `▾` / `▸` header button),
   `packages/ui/src/canvas/Canvas.tsx` (skip modules and frames with a `blockOwner`; the box selection and magnets
   ignore them; `show` drops hidden ids from the selection), `packages/ui/src/canvas/cablegeom.ts` (skip
-  `cableHidden`; a cable with an end under a block is a curve, never routed), `packages/ui/src/canvas/keys.ts` (C:
+  `cableHidden`; a crossing cable ends on the block jack), `packages/ui/src/canvas/keys.ts` (C:
   `setCollapsed` on the selected frames, collapsing if any selected frame is expanded; ⇧C: `toggleCollapsedAll`),
   `packages/ui/src/store.ts` (a `collapse` method committing one undo step), `canvas.css`, the hint line in
   `Chrome.tsx` (add `C COLLAPSE`), `Frame.test.tsx`, `cablegeom.test.ts`, `e2e/app.spec.ts`.
 
-**Interfaces:** Consumes Task 3's `blockOf`, `blockOwner`, `cableHidden`, `setCollapsed`, `toggleCollapsedAll`.
+**Interfaces:** Consumes Task 5's `blockOf`, `blockOwner`, `cableHidden`, `setCollapsed`, `toggleCollapsedAll`.
 
 - [ ] **Step 1: Failing tests:**
   - `Frame.test.tsx`: a collapsed frame renders `.sr-block` with one `.sr-bjack` per block jack (labels
