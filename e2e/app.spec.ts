@@ -1064,9 +1064,60 @@ test('an audio file dropped on empty canvas becomes a SAMPLER; another file give
   await app.close();
 });
 
+test('a 3-minute stereo sample loads without freezing the page, and the SAMPLER shows its peaks', async () => {
+  const { app, page } = await launch(undefined, 'starter', libraryWithSamples());
+  await page.evaluate(() => {
+    const w = window as unknown as { __gap: number };
+    w.__gap = 0;
+    let last = performance.now();
+    const beat = () => {
+      const now = performance.now();
+      w.__gap = Math.max(w.__gap, now - last);
+      last = now;
+      requestAnimationFrame(beat);
+    };
+    requestAnimationFrame(beat);
+  });
+  const dt = await page.evaluateHandle(() => {
+    const rate = 48_000;
+    const n = rate * 180;
+    const bytes = new Uint8Array(44 + 4 * n);
+    const v = new DataView(bytes.buffer);
+    const tag = (at: number, s: string) => [...s].forEach((c, i) => (bytes[at + i] = c.charCodeAt(0)));
+    tag(0, 'RIFF');
+    v.setUint32(4, 36 + 4 * n, true);
+    tag(8, 'WAVEfmt ');
+    v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true);
+    v.setUint16(22, 2, true);
+    v.setUint32(24, rate, true);
+    v.setUint32(28, rate * 4, true);
+    v.setUint16(32, 4, true);
+    v.setUint16(34, 16, true);
+    tag(36, 'data');
+    v.setUint32(40, 4 * n, true);
+    for (let i = 0; i < n; i++) {
+      const k = i % 24_000;
+      const x = Math.round(20_000 * Math.exp(-k / 3000) * Math.sin(k * 0.05));
+      v.setInt16(44 + 4 * i, x, true);
+      v.setInt16(46 + 4 * i, x, true);
+    }
+    const d = new DataTransfer();
+    d.items.add(new File([bytes], 'long.wav'));
+    return d;
+  });
+  await page.dispatchEvent('.sr-canvas', 'drop', { dataTransfer: dt, clientX: 700, clientY: 650 });
+  await expect.poll(async () => (await samplers(page))[0]?.sample, { timeout: 60_000 }).toBe('long.wav');
+  const fill = page.locator('.sr-wave .d-fill').first();
+  await expect.poll(async () => (await fill.getAttribute('d')) ?? '', { timeout: 60_000 }).toMatch(/L/);
+  expect(await page.evaluate(() => (window as unknown as { __gap: number }).__gap)).toBeLessThan(200);
+  await app.close();
+});
+
 test('SETTINGS: W opens WIRES; choosing NORD recolours the canvas and is remembered', async () => {
   const first = await launch();
-  const ground = () => first.page.locator('.sr-canvas').evaluate((el) => getComputedStyle(el).backgroundColor);
+  const ground = () =>
+    first.page.locator('.sr-canvas').evaluate((el) => getComputedStyle(el).backgroundColor);
   await first.page.keyboard.press('w');
   await expect(first.page.locator('.sr-wfilter')).toBeVisible();
   await first.page.getByRole('button', { name: 'SETTINGS' }).click();

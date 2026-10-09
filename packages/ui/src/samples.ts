@@ -3,8 +3,10 @@
 // read is MISSING (the module plays nothing; WIRES lists it); one that cannot be used is refused with a notice.
 import type { Doc } from '@sreda/core';
 import type { ToEngine } from '@sreda/protocol';
-import { parseAiff } from './samples/aiff';
-import { onsets } from './samples/onsets';
+import { analyseChannels, parseAiffOff } from './samples/analysis';
+import { COLUMNS } from './samples/peaks';
+
+export { peaksOf } from './samples/peaks';
 
 /** A sample refused: the reason, shown as `<NAME> — <reason>`. */
 export class SampleError extends Error {}
@@ -22,23 +24,6 @@ export interface DecodedSample {
 const MAX_S = 600;
 /** the engine's pool slot the audition uses (replaced each time, so browsing keeps one sample in memory) */
 const AUDITION_ID = 0;
-const COLUMNS = 512;
-
-/** The largest |x| of each of 512 columns, over the channels. */
-export function peaksOf(channels: Float32Array[]): Float32Array {
-  const out = new Float32Array(COLUMNS);
-  const n = channels[0]?.length ?? 0;
-  for (let c = 0; c < COLUMNS; c++) {
-    const [a, b] = [
-      Math.floor((c * n) / COLUMNS),
-      Math.max(Math.floor(((c + 1) * n) / COLUMNS), Math.floor((c * n) / COLUMNS) + 1),
-    ];
-    let p = 0;
-    for (const ch of channels) for (let i = a; i < b && i < n; i++) p = Math.max(p, Math.abs(ch[i]!));
-    out[c] = Math.min(1, p);
-  }
-  return out;
-}
 
 async function resample(src: AudioBuffer, rate: number): Promise<Float32Array[]> {
   const n = Math.min(2, src.numberOfChannels);
@@ -60,7 +45,7 @@ export async function decodeSample(bytes: ArrayBuffer, name: string, rate: numbe
   let channels: Float32Array[];
   try {
     if (/\.aiff?$/i.test(name)) {
-      const a = parseAiff(bytes);
+      const a = await parseAiffOff(bytes);
       const frames = a.channels[0]?.length ?? 0;
       if (frames === 0)
         return check({
@@ -91,7 +76,8 @@ export async function decodeSample(bytes: ArrayBuffer, name: string, rate: numbe
     throw new SampleError('CANNOT BE DECODED');
   }
   const frames = channels[0]?.length ?? 0;
-  return check({ channels, frames, rate, hits: onsets(channels, rate), peaks: peaksOf(channels) });
+  const a = await analyseChannels(channels, rate);
+  return check({ channels: a.channels, frames, rate, hits: a.hits, peaks: a.peaks });
 }
 
 /** Refuses a sample with no frames or longer than 10 minutes. */
