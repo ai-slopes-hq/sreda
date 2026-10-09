@@ -237,3 +237,16 @@ test('collapsing a frame drops its modules from the selection and is one undo st
   s.undo();
   expect(s.current().groups[0]!.collapsed).toBe(false);
 });
+
+test('collapsing a frame clears the hover of a module that goes out of sight', () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const out = s.current().modules.find((m) => m.type === 'out')!;
+  const framed = frameSelection(s.current(), SPECS, [out.id]);
+  s.commit(framed.doc);
+  s.setState('hover', out.id);
+  s.collapse([framed.id], true);
+  expect(s.state.hover).toBeNull();
+  s.setState('hover', framed.id);
+  s.collapse([framed.id], false);
+  expect(s.state.hover).toBe(framed.id);
+});

@@ -7,7 +7,7 @@ import {
   type NodeReadouts,
   type Role,
 } from '@sreda/core';
-import { createSignal, For, Show, type JSX } from 'solid-js';
+import { createSignal, Index, Show, type JSX } from 'solid-js';
 import { track } from '../live';
 import { fmtRat } from './glyphs';
 import { Jack } from './Jack';
@@ -376,36 +376,36 @@ export function Frame(props: FrameProps): JSX.Element {
                 props.act.headDown(e);
               }}
             >
-              <For each={b().jacks}>
+              <Index each={b().jacks}>
                 {(j) => (
                   // the wrapper is what a dropped cable resolves: the inner object and its port
                   <div
                     class="sr-bjack"
-                    data-module={isGroupId(j.id) ? undefined : j.id}
-                    data-frame={isGroupId(j.id) ? j.id : undefined}
-                    data-jack={j.port}
+                    data-module={isGroupId(j().id) ? undefined : j().id}
+                    data-frame={isGroupId(j().id) ? j().id : undefined}
+                    data-jack={j().port}
                   >
                     <Jack
-                      port={j.port}
-                      dir={j.dir}
-                      role={j.role}
-                      x={j.x}
-                      y={j.y - GHEAD}
-                      filled={j.filled}
-                      listening={j.listening}
-                      title={j.label}
-                      onPointerDown={(e) => props.act.blockJackDown(j, e)}
+                      port={j().port}
+                      dir={j().dir}
+                      role={j().role}
+                      x={j().x}
+                      y={j().y - GHEAD}
+                      filled={j().filled}
+                      listening={j().listening}
+                      title={j().label}
+                      onPointerDown={(e) => props.act.blockJackDown(j(), e)}
                     />
                     <div
                       class="sr-blabel"
-                      classList={{ out: j.dir === 'out' }}
-                      style={{ [j.dir === 'in' ? 'left' : 'right']: '22px', top: j.y - GHEAD - 6 + 'px' }}
+                      classList={{ out: j().dir === 'out' }}
+                      style={{ [j().dir === 'in' ? 'left' : 'right']: '22px', top: j().y - GHEAD - 6 + 'px' }}
                     >
-                      {j.label}
+                      {j().label}
                     </div>
                   </div>
                 )}
-              </For>
+              </Index>
             </div>
           </>
         )}

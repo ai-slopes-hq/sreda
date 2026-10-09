@@ -1,6 +1,7 @@
 import {
   addModule,
   blockOf,
+  type Block,
   blockOwner,
   chainOf,
   canInsert,
@@ -186,7 +187,13 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     setPicker(null);
   };
 
-  const jackPos = (id: string, port: string): Pt => jackAt(st.doc, specs, id, port);
+  /** every collapsed frame's block, once per document (a block scans all cables) */
+  const blocks = createMemo(() => {
+    const m = new Map<string, Block>();
+    for (const g of st.doc.groups) if (g.collapsed) m.set(g.id, blockOf(st.doc, specs, g.id));
+    return m;
+  });
+  const jackPos = (id: string, port: string): Pt => jackAt(st.doc, specs, id, port, blocks());
   /** a module's sample as its display shows it (re-read when the registry changes) */
   const sampleView = (path: string | undefined): SampleView | undefined => {
     if (!path) return undefined;
@@ -210,7 +217,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   );
   /** a collapsed frame's block with each jack's role, and whether it is cabled or listened to */
   function blockView(gid: string): BlockView {
-    const b = blockOf(st.doc, specs, gid);
+    const b = blocks().get(gid) ?? blockOf(st.doc, specs, gid);
     return {
       w: b.w,
       h: b.h,
@@ -493,7 +500,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           ...st.doc.groups
             .filter((g) => {
               if (blockOwner(st.doc, g.id)) return false;
-              const r = shownRect(st.doc, specs, g.id);
+              const r = shownRect(st.doc, specs, g.id, blocks());
               return r.x >= x0 && r.y >= y0 && r.x + r.w <= x1 && r.y + r.h <= y1;
             })
             .map((g) => g.id),
@@ -666,7 +673,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     if (!ids.length) return;
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
     for (const id of ids) {
-      const r = shownRect(st.doc, specs, id);
+      const r = shownRect(st.doc, specs, id, blocks());
       [x0, y0, x1, y1] = [
         Math.min(x0, r.x),
         Math.min(y0, r.y),

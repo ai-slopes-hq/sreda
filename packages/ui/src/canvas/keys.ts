@@ -1,5 +1,6 @@
 // The canvas keyboard (spec §4, §5): undo, delete, Esc, `/`, F, G.
 import {
+  blockOwner,
   deleteObjects,
   duplicate,
   frameSelection,
@@ -152,7 +153,8 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
   } else if (!meta && key === 'r') {
     // R: the module under the pointer gets random knob values (sent as knob messages, one undo step)
     const id = s.state.hover;
-    const m = id && s.current().modules.find((x) => x.id === id);
+    const cur = s.current();
+    const m = id && !blockOwner(cur, id) && cur.modules.find((x) => x.id === id);
     if (!m) return;
     const after = randomise(s.current(), k.specs, m.id, Math.random).modules.find(
       (x) => x.id === m.id,

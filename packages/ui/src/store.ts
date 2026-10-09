@@ -234,6 +234,7 @@ export function createSession(
     // (inside a collapsed frame, an object is out of sight and out of the selection; listening stays)
     const shown = (id: string) => ids.has(id) && !blockOwner(doc, id);
     if (state.sel.some((id) => !shown(id))) setState('sel', state.sel.filter(shown));
+    if (state.hover !== null && !shown(state.hover)) setState('hover', null);
     if (state.listen && !ids.has(state.listen.id)) setState('listen', null);
   }
 

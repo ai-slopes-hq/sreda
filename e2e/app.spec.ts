@@ -455,6 +455,28 @@ const flashes = (page: Page, selector: string, ms: number) =>
     [selector, ms] as const,
   );
 
+/** resolves once the element has shown a `flash` (a clock is running and the page sees it) */
+const firstFlash = (page: Page, selector: string) =>
+  page.evaluate(
+    (sel) =>
+      new Promise<void>((done, fail) => {
+        const el = document.querySelector(sel)!;
+        if (el.classList.contains('flash')) return done();
+        const obs = new MutationObserver(() => {
+          if (!el.classList.contains('flash')) return;
+          obs.disconnect();
+          clearTimeout(t);
+          done();
+        });
+        const t = setTimeout(() => {
+          obs.disconnect();
+          fail(new Error(`no flash on ${sel}`));
+        }, 10000);
+        obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+      }),
+    selector,
+  );
+
 test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half as often', async () => {
   const { app, page } = await launch();
   await page.mouse.move(700, 600);
@@ -475,7 +497,8 @@ test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half 
     to: [expect.any(String), 'ping'],
   });
   await page.mouse.click(1300, 880); // start audio
-  expect(await flashes(page, '[data-type=lpg] [data-jack=ping]', 1000)).toBeGreaterThanOrEqual(1);
+  await firstFlash(page, '[data-type=lpg] [data-jack=ping]'); // the clock runs and the page sees it
+  expect(await flashes(page, '[data-type=lpg] [data-jack=ping]', 2500)).toBeGreaterThanOrEqual(1);
 
   // a frame inside it at ÷2 (drag its CLK IN ratio field down one step)
   await page.locator('[data-type=lpg] .sr-head').click();
@@ -485,12 +508,17 @@ test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half 
   const f = await center(page, page.locator(`[data-frame=${inner}] [data-field=clkIn]`));
   await drag(page, f, { x: f.x, y: f.y + 9 });
   await expect(page.locator(`[data-frame=${inner}] [data-field=clkIn]`)).toHaveText('÷2');
-  const [a, b] = await Promise.all([
-    flashes(page, `[data-frame=${outer}] [data-jack=clkOut]`, 3000),
-    flashes(page, `[data-frame=${inner}] [data-jack=clkOut]`, 3000),
+  // the plan changed: let both clocks tick in the new plan before counting
+  await Promise.all([
+    firstFlash(page, `[data-frame=${outer}] [data-jack=clkOut]`),
+    firstFlash(page, `[data-frame=${inner}] [data-jack=clkOut]`),
   ]);
-  expect(Math.abs(a - 6)).toBeLessThanOrEqual(1);
-  expect(Math.abs(b - 3)).toBeLessThanOrEqual(1);
+  const [a, b] = await Promise.all([
+    flashes(page, `[data-frame=${outer}] [data-jack=clkOut]`, 4000),
+    flashes(page, `[data-frame=${inner}] [data-jack=clkOut]`, 4000),
+  ]);
+  expect(Math.abs(a - 8)).toBeLessThanOrEqual(1);
+  expect(Math.abs(b - 4)).toBeLessThanOrEqual(1);
   await app.close();
 });
 

@@ -19,6 +19,7 @@ import {
   GHEAD,
   GPAD,
   jackAt,
+  landingFrame,
   rectOf,
   resizeFrame,
   unframe,
@@ -562,4 +563,71 @@ test('collapsed survives a save and extractGroup; absent means expanded', () => 
   const plain = JSON.parse(JSON.stringify(doc));
   delete plain.groups[0].collapsed;
   expect(validateDoc(plain, SPECS)!.groups[0]!.collapsed).toBe(false);
+});
+
+// A collapsed frame's room stays free (spec §5: neighbours do not move)
+function roomFixture() {
+  let doc = emptyDoc;
+  const ids: string[] = [];
+  for (const [x, y] of [
+    [0, 0],
+    [400, 0],
+    [0, 300],
+    [400, 300],
+  ] as const) {
+    const a = addModule(doc, SPECS, 'osc', x, y);
+    doc = a.doc;
+    ids.push(a.id);
+  }
+  const o = addModule(doc, SPECS, 'out', 1600, 1200);
+  const f = frameSelection(o.doc, SPECS, ids);
+  const doc2 = setCollapsed(f.doc, [f.id], true);
+  const g = doc2.groups.find((x) => x.id === f.id)!;
+  const block = blockOf(doc2, SPECS, f.id);
+  return { doc: doc2, g, out: o.id, block, ids };
+}
+
+test('moving a module into the room under a collapsed block does not join the frame', () => {
+  const { doc, g, out, block } = roomFixture();
+  expect(g.h).toBeGreaterThan(block.h + 200);
+  const m = doc.modules.find((x) => x.id === out)!;
+  const moved = moveObjects(doc, SPECS, [out], g.x + 40 - m.x, g.y + block.h + 100 - m.y);
+  const mo = moved.modules.find((x) => x.id === out)!;
+  expect(mo.parent).toBeNull();
+  expect(blockOwner(moved, out)).toBeNull();
+});
+
+test('a module added in the room under a collapsed block stays outside it', () => {
+  const { doc, g, block } = roomFixture();
+  const a = addModule(doc, SPECS, 'osc', g.x + 40, g.y + block.h + 100);
+  const moved = moveObjects(a.doc, SPECS, [a.id], 0, 0);
+  expect(moved.modules.find((x) => x.id === a.id)!.parent).toBeNull();
+  expect(blockOwner(moved, a.id)).toBeNull();
+});
+
+test('a frame dropped into the room under a collapsed block does not nest, and landingFrame agrees', () => {
+  const { doc, g, block } = roomFixture();
+  const f = frameSelection(doc, SPECS, [doc.modules.find((m) => m.type === 'out')!.id]);
+  const dx = g.x + 40 - rectOf(f.doc, SPECS, f.id).x;
+  const dy = g.y + block.h + 100 - rectOf(f.doc, SPECS, f.id).y;
+  expect(landingFrame(f.doc, SPECS, [f.id], dx, dy)).toBeNull();
+  const moved = moveObjects(f.doc, SPECS, [f.id], dx, dy);
+  expect(moved.groups.find((x) => x.id === f.id)!.parent).toBeNull();
+});
+
+test('a collapsed frame moved inside another frame by its block joins it', () => {
+  const { doc, g } = roomFixture();
+  const o = addModule(doc, SPECS, 'out', 3000, 0);
+  const big = frameSelection(o.doc, SPECS, [o.id]);
+  const F = big.doc.groups.find((x) => x.id === big.id)!;
+  // F is smaller than the collapsed frame's full rect, but larger than its block
+  const withF: Doc = {
+    ...big.doc,
+    groups: big.doc.groups.map((x) => (x.id === F.id ? { ...x, x: 3000, y: 2000, w: 600, h: 400 } : x)),
+  };
+  const dx = 3100 - g.x;
+  const dy = 2100 - g.y;
+  expect(landingFrame(withF, SPECS, [g.id], dx, dy)).toBe(F.id);
+  const moved = moveObjects(withF, SPECS, [g.id], dx, dy);
+  expect(moved.groups.find((x) => x.id === g.id)!.parent).toBe(F.id);
 });

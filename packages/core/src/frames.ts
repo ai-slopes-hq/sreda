@@ -90,10 +90,10 @@ export interface Block {
 }
 
 /** What is drawn of an object: a collapsed frame is its block, anything else its rectangle. */
-export function shownRect(doc: Doc, specs: Specs, id: string): Rect {
+export function shownRect(doc: Doc, specs: Specs, id: string, blocks?: ReadonlyMap<string, Block>): Rect {
   const g = doc.groups.find((x) => x.id === id);
   if (!g?.collapsed) return rectOf(doc, specs, id);
-  const b = blockOf(doc, specs, id);
+  const b = blocks?.get(id) ?? blockOf(doc, specs, id);
   return { x: g.x, y: g.y, w: b.w, h: b.h };
 }
 
@@ -220,12 +220,20 @@ const contains = (r: Rect, p: Pt): boolean => p.x > r.x && p.x < r.x + r.w && p.
 const centre = (r: Rect): Pt => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
 
 /** The smallest frame holding `p` that is larger than `minArea`, skipping `skip`. */
-function innermost(doc: Doc, p: Pt, minArea: number, skip: ReadonlySet<string>): string | null {
+function innermost(
+  doc: Doc,
+  p: Pt,
+  minArea: number,
+  skip: ReadonlySet<string>,
+  objs: readonly string[],
+): string | null {
   let best: string | null = null;
   let area = Infinity;
   for (const g of doc.groups) {
     const a = g.w * g.h;
     if (skip.has(g.id) || a <= minArea || !contains(g, p)) continue;
+    // a collapsed frame's room (and anything under a block) is free: it only keeps what is already inside it
+    if ((g.collapsed || blockOwner(doc, g.id)) && !objs.some((o) => chainOf(doc, o).includes(g.id))) continue;
     if (a < area) {
       area = a;
       best = g.id;
@@ -249,13 +257,14 @@ export function recomputeParents(
   const skipped = new Set(skip);
   const modules = doc.modules.map((m) => {
     if (want && !want.has(m.id)) return m;
-    const parent = innermost(doc, centre(rectOf(doc, specs, m.id)), 0, skipped);
+    const parent = innermost(doc, centre(rectOf(doc, specs, m.id)), 0, skipped, [m.id]);
     return parent === m.parent ? m : { ...m, parent };
   });
   const groups = doc.groups.map((g) => {
     if (want && !want.has(g.id)) return g;
     const inside = new Set([g.id, ...descendants(doc, g.id), ...skipped]);
-    const parent = innermost(doc, centre(g), g.w * g.h, inside);
+    const shown = shownRect(doc, specs, g.id);
+    const parent = innermost(doc, centre(shown), shown.w * shown.h, inside, [g.id]);
     return parent === g.parent ? g : { ...g, parent };
   });
   return { ...doc, modules, groups };
@@ -351,13 +360,14 @@ export function landingFrame(
 ): string | null {
   const roots = rootsOf(doc, ids);
   if (!roots.length) return null;
-  const b = bounds(roots.map((id) => rectOf(doc, specs, id)));
+  const b = bounds(roots.map((id) => shownRect(doc, specs, id)));
   const area = roots.length === 1 && isGroupId(roots[0]!) ? b.w * b.h : 0;
   return innermost(
     doc,
     { x: b.x + b.w / 2 + dx, y: b.y + b.h / 2 + dy },
     area,
     new Set(withDescendants(doc, ids)),
+    roots,
   );
 }
 
