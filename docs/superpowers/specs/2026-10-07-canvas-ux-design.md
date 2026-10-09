@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 20 (§5: STACK packs densely as a frame mode; resizing a STACK / FIX frame re-packs it; frames collapse to a block, C / ⇧C) · Status: approved
+Date: 2026-10-07 · Revision 21 (§4: cables are drawn behind — stubs at the jacks, whole on hover, focus and in WIRES; §5: WIRE FIX removed, STACK is the one managed layout) · Status: approved
 
 ## Why
 
@@ -214,8 +214,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - **Magnets:** while a module or selection is dragged, its bounding box snaps flush to nearby modules when an edge
   comes within 10 screen px: side by side (edges touching, tops or bottoms aligned) or stacked (one under the
   other, lefts or rights aligned). A thin guide line shows each active snap. Holding ⌘ while dragging turns magnets
-  off. Magnets only arrange; snapped modules do not stay linked. Inside a WIRE FIX frame magnets keep a 32 px gap instead
-  of a flush edge.
+  off. Magnets only arrange; snapped modules do not stay linked.
 - **Replace:** double-click a module's name → the search opens as `REPLACE <MODULE>`; Enter puts the new module in
   the same place and frame. Cables move to the new module's port with the same id, else to its next unused port of
   the same role; cables with no match are removed. Knobs with the same id keep their value (`freq` survives OSC →
@@ -223,12 +222,17 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - **Insert into a cable:** drag a module that has no cables over a cable; within 8 screen px the cable highlights;
   dropping splits it: source → the module's first input of the source's role (else its first input), the module's
   first output of the target's role (else its first output) → the old target. One undo step.
-- **Wire hover:** a wire under the pointer (within 6 screen px of its drawn path, routed or curved) is drawn at full
-  strength and thicker, every other wire dims to 15 %, and a tag by the pointer names both ends
-  (`SLOPE › EOC  →  STAGES › ADV`). It takes precedence over cable focus.
-- **Cable focus:** hovering a module or a frame header shows its cables (a frame: all cables touching anything inside
-  it) at full strength and slightly thicker, and dims every other cable to 20 %. Selection does not focus: with
-  nothing hovered all cables are drawn normally.
+- **Cables are drawn behind.** By default a cable shows only its two ends: a stub of about 14 px in the cable's
+  colour leaving each jack and going behind the panel, so a patched jack reads as patched and the canvas stays clear.
+  A cable is drawn whole (curved, full strength):
+  - **all of them** while the sidebar is open on WIRES;
+  - **a module's or a frame's cables** while it is hovered or selected (a frame: every cable touching anything
+    inside it);
+  - **the cable under the pointer** — hovering a stub (or, where the cable is drawn whole, its path within 6 screen
+    px) draws it whole, thicker, with a tag by the pointer naming both ends (`SLOPE › EOC  →  STAGES › ADV`);
+  - **a cable being dragged**, and the cable a dragged module would be inserted into.
+  Ghost cables (normals) follow the same rule. Stubs are drawn for every cable, also while the cable is whole.
+  Insert-into-a-cable works on cables drawn whole.
 - Popups (the picker, option lists) close when the canvas pans or zooms.
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
@@ -249,8 +253,8 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 ## 5. Groups (frames)
 
 - A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
-  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, FIX, SAVE, M, collapse) show while the header is hovered, and stay visible
-  while STACK, FIX or M is on. Drag an edge or corner to resize (minimum 352 × 96); a STACK or FIX frame re-packs its
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, SAVE, M, collapse) show while the header is hovered, and stay visible
+  while STACK or M is on. Drag an edge or corner to resize (minimum 352 × 96); a STACK frame re-packs its
   children to the new width as you drag (see below);
   drag the header to move the frame and everything inside it; click the header to select it.
 - **Membership is containment.** Every module and frame has a `parent` (a frame or none): the innermost frame that
@@ -276,32 +280,23 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - CLK out flashes on each tick.
 - The header shows a small level meter: the peak of what leaves the frame (its outgoing audio cables and OUT
   modules inside it), held and falling over 300 ms.
-- **Frame tools** in the header:
+- **Frame tools** in the header (tint, STACK, SAVE, M, collapse):
   - **Tint** (a small swatch): click cycles the fill through neutral (≈ 4 % white) and six muted hues (≈ 8 %).
     Nested frames layer, so the hierarchy reads without extra lines.
-  - **STACK:** a frame mode (`layout: 'stack'`), toggled. It packs the frame's direct children (modules, and child
-    frames as single blocks) **densely** inside 16 px padding, with no gaps: in reading order (rows by position, then
-    x), each child goes to the highest free place it fits in, the leftmost of equal ones (skyline packing), so 1U
-    modules fill the room beside and under taller ones. Like WIRE FIX, a STACK frame manages its own layout: anything
-    dropped into, moved within or taken out of it re-packs it (where a module is dropped sets its place in the reading
-    order). STACK and WIRE FIX exclude each other; turning either off leaves a free frame and keeps the layout.
-  - **The packing width** is the frame's inner width. Turning STACK or FIX on in a free frame chooses it: the
-    smallest area at about 1.6 : 1, at least the widest child. Switching STACK ↔ FIX keeps the frame's width and the
-    children's order (FIX lays them out in its rows again). Dragging the right edge or a corner of a STACK or FIX
-    frame changes the width (never below the widest child) and re-packs live; the height always follows the content.
-    Pressing STACK or FIX on a frame already in that mode changes nothing. Each is one undo step.
-  - After a pack the frame fits its content: the same margin on all four sides (16 px for STACK, 32 px for FIX).
-  - **WIRE FIX** (button `FIX`): a frame mode (`layout: 'route'`), toggled, **on by default** — ⌘G frames and
-    factory frames start packed in rows with routed wires (innermost frames first). A WIRE FIX frame manages its own layout: its direct children
-    sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the
-    left padding is a trunk). Anything dropped into, moved within or taken out of it re-packs it, so the channels
-    always run through. Cables between two direct children are drawn orthogonally and never cross a module. A cable to
-    the next module to the right in the same row goes straight through the gap between them (one step at mid-gap if
-    the jacks are at different heights). Any other cable goes out of
-    the source into the channel on its right, up into the channel above its row, along the trunk to the channel
-    above the target's row (same row: straight across), down the channel on the target's left into the jack (a
-    knob's mod jack: straight down from the channel above) — rounded corners, one 4 px lane per cable. Turning WIRE FIX
-    off returns to curves and keeps the layout.
+  - **STACK:** a frame mode (`layout: 'stack'`), toggled, **on by default** — ⌘G frames and factory frames start
+    stacked. It packs the frame's direct children (modules, and child frames as single blocks) **densely** inside
+    16 px padding, with no gaps: in reading order (rows by position, then x), each child goes to the highest free
+    place it fits in, the leftmost of equal ones (skyline packing), so 1U modules fill the room beside and under taller
+    ones. A STACK frame manages its own layout: anything dropped into, moved within or taken out of it re-packs it
+    (where a module is dropped sets its place in the reading order). Turning STACK off leaves a free frame and keeps
+    the layout.
+  - **The packing width** is the frame's inner width. Turning STACK on in a free frame chooses it: the smallest area
+    at about 1.6 : 1, at least the widest child. Dragging the right edge or the bottom-right corner of a STACK frame
+    changes the width (never below the widest child) and re-packs live; the height always follows the content.
+    Pressing STACK on a stacked frame turns it off. Each is one undo step.
+  - After a pack the frame fits its content: 16 px on all four sides.
+  - **WIRE FIX is gone** (it routed cables in channels; with cables drawn behind, §4, it is not needed). Documents
+    with `layout: 'route'` frames open them as STACK frames (same order, packed densely).
   - **MUTE (M):** the frame fades out over 50 ms: cables leaving the frame and OUT modules inside it go silent; clocks
     and everything inside keep running, so the voice comes back in time. A cable is silenced by the innermost
     frame that holds its source but not its target, when that frame or one of its parents is muted. Its contents are drawn at 40 % (its own
@@ -572,7 +567,7 @@ Decided 2026-10-07 for one user on one Mac.
 - **The document** is immutable JSON:
   `modules: { id, type, x, y, parent, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks
   as `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
-  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'route', muted, clock: { on, bpm } }[]`.
+  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'stack', muted, collapsed, clock: { on, bpm } }[]`.
   A group's jacks are `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new
   document; undo is a history of documents grouped per gesture. `compile` resolves normals into ordinary bindings,
   compiles each group into a hidden clock node, marks muted bindings, orders the graph and lays out the readouts.
@@ -612,7 +607,7 @@ Decided 2026-10-07 for one user on one Mac.
 - **e2e (Playwright driving Electron):** drag from a jack → search → placed and wired; stack two cables on one input; click to listen
   and back; R randomises and undo restores; box-select by dragging; magnets snap flush; ⌘G frames the selection,
   own clock ticks, CLK out drives a member, a nested frame inherits its parent's clock at ÷2; dragging a module out
-  of a frame detaches it; STACK packs a frame; WIRE FIX draws orthogonal cables; MUTE silences a frame's outgoing
+  of a frame detaches it; STACK packs a frame; cables show as stubs and whole on hover / in WIRES; MUTE silences a frame's outgoing
   cables; replace keeps matching cables and knob values; dropping a free module on a cable inserts it; NEW clears and
   undo restores; reload resumes the canvas; ⌘S saves a frame as a group and the picker places it twice with fresh
   ids; ⌘S / ⌘O round-trip a project through the library folder; WIRES lists a frame's wires under it, rewires
