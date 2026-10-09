@@ -75,7 +75,12 @@ of a creative tool; nothing of its UI is ported.
 - **Plan 10 done and merged into `main`** (2026-10-10), spec revision 27: FOLD has four models (SINE, TRI, WRAP, CHEB),
   FOLD ×1…×40, LEVEL and loudness matched by a measured table; old FOLD values keep their drive. The 200-module patch
   now runs at 23.2 % natively (FOLD is heavier).
-- **Next:** the FILTER models from listening and the FILTER cutoff animation (backlog), or another milestone.
+- **Plan 11 done and merged into `main`** (2026-10-10), spec revision 28: FILTER after Ableton's Auto Filter renders
+  (`projects/refs/filter/`) — RES means the same on every model (+7 dB at 0.5, ≈ +20 dB at 0.9), the passband holds at
+  any RES, each model's saturation matches its reference within ±6 dB; the MODEL glyph follows the live cutoff and RES.
+  The sound block from listening (DRIVE, FOLD, FILTER) is done; DRIVE's tuning against renders waits for them.
+- **Next:** choose the next milestone (candidates in `docs/backlog.md`: DICE for the whole project, sends to shared
+  effects, recording and export).
 
 ## The road (vertical slices: something to hear at every stage)
 
