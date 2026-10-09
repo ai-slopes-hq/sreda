@@ -79,9 +79,9 @@ of a creative tool; nothing of its UI is ported.
   (`projects/refs/filter/`) — RES means the same on every model (+7 dB at 0.5, ≈ +20 dB at 0.9), the passband holds at
   any RES, each model's saturation matches its reference within ±6 dB; the MODEL glyph follows the live cutoff and RES.
   The sound block from listening (DRIVE, FOLD, FILTER) is done; DRIVE's tuning against renders waits for them.
-- **Plan 12 done and merged into `main`** (2026-10-10), spec revision 29: DICE at the top right (in place of NEW)
-  throws a random playable patch — rhythmic (drums, bass, lead, synced FX) or ambient (drone, pad or bells, long delay,
-  big reverb, sometimes GRAINS on LIVE) — tested to sound on every seed; NEW moved to LIBRARY › PROJECTS.
+- **Plan 12 done and merged into `main`** (2026-10-10), spec revision 29: DICE at the top right
+  beside NEW (spec revision 30) throws a random playable patch — rhythmic (drums, bass, lead, synced FX) or ambient (drone, pad or bells, long delay,
+  big reverb, sometimes GRAINS on LIVE) — tested to sound on every seed.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: more factory presets, recording and export).
 
 ## The road (vertical slices: something to hear at every stage)

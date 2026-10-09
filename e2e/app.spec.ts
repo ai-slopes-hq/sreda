@@ -757,13 +757,7 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await page.keyboard.press('Enter');
   await expect(page.locator('.sr-brand')).toHaveText('SREDAjam');
   expect(existsSync(join(library, 'projects', 'jam.sreda.json'))).toBe(true);
-  // NEW lives in LIBRARY › PROJECTS (the top right holds DICE)
-  const newProject = async () => {
-    await page.getByText('SIDEBAR', { exact: true }).click();
-    await page.locator('.sr-stabs button', { hasText: 'LIBRARY' }).click();
-    await page.locator('.sr-lib').getByText('NEW', { exact: true }).click();
-    await page.getByText('SIDEBAR', { exact: true }).click();
-  };
+  const newProject = () => page.locator('.sr-tbtn', { hasText: 'NEW' }).click();
   await newProject();
   await expect(page.locator('.sr-mod')).toHaveCount(0);
   await page.keyboard.press('Meta+z');
@@ -1372,7 +1366,7 @@ test("FILTER's response glyph follows the live cutoff", async () => {
 
 test('DICE throws a random patch that sounds; ⌘Z returns the one before', async () => {
   const { app, page } = await launch();
-  await page.getByText('DICE', { exact: true }).click();
+  await page.locator('.sr-tbtn', { hasText: 'DICE' }).click();
   await expect.poll(async () => (await doc(page)).modules.length).toBeGreaterThan(5);
   await expect(page.locator('.sr-frame .sr-gname', { hasText: 'DICE' })).toHaveCount(1);
   await page.mouse.click(1300, 880); // start audio

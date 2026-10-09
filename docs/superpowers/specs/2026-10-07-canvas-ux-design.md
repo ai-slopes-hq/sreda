@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 29 (§6: DICE in place of NEW at the top right — a random playable patch, rhythmic or ambient) · Status: approved
+Date: 2026-10-07 · Revision 30 (§6: NEW stays at the top right; DICE sits beside it) · Status: approved
 
 ## Why
 
@@ -385,8 +385,8 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
 - Top right: **SIDEBAR** (opens the sidebar, §5a; its first tab is WIRES), **SAVE** (saves the project, as ⌘S with no
-  frame selected) and **DICE** (revision 29, in place of NEW: a random playable patch, below). An empty canvas comes
-  from NEW in LIBRARY › PROJECTS. With the listen bar these are the only chrome.
+  frame selected), **NEW** (clears the canvas; an undo step; also in LIBRARY › PROJECTS) and **DICE** (a random
+  playable patch, below; revision 30: beside NEW, not in its place). With the listen bar these are the only chrome.
 - **DICE** replaces the canvas with a new random patch (one undo step, fit in view, the speakers fade in) and the
   project becomes unnamed. Each throw picks one of two kinds at random:
   - **rhythmic** — a frame with its own clock (90–150 BPM); RHYTHM (euclid or grid) and / or STAGES (a generated line in

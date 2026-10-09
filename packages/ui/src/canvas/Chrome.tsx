@@ -9,7 +9,7 @@ const HINT =
 
 const stop = (e: Event) => e.stopPropagation();
 
-/** The only chrome (spec §6): SREDA and the project path (● unsaved), SAVE / DICE, the save name field, zoom, hints. */
+/** The only chrome (spec §6): SREDA and the project path (● unsaved), SAVE / NEW / DICE, the save name field, zoom, hints. */
 export function Chrome(props: {
   session: SessionApi;
   lib: LibraryApi;
@@ -46,6 +46,9 @@ export function Chrome(props: {
         </button>
         <button class="sr-tbtn" title="save (⌘S)" onClick={() => void props.lib.save()}>
           SAVE
+        </button>
+        <button class="sr-tbtn" title="clear the canvas" onClick={() => props.lib.clear()}>
+          NEW
         </button>
         <button
           class="sr-tbtn"
