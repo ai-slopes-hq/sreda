@@ -3,6 +3,7 @@ import { addModule, FACTORY, frameSelection, setParam, SPECS, starterDoc } from 
 import { expect, test } from 'vitest';
 import { libraryActions, validPath, type SredaBridge } from './library';
 import { createSession } from './store';
+import { dicePatch } from '@sreda/core';
 
 function fakeBridge(folder: string | null = '/lib') {
   const files = new Map<string, unknown>();
@@ -140,6 +141,22 @@ test('NEW clears the canvas as an undo step and makes the project unnamed', () =
   expect(s.state.project).toBeNull();
   s.undo();
   expect(s.current().modules).toHaveLength(2);
+});
+
+test('DICE replaces the canvas with a random playable patch as an undo step; the project is unnamed', () => {
+  const s = createSession(SPECS, starterDoc(SPECS), null, { path: 'jam', factory: false });
+  const { bridge } = fakeBridge();
+  const lib = libraryActions(s, SPECS, bridge);
+  lib.dice(7);
+  expect(s.state.doc).toEqual(dicePatch(SPECS, 7).doc);
+  expect(s.state.project).toBeNull();
+  s.undo();
+  expect(s.state.doc.modules.map((m) => m.type)).toEqual(['osc', 'out']);
+  // without a seed every throw differs
+  lib.dice();
+  const a = JSON.stringify(s.state.doc);
+  lib.dice();
+  expect(JSON.stringify(s.state.doc)).not.toBe(a);
 });
 
 test('⌘O opens a project file: a document replaces the canvas; ⌘S writes back to that file, save as goes to the library', async () => {

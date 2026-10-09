@@ -9,11 +9,13 @@ const HINT =
 
 const stop = (e: Event) => e.stopPropagation();
 
-/** The only chrome (spec §6): SREDA and the project path (● unsaved), SAVE / NEW, the save name field, zoom, hints. */
+/** The only chrome (spec §6): SREDA and the project path (● unsaved), SAVE / DICE, the save name field, zoom, hints. */
 export function Chrome(props: {
   session: SessionApi;
   lib: LibraryApi;
   zoom(factor: number | null): void;
+  /** fit the whole patch in view */
+  fit(): void;
 }): JSX.Element {
   const st = props.session.state;
   const title = () => {
@@ -45,8 +47,15 @@ export function Chrome(props: {
         <button class="sr-tbtn" title="save (⌘S)" onClick={() => void props.lib.save()}>
           SAVE
         </button>
-        <button class="sr-tbtn" title="clear the canvas" onClick={() => props.lib.clear()}>
-          NEW
+        <button
+          class="sr-tbtn"
+          title="a random patch, rhythmic or ambient (⌘Z returns)"
+          onClick={() => {
+            props.lib.dice();
+            props.fit();
+          }}
+        >
+          DICE
         </button>
       </div>
       <Show when={st.saving}>

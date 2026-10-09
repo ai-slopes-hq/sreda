@@ -757,11 +757,18 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await page.keyboard.press('Enter');
   await expect(page.locator('.sr-brand')).toHaveText('SREDAjam');
   expect(existsSync(join(library, 'projects', 'jam.sreda.json'))).toBe(true);
-  await page.getByText('NEW', { exact: true }).click();
+  // NEW lives in LIBRARY › PROJECTS (the top right holds DICE)
+  const newProject = async () => {
+    await page.getByText('SIDEBAR', { exact: true }).click();
+    await page.locator('.sr-stabs button', { hasText: 'LIBRARY' }).click();
+    await page.locator('.sr-lib').getByText('NEW', { exact: true }).click();
+    await page.getByText('SIDEBAR', { exact: true }).click();
+  };
+  await newProject();
   await expect(page.locator('.sr-mod')).toHaveCount(0);
   await page.keyboard.press('Meta+z');
   await expect(page.locator('.sr-mod')).toHaveCount(2);
-  await page.getByText('NEW', { exact: true }).click();
+  await newProject();
   await page.keyboard.press('Meta+o');
   await expect(page.locator('.sr-mod')).toHaveCount(2);
   await expect(page.locator('.sr-brand')).toHaveText('SREDAjam.sreda.json');
@@ -1360,5 +1367,18 @@ test("FILTER's response glyph follows the live cutoff", async () => {
   const a = await glyph.getAttribute('d');
   await page.waitForTimeout(150);
   expect(await glyph.getAttribute('d')).not.toBe(a);
+  await app.close();
+});
+
+test('DICE throws a random patch that sounds; ⌘Z returns the one before', async () => {
+  const { app, page } = await launch();
+  await page.getByText('DICE', { exact: true }).click();
+  await expect.poll(async () => (await doc(page)).modules.length).toBeGreaterThan(5);
+  await expect(page.locator('.sr-frame .sr-gname', { hasText: 'DICE' })).toHaveCount(1);
+  await page.mouse.click(1300, 880); // start audio
+  const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  await expect.poll(master, { timeout: 4000 }).toBeGreaterThan(0.01);
+  await page.keyboard.press('Meta+z');
+  await expect.poll(async () => (await doc(page)).modules.map((m) => m.type)).toEqual(['osc', 'out']);
   await app.close();
 });

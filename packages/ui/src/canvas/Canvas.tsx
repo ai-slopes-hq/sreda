@@ -1001,7 +1001,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             </div>
           )}
         </Show>
-        <Chrome session={s} lib={lib} zoom={zoomBy} />
+        <Chrome session={s} lib={lib} zoom={zoomBy} fit={() => requestAnimationFrame(() => fit(false))} />
         <Show when={!st.audio}>
           <div class="sr-line">CLICK TO START AUDIO</div>
         </Show>

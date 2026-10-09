@@ -19,3 +19,4 @@ export const FACTORY: FactoryEntry[] = [
   })),
   ...GROUPS.map((g) => ({ kind: 'group' as const, name: g.name, build: (s: Specs) => build(s, g.build) })),
 ];
+export { dicePatch, type DiceKind } from './dicepatch';

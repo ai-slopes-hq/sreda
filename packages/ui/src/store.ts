@@ -397,6 +397,10 @@ export function createSession(
       this.markSaved();
       host?.post({ t: 'fade', ms: 200 });
     },
+    /** the speakers fade in (a new patch arrived: DICE) */
+    fadeIn(): void {
+      host?.post({ t: 'fade', ms: 200 });
+    },
     /** the current document is what is saved now */
     markSaved(): void {
       saved = history.current;

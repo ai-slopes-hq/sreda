@@ -1,5 +1,14 @@
 // The library (spec §6): what the Electron preload exposes as `window.sreda`, and the save / open flows over it.
-import { emptyDoc, extractGroup, FACTORY, isGroupId, validateDoc, type Doc, type Specs } from '@sreda/core';
+import {
+  dicePatch,
+  emptyDoc,
+  extractGroup,
+  FACTORY,
+  isGroupId,
+  validateDoc,
+  type Doc,
+  type Specs,
+} from '@sreda/core';
 import type { LibEntry } from './canvas/patching';
 import type { Saving, SessionApi } from './store';
 
@@ -216,6 +225,12 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
         s.setState('sidebar', 'highlight', paths);
         s.setState('sidebar', { open: true, tab: 'LIBRARY' });
       }
+    },
+    /** DICE (spec §6, revision 29): a random playable patch in place of the canvas (an undo step), the project unnamed */
+    dice(seed: number = (Math.random() * 2 ** 32) >>> 0): void {
+      s.commit(dicePatch(specs, seed).doc);
+      s.setProject(null);
+      s.fadeIn();
     },
     /** NEW: an empty canvas (an undo step), the project unnamed */
     clear(): void {
