@@ -256,3 +256,21 @@ test('a Plan 4 DRIVE opens with its model and its gain in dB (MODE SAT / OD / FU
   expect(n.modules[0]!.params['model']).toBe(5);
   expect(n.modules[0]!.params['gain']).toBe(0.5);
 });
+
+test('a Plan 4 FOLD keeps its drive and opens as SINE at LEVEL 0 dB', () => {
+  const d = validateDoc(
+    {
+      version: 1,
+      modules: [{ id: 'm1', type: 'fold', x: 0, y: 0, params: { fold: 0.5, sym: 0.25 } }],
+      cables: [],
+      nextId: 2,
+    },
+    SPECS,
+  )!;
+  const p = d.modules[0]!.params;
+  // old drive ×(1 + 8·0.5) = ×5 → the position of ×5 on the new ×1…×40 exponential knob
+  expect(p['fold']).toBeCloseTo(Math.log(5) / Math.log(40), 6);
+  expect(p['sym']).toBe(0.25);
+  expect(p['model']).toBe(0);
+  expect(p['level']).toBe(0.5);
+});

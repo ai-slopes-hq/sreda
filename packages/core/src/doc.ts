@@ -89,7 +89,8 @@ const RENAMED_OUTPUTS: Record<string, Record<string, string>> = { delay: { out: 
 
 /**
  * Params of an older module version, moved to the current one before validation. DRIVE (Plan 9): MODE SAT / OD / FUZZ
- * became MODEL SOFT / TUBE / OD / DIST / FUZZ / RECT / DIGI, and GAIN's range grew from 0…24 dB to 0…36 dB.
+ * became MODEL SOFT / TUBE / OD / DIST / FUZZ / RECT / DIGI, and GAIN's range grew from 0…24 dB to 0…36 dB. FOLD (Plan
+ * 10): see below.
  */
 function migrateParams(type: string, params: Record<string, number>): Record<string, number> {
   if (type === 'drive' && 'mode' in params && !('model' in params)) {
@@ -97,6 +98,11 @@ function migrateParams(type: string, params: Record<string, number>): Record<str
     const next: Record<string, number> = { ...rest, model: [0, 2, 4][Math.round(mode ?? 1)] ?? 2 };
     if ('gain' in params) next['gain'] = ((params['gain'] ?? 0.25) * 24) / 36;
     return next;
+  }
+  // FOLD (Plan 10): FOLD was ×(1 + 8·k) on a linear knob; it is ×1…×40 on an exponential one, and MODEL is new
+  if (type === 'fold' && !('model' in params) && 'fold' in params) {
+    const drive = 1 + 8 * (params['fold'] ?? 0.3);
+    return { ...params, fold: Math.log(drive) / Math.log(40) };
   }
   return params;
 }

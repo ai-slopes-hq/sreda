@@ -33,7 +33,7 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
     name: 'drone',
     build(S) {
       const cx = S.add('complex', 0, 0, { freq: 55, ratio: 1.5, index: 0.15 });
-      const fo = S.add('fold', 384, 0, { fold: 0.25 });
+      const fo = S.add('fold', 384, 0, { fold: 3 }); // ×3, the old FOLD 0.25
       const fl = S.add('filter', 624, 0, { cutoff: 700, res: 0.45 });
       const dl = S.add('delay', 912, 0, { time: 0.5, feedback: 0.6, mix: 0.35 });
       const o = S.add('out', 1200, 0);

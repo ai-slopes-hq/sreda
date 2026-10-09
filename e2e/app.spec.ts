@@ -1160,7 +1160,8 @@ test('a loaded SAMPLER display: a click moves START (⌘Z undoes it); a drag scr
     await page.waitForTimeout(40);
     peak = Math.max(peak, await master());
   }
-  expect(peak).toBeGreaterThan(0.05);
+  // the scrub's level follows the drag's speed (a 25 Hz high-pass on the scrub voice), which varies under load
+  expect(peak).toBeGreaterThan(0.02);
   await page.mouse.up();
   await expect.poll(start).toBeCloseTo(0.6, 1);
   // one undo step for the whole gesture

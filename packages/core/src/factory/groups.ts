@@ -41,7 +41,7 @@ export const GROUPS: { name: string; build(b: Builder): void }[] = [
     name: 'complex vco',
     build(S) {
       const cx = S.add('complex', 0, 0, { freq: 110, ratio: 1.5, index: 0.3 });
-      const fo = S.add('fold', 384, 0, { fold: 0.3 });
+      const fo = S.add('fold', 384, 0, { fold: 3.4 }); // ×3.4, the old FOLD 0.3
       const lp = S.add('lpg', 624, 0, { decay: 0.6 });
       const sl = S.add('slope', 0, 160, { rise: 0.01, fall: 0.5, cycle: 1 });
       const un = S.add('uncertainty', 336, 160, { rate: 0.3 });

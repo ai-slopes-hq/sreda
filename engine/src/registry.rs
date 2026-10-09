@@ -27,7 +27,7 @@ const MODULES: &[Entry] = &[
     ("filter", filter::spec, |sr| {
         Box::new(filter::Filter::new(sr))
     }),
-    ("fold", fold::spec, |_| Box::new(fold::Fold::default())),
+    ("fold", fold::spec, |sr| Box::new(fold::Fold::new(sr))),
     ("follow", follow::spec, |sr| {
         Box::new(follow::Follow::new(sr))
     }),
