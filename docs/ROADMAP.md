@@ -45,7 +45,9 @@ of a creative tool; nothing of its UI is ported.
   Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 4 review").
   **Milestone 2 is complete.**
   Spec revision 18 (skins, §1a, written down only) and revision 19 (how the sound pack was built, §7a) are in.
-- **Next:** choose the next milestone (candidates: skin switching from §1a; the Plan 4 backlog items).
+- **Next:** Plan 5 (`docs/superpowers/plans/2026-10-09-5-frames-stack-collapse.md`, 4 tasks, spec revision 20):
+  dense STACK as a frame mode, resize re-packs STACK / FIX frames, collapsed frames (C / ⇧C). Native, on a branch
+  `plan-5-frames`, checkpoints after Tasks 2 and 4.
 
 ## The road (vertical slices: something to hear at every stage)
 
