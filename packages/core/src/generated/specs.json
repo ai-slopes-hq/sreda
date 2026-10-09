@@ -863,6 +863,166 @@
     "normals": []
   },
   {
+    "type": "grains",
+    "label": "GRAINS",
+    "desc": "granular: a sample or live input, freeze",
+    "size": [
+      10,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "trig",
+        "label": "TRIG",
+        "role": "trigger"
+      },
+      {
+        "id": "in",
+        "label": "IN",
+        "role": "audio"
+      },
+      {
+        "id": "pos",
+        "label": "POS",
+        "role": "mod"
+      },
+      {
+        "id": "pitch",
+        "label": "PTCH",
+        "role": "pitch"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "l",
+        "label": "L",
+        "role": "audio"
+      },
+      {
+        "id": "r",
+        "label": "R",
+        "role": "audio"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "pos",
+        "label": "POS",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.5,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "size",
+        "label": "SIZE",
+        "min": 0.005,
+        "max": 1.0,
+        "def": 0.1,
+        "taper": "exp",
+        "unit": "s"
+      },
+      {
+        "kind": "knob",
+        "id": "dens",
+        "label": "DENS",
+        "min": 1.0,
+        "max": 200.0,
+        "def": 20.0,
+        "taper": "exp"
+      },
+      {
+        "kind": "knob",
+        "id": "spray",
+        "label": "SPRAY",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.1,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "pitch",
+        "label": "PITCH",
+        "min": -24.0,
+        "max": 24.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "knob",
+        "id": "detune",
+        "label": "DETUNE",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "rev",
+        "label": "REV %",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "spread",
+        "label": "SPREAD",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.5,
+        "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "source",
+        "label": "SOURCE",
+        "options": [
+          "FILE",
+          "LIVE"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "option",
+        "id": "freeze",
+        "label": "FREEZE",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "action",
+        "id": "load",
+        "label": "LOAD"
+      },
+      {
+        "kind": "knob",
+        "id": "sample",
+        "label": "SAMPLE",
+        "min": -1.0,
+        "max": 1000000.0,
+        "def": -1.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 4,
+      "kind": "grains"
+    }
+  },
+  {
     "type": "lpg",
     "label": "LPG",
     "desc": "low-pass gate and VCA",

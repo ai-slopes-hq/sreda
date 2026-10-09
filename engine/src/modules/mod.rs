@@ -1,5 +1,4 @@
 //! One file per module: `spec()`, the DSP struct and its tests.
-
 pub mod abc;
 pub mod att;
 pub mod chance;
@@ -11,6 +10,7 @@ pub mod drive;
 pub mod filter;
 pub mod fold;
 pub mod follow;
+pub mod grains;
 pub mod lpg;
 pub mod mix;
 pub mod noise;

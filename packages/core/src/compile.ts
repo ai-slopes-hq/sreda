@@ -165,7 +165,7 @@ export function compile(doc: Doc, specs: Specs, seq: number, sampleId?: (path: s
     off += spec.outputs.length;
     const state = off++;
     let trace: number | null = null;
-    if (spec.display?.kind === 'scope') {
+    if (spec.display?.kind === 'scope' || spec.display?.kind === 'grains') {
       trace = off;
       off += TRACE_LEN;
     }

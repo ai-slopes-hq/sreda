@@ -18,6 +18,7 @@ import { Option } from './Option';
 import { Contour } from './displays/Contour';
 import { Pads } from './displays/Pads';
 import { Room } from './displays/Room';
+import { Grains } from './displays/Grains';
 import { Wave } from './displays/Wave';
 import { Scope } from './displays/Scope';
 
@@ -242,6 +243,24 @@ export function Panel(props: PanelProps): JSX.Element {
             />
           );
         }}
+      </Show>
+      <Show when={props.spec.display?.kind === 'grains' && L().display}>
+        {(d) => (
+          <Grains
+            x={d().x}
+            y={d().y}
+            w={d().w}
+            h={d().h}
+            pos={knobValue('pos')}
+            live={(props.mod.params['source'] ?? 0) === 1}
+            frozen={(props.mod.params['freeze'] ?? 0) === 1}
+            path={props.sample?.path}
+            missing={props.sample?.missing ?? false}
+            peaks={props.sample?.peaks ?? null}
+            trace={props.readouts?.trace ?? undefined}
+            onLoad={() => props.act.load?.()}
+          />
+        )}
       </Show>
       <Show when={props.spec.display?.kind === 'room' && L().display}>
         {(d) => (

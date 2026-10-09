@@ -1425,3 +1425,14 @@
 .sr-wave-box.missing .sr-dtag {
   color: #f5a524;
 }
+/* GRAINS (spec §7a) */
+.sr-grains .d-acc {
+  fill: #f5a524;
+}
+.sr-grains .d-shade {
+  fill: #f5a524;
+  fill-opacity: 0.15;
+}
+.sr-dtag.amber {
+  color: #f5a524;
+}

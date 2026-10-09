@@ -131,6 +131,13 @@ fn process_with_a_sample_loaded_and_auditioning_allocates_nothing() {
     e.apply(plan).unwrap();
     // SAMPLER plays sample 0 (its hidden `sample` is the last fixed value: MODE, REV, AUTO, sample)
     e.fixed(sampler, 3, 0.0);
+    // GRAINS too (its `sample` follows SOURCE and FREEZE)
+    let grains = fixture("all-a")
+        .nodes
+        .iter()
+        .position(|n| n.type_ == "grains")
+        .unwrap();
+    e.fixed(grains, 2, 0.0);
     let p = e.sample_alloc(0, 48_000, 2, 4);
     unsafe { std::ptr::write_bytes(p, 0, 2 * 48_000 + 8) };
     e.sample_commit();

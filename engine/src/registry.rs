@@ -31,6 +31,9 @@ const MODULES: &[Entry] = &[
     ("follow", follow::spec, |sr| {
         Box::new(follow::Follow::new(sr))
     }),
+    ("grains", grains::spec, |sr| {
+        Box::new(grains::Grains::new(sr))
+    }),
     ("lpg", lpg::spec, |sr| Box::new(lpg::Lpg::new(sr))),
     ("mix", mix::spec, |_| Box::new(mix::Mix)),
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),

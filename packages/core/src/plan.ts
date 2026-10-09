@@ -43,7 +43,7 @@ export interface NodeReadouts {
   outs: number;
   /** one float: the module's current index (STAGES, RHYTHM, SWITCH, SPREAD) */
   state: number;
-  /** TRACE_LEN floats for a scope display: min A, max A, min B, max B, 256 columns each */
+  /** TRACE_LEN floats: SCOPE min A, max A, min B, max B (256 columns each); GRAINS the write head, 64 grain positions, 512 live peaks */
   trace: number | null;
 }
 export interface ReadoutLayout {

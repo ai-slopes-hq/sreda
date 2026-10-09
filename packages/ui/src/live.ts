@@ -3,7 +3,8 @@
 import { createEffect, onCleanup } from 'solid-js';
 import { tracePaths } from './canvas/displays/trace';
 
-type Kind = 'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw' | 'playhead';
+type Kind =
+  'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw' | 'playhead' | 'tick';
 interface Entry {
   el: Element;
   kind: Kind;
@@ -23,6 +24,11 @@ const entries = new Set<Entry>();
 let source: Float32Array | null = null;
 let layoutSeq = -1;
 let running = false;
+
+/** The readout buffer, for displays that draw from it directly ('tick'). */
+export function readoutBuffer(): Float32Array | null {
+  return source;
+}
 
 /** The readout buffer the worklet fills. */
 export function setSource(buf: Float32Array | null): void {
@@ -119,6 +125,10 @@ export function frame(now: number): void {
         // hold the peak, fall at full scale per 0.6 s
         e.hold = Math.max(Math.min(1, v), e.hold - dt / 0.6);
         e.onChange?.(e.hold);
+        break;
+      case 'tick':
+        // every frame: the callback reads what it needs from the buffer at its offset
+        e.onChange?.(e.offset);
         break;
       case 'playhead':
         // a position 0…1 (−1: nothing playing), handed on when it moves
