@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 21 (§4: cables are drawn behind — stubs at the jacks, whole on hover, focus and in WIRES; §5: WIRE FIX removed, STACK is the one managed layout) · Status: approved
+Date: 2026-10-07 · Revision 22 (§5a: sidebar tabs WIRES / MIX / SETTINGS; the MIX tab, a strip per OUT and the master fader; §1a: skins chosen in SETTINGS) · Status: approved
 
 ## Why
 
@@ -47,9 +47,11 @@ geometry, type (IBM Plex Mono), the panel grammar and the meaning of colour (rol
 every skin. A document does not store a skin, and a frame's tint is stored as an index (0 neutral, 1–6 hues), so a
 patch looks right in any skin.
 
-**For now skins are only written down.** The first build ships DEFAULT and has no way to choose a skin; the others
-are recorded here so they can be tried later (choosing a skin is in the backlog). Candidates were compared on one
-small patch: https://claude.ai/artifact/U5d9RCXf13k7nkraC3VGgq.
+**Choosing a skin** (revision 22): the sidebar's SETTINGS tab (§5a) lists the six skins, each row its name and a
+strip of swatches (`ground`, `panel`, `text` and the four role colours). Hovering a row tries the skin on the whole
+app; a click chooses it; leaving the list without a click returns to the chosen one. The skin is app-wide, kept in
+`<userData>/settings.json` beside the library folder, never in a document; a new install starts on DEFAULT. Candidates
+were compared on one small patch: https://claude.ai/artifact/U5d9RCXf13k7nkraC3VGgq.
 
 | Token | Used for | DEFAULT | ANNABIOSIS | KANAGAWA | TOUCH | NORD | TOKYO NIGHT |
 |---|---|---|---|---|---|---|---|
@@ -317,8 +319,9 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - **Sidebar:** a panel docked on the right, hidden by default (W or the SIDEBAR button opens and closes it; Esc closes
   it). It does not cover the canvas: the canvas, the top-right buttons, the zoom control and the hint line end at its
   edge. It opens at a fixed width (440 px) with every new window and every opened project; within a session its
-  left edge can be dragged (320 px … 70 % of the window). A tab row at its top holds its functions; the first and,
-  for now, only one is WIRES.
+  left edge can be dragged (320 px … 70 % of the window). A tab row at its top holds its functions: **WIRES**,
+  **MIX** and **SETTINGS**. W opens the sidebar on WIRES, **M** on MIX (either key again, while that tab shows,
+  closes it); the sidebar remembers the last tab within a session.
 - **WIRES** — the patch seen through its wires: to understand it, set depths, rewire and find problems.
 
 - **Sections**, each collapsible with a wire count:
@@ -351,6 +354,21 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   keeps only the wires touching the selection; the filter field matches module and port names.
 - **Keys** while it is open: ↑ / ↓ move between wire rows, Backspace removes the selected wire, Enter opens the port
   list for its input end.
+
+- **MIX** — the project's mixer: a strip per OUT, then the master.
+  - **Strips** in reading order of their OUT modules. A strip is named after the frame its OUT sits in when that
+    frame holds only this OUT (`DRUMS`), else after the module (`OUT 2`). Each strip: the name (a click selects the
+    OUT and frames it in view), a vertical fader, a level meter (the strip's peak after fader, mute and solo, held and
+    falling over 300 ms), **M** (mute) and **S** (solo).
+  - **The fader is the OUT's LVL knob:** moving either moves both (one value, one undo step per drag). Mute and solo
+    are hidden options of the OUT module (`mute`, `solo`: OFF / ON), saved with the document; each click is one undo
+    step and a message (no new plan). While any strip is soloed only soloed strips sound; mute wins over solo. An OUT
+    inside a muted frame is silent and its strip is drawn dimmed.
+  - **Master:** the last strip, a fader for the whole project (the document's `master`, 0…1, default 1, before the
+    master stage's DC blocker and limiter, gliding 10 ms) and a meter after the limiter. Listening (§4) and sample
+    audition (§7a) go through the master stage but not through the strips.
+  - Later (backlog): sends to shared effects, recording and export.
+- **SETTINGS** — app-wide settings: for now the skin (§1a).
 
 ## 6. Session, library and factory patches
 
@@ -466,8 +484,8 @@ Size is `HP × U`.
 - Action cells (DICE) are buttons on the face; they hold no value.
 - SCOPE syncs its sweep on a TRIG rise when TRIG is patched, else on A's rising zero crossing, else runs free.
 
-- Several OUT modules sum. After them the master stage is fixed: 5 Hz DC blocker, soft limiter, nothing non-finite
-  reaches the device.
+- Several OUT modules sum, each after its MIX strip (LVL, mute, solo, §5a). Then the master fader (the document's
+  `master`), then the fixed master stage: 5 Hz DC blocker, soft limiter, nothing non-finite reaches the device.
 
 ## 7a. Second milestone: the sound pack
 
@@ -567,7 +585,8 @@ Decided 2026-10-07 for one user on one Mac.
 - **The document** is immutable JSON:
   `modules: { id, type, x, y, parent, params, atts, ratios }[]` (`atts` and `ratios` keyed by input port id, mod jacks
   as `@param`), `cables: { from: [id, port], to: [id, port] }[]`,
-  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'stack', muted, collapsed, clock: { on, bpm } }[]`.
+  `groups: { id, name, x, y, w, h, parent, ratio, tint, layout: 'free' | 'stack', muted, collapsed, clock: { on, bpm } }[]`,
+  `master` (0…1, default 1).
   A group's jacks are `[groupId, 'clkIn']` and `[groupId, 'clkOut']`. Edits are pure functions returning a new
   document; undo is a history of documents grouped per gesture. `compile` resolves normals into ordinary bindings,
   compiles each group into a hidden clock node, marks muted bindings, orders the graph and lays out the readouts.
