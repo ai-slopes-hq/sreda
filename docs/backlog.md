@@ -120,3 +120,13 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   the collapse e2e checks the master stays audible, not that it is the same collapsed and expanded.~~ Done in Plan 6.
 - ~~**Code tidy:** `frames.ts` ↔ `wires.ts` import each other; `rectsOf2` duplicates `rectsOf` and a bare `{}` block
   remains in `frames.test.ts`; a filler assertion at `frames.test.ts:284`.~~ Done in Plan 6.
+
+## From the Plan 6 review (deferred, 2026-10-09)
+
+- **STACK fallback is not a strict fixed point:** when the re-pack loop finds a true cycle it keeps the lowest pack
+  after 8 rounds; a second press can still move children (deterministic, never seen in a 600-frame fuzz).
+- **Stereo samples hold ~3× frames of memory:** after `split_off` the left channel keeps the staging buffer's whole
+  capacity (`shrink_to_fit` off the audio thread, or with the eviction item above).
+- **DEFAULT flashes at launch** before the saved skin applies (read the skin before creating the session).
+- **Tint fills and the WIRES row-on text** are close `color-mix` values, not byte-identical to the old DEFAULT
+  literals; the mix ratios are scattered numbers in `canvas.css`.
