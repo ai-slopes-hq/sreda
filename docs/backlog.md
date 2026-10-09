@@ -27,19 +27,16 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   colour literal in the UI into the §1a tokens (today `canvas.css` has only the role tokens; `Frame.tsx` keeps
   `TINT_FILL`), then a way to pick the skin (app-wide, not per document).
 
-- **FOLD sounds weak** (2026-10-09, from listening): it adds almost no level and few harmonics, and its modes
-  barely differ. Rework against a reference wavefolder (Ableton's Saturator / Roar folding, Bitwig's wavefolder, a
-  Buchla 259 / Serge-style folder): more gain into the fold, clearly different curves per mode, matched loudness.
+- ~~**FOLD sounds weak**~~ Done in Plan 10 (SINE / TRI / WRAP / CHEB, ×40, matched loudness).
 - **FILTER models are not convincing** (2026-10-09, from listening): SK (MS-20), LADDER and DIODE do not sound like
   their originals and differ too little from each other (and from SVF). Compare against references (Moog ladder,
   TB-303 diode, MS-20 Sallen-Key) and re-tune drive, resonance and the self-oscillation character per model.
+- **FOLD's knob reads `4.00`**: show it as `×4.0`.
 - **DICE for the whole project** (2026-10-10): in place of NEW (or beside it), a button that generates a random
   playable patch — a clock, a sequence source, one or two voices with effects, an OUT — using the generators and
   per-module DICE that already exist, so a click gives a new starting point that already makes sound.
-- **DRIVE sounds poor and its modes are alike** (2026-10-09, from listening): SAT / OD / FUZZ barely differ. Rework it
-  with distinct models like Ableton's Saturator / Overdrive / Pedal and Roar shapes (soft sine, analog clip, tube,
-  digital clip, half / full wave, a fuzz pedal with its bias and gating, a tape stage), each with its own tone stack and
-  matched loudness; listen against those references.
+- ~~**DRIVE sounds poor and its modes are alike**~~ Done in Plan 9 (seven models, BIAS, matched loudness); tuning
+  against Ableton renders waits for `projects/refs/drive/`.
 - **FILTER cutoff animation** (2026-10-09): the response glyph on the panel follows the live cutoff (and resonance)
   with modulation applied, schematically — the curve moves, no waveform.
 
