@@ -6,7 +6,6 @@ import {
   FACTORY,
   insertIntoCable,
   replaceModule,
-  RGAP,
   portLabel,
   withDescendants,
   isGroupId,
@@ -295,7 +294,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
 
   /** magnet guide lines while dragging */
   const [guides, setGuides] = createSignal<Pick<Snap, 'gx' | 'gy'> | null>(null);
-  /** the snap for a moved selection: its bounding box against the modules not moving (32 px apart in WIRE FIX) */
+  /** the snap for a moved selection: its bounding box against the modules not moving */
   function magnets(base: Doc, ids: string[], dx: number, dy: number): Snap | null {
     const moving = new Set(withDescendants(base, ids));
     const roots = ids.filter((id) => moving.has(id));
@@ -310,9 +309,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       h: Math.max(...rs.map((r) => r.y + r.h)) + dy - y0,
     };
     const others = base.modules.filter((m) => !moving.has(m.id)).map((m) => rectOf(base, specs, m.id));
-    const first = base.modules.find((m) => m.id === roots[0]) ?? base.groups.find((g) => g.id === roots[0]);
-    const parent = first?.parent ? base.groups.find((g) => g.id === first.parent) : undefined;
-    return magnet(box, others, 10 / st.view.z, parent?.layout === 'route' ? RGAP : 0);
+    return magnet(box, others, 10 / st.view.z);
   }
 
   let root: HTMLDivElement | undefined;
@@ -439,9 +436,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       case 'resize': {
         if (!d.moved && !far(p, d.at)) return;
         d.moved = true;
-        const g = d.base.groups.find((x) => x.id === d.id);
-        const next = resizeFrame(d.base, specs, d.id, resized(d, p));
-        s.preview(settle(d.base, next, specs, g?.parent ? [g.parent] : []));
+        s.preview(resizeSettled(d, p));
         break;
       }
       case 'box': {
@@ -504,7 +499,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       setGuides(null);
       if (d.moved) {
         const moved = moveObjects(d.base, specs, d.ids, d.dx, d.dy);
-        // the WIRE FIX frames a module left, landed in or moved within re-pack
+        // the STACK frames a module left, landed in or moved within re-pack
         const parents = (doc: Doc) =>
           d.ids.flatMap((id) => {
             const o = doc.modules.find((m) => m.id === id) ?? doc.groups.find((g) => g.id === id);
@@ -515,12 +510,20 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       }
     } else if (d.kind === 'resize') {
       if (d.moved) {
-        const g = d.base.groups.find((x) => x.id === d.id);
-        const next = resizeFrame(d.base, specs, d.id, resized(d, p));
-        s.commit(settle(d.base, next, specs, g?.parent ? [g.parent] : []));
+        s.commit(resizeSettled(d, p));
       }
     } else if (d.kind === 'box') setBox(null);
     else if (d.kind === 'field') s.setState('editing', null);
+  }
+
+  /**
+   * The document with a frame resized to the drag and settled: a free frame dragged by its left / top edge can land
+   * in another parent, so the parent before and after both re-pack.
+   */
+  function resizeSettled(d: Extract<Drag, { kind: 'resize' }>, p: Pt): Doc {
+    const next = resizeFrame(d.base, specs, d.id, resized(d, p));
+    const parents = [d.base, next].flatMap((doc) => doc.groups.find((x) => x.id === d.id)?.parent ?? []);
+    return settle(d.base, next, specs, parents);
   }
 
   /** a frame's rectangle while one of its edges is dragged (8 px steps) */
@@ -770,11 +773,6 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                     s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
                   },
                   save: () => lib.saveGroup(g.id),
-                  fix: () => {
-                    const d = s.current();
-                    const next = setLayout(d, specs, g.id, g.layout === 'route' ? 'free' : 'route');
-                    s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
-                  },
                 }}
               />
             )}

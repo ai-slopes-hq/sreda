@@ -4,8 +4,7 @@ import type { CableGeom } from './cablegeom';
 import { bez, ROLE } from './glyphs';
 
 /**
- * Every cable as one SVG layer under the canvas transform: curves, or orthogonal routes inside a WIRE FIX frame. A
- * cable between two roles changes colour along its length (40 % source, a blend, 40 % input). A nested frame whose
+ * Every cable as one SVG layer under the canvas transform: curves. A cable between two roles changes colour along its length (40 % source, a blend, 40 % input). A nested frame whose
  * CLK IN reads its parent's clock shows that normal as a faint dashed line.
  */
 export function Cables(props: {
@@ -61,7 +60,6 @@ export function Cables(props: {
               <path
                 class="cable"
                 classList={{
-                  routed: !!g.routed,
                   lit: same(g.cable, props.hover) || (!props.hover && !!props.focus?.(g.cable)),
                   insert: same(g.cable, props.insert),
                 }}

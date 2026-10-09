@@ -25,12 +25,12 @@ test('the factory: six projects and four groups', () => {
 });
 
 test.each(FACTORY.map((e) => [e.name, e] as const))(
-  '%s is a valid document, its frames packed in WIRE FIX',
+  '%s is a valid document, its frames packed as STACK',
   (_n, e) => {
     const doc = e.build(SPECS);
     expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)).toEqual(doc);
     for (const g of doc.groups) {
-      expect(g.layout).toBe('route');
+      expect(g.layout).toBe('stack');
       expect(packFrame(doc, SPECS, g.id)).toEqual(doc);
     }
     if (e.kind === 'group') {

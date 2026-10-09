@@ -1,5 +1,5 @@
 // Building factory patches in code: modules by type with real-unit values, cables, frames. Positions are in the
-// prototype's units (×7/6, ×9/7 for the panels' room to breathe); WIRE FIX frames are packed, innermost first.
+// prototype's units (×7/6, ×9/7 for the panels' room to breathe); STACK frames are packed, innermost first.
 import { blankModule, type Doc, type Group } from '../doc';
 import { chainOf, FRAME_MIN, GHEAD, GPAD, recomputeParents, rectOf, setLayout } from '../frames';
 import { toKnob, type Specs } from '../spec';
@@ -84,9 +84,9 @@ export function build(specs: Specs, f: (b: Builder) => void): Doc {
   };
   f(b);
   doc = recomputeParents({ ...doc, nextId: n }, specs);
-  // WIRE FIX is on by default: pack the innermost frames first, then their parents
+  // STACK is on by default: pack the innermost frames first, then their parents
   const depth = (id: string) => chainOf(doc, id).length;
   for (const g of [...doc.groups].sort((a, c) => depth(c.id) - depth(a.id)))
-    doc = setLayout(doc, specs, g.id, 'route');
+    doc = setLayout(doc, specs, g.id, 'stack');
   return doc;
 }

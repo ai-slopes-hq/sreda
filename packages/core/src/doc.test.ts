@@ -48,7 +48,7 @@ const frame = (id: string, o: Partial<Group> = {}): Group => ({
   parent: null,
   ratio: -2,
   tint: 3,
-  layout: 'route',
+  layout: 'free',
   muted: true,
   clock: { on: true, bpm: 128 },
   ...o,

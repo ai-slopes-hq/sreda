@@ -486,7 +486,7 @@ test('MUTE: a framed voice goes silent and comes back', async () => {
   await app.close();
 });
 
-test('WIRE FIX: ⌘G packs rows and routes wires at right angles; STACK packs flush and turns FIX off', async () => {
+test('⌘G frames start stacked; STACK toggles off and on', async () => {
   const { app, page } = await launch();
   // OSC → FILTER (added wired from OSC's output), OSC → OUT
   const out = await center(page, jack(page, 'osc', 'out'));
@@ -498,42 +498,31 @@ test('WIRE FIX: ⌘G packs rows and routes wires at right angles; STACK packs fl
     .evaluateAll((els) =>
       els.map((e) => e.getBoundingClientRect()).map((r) => [r.left, r.top, r.right, r.bottom]),
     );
-  const x0 = Math.min(...all.map((r) => r[0]!)) - 20;
-  const y0 = Math.min(...all.map((r) => r[1]!)) - 20;
   await drag(
     page,
-    { x: x0, y: y0 },
+    { x: Math.min(...all.map((r) => r[0]!)) - 20, y: Math.min(...all.map((r) => r[1]!)) - 20 },
     { x: Math.max(...all.map((r) => r[2]!)) + 20, y: Math.max(...all.map((r) => r[3]!)) + 20 },
   );
   await page.keyboard.press('Meta+g');
-  const fix = page.locator('.sr-frame').getByText('FIX', { exact: true });
-  await expect(fix).toHaveClass(/on/);
-  const ds = await page
-    .locator('.sr-cables path.cable.routed')
-    .evaluateAll((els) => els.map((e) => e.getAttribute('d')!));
-  expect(ds.length).toBeGreaterThanOrEqual(1);
-  for (const d of ds) {
-    expect(d).toMatch(/^[MLQ0-9.\s-]+$/);
-    // every straight segment is horizontal or vertical
-    const cmds = [...d.matchAll(/([MLQ])([^MLQ]*)/g)].map(
-      (m) => [m[1]!, m[2]!.trim().split(/\s+/).map(Number)] as const,
-    );
-    let at = [0, 0];
-    for (const [c, n] of cmds) {
-      const end = [n[n.length - 2]!, n[n.length - 1]!];
-      if (c === 'L') expect(Math.abs(end[0]! - at[0]!) < 0.6 || Math.abs(end[1]! - at[1]!) < 0.6).toBe(true);
-      at = end;
-    }
-  }
-  const before = (await fullDoc(page)).modules.map((m) => [m.x, m.y]);
-  await page.locator('.sr-frame').getByText('STACK').click();
-  expect((await fullDoc(page)).modules.map((m) => [m.x, m.y])).not.toEqual(before);
-  await expect(fix).not.toHaveClass(/on/);
-  await expect(page.locator('.sr-cables path.cable.routed')).toHaveCount(0);
+  const frame = page.locator('.sr-frame');
+  const stack = frame.getByText('STACK', { exact: true });
+  await expect(stack).toHaveClass(/on/);
+  await expect(frame.getByText('FIX', { exact: true })).toHaveCount(0);
+  expect((await fullDoc(page)).groups[0]!.layout).toBe('stack');
+  const positions = async () => (await fullDoc(page)).modules.map((m) => [m.x, m.y]);
+  const packed = await positions();
+  await stack.click();
+  await expect(stack).not.toHaveClass(/on/);
+  expect((await fullDoc(page)).groups[0]!.layout).toBe('free');
+  expect(await positions()).toEqual(packed);
+  await stack.click();
+  await expect(stack).toHaveClass(/on/);
+  expect((await fullDoc(page)).groups[0]!.layout).toBe('stack');
+  expect(await positions()).toEqual(packed);
   await app.close();
 });
 
-test('STACK packs a frame densely; dragging its right edge re-packs; STACK again turns it off', async () => {
+test('a stacked frame packs densely; dragging its right edge re-packs; STACK turns it off', async () => {
   const { app, page } = await launch();
   const out = await center(page, jack(page, 'osc', 'out'));
   await drag(page, out, { x: out.x + 100, y: out.y + 320 });
@@ -551,15 +540,11 @@ test('STACK packs a frame densely; dragging its right edge re-packs; STACK again
   );
   await page.keyboard.press('Meta+g');
   const frame = page.locator('.sr-frame');
-  await frame.getByText('FIX', { exact: true }).click(); // WIRE FIX off
   const box = async () => (await frame.boundingBox())!;
   const positions = async () => (await fullDoc(page)).modules.map((m) => [m.x, m.y]);
-  const wide = await box();
   const stack = frame.getByText('STACK');
-  await stack.click();
-  await expect(stack).toHaveClass(/on/);
+  await expect(stack).toHaveClass(/on/); // ⌘G starts stacked
   const stacked = await box();
-  expect(stacked.width).toBeLessThan(wide.width);
   const overlap = async () => {
     const rs = await page
       .locator('.sr-mod')

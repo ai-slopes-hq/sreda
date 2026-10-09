@@ -30,10 +30,8 @@ export interface FrameActions {
   fieldDown(e: PointerEvent): void;
   fieldReset(): void;
   mute(): void;
-  /** pack the frame flush (WIRE FIX off) */
+  /** STACK on / off */
   stack(): void;
-  /** WIRE FIX on / off */
-  fix(): void;
   /** save the frame as a group */
   save(): void;
 }
@@ -197,15 +195,6 @@ export function Frame(props: FrameProps): JSX.Element {
               onClick={() => props.act.stack()}
             >
               STACK
-            </button>
-            <button
-              class="sr-gbtn"
-              classList={{ on: g().layout === 'route' }}
-              title="wire fix: tidy rows, wires through the channels"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => props.act.fix()}
-            >
-              FIX
             </button>
             <button
               class="sr-gbtn"

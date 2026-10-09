@@ -1,4 +1,4 @@
-import { FRAME_MIN, isGroupId, recomputeParents, TINTS } from './frames';
+import { chainOf, FRAME_MIN, isGroupId, packFrame, recomputeParents, TINTS } from './frames';
 import { inputPorts, RATIOS, specOf, toKnob, type Specs } from './spec';
 
 export interface ModuleDoc {
@@ -18,8 +18,8 @@ export interface Cable {
   from: [string, string];
   to: [string, string];
 }
-/** A frame's layout: loose, packed densely (STACK) or packed in rows with routed wires (WIRE FIX). */
-export type Layout = 'free' | 'stack' | 'route';
+/** A frame's layout: loose, or packed densely (STACK). */
+export type Layout = 'free' | 'stack';
 /** A frame (spec §5). Its jacks are `[id, 'clkIn']` and `[id, 'clkOut']`. */
 export interface Group {
   id: string;
@@ -99,6 +99,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
   if (!Array.isArray(modules) || !Array.isArray(cables) || !Array.isArray(groups)) return null;
   const outGroups: Group[] = [];
   const gIds = new Set<string>();
+  const formerRoutes: string[] = [];
   for (const g of groups) {
     if (!isObj(g) || typeof g['id'] !== 'string' || !isGroupId(g['id']) || gIds.has(g['id'])) return null;
     if (![g['x'], g['y'], g['w'], g['h']].every(isNum)) return null;
@@ -106,6 +107,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
     const bpm = isNum(clock['bpm']) ? Math.min(300, Math.max(20, clock['bpm'])) : 120;
     const tint = isNum(g['tint']) ? Math.round(g['tint']) : 0;
     gIds.add(g['id']);
+    if (g['layout'] === 'route') formerRoutes.push(g['id']);
     outGroups.push({
       id: g['id'],
       name: typeof g['name'] === 'string' ? g['name'] : 'GROUP',
@@ -116,7 +118,8 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
       parent: typeof g['parent'] === 'string' ? g['parent'] : null,
       ratio: isNum(g['ratio']) && RATIOS.includes(g['ratio']) ? g['ratio'] : 1,
       tint: tint >= 0 && tint < TINTS ? tint : 0,
-      layout: g['layout'] === 'route' || g['layout'] === 'stack' ? g['layout'] : 'free',
+      // Plan 3's WIRE FIX ('route') is a STACK now; it is packed below
+      layout: g['layout'] === 'route' || g['layout'] === 'stack' ? 'stack' : 'free',
       muted: g['muted'] === true,
       clock: { on: clock['on'] === true, bpm },
     });
@@ -199,5 +202,10 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
     return false;
   });
   const sound = !loops && out.every((m) => valid(m.parent)) && outGroups.every((g) => valid(g.parent));
-  return sound ? doc : recomputeParents(doc, specs);
+  let result = sound ? doc : recomputeParents(doc, specs);
+  // the former WIRE FIX frames were packed in rows with wide channels: pack them densely, innermost first
+  const depth = (id: string) => chainOf(result, id).length;
+  for (const id of formerRoutes.sort((a, b) => depth(b) - depth(a)))
+    result = packFrame(result, specs, id, true);
+  return result;
 }
