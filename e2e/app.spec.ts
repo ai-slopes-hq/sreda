@@ -49,11 +49,41 @@ test('the app opens a cross-origin isolated SREDA window', async () => {
   await app.close();
 });
 
+test('cables show as stubs; hovering a stub, a module or opening WIRES shows them whole', async () => {
+  const { app, page } = await launch();
+  const cable = page.locator('.sr-cables path.cable');
+  await expect(page.locator('.sr-cables path.stub')).toHaveCount(2);
+  await expect(cable).toHaveCount(0);
+  const o = await center(page, page.locator('[data-type=osc] .sr-head'));
+  await page.mouse.move(o.x, o.y);
+  await expect(cable).toHaveCount(1);
+  await page.mouse.move(700, 900);
+  await expect(cable).toHaveCount(0);
+  const b = await center(page, jack(page, 'out', 'l'));
+  await page.mouse.move(b.x - 7, b.y + 3);
+  await expect(cable).toHaveCount(1);
+  await expect(page.locator('.sr-wtag')).toHaveText('OSC › OUT  →  OUT › L');
+  await page.mouse.move(700, 900);
+  await expect(cable).toHaveCount(0);
+  await page.keyboard.press('w');
+  await expect(cable).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(cable).toHaveCount(0);
+  // dragging from OSC's output draws the dragged cable whole
+  const a = await center(page, jack(page, 'osc', 'out'));
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(a.x + 60, a.y + 120, { steps: 5 });
+  await expect(page.locator('.sr-cables path.ghost')).toHaveCount(1);
+  await page.mouse.up();
+  await app.close();
+});
+
 test('the first launch shows OSC → OUT; a click starts audio', async () => {
   const { app, page } = await launch();
   await expect(page.locator('[data-type=osc]')).toBeVisible();
   await expect(page.locator('[data-type=out]')).toBeVisible();
-  await expect(page.locator('.sr-cables path.cable')).toHaveCount(1);
+  await expect(page.locator('.sr-cables path.stub')).toHaveCount(2);
   await expect(page.getByText('CLICK TO START AUDIO')).toBeVisible();
   await page.mouse.click(1300, 800);
   await expect(page.getByText('CLICK TO START AUDIO')).toBeHidden();
@@ -681,8 +711,10 @@ test('wire hover names both ends; a free FILTER dropped on the cable goes into i
   const a = await center(page, jack(page, 'osc', 'out'));
   const b = await center(page, jack(page, 'out', 'l'));
   const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  await page.mouse.move(mid.x, mid.y + 3);
+  // the cable is drawn behind: its stub at OUT's L shows it whole, with the tag
+  await page.mouse.move(b.x - 7, b.y + 3);
   await expect(page.locator('.sr-wtag')).toBeVisible();
+  await expect(page.locator('.sr-cables path.cable')).toHaveCount(1);
   expect(await page.locator('.sr-wtag').evaluate((el) => el.textContent)).toBe('OSC › OUT  →  OUT › L');
   await expect(page.locator('[data-type=osc]')).toHaveClass(/wire-end/);
 

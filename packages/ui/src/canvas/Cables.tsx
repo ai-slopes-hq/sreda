@@ -1,20 +1,22 @@
 import { jackAt, type Cable, type Doc, type Specs } from '@sreda/core';
 import { For, Show, type JSX } from 'solid-js';
-import type { CableGeom } from './cablegeom';
+import { stubPts, stubs, type CableGeom } from './cablegeom';
 import { bez, ROLE } from './glyphs';
 
 /**
- * Every cable as one SVG layer under the canvas transform: curves. A cable between two roles changes colour along its length (40 % source, a blend, 40 % input). A nested frame whose
- * CLK IN reads its parent's clock shows that normal as a faint dashed line.
+ * Every cable as one SVG layer under the canvas transform: curves, drawn behind (spec §4). A cable always shows its two
+ * stubs, the first and last 14 px fading out from the jack; the whole path only when `whole(c)`. A cable between two
+ * roles changes colour along its length (40 % source, a blend, 40 % input). A nested frame whose CLK IN reads its
+ * parent's clock shows that normal as a faint dashed line.
  */
 export function Cables(props: {
   doc: Doc;
   specs: Specs;
   geoms: CableGeom[];
-  /** wire hover: this cable full and thicker, the rest at 15 % */
+  /** the wire lit and thicker: the one under the pointer, or a WIRES row */
   hover: Cable | null;
-  /** cable focus (a hovered module or frame): these full, the rest at 20 % */
-  focus: ((c: Cable) => boolean) | null;
+  /** is the whole cable drawn (otherwise only its stubs) */
+  whole: (c: Cable) => boolean;
   /** the cable a dragged module would go into */
   insert: Cable | null;
 }): JSX.Element {
@@ -34,7 +36,7 @@ export function Cables(props: {
         : [],
     );
   return (
-    <svg class="sr-cables" classList={{ hovering: !!props.hover, focusing: !props.hover && !!props.focus }}>
+    <svg class="sr-cables">
       <For each={normals()}>{(d) => <path class="ghost-normal" d={d} stroke={ROLE.trigger} />}</For>
       <For each={props.geoms}>
         {(g, i) => {
@@ -57,15 +59,42 @@ export function Cables(props: {
                   </linearGradient>
                 </defs>
               </Show>
-              <path
-                class="cable"
-                classList={{
-                  lit: same(g.cable, props.hover) || (!props.hover && !!props.focus?.(g.cable)),
-                  insert: same(g.cable, props.insert),
-                }}
-                d={g.d}
-                stroke={g.from === g.to ? ROLE[g.from] : `url(#cg${i()})`}
-              />
+              <defs>
+                <For each={[0, 1]}>
+                  {(end) => {
+                    // from the jack (the cable's colour) to the stub's far end (transparent)
+                    const pts = () => (end ? stubPts(g).b : stubPts(g).a);
+                    const e = () => pts()[pts().length - 1]!;
+                    const color = () => ROLE[end ? g.to : g.from];
+                    return (
+                      <linearGradient
+                        id={`sg${i()}${end}`}
+                        gradientUnits="userSpaceOnUse"
+                        x1={pts()[0]!.x}
+                        y1={pts()[0]!.y}
+                        x2={e().x}
+                        y2={e().y}
+                      >
+                        <stop offset="0" stop-color={color()} />
+                        <stop offset="1" stop-color={color()} stop-opacity="0" />
+                      </linearGradient>
+                    );
+                  }}
+                </For>
+              </defs>
+              <path class="stub" d={stubs(g).a} stroke={`url(#sg${i()}0)`} />
+              <path class="stub" d={stubs(g).b} stroke={`url(#sg${i()}1)`} />
+              <Show when={props.whole(g.cable) || same(g.cable, props.insert)}>
+                <path
+                  class="cable"
+                  classList={{
+                    lit: same(g.cable, props.hover),
+                    insert: same(g.cable, props.insert),
+                  }}
+                  d={g.d}
+                  stroke={g.from === g.to ? ROLE[g.from] : `url(#cg${i()})`}
+                />
+              </Show>
             </>
           );
         }}

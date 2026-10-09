@@ -1,5 +1,5 @@
-// Cable geometry (spec §4 hover / insert): curves and hit testing. Each cable's geometry is memoised on its end positions, so a move recomputes only the
-// cables it touches.
+// Cable geometry (spec §4 hover / insert): curves, stubs and hit testing. Each cable's geometry is memoised on its end
+// positions, so a move recomputes only the cables it touches.
 import { jackAt, type Cable, type Doc, type Role, type Specs } from '@sreda/core';
 import { bez } from './glyphs';
 
@@ -90,6 +90,59 @@ export function cableAt(geoms: CableGeom[], p: Pt, thr: number): number | null {
         best = i;
       }
     }
+  });
+  return best;
+}
+
+/** how long a stub is, along the cable's own path (canvas px) */
+export const STUB_LEN = 14;
+
+/** The first `len` px of a polyline (the last point is interpolated). */
+function head(pts: Pt[], len: number): Pt[] {
+  const out: Pt[] = [pts[0]!];
+  let left = len;
+  for (let k = 1; k < pts.length; k++) {
+    const a = pts[k - 1]!;
+    const b = pts[k]!;
+    const l = Math.hypot(b.x - a.x, b.y - a.y);
+    if (l >= left) {
+      const t = l ? left / l : 0;
+      out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+      return out;
+    }
+    out.push(b);
+    left -= l;
+  }
+  return out;
+}
+
+/** The two stubs as point lists, each starting at its jack: the output end `a`, the input end `b`. */
+export function stubPts(g: CableGeom): { a: Pt[]; b: Pt[] } {
+  return { a: head(g.pts, STUB_LEN), b: head([...g.pts].reverse(), STUB_LEN) };
+}
+
+const path = (pts: Pt[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ');
+
+/** The first and last 14 px of the cable's own path, as two SVG paths (each from its jack inwards). */
+export function stubs(g: CableGeom): { a: string; b: string } {
+  const s = stubPts(g);
+  return { a: path(s.a), b: path(s.b) };
+}
+
+/** The cable whose stub is nearest to `p` within `thr` (canvas px), or null. */
+export function stubAt(geoms: CableGeom[], p: Pt, thr: number): number | null {
+  let best: number | null = null;
+  let bd = thr + 1e-9;
+  geoms.forEach((g, i) => {
+    const s = stubPts(g);
+    for (const pts of [s.a, s.b])
+      for (let k = 0; k < pts.length - 1; k++) {
+        const d = segDist(p, pts[k]!, pts[k + 1]!);
+        if (d <= bd) {
+          bd = d;
+          best = i;
+        }
+      }
   });
   return best;
 }

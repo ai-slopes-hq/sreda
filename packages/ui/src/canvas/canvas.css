@@ -1098,19 +1098,16 @@
   text-align: center;
   cursor: pointer;
 }
-/* wire hover and cable focus (spec §4) */
-.sr-cables.hovering .cable {
-  stroke-opacity: 0.15;
-}
-.sr-cables.focusing .cable {
-  stroke-opacity: 0.2;
+/* cables drawn behind (spec §4): stubs always, the whole cable on hover, focus and in WIRES */
+.sr-cables .stub {
+  fill: none;
+  stroke-width: 2;
+  stroke-opacity: 0.8;
+  stroke-linecap: round;
 }
 .sr-cables .cable.lit {
   stroke-opacity: 1;
   stroke-width: 2.5;
-}
-.sr-cables.hovering .cable.lit {
-  stroke-width: 3;
 }
 .sr-cables .cable.insert {
   stroke-opacity: 1;

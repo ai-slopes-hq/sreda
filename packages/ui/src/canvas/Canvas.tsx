@@ -33,7 +33,7 @@ import type { SessionApi } from '../store';
 import { diceModule } from '../dice';
 import { libraryActions } from '../library';
 import { Cables } from './Cables';
-import { cableAt, cableGeoms } from './cablegeom';
+import { cableAt, cableGeoms, stubAt } from './cablegeom';
 import { magnet, type Snap } from './magnets';
 import { animateView, glideTo } from './glide';
 import { Chrome } from './Chrome';
@@ -265,21 +265,33 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     clearTimeout(glideTimer);
     stopGlide();
   });
-  /** cable focus: the hovered module's cables, or every cable touching anything in the hovered frame */
-  const focus = createMemo(() => {
-    const id = st.hover;
-    if (!id) return null;
-    const set = new Set(isGroupId(id) ? withDescendants(st.doc, [id]) : [id]);
-    return (c: Cable) => set.has(c.from[0]) || set.has(c.to[0]);
-  });
+  /** the modules and frames whose cables are drawn whole: the hovered and the selected, with what is inside frames */
+  const focusSet = createMemo(
+    () => new Set(withDescendants(st.doc, [...(st.hover ? [st.hover] : []), ...st.sel])),
+  );
+  /** is this cable drawn whole (otherwise only its stubs): WIRES open, an end in the focus, or lit / inserting */
+  const whole = (c: Cable): boolean => {
+    if (st.sidebar.open) return true;
+    const set = focusSet();
+    if (set.has(c.from[0]) || set.has(c.to[0])) return true;
+    const l = litCable();
+    return (
+      !!l && l.from[0] === c.from[0] && l.from[1] === c.from[1] && l.to[0] === c.to[0] && l.to[1] === c.to[1]
+    );
+  };
   function hoverWires(e: PointerEvent): void {
     pointer = client(e);
     if (drag || (e.target as Element).closest?.('.sr-picker, .sr-menu, input')) {
       if (hovered()) setHovered(null);
       return;
     }
-    const i = cableAt(geoms(), toCanvas(pointer), 6 / st.view.z);
-    const cable = i === null ? null : geoms()[i]!.cable;
+    // a whole cable by its path, any cable by its stubs
+    const gs = geoms();
+    const shown = gs.filter((g) => whole(g.cable));
+    const at = toCanvas(pointer);
+    const i = cableAt(shown, at, 6 / st.view.z);
+    const j = i === null ? stubAt(gs, at, 6 / st.view.z) : null;
+    const cable = i !== null ? shown[i]!.cable : j !== null ? gs[j]!.cable : null;
     const h = hovered();
     if (!cable) {
       if (h) setHovered(null);
@@ -870,7 +882,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             specs={specs}
             geoms={geoms()}
             hover={litCable()}
-            focus={focus()}
+            whole={whole}
             insert={insert()}
           />
           <Show when={preview()}>
