@@ -125,6 +125,19 @@ test('M mutes; lit while on, and the tools stay visible while it is on; a muted 
   expect(muted.container.querySelector('.sr-gmeter')).not.toBeNull();
 });
 
+test('a STACK frame lights STACK and not FIX; a managed frame has only the r and br handles', () => {
+  const stacked = frame({ layout: 'stack' });
+  expect(stacked.getByText('STACK').classList.contains('on')).toBe(true);
+  expect(stacked.getByText('FIX').classList.contains('on')).toBe(false);
+  const edges = [...stacked.container.querySelectorAll('[data-resize]')].map((e) =>
+    e.getAttribute('data-resize'),
+  );
+  expect(edges.sort()).toEqual(['br', 'r']);
+  stacked.unmount();
+  const free = frame();
+  expect(free.container.querySelectorAll('[data-resize]')).toHaveLength(5);
+});
+
 test('STACK and FIX are frame tools; FIX is lit, and the tools stay, while WIRE FIX is on', () => {
   const routed = frame({ layout: 'route' });
   expect(routed.getByText('FIX').classList.contains('on')).toBe(true);

@@ -371,6 +371,37 @@ test('a WIRE FIX frame re-packs when a module is dropped into it, and when its l
   expect(Object.values(empty).every(Number.isFinite)).toBe(true);
 });
 
+test('widening a STACK frame nested in a STACK parent re-packs the parent too', () => {
+  const { doc, ids } = mods(['src', 0, 0], ['fx', 300, 0], ['sink', 600, 0], ['src', 900, 0]);
+  const inner = frameSelection(doc, S, [ids[0]!, ids[1]!]);
+  const outer = frameSelection(inner.doc, S, [inner.id, ids[2]!, ids[3]!]);
+  let d = setLayout(outer.doc, S, inner.id, 'stack');
+  d = setLayout(d, S, outer.id, 'stack');
+  // narrowest: the others sit below the inner frame, so widening it covers nothing new
+  d = resizeFrame(d, S, outer.id, { ...rectOf(d, S, outer.id), w: 0 });
+  const gi = d.groups.find((g) => g.id === inner.id)!;
+  const widened = resizeFrame(d, S, inner.id, { ...rectOf(d, S, inner.id), w: gi.w + 200 });
+  const settled = settle(d, widened, S, [outer.id]);
+  const o = rectOf(settled, S, outer.id);
+  const kids = [inner.id, ids[2]!, ids[3]!].map((id) => rectOf(settled, S, id));
+  for (let i = 0; i < kids.length; i++) {
+    const a = kids[i]!;
+    expect(a.x >= o.x && a.x + a.w <= o.x + o.w && a.y + a.h <= o.y + o.h).toBe(true);
+    for (let j = i + 1; j < kids.length; j++) {
+      const b = kids[j]!;
+      expect(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y).toBe(true);
+    }
+  }
+});
+
+test('narrowing a STACK frame keeps its children and re-packs them to the width', () => {
+  const { doc, ids } = mods(['src', 0, 0], ['fx', 300, 0], ['sink', 600, 0]);
+  const g = frameSelection(doc, S, ids);
+  const wide = setLayout(g.doc, S, g.id, 'stack');
+  const narrow = resizeFrame(wide, S, g.id, { ...rectOf(wide, S, g.id), w: 0 });
+  expect(ids.map((id) => parentOf(narrow, id))).toEqual([g.id, g.id, g.id]);
+});
+
 test('extractGroup takes a frame with everything inside and the cables among them; mergeDoc places it with fresh ids', () => {
   const { doc: d0, ids } = mods(['src', 0, 0], ['fx', 400, 0], ['sink', 3000, 0]);
   let doc = connect(d0, S, [ids[0]!, 'out'], [ids[1]!, 'in']);

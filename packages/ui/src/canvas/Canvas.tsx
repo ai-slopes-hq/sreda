@@ -439,7 +439,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       case 'resize': {
         if (!d.moved && !far(p, d.at)) return;
         d.moved = true;
-        s.preview(resizeFrame(d.base, specs, d.id, resized(d, p)));
+        const g = d.base.groups.find((x) => x.id === d.id);
+        const next = resizeFrame(d.base, specs, d.id, resized(d, p));
+        s.preview(settle(d.base, next, specs, g?.parent ? [g.parent] : []));
         break;
       }
       case 'box': {
@@ -512,7 +514,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         s.commit(settle(d.base, doc, specs, [...parents(d.base), ...parents(moved)]));
       }
     } else if (d.kind === 'resize') {
-      if (d.moved) s.commit(settle(d.base, resizeFrame(d.base, specs, d.id, resized(d, p)), specs));
+      if (d.moved) {
+        const g = d.base.groups.find((x) => x.id === d.id);
+        const next = resizeFrame(d.base, specs, d.id, resized(d, p));
+        s.commit(settle(d.base, next, specs, g?.parent ? [g.parent] : []));
+      }
     } else if (d.kind === 'box') setBox(null);
     else if (d.kind === 'field') s.setState('editing', null);
   }
@@ -760,9 +766,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
                   stack: () => {
                     const d = s.current();
-                    s.commit(
-                      settle(d, setLayout(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []),
-                    );
+                    const next = setLayout(d, specs, g.id, g.layout === 'stack' ? 'free' : 'stack');
+                    s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
                   },
                   save: () => lib.saveGroup(g.id),
                   fix: () => {

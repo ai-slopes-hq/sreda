@@ -180,7 +180,7 @@ export function Frame(props: FrameProps): JSX.Element {
           <div ref={(el) => track(el, 'meter', () => props.meter)} />
         </div>
         <div class="sr-gclock">
-          <Show when={hot() || g().muted || g().layout === 'route'}>
+          <Show when={hot() || g().muted || g().layout !== 'free'}>
             <button
               class="sr-swatch"
               aria-label="Frame colour"
@@ -191,7 +191,8 @@ export function Frame(props: FrameProps): JSX.Element {
             />
             <button
               class="sr-gbtn"
-              title="pack the frame's contents flush"
+              classList={{ on: g().layout === 'stack' }}
+              title="pack the frame's contents densely; the width decides the rows"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => props.act.stack()}
             >
@@ -304,18 +305,20 @@ export function Frame(props: FrameProps): JSX.Element {
       <div class="sr-plabel" style={{ left: '22px', top: `${GHEAD + 3}px` }}>
         CLK
       </div>
-      {(Object.keys(HANDLES) as Edge[]).map((edge) => (
-        <div
-          class="sr-rs"
-          data-resize={edge}
-          style={HANDLES[edge]}
-          onPointerDown={(e) => {
-            if (e.button !== 0) return;
-            e.stopPropagation();
-            props.act.resizeDown(edge, e);
-          }}
-        />
-      ))}
+      {(Object.keys(HANDLES) as Edge[])
+        .filter((edge) => g().layout === 'free' || edge === 'r' || edge === 'br')
+        .map((edge) => (
+          <div
+            class="sr-rs"
+            data-resize={edge}
+            style={HANDLES[edge]}
+            onPointerDown={(e) => {
+              if (e.button !== 0) return;
+              e.stopPropagation();
+              props.act.resizeDown(edge, e);
+            }}
+          />
+        ))}
     </div>
   );
 }

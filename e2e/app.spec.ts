@@ -533,6 +533,60 @@ test('WIRE FIX: ⌘G packs rows and routes wires at right angles; STACK packs fl
   await app.close();
 });
 
+test('STACK packs a frame densely; dragging its right edge re-packs; STACK again turns it off', async () => {
+  const { app, page } = await launch();
+  const out = await center(page, jack(page, 'osc', 'out'));
+  await drag(page, out, { x: out.x + 100, y: out.y + 320 });
+  await page.keyboard.type('filter');
+  await page.keyboard.press('Enter');
+  const all = await page
+    .locator('.sr-mod')
+    .evaluateAll((els) =>
+      els.map((e) => e.getBoundingClientRect()).map((r) => [r.left, r.top, r.right, r.bottom]),
+    );
+  await drag(
+    page,
+    { x: Math.min(...all.map((r) => r[0]!)) - 20, y: Math.min(...all.map((r) => r[1]!)) - 20 },
+    { x: Math.max(...all.map((r) => r[2]!)) + 20, y: Math.max(...all.map((r) => r[3]!)) + 20 },
+  );
+  await page.keyboard.press('Meta+g');
+  const frame = page.locator('.sr-frame');
+  await frame.getByText('FIX', { exact: true }).click(); // WIRE FIX off
+  const box = async () => (await frame.boundingBox())!;
+  const positions = async () => (await fullDoc(page)).modules.map((m) => [m.x, m.y]);
+  const wide = await box();
+  const stack = frame.getByText('STACK');
+  await stack.click();
+  await expect(stack).toHaveClass(/on/);
+  const stacked = await box();
+  expect(stacked.width).toBeLessThan(wide.width);
+  const overlap = async () => {
+    const rs = await page
+      .locator('.sr-mod')
+      .evaluateAll((els) =>
+        els.map((e) => e.getBoundingClientRect()).map((r) => [r.left, r.top, r.right, r.bottom]),
+      );
+    return rs.some((a, i) =>
+      rs.some((b, j) => i < j && a[0]! < b[2]! && b[0]! < a[2]! && a[1]! < b[3]! && b[1]! < a[3]!),
+    );
+  };
+  expect(await overlap()).toBe(false);
+  const packed = await positions();
+  const edge = { x: stacked.x + stacked.width, y: stacked.y + stacked.height / 2 };
+  await drag(page, edge, { x: edge.x + 400, y: edge.y });
+  const widened = await box();
+  expect(widened.width).toBeGreaterThan(stacked.width);
+  expect(widened.height).toBeLessThan(stacked.height);
+  expect(await overlap()).toBe(false);
+  await page.keyboard.press('Meta+z');
+  expect((await box()).width).toBeCloseTo(stacked.width, 0);
+  expect(await positions()).toEqual(packed);
+  await stack.click();
+  await expect(stack).not.toHaveClass(/on/);
+  expect(await positions()).toEqual(packed);
+  await app.close();
+});
+
 test('the very first launch opens the factory project Pulse', async () => {
   const { app, page } = await launch(undefined, 'factory');
   await expect(page.locator('[data-type=lpg]')).toHaveCount(2);

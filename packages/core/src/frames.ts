@@ -248,7 +248,15 @@ export function resizeFrame(doc: Doc, specs: Specs, gid: string, r: Rect): Doc {
     g.id === gid ? (managed ? { ...g, w } : { ...g, x: r.x, y: r.y, w, h }) : g,
   );
   const d = recomputeParents({ ...doc, groups }, specs);
-  return managed ? packFrame(d, specs, gid) : d;
+  if (!managed) return d;
+  // narrowing never throws a packed child out: it re-packs to the new width
+  const keep = <T extends { id: string; parent: string | null }>(os: T[], was: T[]): T[] =>
+    os.map((o) => (was.find((x) => x.id === o.id)?.parent === gid ? { ...o, parent: gid } : o));
+  return packFrame(
+    { ...d, modules: keep(d.modules, doc.modules), groups: keep(d.groups, doc.groups) },
+    specs,
+    gid,
+  );
 }
 
 export function editFrame(
