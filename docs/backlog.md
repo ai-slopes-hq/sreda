@@ -148,3 +148,5 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **The real file dialogs and the ⇧⌘I accelerator are not exercised by e2e:** e2e stands in for the dialogs with
   `SREDA_E2E_OPEN` / `SREDA_E2E_IMPORT` and sends the menu event directly.
 - **Library.tsx duplicates the picker's 120 ms audition timer:** the two should share one helper.
+- **LOAD with an unreadable or non-audio file** returns silently (no notice); two quick clicks on a sample display
+  can open two dialogs (no in-flight guard).
