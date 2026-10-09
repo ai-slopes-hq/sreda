@@ -11,6 +11,7 @@ function fakeBridge(folder: string | null = '/lib') {
   let chosen = folder;
   const bridge: SredaBridge = {
     first: async () => null,
+    settings: { skin: async () => null, setSkin: async () => {} },
     library: {
       folder: async () => chosen,
       choose: async () => {

@@ -1063,3 +1063,24 @@ test('an audio file dropped on empty canvas becomes a SAMPLER; another file give
   await expect(page.locator('.sr-line.notice')).toHaveText('NOT A SAMPLE · notes.txt');
   await app.close();
 });
+
+test('SETTINGS: W opens WIRES; choosing NORD recolours the canvas and is remembered', async () => {
+  const first = await launch();
+  const ground = () => first.page.locator('.sr-canvas').evaluate((el) => getComputedStyle(el).backgroundColor);
+  await first.page.keyboard.press('w');
+  await expect(first.page.locator('.sr-wfilter')).toBeVisible();
+  await first.page.getByRole('button', { name: 'SETTINGS' }).click();
+  await expect(first.page.locator('.sr-wfilter')).toHaveCount(0);
+  await first.page.locator('[data-skin="NORD"]').click();
+  await expect.poll(ground).toBe('rgb(46, 52, 64)');
+  await first.page.keyboard.press('w'); // on another tab than WIRES: switches to it
+  await expect(first.page.locator('.sr-wfilter')).toBeVisible();
+  await first.page.keyboard.press('w'); // on WIRES: closes
+  await expect(first.page.locator('.sr-side')).toHaveCount(0);
+  await first.app.close();
+  const again = await launch(first.dir, 'starter', first.library);
+  await expect
+    .poll(() => again.page.locator('.sr-canvas').evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toBe('rgb(46, 52, 64)');
+  await again.app.close();
+});

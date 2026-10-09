@@ -1,4 +1,4 @@
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { app, BrowserWindow, dialog, ipcMain, protocol, session } from 'electron';
 import {
@@ -11,6 +11,7 @@ import {
   writeEntry,
   type Kind,
 } from './library';
+import { mergeSettings, readSettings, readSkin, writeSkin } from './settings';
 
 // Every response carries COOP / COEP so the renderer is cross-origin isolated (SharedArrayBuffer).
 const ISOLATION = {
@@ -81,7 +82,8 @@ async function libraryFolder(): Promise<string | null> {
   let folder = process.env['SREDA_LIBRARY'] ?? null;
   if (!folder)
     try {
-      folder = (JSON.parse(await readFile(settingsFile(), 'utf8')) as { library?: string }).library ?? null;
+      const lib = (await readSettings(settingsFile()))['library'];
+      folder = typeof lib === 'string' ? lib : null;
     } catch {
       folder = null;
     }
@@ -114,9 +116,11 @@ function serveLibrary(): void {
       properties: ['openDirectory', 'createDirectory'],
     });
     const folder = r.canceled ? null : (r.filePaths[0] ?? null);
-    if (folder) await writeFile(settingsFile(), JSON.stringify({ library: folder }, null, 2));
+    if (folder) await mergeSettings(settingsFile(), { library: folder });
     return folder;
   });
+  ipcMain.handle('settings:skin', () => readSkin(settingsFile()));
+  ipcMain.handle('settings:setSkin', (_e, name: unknown) => writeSkin(settingsFile(), name));
   ipcMain.handle('library:list', async () => listLibrary(await root()));
   ipcMain.handle('library:read', async (_e, kind: unknown, path: unknown) =>
     readEntry(await root(), kindOf(kind), pathOf(path)),

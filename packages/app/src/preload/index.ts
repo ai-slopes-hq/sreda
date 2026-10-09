@@ -5,6 +5,10 @@ type Kind = 'group' | 'project';
 
 contextBridge.exposeInMainWorld('sreda', {
   first: (): Promise<'starter' | null> => ipcRenderer.invoke('sreda:first'),
+  settings: {
+    skin: (): Promise<string | null> => ipcRenderer.invoke('settings:skin'),
+    setSkin: (name: string): Promise<void> => ipcRenderer.invoke('settings:setSkin', name),
+  },
   library: {
     folder: (): Promise<string | null> => ipcRenderer.invoke('library:folder'),
     choose: (): Promise<string | null> => ipcRenderer.invoke('library:choose'),

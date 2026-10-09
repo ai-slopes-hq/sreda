@@ -34,6 +34,7 @@ import { scheduleSave } from './autosave';
 import { setLayoutSeq, setSource } from './live';
 import type { LibEntry } from './canvas/patching';
 import { createSampleRegistry } from './samples';
+import type { SkinName } from './skins';
 
 export interface Session {
   doc: Doc;
@@ -54,6 +55,8 @@ export interface Session {
   /** the library folder's groups and projects (factory ones are added by the picker) */
   library: LibEntry[];
   sidebar: SidebarState;
+  /** the chosen skin (SETTINGS) */
+  skin: SkinName;
   /** the port a WIRES port list points at: ringed on the canvas */
   candidate: { id: string; port: string } | null;
   /** sample paths the library could not read (spec §7a: MISSING) */
@@ -62,9 +65,11 @@ export interface Session {
   samplesVersion: number;
 }
 
-/** The sidebar (spec §5a): docked right, WIRES its only tab for now. */
+/** The sidebar (spec §5a): docked right, WIRES, MIX and SETTINGS tabs. */
 export interface SidebarState {
   open: boolean;
+  /** the tab showing; kept for the session */
+  tab: 'WIRES' | 'MIX' | 'SETTINGS';
   width: number;
   /** SELECTION: only the wires touching the selection */
   selOnly: boolean;
@@ -119,8 +124,10 @@ export function createSession(
     dirty: false,
     saving: null,
     library: [],
+    skin: 'DEFAULT',
     sidebar: {
       open: false,
+      tab: 'WIRES',
       width: SIDEBAR_WIDTH,
       selOnly: false,
       q: '',

@@ -96,7 +96,7 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
       gids,
       gids.some((id) => !doc.groups.find((g) => g.id === id)?.collapsed),
     );
-  } else if (s.state.sidebar.open && !meta && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+  } else if (s.state.sidebar.open && s.state.sidebar.tab === 'WIRES' && !meta && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     // WIRES: walk the wire rows that are showing
     e.preventDefault();
     const rows = visibleWires(k);
@@ -109,7 +109,7 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
           : rows.length - 1
         : (at + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length;
     s.pickWire(rows[next]!);
-  } else if (s.state.sidebar.open && !meta && e.key === 'Enter' && s.state.sidebar.picked !== null) {
+  } else if (s.state.sidebar.open && s.state.sidebar.tab === 'WIRES' && !meta && e.key === 'Enter' && s.state.sidebar.picked !== null) {
     // WIRES: the port list for the picked wire's input end
     const cable = s.current().cables[s.state.sidebar.picked];
     if (!cable) return;
@@ -121,6 +121,7 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     });
   } else if (
     s.state.sidebar.open &&
+    s.state.sidebar.tab === 'WIRES' &&
     !meta &&
     (e.key === 'Backspace' || e.key === 'Delete') &&
     s.state.sidebar.picked !== null
@@ -140,7 +141,10 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     else if (s.state.sidebar.open) s.setState('sidebar', 'open', false);
     else s.setState('sel', []);
   } else if (!meta && key === 'w') {
-    s.setState('sidebar', 'open', !s.state.sidebar.open);
+    // W: opens on WIRES; on WIRES it closes; on another tab it switches to WIRES
+    const sb = s.state.sidebar;
+    if (sb.open && sb.tab === 'WIRES') s.setState('sidebar', 'open', false);
+    else s.setState('sidebar', { open: true, tab: 'WIRES' });
   } else if (meta && key === 'd') {
     // ⌘D: copies of the selected modules with the cables between them
     e.preventDefault();

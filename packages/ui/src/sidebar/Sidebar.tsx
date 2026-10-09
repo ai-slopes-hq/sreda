@@ -1,9 +1,10 @@
 import type { Specs } from '@sreda/core';
 import { Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
+import { Settings } from './Settings';
 import { Wires } from './Wires';
 
-/** The sidebar (spec §5a): docked right, its left edge dragged (320 px … 70 % of the window); WIRES its only tab. */
+/** The sidebar (spec §5a): docked right, its left edge dragged (320 px … 70 % of the window); tabs WIRES and SETTINGS (MIX comes with the mixer). */
 export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: string): void }): JSX.Element {
   const s = props.session;
   const st = s.state;
@@ -28,14 +29,29 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
       <aside class="sr-side" style={{ width: st.sidebar.width + 'px' }}>
         <div class="sr-grip" onPointerDown={gripDown} />
         <div class="sr-stabs">
-          <button class="sr-gbtn on">WIRES</button>
           <button
             class="sr-gbtn"
-            classList={{ on: st.sidebar.selOnly }}
-            onClick={() => s.setState('sidebar', 'selOnly', !st.sidebar.selOnly)}
+            classList={{ on: st.sidebar.tab === 'WIRES' }}
+            onClick={() => s.setState('sidebar', 'tab', 'WIRES')}
           >
-            SELECTION
+            WIRES
           </button>
+          <button
+            class="sr-gbtn"
+            classList={{ on: st.sidebar.tab === 'SETTINGS' }}
+            onClick={() => s.setState('sidebar', 'tab', 'SETTINGS')}
+          >
+            SETTINGS
+          </button>
+          <Show when={st.sidebar.tab === 'WIRES'}>
+            <button
+              class="sr-gbtn"
+              classList={{ on: st.sidebar.selOnly }}
+              onClick={() => s.setState('sidebar', 'selOnly', !st.sidebar.selOnly)}
+            >
+              SELECTION
+            </button>
+          </Show>
           <span class="sp" />
           <button
             class="sr-gbtn"
@@ -45,20 +61,25 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
             ✕
           </button>
         </div>
-        <input
-          class="sr-wfilter"
-          placeholder="FILTER…"
-          value={st.sidebar.q}
-          onInput={(e) => s.setState('sidebar', 'q', e.currentTarget.value)}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === 'Escape') {
-              s.setState('sidebar', 'q', '');
-              e.currentTarget.blur();
-            }
-          }}
-        />
-        <Wires session={s} specs={props.specs} focus={props.focus} />
+        <Show when={st.sidebar.tab === 'WIRES'}>
+          <input
+            class="sr-wfilter"
+            placeholder="FILTER…"
+            value={st.sidebar.q}
+            onInput={(e) => s.setState('sidebar', 'q', e.currentTarget.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Escape') {
+                s.setState('sidebar', 'q', '');
+                e.currentTarget.blur();
+              }
+            }}
+          />
+          <Wires session={s} specs={props.specs} focus={props.focus} />
+        </Show>
+        <Show when={st.sidebar.tab === 'SETTINGS'}>
+          <Settings session={s} />
+        </Show>
       </aside>
     </Show>
   );

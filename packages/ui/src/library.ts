@@ -9,6 +9,12 @@ type Kind = 'group' | 'project';
 export interface SredaBridge {
   /** e2e runs ask for the starter patch on a first launch instead of the factory project Pulse */
   first(): Promise<'starter' | null>;
+  settings: {
+    /** the saved skin name, or null */
+    skin(): Promise<string | null>;
+    /** remembered in <userData>/settings.json beside the library folder */
+    setSkin(name: string): Promise<void>;
+  };
   library: {
     /** the remembered folder, if it still exists */
     folder(): Promise<string | null>;

@@ -37,7 +37,7 @@ describe('skins', () => {
   });
 
   it('no colour literal outside skins.ts and the :root block', () => {
-    const literal = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgba?\(|hsla?\(/;
+    const literal = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgba?\(|hsla?\(|\b(?:black|white)\b(?!-space)/;
     const bad: string[] = [];
     for (const file of sources(here)) {
       if (file.endsWith('skins.ts') || /\.test\.tsx?$/.test(file)) continue;

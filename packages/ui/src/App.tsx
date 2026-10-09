@@ -5,6 +5,7 @@ import { AudioHost } from './audio/host';
 import { loadSaved } from './autosave';
 import { Canvas } from './canvas/Canvas';
 import './library';
+import { applySkin, SKIN_NAMES, type SkinName } from './skins';
 import { createSession, type SessionApi } from './store';
 
 declare global {
@@ -32,6 +33,11 @@ export function App(): JSX.Element {
     if (import.meta.env.DEV)
       window.__sreda.big = () =>
         s.openProject(bigPatch(SPECS), { path: 'FACTORY/200 modules', factory: true });
+    const skin = await window.sreda?.settings.skin().catch(() => null);
+    if (skin && (SKIN_NAMES as readonly string[]).includes(skin)) {
+      s.setState('skin', skin as SkinName);
+      applySkin(skin as SkinName);
+    }
     listenForFirstClick(s);
     return s;
   });
