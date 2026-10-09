@@ -11,6 +11,9 @@ export interface Analysis {
   peaks: Float32Array;
 }
 
+/** How often the work ran in the worker and how often in place (e2e reads it through `__sreda.analysis`). */
+export const analysisCounts = { worker: 0, fallback: 0 };
+
 /** Creates the worker; replaced in tests. Null when there is none. */
 export let makeWorker: () => Worker | null = () =>
   typeof Worker === 'undefined'
@@ -62,11 +65,13 @@ export async function analyseChannels(
   if (p) {
     try {
       const r = await p;
+      analysisCounts.worker++;
       return { channels: r.channels, hits: r.hits ?? [], peaks: r.peaks ?? peaksOf(r.channels) };
     } catch {
       // fall through to the in-place run
     }
   }
+  analysisCounts.fallback++;
   return { channels, hits: onsets(channels, rate), peaks: peaksOf(channels) };
 }
 
@@ -82,10 +87,12 @@ export async function parseAiffOff(bytes: ArrayBuffer): Promise<{ channels: Floa
   if (p) {
     try {
       const r = await p;
+      analysisCounts.worker++;
       return { channels: r.channels, rate: r.rate };
     } catch {
       // fall through: a bad file throws from the in-place parse below
     }
   }
+  analysisCounts.fallback++;
   return parseAiff(bytes);
 }

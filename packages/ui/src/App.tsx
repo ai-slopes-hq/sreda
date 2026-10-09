@@ -5,13 +5,19 @@ import { AudioHost } from './audio/host';
 import { loadSaved } from './autosave';
 import { Canvas } from './canvas/Canvas';
 import './library';
+import { analysisCounts } from './samples/analysis';
 import { applySkin, SKIN_NAMES, type SkinName } from './skins';
 import { createSession, type SessionApi } from './store';
 
 declare global {
   interface Window {
     /** for e2e tests: the current document and the readout buffer */
-    __sreda?: { doc(): unknown; readout(i: number): number; big?(): void };
+    __sreda?: {
+      doc(): unknown;
+      readout(i: number): number;
+      big?(): void;
+      analysis: { worker: number; fallback: number };
+    };
   }
 }
 
@@ -28,7 +34,11 @@ export function App(): JSX.Element {
     const { doc, notice } = saved;
     const project = !saved.fresh ? saved.project : starter ? null : { path: 'FACTORY/pulse', factory: true };
     const s = createSession(SPECS, doc, notice, project);
-    window.__sreda = { doc: () => structuredClone(unwrap(s.state.doc)), readout: (i) => s.readout(i) };
+    window.__sreda = {
+      doc: () => structuredClone(unwrap(s.state.doc)),
+      readout: (i) => s.readout(i),
+      analysis: analysisCounts,
+    };
     // dev builds: `__sreda.big()` in the console opens the 200-module patch (the smoothness check)
     if (import.meta.env.DEV)
       window.__sreda.big = () =>

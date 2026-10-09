@@ -1111,6 +1111,9 @@ test('a 3-minute stereo sample loads without freezing the page, and the SAMPLER 
   const fill = page.locator('.sr-wave .d-fill').first();
   await expect.poll(async () => (await fill.getAttribute('d')) ?? '', { timeout: 60_000 }).toMatch(/L/);
   expect(await page.evaluate(() => (window as unknown as { __gap: number }).__gap)).toBeLessThan(200);
+  expect(
+    await page.evaluate(() => (window as unknown as { __sreda: { analysis: object } }).__sreda.analysis),
+  ).toEqual({ worker: 1, fallback: 0 });
   await app.close();
 });
 
