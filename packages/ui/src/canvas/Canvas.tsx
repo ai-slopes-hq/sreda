@@ -730,6 +730,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       lib,
     });
   window.addEventListener('keydown', key);
+  const offImport = window.sreda?.onImportSamples?.(() => void lib.importSamples());
+  onCleanup(() => offImport?.());
   window.addEventListener('keyup', key);
   onCleanup(() => {
     window.removeEventListener('keydown', key);

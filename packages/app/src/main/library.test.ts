@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'vitest';
 import {
   fileFor,
+  importFiles,
   importSample,
   listLibrary,
   listSamples,
@@ -139,4 +140,18 @@ test('a later run seeded with the remembered paths may save to them; a path neve
   }
   expect(remembered).toHaveLength(20);
   expect(remembered[0]).toBe(join(dir, 'f24.json'));
+});
+
+test('importFiles copies picked audio files into samples/; a second kick.wav becomes kick 2.wav', async () => {
+  const root = tmp();
+  const src = tmp();
+  writeFileSync(join(src, 'kick.wav'), 'one');
+  writeFileSync(join(src, 'snare.flac'), 'two');
+  writeFileSync(join(src, 'notes.txt'), 'no');
+  expect(await importFiles(root, [join(src, 'kick.wav'), join(src, 'snare.flac'), join(src, 'notes.txt')])).toEqual([
+    'kick.wav',
+    'snare.flac',
+  ]);
+  expect(await importFiles(root, [join(src, 'kick.wav'), join(src, 'missing.wav')])).toEqual(['kick 2.wav']);
+  expect(readFileSync(join(root, 'samples', 'kick 2.wav'), 'utf8')).toBe('one');
 });

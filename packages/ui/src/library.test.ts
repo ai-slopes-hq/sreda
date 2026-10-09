@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { FACTORY, frameSelection, setParam, SPECS, starterDoc } from '@sreda/core';
+import { addModule, FACTORY, frameSelection, setParam, SPECS, starterDoc } from '@sreda/core';
 import { expect, test } from 'vitest';
 import { libraryActions, validPath, type SredaBridge } from './library';
 import { createSession } from './store';
@@ -11,6 +11,7 @@ function fakeBridge(folder: string | null = '/lib') {
   const disk = {
     opened: null as { path: string; doc?: unknown; error?: true } | null,
     saved: [] as { path: string; doc: unknown }[],
+    imported: [] as string[],
   };
   let chosen = folder;
   const bridge: SredaBridge = {
@@ -49,6 +50,7 @@ function fakeBridge(folder: string | null = '/lib') {
       readSample: async () => {
         throw new Error('no samples');
       },
+      importFromDialog: async () => disk.imported,
       importSample: async (name) => name,
     },
   };
@@ -184,4 +186,25 @@ test('⌘O on an unreadable file names it in the notice', async () => {
   disk.opened = { path: '/x/broken.sreda.json', error: true };
   expect(await libraryActions(s, SPECS, bridge).open()).toBe(false);
   expect(s.state.notice).toBe('BROKEN.SREDA.JSON COULD NOT BE OPENED');
+});
+
+test('Import Samples: a selected SAMPLER gets the first file (one undo step); nothing selected opens LIBRARY', async () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { bridge, disk } = fakeBridge();
+  const lib = libraryActions(s, SPECS, bridge);
+  const added = addModule(s.current(), SPECS, 'sampler', 100, 100);
+  s.commit(added.doc);
+  disk.imported = ['kick.wav', 'kick 2.wav'];
+  s.setState('sel', [added.id]);
+  const undo = s.current();
+  await lib.importSamples();
+  expect(s.current().modules.find((m) => m.id === added.id)?.sample).toBe('kick.wav');
+  expect(s.state.sidebar.tab).not.toBe('LIBRARY');
+  s.undo();
+  expect(s.current()).toEqual(undo);
+
+  s.setState('sel', []);
+  await lib.importSamples();
+  expect(s.state.sidebar).toMatchObject({ open: true, tab: 'LIBRARY', highlight: ['kick.wav', 'kick 2.wav'] });
+  expect(s.current().modules.find((m) => m.id === added.id)?.sample).toBeUndefined();
 });

@@ -6,6 +6,12 @@ type Kind = 'group' | 'project';
 contextBridge.exposeInMainWorld('sreda', {
   e2e: (): Promise<boolean> => ipcRenderer.invoke('sreda:e2e'),
   first: (): Promise<'starter' | null> => ipcRenderer.invoke('sreda:first'),
+  /** File › Import Samples… was chosen in the application menu; returns the unsubscribe */
+  onImportSamples: (cb: () => void): (() => void) => {
+    const handler = (): void => cb();
+    ipcRenderer.on('menu:importSamples', handler);
+    return () => ipcRenderer.removeListener('menu:importSamples', handler);
+  },
   settings: {
     skin: (): Promise<string | null> => ipcRenderer.invoke('settings:skin'),
     setSkin: (name: string): Promise<void> => ipcRenderer.invoke('settings:setSkin', name),
@@ -25,6 +31,7 @@ contextBridge.exposeInMainWorld('sreda', {
       ipcRenderer.invoke('library:write', kind, path, doc),
     samples: (): Promise<string[]> => ipcRenderer.invoke('library:samples'),
     readSample: (path: string): Promise<ArrayBuffer> => ipcRenderer.invoke('library:readSample', path),
+    importFromDialog: (): Promise<string[]> => ipcRenderer.invoke('library:importFromDialog'),
     importSample: (name: string, bytes: ArrayBuffer): Promise<string> =>
       ipcRenderer.invoke('library:importSample', name, bytes),
   },

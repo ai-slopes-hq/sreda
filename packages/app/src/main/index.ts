@@ -1,14 +1,16 @@
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
-import { app, BrowserWindow, dialog, ipcMain, protocol, session } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session } from 'electron';
 import {
   existsEntry,
+  importFiles,
   importSample,
   listLibrary,
   listSamples,
   openedFiles,
   readEntry,
   readSample,
+  SAMPLE_EXT,
   writeEntry,
   type Kind,
 } from './library';
@@ -57,6 +59,31 @@ function serveRenderer(): void {
 // e2e runs keep the window hidden: a real mouse over a visible test window injects pointer events into the
 // synthetic drags (seen as flaky knob drags); hidden windows must not be throttled.
 const e2e = !!process.env['SREDA_E2E'];
+
+/** The standard macOS menus (app, Edit, View, Window), with a File menu after the app menu. */
+function buildMenu(): void {
+  const mac = process.platform === 'darwin';
+  const file: Electron.MenuItemConstructorOptions = {
+    label: 'File',
+    submenu: [
+      {
+        id: 'importSamples',
+        label: 'Import Samples…',
+        accelerator: 'Shift+CmdOrCtrl+I',
+        click: () => BrowserWindow.getAllWindows()[0]?.webContents.send('menu:importSamples'),
+      },
+    ],
+  };
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate([
+      ...(mac ? [{ role: 'appMenu' as const }] : []),
+      file,
+      { role: 'editMenu' },
+      { role: 'viewMenu' },
+      { role: 'windowMenu' },
+    ]),
+  );
+}
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -162,6 +189,22 @@ function serveLibrary(): void {
     if (!(bytes instanceof ArrayBuffer) && !(bytes instanceof Uint8Array)) throw new Error('bad bytes');
     return importSample(await root(), pathOf(name), bytes);
   });
+  // File › Import Samples…: audio files picked in a dialog (e2e: SREDA_E2E_IMPORT, comma-separated paths)
+  ipcMain.handle('library:importFromDialog', async () => {
+    const folder = await root();
+    let files: string[];
+    const stub = e2e ? process.env['SREDA_E2E_IMPORT'] : undefined;
+    if (stub) files = stub.split(',').filter(Boolean);
+    else {
+      const r = await dialog.showOpenDialog({
+        title: 'Import samples',
+        properties: ['openFile', 'multiSelections'],
+        filters: [{ name: 'Audio', extensions: SAMPLE_EXT.map((x) => x.slice(1)) }],
+      });
+      files = r.canceled ? [] : r.filePaths;
+    }
+    return importFiles(folder, files);
+  });
 }
 
 void app.whenReady().then(() => {
@@ -175,6 +218,7 @@ void app.whenReady().then(() => {
   });
   serveRenderer();
   serveLibrary();
+  buildMenu();
   // e2e runs open the starter patch on a first launch, not the factory project Pulse
   ipcMain.handle('sreda:e2e', () => e2e);
   ipcMain.handle('sreda:first', () => (process.env['SREDA_FIRST'] === 'starter' ? 'starter' : null));

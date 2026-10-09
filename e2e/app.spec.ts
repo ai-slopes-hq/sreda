@@ -19,6 +19,8 @@ async function launch(
   library = mkdtempSync(join(tmpdir(), 'sreda-lib-')),
   /** SREDA_E2E_OPEN: the file ⌘O opens in place of the dialog */
   open?: string,
+  /** SREDA_E2E_IMPORT: the files File › Import Samples… picks in place of the dialog */
+  importPaths?: string[],
 ): Promise<{ app: ElectronApplication; page: Page; dir: string; library: string }> {
   const app = await electron.launch({
     args: ['packages/app'],
@@ -29,6 +31,7 @@ async function launch(
       SREDA_E2E: '1',
       SREDA_LIBRARY: library,
       ...(open ? { SREDA_E2E_OPEN: open } : {}),
+      ...(importPaths ? { SREDA_E2E_IMPORT: importPaths.join(',') } : {}),
       ...(first === 'starter' ? { SREDA_FIRST: 'starter' } : {}),
     },
   });
@@ -1114,6 +1117,28 @@ test('an audio file dropped on empty canvas becomes a SAMPLER; another file give
   expect(existsSync(join(library, 'samples', 'hat.wav'))).toBe(true);
   await dropFile('notes.txt', [1, 2, 3]);
   await expect(page.locator('.sr-line.notice')).toHaveText('NOT A SAMPLE · notes.txt');
+  await app.close();
+});
+
+test('File › Import Samples…: with a SAMPLER selected the first file loads into it; the menu keeps Edit', async () => {
+  const src = mkdtempSync(join(tmpdir(), 'sreda-src-'));
+  const files = [join(src, 'zap.wav'), join(src, 'pop.wav')];
+  files.forEach((f) => writeFileSync(f, wav(0.1, 440)));
+  const lib = libraryWithSamples();
+  const { app, page } = await launch(undefined, 'starter', lib, undefined, files);
+  expect(
+    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((i) => i.label)),
+  ).toEqual(expect.arrayContaining(['File', 'Edit', 'View', 'Window']));
+  // S → kick ⏎ places a SAMPLER and selects it
+  await page.mouse.move(700, 650);
+  await page.keyboard.press('s');
+  await page.keyboard.type('kick');
+  await page.keyboard.press('Enter');
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/kick.wav');
+  await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('importSamples')!.click());
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('zap.wav');
+  await expect(page.locator('[data-type=sampler] .sr-dtag')).toHaveText(/^zap\.wav/);
+  expect(existsSync(join(lib, 'samples', 'pop.wav'))).toBe(true);
   await app.close();
 });
 

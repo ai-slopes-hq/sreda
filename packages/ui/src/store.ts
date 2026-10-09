@@ -69,8 +69,10 @@ export interface Session {
 export interface SidebarState {
   open: boolean;
   /** the tab showing; kept for the session */
-  tab: 'WIRES' | 'MIX' | 'SETTINGS';
+  tab: 'WIRES' | 'MIX' | 'SETTINGS' | 'LIBRARY';
   width: number;
+  /** sample paths just imported (the LIBRARY tab marks them) */
+  highlight: string[];
   /** SELECTION: only the wires touching the selection */
   selOnly: boolean;
   /** the filter field */
@@ -129,6 +131,7 @@ export function createSession(
       open: false,
       tab: 'WIRES',
       width: SIDEBAR_WIDTH,
+      highlight: [],
       selOnly: false,
       q: '',
       closed: {},

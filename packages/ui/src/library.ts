@@ -11,6 +11,8 @@ export interface SredaBridge {
   first(): Promise<'starter' | null>;
   /** an e2e run (test hooks on `window.__sreda`) */
   e2e?(): Promise<boolean>;
+  /** File › Import Samples… was chosen in the application menu; returns the unsubscribe */
+  onImportSamples?(cb: () => void): () => void;
   settings: {
     /** the saved skin name, or null */
     skin(): Promise<string | null>;
@@ -37,6 +39,8 @@ export interface SredaBridge {
     samples(): Promise<string[]>;
     /** a sample's raw bytes; throws when it is not there */
     readSample(path: string): Promise<ArrayBuffer>;
+    /** a file dialog (multi-select) for audio files, each copied into samples/; returns their paths */
+    importFromDialog(): Promise<string[]>;
     /** writes a dropped audio file into samples/ under a free name; returns its path */
     importSample(name: string, bytes: ArrayBuffer): Promise<string>;
   };
@@ -187,6 +191,25 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       }
       s.openProject(doc, { path: file.path, factory: false, file: true });
       return true;
+    },
+    /** File › Import Samples…: the first file goes into a selected SAMPLER / GRAINS, else the LIBRARY tab shows them */
+    async importSamples(): Promise<void> {
+      if (!lib || !(await ensureFolder())) return;
+      let paths: string[];
+      try {
+        paths = await lib.importFromDialog();
+      } catch {
+        s.setState('notice', 'THE SAMPLES COULD NOT BE IMPORTED');
+        return;
+      }
+      if (!paths.length) return;
+      const sel = s.state.sel;
+      const m = sel.length === 1 ? s.current().modules.find((x) => x.id === sel[0]) : undefined;
+      if (m && (m.type === 'sampler' || m.type === 'grains')) s.setSample(m.id, paths[0]!);
+      else {
+        s.setState('sidebar', 'highlight', paths);
+        s.setState('sidebar', { open: true, tab: 'LIBRARY' });
+      }
     },
     /** NEW: an empty canvas (an undo step), the project unnamed */
     clear(): void {

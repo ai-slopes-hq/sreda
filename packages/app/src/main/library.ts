@@ -138,6 +138,20 @@ export async function importSample(
   }
 }
 
+/** Copies audio files picked in a dialog into samples/ (free names); returns their library paths. Files that are not audio or cannot be read are skipped. */
+export async function importFiles(root: string, files: string[]): Promise<string[]> {
+  const out: string[] = [];
+  for (const file of files) {
+    if (!isSample(file)) continue;
+    try {
+      out.push(await importSample(root, basename(file), await readFile(file)));
+    } catch {
+      // unreadable: skipped
+    }
+  }
+  return out;
+}
+
 /** Replace a file with a document: written to a temporary file, renamed over it. */
 export async function writeJsonAtomic(file: string, doc: unknown): Promise<void> {
   const tmp = `${file}.${process.pid}.tmp`;
