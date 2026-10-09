@@ -232,7 +232,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
     px) draws it whole, thicker, with a tag by the pointer naming both ends (`SLOPE › EOC  →  STAGES › ADV`);
   - **a cable being dragged**, and the cable a dragged module would be inserted into.
   Ghost cables (normals) follow the same rule. Stubs are drawn for every cable, also while the cable is whole.
-  Insert-into-a-cable works on cables drawn whole.
+  Insert-into-a-cable finds a cable by its path whether it is drawn whole or not, and draws the candidate whole.
 - Popups (the picker, option lists) close when the canvas pans or zooms.
 - **Randomise:** R with the pointer over a module sets each of its knobs to a random value within the knob's
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
@@ -253,7 +253,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 ## 5. Groups (frames)
 
 - A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
-  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, SAVE, M, collapse) show while the header is hovered, and stay visible
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, SAVE, M) show while the header is hovered, and stay visible
   while STACK or M is on. Drag an edge or corner to resize (minimum 352 × 96); a STACK frame re-packs its
   children to the new width as you drag (see below);
   drag the header to move the frame and everything inside it; click the header to select it.
@@ -302,7 +302,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
     frame that holds its source but not its target, when that frame or one of its parents is muted. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
 - **Collapse** (the big picture): **C** collapses or expands the selected frames, **⇧C** collapses all frames (or
-  expands all, when every frame is collapsed); the header's `▾` / `▸` does the same for one frame. A collapsed frame
+  expands all, when every frame is collapsed); the header's `▾` / `▸` (always visible) does the same for one frame. A collapsed frame
   is a block at the frame's top-left: its header (name, level meter, CLK in / out, M, `▸`), then one jack per port
   inside it that has a cable crossing its edge — inputs on the left, outputs on the right, labelled `MODULE › PORT`;
   several cables from one port share its jack. Cables inside are hidden; cables crossing the edge end on the block's
