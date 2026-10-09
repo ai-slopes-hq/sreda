@@ -66,6 +66,9 @@ of a creative tool; nothing of its UI is ported.
   cursor and a scrub — a click moves START (SAMPLER ONE / LOOP) or POS (GRAINS), a drag scrubs the file through the
   module's outputs (hidden `scrub` voice, 10 ms glide) with START / POS following; in SLICE a click plays the slice
   (hidden `play` one-shot). Awaiting review and the user's listening check.
+- **Plan 8 done and merged into `main`** (2026-10-09), spec revision 25: on a loaded SAMPLER / GRAINS display a click
+  is the cursor (START / POS) and a drag scrubs (heard through the module's outputs; a pointer at rest fades out;
+  SLICE: a click plays that slice); LOAD loads another file. Reviewed; fixes in.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: FOLD and FILTER models from listening, the
   FILTER cutoff animation, sends to shared effects, recording and export).
 
