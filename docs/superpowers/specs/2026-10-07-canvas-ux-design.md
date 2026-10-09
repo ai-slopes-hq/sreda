@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 30 (§6: NEW stays at the top right; DICE sits beside it) · Status: approved
+Date: 2026-10-07 · Revision 31 (§6: more factory presets — drum, bass, lead and ambient groups and four more projects) · Status: approved
 
 ## Why
 
@@ -426,6 +426,18 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   *303 voice* (the ACID voice without delay and out, own clock 128 BPM), *complex vco* (COMPLEX → FOLD → LPG pinged
   by a cycling SLOPE, UNCERTAINTY on the fold), *bleep-bloop* (own clock 120 BPM at ×4 → CHANCE → UNCERTAINTY
   quantised → QUANT → OSC → LPG), *vca-lpg* (two LPGs: the first in VCA mode with a SLOPE on its level, the second pinged; CLK in fires both).
+- **More factory presets** (revision 31), all built from the current modules, each frame with its own clock so it
+  plays when dropped in (patch CLK IN to follow the patch's clock):
+  - groups — drums: *kick* (a sine with a pitch envelope and a soft DRIVE), *snare* (a tone and band-passed noise),
+    *hats* (closed and open), *clap* (band-passed noise through a short DIGI delay), *noisy techno drums* (kick, hats
+    and a folded percussion through DIST); bass and lead: *fm bass* (COMPLEX, an envelope on the index), *reese* (two
+    detuned saws through a LADDER, the cutoff breathing), *pluck* (a saw through an LPG in LP mode); ambient:
+    *chaotic bells* (CHANCE and UNCERTAINTY into quantised sine bells, a big PLATE), *pad* (two detuned oscillators, slow
+    filter and envelope, HALL), *drone* (COMPLEX → FOLD → LADDER → TAPE delay), *grain cloud* (GRAINS on LIVE over a slow
+    bell), *frozen space* (a slow source into a 30 s HALL);
+  - projects: *techno* (noisy techno drums, fm bass, hats at 130 BPM), *ambient bells* (chaotic bells over a drone),
+    *dub* (kick, snare and a chord stab through a long SPRING / TAPE delay and a reverb at 75 BPM), *generative*
+    (chance-driven quantised voices, a grain cloud, slow modulation).
 - Factory projects are built only from the first modules and fade in over 200 ms:
   - **Pulse:** an OSC square at 2 Hz pings an LPG on a 50 Hz sine (kick); the same clock, ×2 on the input, pings a
     second LPG on NOISE (hats); MIX → OUT.
