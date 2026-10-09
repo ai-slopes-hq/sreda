@@ -127,6 +127,21 @@ GRAINS sample — reuse the picker's `place` / `useSample` paths), `canvas.css` 
 - [ ] **Step 2:** → FAIL. **Step 3:** Implement. **Step 4:** `pnpm check && pnpm e2e`.
 - [ ] **Step 5:** Commit `feat: the LIBRARY tab — projects, groups and samples`.
 
+### Task 6: LOAD opens the file dialog; no SAMPLES tab in the picker (spec revision 24)
+
+**Files:** `packages/app/src/main/index.ts` + `preload/index.ts` (`samples.pickOne(): Promise<string | null>` — the
+system dialog for one audio file, copied with `importSample`; asks for the library folder first when none is set;
+stub `SREDA_E2E_IMPORT` honoured as for Import Samples), `packages/ui/src/library.ts` (bridge type),
+`packages/ui/src/canvas/Canvas.tsx` (`act.load` for SAMPLER / GRAINS → `pickOne` → `setSample`; no picker),
+`packages/ui/src/canvas/{patching.ts,Picker.tsx,keys.ts}` (tabs ALL · MODULES · GROUPS; S unbound; the picker's
+audition code removed), the hint line, tests, e2e (the S / SAMPLES-tab e2e becomes LOAD with the stub).
+
+- [ ] **Step 1: Failing tests:** `patching.test.ts` — TABS are ALL, MODULES, GROUPS; keys — S does nothing; e2e —
+  a SAMPLER's LOAD with `SREDA_E2E_IMPORT=<kick.wav>` → its display tag starts `kick.wav` and the file is in
+  `samples/`; ⌘Z clears it; a click on the empty display does the same.
+- [ ] **Step 2:** → FAIL. **Step 3:** Implement. **Step 4:** `pnpm check && pnpm e2e`.
+- [ ] **Step 5:** Commit `feat: LOAD opens the file dialog; the picker has no SAMPLES tab`.
+
 ---
 
 ## After the last task
