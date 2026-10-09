@@ -1104,6 +1104,8 @@ impl Engine {
         }
         self.steps = steps;
 
+        // the master fader is the last strip: it scales the mix only, listening and auditioning skip it
+        let mut fader = self.listen.is_none();
         self.out = match self.listen {
             Some(b) => [self.outs[b], self.outs[b]],
             None => self.ctx.master,
@@ -1118,12 +1120,13 @@ impl Engine {
                         }
                     }
                     self.audition = Some((id, pos + BLOCK));
+                    fader = false;
                 }
                 _ => self.audition = None,
             }
         }
         let [l, r] = &mut self.out;
-        self.master.process(l, r);
+        self.master.process(l, r, fader);
         self.readouts[1] = self.out[0]
             .iter()
             .chain(self.out[1].iter())
@@ -2294,5 +2297,29 @@ mod tests {
         e.master(0.0);
         run(&mut e, 100); // the DC blocker's tail, after the fader
         assert!(peak(&run(&mut e, 5)) < 1e-3);
+    }
+
+    #[test]
+    fn listening_and_auditioning_pass_the_master_stage_but_not_the_fader() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![osc("o"), out("x", 0, 0.0)], chain(2)))
+            .unwrap();
+        e.master(0.0);
+        run(&mut e, 20);
+        e.listen(Some((0, 0)));
+        assert!(peak(&run(&mut e, 20)) > 0.5, "listening ignores the fader");
+        e.listen(None);
+        let n = 10 * BLOCK;
+        let sine: Vec<f32> = (0..n).map(|i| 0.25 * (i as f32 * 0.13).sin()).collect();
+        load(&mut e, 0, &sine, &sine, &[]);
+        e.audition(0);
+        let (l, _) = e.process();
+        assert!(peak(l) > 0.1, "auditioning ignores the fader");
+        // the mix itself is still scaled by it
+        let mut m = Engine::new(SR, 1);
+        m.apply(two_outs(1, [0.0, 1.0], [0.0, 0.0])).unwrap();
+        m.master(0.0);
+        run(&mut m, 100);
+        assert!(peak(&run(&mut m, 5)) < 1e-3, "the mix is silent at master 0");
     }
 }

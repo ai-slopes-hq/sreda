@@ -108,12 +108,14 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
           ? 0
           : rows.length - 1
         : (at + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length;
-    s.pickWire(rows[next]!);
+    // only the pick: a collapsed frame opens on a click or Enter, not while walking
+    s.pickRow(rows[next]!);
   } else if (s.state.sidebar.open && s.state.sidebar.tab === 'WIRES' && !meta && e.key === 'Enter' && s.state.sidebar.picked !== null) {
     // WIRES: the port list for the picked wire's input end
     const cable = s.current().cables[s.state.sidebar.picked];
     if (!cable) return;
     e.preventDefault();
+    s.pickWire(s.state.sidebar.picked);
     s.setState('sidebar', 'ports', {
       index: s.state.sidebar.picked,
       end: 'to',

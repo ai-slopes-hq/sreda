@@ -154,9 +154,21 @@ export function cableHidden(doc: Doc, c: Cable): boolean {
   return own(a, b) || own(b, a);
 }
 
-/** The outermost collapsed frame a hidden cable sits inside (expanding it shows the cable); null: it is drawn. */
+/**
+ * The outermost collapsed frame a hidden cable sits inside; null: it is drawn. Expanding only this one may leave an
+ * inner collapsed frame hiding the cable: see `revealFrames`.
+ */
 export function hiddenIn(doc: Doc, c: Cable): string | null {
   return cableHidden(doc, c) ? (blockOwner(doc, c.to[0]) ?? blockOwner(doc, c.from[0])) : null;
+}
+
+/** Every collapsed frame hiding a cable (both ends' chains, an end that is itself a collapsed frame too); [] when it is drawn. */
+export function revealFrames(doc: Doc, c: Cable): string[] {
+  if (!cableHidden(doc, c)) return [];
+  const ids = new Set<string>();
+  for (const end of [c.from[0], c.to[0]])
+    for (const g of [end, ...chainOf(doc, end)]) if (doc.groups.find((x) => x.id === g)?.collapsed) ids.add(g);
+  return [...ids];
 }
 
 const setGroups = (doc: Doc, gids: readonly string[], f: (g: Group) => Group): Doc => ({
@@ -423,7 +435,7 @@ export interface Item {
 }
 
 /** Reading order: rows by position (a new row past half a 1U), then x. */
-function sortReading(kids: Item[], strict = false): Item[] {
+export function sortReading(kids: Item[], strict = false): Item[] {
   const sorted = [...kids].sort((a, b) => a.r.y - b.r.y || a.r.x - b.r.x);
   if (strict) return sorted;
   const rows: { top: number; items: Item[] }[] = [];

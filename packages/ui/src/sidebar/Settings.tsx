@@ -1,4 +1,4 @@
-import { For, type JSX } from 'solid-js';
+import { For, onCleanup, type JSX } from 'solid-js';
 import type { SredaBridge } from '../library';
 import type { SessionApi } from '../store';
 import { applySkin, SKIN_NAMES, SKINS, type SkinName, type Token } from '../skins';
@@ -21,6 +21,8 @@ export function Settings(props: { session: SessionApi; bridge?: SredaBridge | un
       ?.settings.setSkin(name)
       .catch(() => {});
   }
+  // the list unmounting (Esc, W, M) while a row is hovered: no mouseleave comes, so restore the chosen skin here
+  onCleanup(() => applySkin(s.state.skin));
   return (
     <div class="sr-skins" onMouseLeave={() => applySkin(s.state.skin)}>
       <div class="sr-skins-head">SKIN</div>

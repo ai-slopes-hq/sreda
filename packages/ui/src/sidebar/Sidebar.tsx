@@ -86,7 +86,7 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
           <Wires session={s} specs={props.specs} focus={props.focus} />
         </Show>
         <Show when={st.sidebar.tab === 'MIX'}>
-          <Mix session={s} specs={props.specs} />
+          <Mix session={s} specs={props.specs} focus={props.focus} />
         </Show>
         <Show when={st.sidebar.tab === 'SETTINGS'}>
           <Settings session={s} />

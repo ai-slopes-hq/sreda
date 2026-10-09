@@ -49,7 +49,9 @@ impl Master {
         };
     }
 
-    pub fn process(&mut self, l: &mut [f32; BLOCK], r: &mut [f32; BLOCK]) {
+    /// The master stage: the fader (`fader`: the mix path only; listening and auditioning skip it, the glide runs on),
+    /// the DC blocker and the limiter.
+    pub fn process(&mut self, l: &mut [f32; BLOCK], r: &mut [f32; BLOCK], fader: bool) {
         let (pole, gain0, step) = (self.pole, self.gain, self.gain_step);
         let (level0, target) = (self.level, self.level_target);
         let level_step = 1.0 / (0.010 * self.sample_rate).max(1.0);
@@ -62,7 +64,7 @@ impl Master {
                 } else if level > target {
                     level = (level - level_step).max(target);
                 }
-                let x = *s as f64 * level;
+                let x = *s as f64 * if fader { level } else { 1.0 };
                 if !x.is_finite() {
                     // a non-finite sample is dropped and the filter restarts
                     x1 = 0.0;
@@ -117,7 +119,7 @@ mod tests {
                 l[i] = input(b * BLOCK + i);
                 r[i] = l[i];
             }
-            m.process(&mut l, &mut r);
+            m.process(&mut l, &mut r, true);
             out.extend_from_slice(&l);
         }
         out

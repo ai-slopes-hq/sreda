@@ -47,3 +47,10 @@ test('names: the frame holding only this OUT, else OUT n; reading order', () => 
 test('an OUT in a muted frame is muted', () => {
   expect(mixStrips(patch(), SPECS).map((s) => s.muted)).toEqual([false, false, true, true]);
 });
+
+test('reading order: OUTs a few pixels apart vertically are one row, the left one first', () => {
+  const doc = patch();
+  const at = (id: string, x: number, y: number) => ({ ...doc.modules.find((m) => m.id === id)!, x, y, parent: null });
+  const tilted: Doc = { ...doc, groups: [], modules: [at('a', 500, 400), at('b', 0, 404)] };
+  expect(mixStrips(tilted, SPECS).map((s) => s.id)).toEqual(['b', 'a']);
+});

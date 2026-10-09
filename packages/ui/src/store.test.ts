@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { frameSelection, SPECS, starterDoc, type Plan } from '@sreda/core';
+import { frameSelection, hiddenIn, SPECS, starterDoc, type Plan } from '@sreda/core';
 import type { FromEngine, ToEngine } from '@sreda/protocol';
 import { expect, test } from 'vitest';
 import type { AudioHost } from './audio/host';
@@ -263,4 +263,57 @@ test('picking a WIRES row of a wire hidden in a collapsed frame expands that fra
   expect(s.state.sidebar.picked).toBe(index);
   s.undo();
   expect(s.current().groups.find((g) => g.id === framed.id)!.collapsed).toBe(true);
+});
+
+function nestedCollapsed() {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const c = s.current().cables.find((x) => !x.from[0].startsWith('g') && !x.to[0].startsWith('g'))!;
+  const g = frameSelection(s.current(), SPECS, [c.from[0], c.to[0]]);
+  s.commit(g.doc);
+  const p = frameSelection(s.current(), SPECS, [g.id]);
+  s.commit(p.doc);
+  const index = s.current().cables.findIndex((x) => x.from[0] === c.from[0] && x.to[0] === c.to[0]);
+  s.collapse([g.id, p.id], true);
+  return { s, g, p, index };
+}
+
+test('picking a wire inside nested collapsed frames expands them all, in one undo step', () => {
+  const { s, g, p, index } = nestedCollapsed();
+  const collapsed = (id: string) => s.current().groups.find((x) => x.id === id)!.collapsed;
+  expect(hiddenIn(s.current(), s.current().cables[index]!)).toBe(p.id);
+  s.pickWire(index);
+  expect(hiddenIn(s.current(), s.current().cables[index]!)).toBeNull();
+  expect(collapsed(g.id)).toBe(false);
+  expect(collapsed(p.id)).toBe(false);
+  s.undo();
+  expect(collapsed(g.id)).toBe(true);
+  expect(collapsed(p.id)).toBe(true);
+});
+
+test('pickRow only picks: a collapsed frame stays collapsed', () => {
+  const { s, p, index } = nestedCollapsed();
+  s.pickRow(index);
+  expect(s.state.sidebar.picked).toBe(index);
+  expect(s.current().groups.find((x) => x.id === p.id)!.collapsed).toBe(true);
+});
+
+test('the master fader is one undo step per stroke, posts a master message, and again after an undo', () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { sent, asHost } = fakeHost();
+  s.attach(asHost);
+  sent.length = 0;
+  const before = s.current().master;
+  s.setMaster(0.5, { key: 'm1', stroke: true });
+  s.setMaster(0.3, { key: 'm1', stroke: true });
+  expect(s.current().master).toBe(0.3);
+  expect(sent.filter((m) => m.t === 'master')).toEqual([
+    { t: 'master', value: 0.5 },
+    { t: 'master', value: 0.3 },
+  ]);
+  sent.length = 0;
+  s.undo();
+  expect(s.current().master).toBe(before);
+  expect(sent).toContainEqual({ t: 'master', value: before });
+  s.redo();
+  expect(s.current().master).toBe(0.3);
 });

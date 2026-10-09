@@ -1,4 +1,4 @@
-import { toKnob, type KnobParam, type Merge, type Specs } from '@sreda/core';
+import { blockOwner, toKnob, type KnobParam, type Merge, type Specs } from '@sreda/core';
 import { createMemo, For, type JSX } from 'solid-js';
 import { track } from '../live';
 import type { SessionApi } from '../store';
@@ -51,8 +51,9 @@ function Fader(props: { value: number; label: string; set(v: number, merge: Merg
   );
 }
 
-/** MIX (spec §5a): a strip per OUT — name, fader (LVL), meter, M / S — and the master. */
-export function Mix(props: { session: SessionApi; specs: Specs }): JSX.Element {
+/** MIX (spec §5a): a strip per OUT — name, fader (LVL), meter, M / S — and the master. A click on a name selects the OUT
+ * and frames it (an OUT in a collapsed frame: the outermost such frame, which is what shows). */
+export function Mix(props: { session: SessionApi; specs: Specs; focus(id: string): void }): JSX.Element {
   const s = props.session;
   const st = s.state;
   const strips = createMemo(() => mixStrips(st.doc, props.specs));
@@ -67,7 +68,9 @@ export function Mix(props: { session: SessionApi; specs: Specs }): JSX.Element {
       <For each={strips()}>
         {(strip) => (
           <div class="sr-strip" classList={{ muted: strip.muted }} data-out={strip.id}>
-            <button class="sr-sname" title="select" onClick={() => s.setState('sel', [strip.id])}>
+            <button class="sr-sname" title="select"
+              onClick={() => props.focus(blockOwner(st.doc, strip.id) ?? strip.id)}
+            >
               {strip.name}
             </button>
             <Fader

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { SPECS, starterDoc } from '@sreda/core';
+import { frameSelection, SPECS, starterDoc } from '@sreda/core';
 import { fireEvent, render } from '@solidjs/testing-library';
 import { expect, test, vi } from 'vitest';
 import { createSession } from '../store';
@@ -10,10 +10,11 @@ function setup() {
   const knob = vi.spyOn(session, 'knob');
   const params = vi.spyOn(session, 'params');
   const setMaster = vi.spyOn(session, 'setMaster');
-  const r = render(() => <Mix session={session} specs={SPECS} />);
+  const focus = vi.fn();
+  const r = render(() => <Mix session={session} specs={SPECS} focus={focus} />);
   const strip = r.container.querySelector<HTMLElement>('.sr-strip[data-out]')!;
   const out = session.state.doc.modules.find((m) => m.type === 'out')!;
-  return { ...r, session, knob, params, setMaster, strip, out };
+  return { ...r, session, knob, params, setMaster, strip, out, focus };
 }
 
 test('dragging a strip fader turns the OUT level; a double-click resets it', () => {
@@ -47,8 +48,17 @@ test('the master fader calls setMaster; double-click resets to 1', () => {
   expect(setMaster).toHaveBeenLastCalledWith(1, undefined);
 });
 
-test('a click on a name selects the OUT', () => {
-  const { strip, session, out } = setup();
+test('a click on a name selects and frames the OUT (the canvas focus path)', () => {
+  const { strip, focus, out } = setup();
   fireEvent.click(strip.querySelector('.sr-sname')!);
-  expect(session.state.sel).toEqual([out.id]);
+  expect(focus).toHaveBeenCalledWith(out.id);
+});
+
+test('a click on the name of an OUT hidden in a collapsed frame focuses the block', () => {
+  const { session, container, focus, out } = setup();
+  const framed = frameSelection(session.current(), SPECS, [out.id]);
+  session.commit(framed.doc);
+  session.collapse([framed.id], true);
+  fireEvent.click(container.querySelector('.sr-strip[data-out] .sr-sname')!);
+  expect(focus).toHaveBeenCalledWith(framed.id);
 });

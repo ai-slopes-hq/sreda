@@ -27,3 +27,10 @@ test('a missing or corrupt file, or an unknown skin, reads as null', async () =>
   await writeSkin(f, 'TOUCH');
   expect(await readSkin(f)).toBe('TOUCH');
 });
+
+test('two quick skin writes: the last one wins and the library key is kept', async () => {
+  const f = file();
+  await mergeSettings(f, { library: '/music' });
+  await Promise.all([writeSkin(f, 'NORD'), writeSkin(f, 'KANAGAWA'), mergeSettings(f, { library: '/other' }), writeSkin(f, 'TOUCH')]);
+  expect(JSON.parse(readFileSync(f, 'utf8'))).toEqual({ library: '/other', skin: 'TOUCH' });
+});

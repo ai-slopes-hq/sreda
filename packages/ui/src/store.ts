@@ -10,7 +10,6 @@ import {
   editFrame,
   effectiveMuted,
   fromKnob,
-  hiddenIn,
   History,
   inputPorts,
   setAtt,
@@ -24,6 +23,7 @@ import {
   type Plan,
   type Specs,
   blockOwner,
+  revealFrames,
   setCollapsed,
 } from '@sreda/core';
 import { createSignal } from 'solid-js';
@@ -412,11 +412,15 @@ export function createSession(
     collapse(gids: readonly string[], on: boolean): void {
       this.commit(setCollapsed(history.current, gids, on));
     },
-    /** WIRES: pick a row; a wire hidden in a collapsed frame expands the outermost one (one undo step) */
+    /** WIRES: pick a row; a wire hidden in collapsed frames expands every one of them (one undo step) */
     pickWire(index: number): void {
       const cable = history.current.cables[index];
-      const owner = cable ? hiddenIn(history.current, cable) : null;
-      if (owner) this.collapse([owner], false);
+      const frames = cable ? revealFrames(history.current, cable) : [];
+      if (frames.length) this.collapse(frames, false);
+      setState('sidebar', 'picked', index);
+    },
+    /** WIRES arrows: only pick the row; a wire hidden in a collapsed frame stays hidden until a click or Enter */
+    pickRow(index: number): void {
       setState('sidebar', 'picked', index);
     },
     /** an edit of the current document (never of the store's copy) */

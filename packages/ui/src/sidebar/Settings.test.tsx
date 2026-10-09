@@ -42,3 +42,11 @@ test('hovering previews a skin, leaving the list restores the chosen one; a clic
   fireEvent.mouseLeave(list);
   expect(ground()).toBe('#2e3440');
 });
+
+test('unmounting the list while a row is hovered applies the chosen skin', () => {
+  const { row, unmount } = setup();
+  fireEvent.mouseEnter(row('KANAGAWA'));
+  expect(ground()).toBe('#1f1f28');
+  unmount();
+  expect(ground()).toBe('#121210');
+});
