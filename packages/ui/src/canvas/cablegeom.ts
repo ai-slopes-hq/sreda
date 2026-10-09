@@ -1,6 +1,6 @@
 // Cable geometry (spec §4 hover / insert): curves, stubs and hit testing. Each cable's geometry is memoised on its end
 // positions, so a move recomputes only the cables it touches.
-import { jackAt, type Cable, type Doc, type Role, type Specs } from '@sreda/core';
+import { cableHidden, jackAt, type Block, type Cable, type Doc, type Role, type Specs } from '@sreda/core';
 import { bez } from './glyphs';
 
 export type Pt = { x: number; y: number };
@@ -51,12 +51,14 @@ const memo = new Map<string, CableGeom>();
 export function cableGeoms(doc: Doc, specs: Specs): CableGeom[] {
   const used = new Set<string>();
   const out: CableGeom[] = [];
+  const blocks = new Map<string, Block>(); // one scan of the cables per collapsed frame, not per jack
   for (const c of doc.cables) {
+    if (cableHidden(doc, c)) continue;
     const from = roleAt(doc, specs, c.from[0], c.from[1], 'out');
     const to = roleAt(doc, specs, c.to[0], c.to[1], 'in');
     if (!from || !to) continue;
-    const a = jackAt(doc, specs, c.from[0], c.from[1]);
-    const b = jackAt(doc, specs, c.to[0], c.to[1]);
+    const a = jackAt(doc, specs, c.from[0], c.from[1], blocks);
+    const b = jackAt(doc, specs, c.to[0], c.to[1], blocks);
     const key = `${c.from.join('.')}|${c.to.join('.')}|${a.x},${a.y}|${b.x},${b.y}`;
     used.add(key);
     let geom = memo.get(key);

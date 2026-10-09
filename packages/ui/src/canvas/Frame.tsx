@@ -1,5 +1,13 @@
-import { GHEAD, type Group, type Merge, type NodeReadouts } from '@sreda/core';
-import { createSignal, Show, type JSX } from 'solid-js';
+import {
+  GHEAD,
+  isGroupId,
+  type BlockJack,
+  type Group,
+  type Merge,
+  type NodeReadouts,
+  type Role,
+} from '@sreda/core';
+import { createSignal, For, Show, type JSX } from 'solid-js';
 import { track } from '../live';
 import { fmtRat } from './glyphs';
 import { Jack } from './Jack';
@@ -34,6 +42,20 @@ export interface FrameActions {
   stack(): void;
   /** save the frame as a group */
   save(): void;
+  /** ▾ / ▸ (C) */
+  collapse(on: boolean): void;
+  /** a press on a block jack: patches the port inside */
+  blockJackDown(j: BlockJackView, e: PointerEvent): void;
+}
+
+/** A block jack as drawn: where it is, what it is and whether a cable is on it. */
+export type BlockJackView = BlockJack & { role: Role; filled: boolean; listening: boolean };
+
+/** A collapsed frame's block: its size and jacks. */
+export interface BlockView {
+  w: number;
+  h: number;
+  jacks: BlockJackView[];
 }
 
 export interface FrameProps {
@@ -47,6 +69,8 @@ export interface FrameProps {
   /** CLK IN reads the parent frame's clock: its title */
   normal?: string | undefined;
   listening?: boolean;
+  /** a collapsed frame: its block instead of the frame */
+  block?: BlockView | undefined;
   /** the frame clock node's readouts, once audio runs */
   readouts?: NodeReadouts | undefined;
   /** inside a muted frame: drawn at 40 % */
@@ -77,6 +101,7 @@ export function Frame(props: FrameProps): JSX.Element {
   const [hot, setHot] = createSignal(false);
   const [renaming, setRenaming] = createSignal(false);
   const g = () => props.group;
+  const block = () => (g().collapsed ? props.block : undefined);
   let draft = '';
   let taps: number[] = [];
 
@@ -117,13 +142,13 @@ export function Frame(props: FrameProps): JSX.Element {
   return (
     <div
       class="sr-frame"
-      classList={{ sel: props.selected, drop: props.drop, muted: !!props.dim }}
+      classList={{ sel: props.selected, drop: props.drop, muted: !!props.dim, collapsed: !!block() }}
       data-frame={g().id}
       style={{
         left: g().x + 'px',
         top: g().y + 'px',
-        width: g().w + 'px',
-        height: g().h + 'px',
+        width: (block()?.w ?? g().w) + 'px',
+        height: (block()?.h ?? g().h) + 'px',
         background: TINT_FILL[g().tint]?.[0],
       }}
     >
@@ -179,31 +204,33 @@ export function Frame(props: FrameProps): JSX.Element {
         </div>
         <div class="sr-gclock">
           <Show when={hot() || g().muted || g().layout !== 'free'}>
-            <button
-              class="sr-swatch"
-              aria-label="Frame colour"
-              title="frame colour"
-              style={{ background: TINT_FILL[g().tint]?.[1] }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => props.act.tint()}
-            />
-            <button
-              class="sr-gbtn"
-              classList={{ on: g().layout === 'stack' }}
-              title="pack the frame's contents densely; the width decides the rows"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => props.act.stack()}
-            >
-              STACK
-            </button>
-            <button
-              class="sr-gbtn"
-              title="save as a group (⌘S)"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => props.act.save()}
-            >
-              SAVE
-            </button>
+            <Show when={!block()}>
+              <button
+                class="sr-swatch"
+                aria-label="Frame colour"
+                title="frame colour"
+                style={{ background: TINT_FILL[g().tint]?.[1] }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => props.act.tint()}
+              />
+              <button
+                class="sr-gbtn"
+                classList={{ on: g().layout === 'stack' }}
+                title="pack the frame's contents densely; the width decides the rows"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => props.act.stack()}
+              >
+                STACK
+              </button>
+              <button
+                class="sr-gbtn"
+                title="save as a group (⌘S)"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => props.act.save()}
+              >
+                SAVE
+              </button>
+            </Show>
             <button
               class="sr-gbtn"
               classList={{ on: g().muted }}
@@ -215,39 +242,50 @@ export function Frame(props: FrameProps): JSX.Element {
               M
             </button>
           </Show>
-          <Show
-            when={g().clock.on}
-            fallback={
+          <Show when={!block()}>
+            <Show
+              when={g().clock.on}
+              fallback={
+                <button
+                  class="sr-gbtn"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => props.act.clock({ on: true, bpm: g().clock.bpm }, undefined)}
+                >
+                  + CLOCK
+                </button>
+              }
+            >
+              <div
+                class="sr-bpm"
+                classList={{ dim: props.cabledIn }}
+                title="drag to change"
+                onPointerDown={bpmDown}
+                onDblClick={(e) => e.stopPropagation()}
+              >
+                {g().clock.bpm} BPM
+              </div>
+              <button class="sr-gbtn" onPointerDown={(e) => e.stopPropagation()} onClick={tap}>
+                TAP
+              </button>
               <button
                 class="sr-gbtn"
+                aria-label="Remove group clock"
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => props.act.clock({ on: true, bpm: g().clock.bpm }, undefined)}
+                onClick={() => props.act.clock({ on: false, bpm: g().clock.bpm }, undefined)}
               >
-                + CLOCK
+                ✕
               </button>
-            }
-          >
-            <div
-              class="sr-bpm"
-              classList={{ dim: props.cabledIn }}
-              title="drag to change"
-              onPointerDown={bpmDown}
-              onDblClick={(e) => e.stopPropagation()}
-            >
-              {g().clock.bpm} BPM
-            </div>
-            <button class="sr-gbtn" onPointerDown={(e) => e.stopPropagation()} onClick={tap}>
-              TAP
-            </button>
-            <button
-              class="sr-gbtn"
-              aria-label="Remove group clock"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => props.act.clock({ on: false, bpm: g().clock.bpm }, undefined)}
-            >
-              ✕
-            </button>
+            </Show>
           </Show>
+          <button
+            class="sr-gbtn"
+            aria-label={block() ? 'Expand frame' : 'Collapse frame'}
+            title={block() ? 'expand (C)' : 'collapse to its connections (C)'}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => props.act.collapse(!block())}
+          >
+            {block() ? '▸' : '▾'}
+          </button>
         </div>
       </div>
       <div
@@ -279,35 +317,99 @@ export function Frame(props: FrameProps): JSX.Element {
         onPointerDown={(e) => props.act.jackDown('clkIn', e)}
         ref={(el) => track(el, 'flash', () => props.readouts?.trigs)}
       />
-      <Jack
-        port="clkOut"
-        dir="out"
-        role="trigger"
-        x={12}
-        y={GHEAD + 8}
-        filled={props.cabledOut}
-        listening={!!props.listening}
-        title="CLK OUT · patch to members · click to listen"
-        onPointerDown={(e) => props.act.jackDown('clkOut', e)}
-        ref={(el) => track(el, 'flash', () => props.readouts?.state)}
-      />
-      <div class="sr-plabel" style={{ left: '22px', top: `${GHEAD + 3}px` }}>
-        CLK
-      </div>
-      {(Object.keys(HANDLES) as Edge[])
-        .filter((edge) => g().layout === 'free' || edge === 'r' || edge === 'br')
-        .map((edge) => (
-          <div
-            class="sr-rs"
-            data-resize={edge}
-            style={HANDLES[edge]}
-            onPointerDown={(e) => {
-              if (e.button !== 0) return;
-              e.stopPropagation();
-              props.act.resizeDown(edge, e);
-            }}
-          />
-        ))}
+      <Show
+        when={block()}
+        fallback={
+          <>
+            <Jack
+              port="clkOut"
+              dir="out"
+              role="trigger"
+              x={12}
+              y={GHEAD + 8}
+              filled={props.cabledOut}
+              listening={!!props.listening}
+              title="CLK OUT · patch to members · click to listen"
+              onPointerDown={(e) => props.act.jackDown('clkOut', e)}
+              ref={(el) => track(el, 'flash', () => props.readouts?.state)}
+            />
+            <div class="sr-plabel" style={{ left: '22px', top: `${GHEAD + 3}px` }}>
+              CLK
+            </div>
+            {(Object.keys(HANDLES) as Edge[])
+              .filter((edge) => g().layout === 'free' || edge === 'r' || edge === 'br')
+              .map((edge) => (
+                <div
+                  class="sr-rs"
+                  data-resize={edge}
+                  style={HANDLES[edge]}
+                  onPointerDown={(e) => {
+                    if (e.button !== 0) return;
+                    e.stopPropagation();
+                    props.act.resizeDown(edge, e);
+                  }}
+                />
+              ))}
+          </>
+        }
+      >
+        {(b) => (
+          <>
+            <Jack
+              port="clkOut"
+              dir="out"
+              role="trigger"
+              x={b().w}
+              y={GHEAD / 2}
+              filled={props.cabledOut}
+              listening={!!props.listening}
+              title="CLK OUT · patch to members · click to listen"
+              onPointerDown={(e) => props.act.jackDown('clkOut', e)}
+              ref={(el) => track(el, 'flash', () => props.readouts?.state)}
+            />
+            <div
+              class="sr-block"
+              style={{ top: GHEAD + 'px' }}
+              onPointerDown={(e) => {
+                if (e.button !== 0) return;
+                e.stopPropagation();
+                props.act.headDown(e);
+              }}
+            >
+              <For each={b().jacks}>
+                {(j) => (
+                  // the wrapper is what a dropped cable resolves: the inner object and its port
+                  <div
+                    class="sr-bjack"
+                    data-module={isGroupId(j.id) ? undefined : j.id}
+                    data-frame={isGroupId(j.id) ? j.id : undefined}
+                    data-jack={j.port}
+                  >
+                    <Jack
+                      port={j.port}
+                      dir={j.dir}
+                      role={j.role}
+                      x={j.x}
+                      y={j.y - GHEAD}
+                      filled={j.filled}
+                      listening={j.listening}
+                      title={j.label}
+                      onPointerDown={(e) => props.act.blockJackDown(j, e)}
+                    />
+                    <div
+                      class="sr-blabel"
+                      classList={{ out: j.dir === 'out' }}
+                      style={{ [j.dir === 'in' ? 'left' : 'right']: '22px', top: j.y - GHEAD - 6 + 'px' }}
+                    >
+                      {j.label}
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          </>
+        )}
+      </Show>
     </div>
   );
 }

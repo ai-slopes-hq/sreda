@@ -948,6 +948,33 @@
   width: 0;
   background: #e9e4d8;
 }
+.sr-frame.collapsed {
+  background: #171715 !important;
+  border-color: #4a4840;
+}
+.sr-block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: auto;
+  cursor: grab;
+}
+.sr-bjack {
+  display: contents;
+}
+.sr-blabel {
+  position: absolute;
+  font-size: 9px;
+  line-height: 12px;
+  letter-spacing: 0.06em;
+  color: #b9b3a6;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.sr-blabel.out {
+  text-align: right;
+}
 .sr-mod.muted,
 .sr-frame.muted {
   opacity: 0.4;

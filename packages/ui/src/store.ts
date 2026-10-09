@@ -22,6 +22,8 @@ import {
   type Merge,
   type Plan,
   type Specs,
+  blockOwner,
+  setCollapsed,
 } from '@sreda/core';
 import { createSignal } from 'solid-js';
 import { createStore, reconcile } from 'solid-js/store';
@@ -229,11 +231,9 @@ export function createSession(
     scheduleSave(doc, state.project);
     // selection and listening follow what still exists
     const ids = new Set([...doc.modules.map((m) => m.id), ...doc.groups.map((g) => g.id)]);
-    if (state.sel.some((id) => !ids.has(id)))
-      setState(
-        'sel',
-        state.sel.filter((id) => ids.has(id)),
-      );
+    // (inside a collapsed frame, an object is out of sight and out of the selection; listening stays)
+    const shown = (id: string) => ids.has(id) && !blockOwner(doc, id);
+    if (state.sel.some((id) => !shown(id))) setState('sel', state.sel.filter(shown));
     if (state.listen && !ids.has(state.listen.id)) setState('listen', null);
   }
 
@@ -389,6 +389,10 @@ export function createSession(
         doc = connect(doc, specs, [from.id, from.port], [gid, 'clkIn']);
       this.commit(settle(before, doc, specs));
       setState('sel', [gid]);
+    },
+    /** C: collapse or expand frames (one undo step) */
+    collapse(gids: readonly string[], on: boolean): void {
+      this.commit(setCollapsed(history.current, gids, on));
     },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {

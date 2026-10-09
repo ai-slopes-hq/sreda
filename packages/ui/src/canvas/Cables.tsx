@@ -1,4 +1,4 @@
-import { jackAt, type Cable, type Doc, type Specs } from '@sreda/core';
+import { blockOwner, jackAt, type Cable, type Doc, type Specs } from '@sreda/core';
 import { For, Show, type JSX } from 'solid-js';
 import { bezPts, makeStubs, type CableGeom, type Pt, type StubSet } from './cablegeom';
 import { bez, ROLE } from './glyphs';
@@ -28,6 +28,7 @@ export function Cables(props: {
     props.doc.groups.flatMap((g) => {
       if (
         !g.parent ||
+        blockOwner(props.doc, g.id) ||
         !props.doc.groups.some((x) => x.id === g.parent) ||
         props.doc.cables.some((c) => c.to[0] === g.id && c.to[1] === 'clkIn')
       )

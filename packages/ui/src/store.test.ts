@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { SPECS, starterDoc, type Plan } from '@sreda/core';
+import { frameSelection, SPECS, starterDoc, type Plan } from '@sreda/core';
 import type { FromEngine, ToEngine } from '@sreda/protocol';
 import { expect, test } from 'vitest';
 import type { AudioHost } from './audio/host';
@@ -221,4 +221,19 @@ test('a WIRES row picked by its cable index lets go when the cables change (an e
   s.setState('sidebar', 'picked', 0);
   s.knob('m1', 'freq', 0.3, undefined);
   expect(s.state.sidebar.picked).toBe(0);
+});
+
+test('collapsing a frame drops its modules from the selection and is one undo step; listening stays', () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const doc = s.current();
+  const out = doc.modules.find((m) => m.type === 'out')!;
+  const framed = frameSelection(doc, SPECS, [out.id]);
+  s.commit(framed.doc);
+  s.setState('sel', [out.id, framed.id]);
+  s.setListen({ id: out.id, port: 'out' });
+  s.collapse([framed.id], true);
+  expect(s.state.sel).toEqual([framed.id]);
+  expect(s.state.listen).toEqual({ id: out.id, port: 'out' });
+  s.undo();
+  expect(s.current().groups[0]!.collapsed).toBe(false);
 });

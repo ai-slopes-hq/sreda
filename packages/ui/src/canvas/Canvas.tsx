@@ -1,5 +1,7 @@
 import {
   addModule,
+  blockOf,
+  blockOwner,
   chainOf,
   canInsert,
   connect,
@@ -14,6 +16,7 @@ import {
   moveObjects,
   setLayout,
   settle,
+  shownRect,
   mulberry32,
   nameOf,
   rectOf,
@@ -38,7 +41,7 @@ import { magnet, type Snap } from './magnets';
 import { animateView, glideTo } from './glide';
 import { Chrome } from './Chrome';
 import { Sidebar } from '../sidebar/Sidebar';
-import { Frame, type Edge } from './Frame';
+import { Frame, type BlockView, type Edge } from './Frame';
 import { bez, ROLE } from './glyphs';
 import { handleKey } from './keys';
 import { Panel, type FieldKind, type SampleView } from './Panel';
@@ -201,8 +204,24 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     chainOf(st.doc, id).some((g) => g !== id && st.doc.groups.find((x) => x.id === g)?.muted);
   /** frames, outer ones first (drawn under what they hold) */
   const frames = createMemo(() =>
-    [...st.doc.groups].sort((a, b) => chainOf(st.doc, a.id).length - chainOf(st.doc, b.id).length),
+    st.doc.groups
+      .filter((g) => !blockOwner(st.doc, g.id))
+      .sort((a, b) => chainOf(st.doc, a.id).length - chainOf(st.doc, b.id).length),
   );
+  /** a collapsed frame's block with each jack's role, and whether it is cabled or listened to */
+  function blockView(gid: string): BlockView {
+    const b = blockOf(st.doc, specs, gid);
+    return {
+      w: b.w,
+      h: b.h,
+      jacks: b.jacks.map((j) => ({
+        ...j,
+        role: roleOf(j.id, j.port, j.dir),
+        filled: j.dir === 'in' ? cabledIn(j.id, j.port) : cabledOut(j.id, j.port),
+        listening: st.listen?.id === j.id && st.listen.port === j.port,
+      })),
+    };
+  }
   function roleOf(id: string, port: string, dir: 'in' | 'out'): Role {
     const m = st.doc.modules.find((x) => x.id === id);
     if (!m) return 'trigger'; // a frame's CLK IN / CLK OUT
@@ -319,7 +338,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       w: Math.max(...rs.map((r) => r.x + r.w)) + dx - x0,
       h: Math.max(...rs.map((r) => r.y + r.h)) + dy - y0,
     };
-    const others = base.modules.filter((m) => !moving.has(m.id)).map((m) => rectOf(base, specs, m.id));
+    const others = base.modules
+      .filter((m) => !moving.has(m.id) && !blockOwner(base, m.id))
+      .map((m) => rectOf(base, specs, m.id));
     return magnet(box, others, 10 / st.view.z);
   }
 
@@ -464,12 +485,17 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         const hit = [
           ...st.doc.modules
             .filter((m) => {
+              if (blockOwner(st.doc, m.id)) return false;
               const r = rectOf(st.doc, specs, m.id);
               return r.x < x1 && r.x + r.w > x0 && r.y < y1 && r.y + r.h > y0;
             })
             .map((m) => m.id),
           ...st.doc.groups
-            .filter((g) => g.x >= x0 && g.y >= y0 && g.x + g.w <= x1 && g.y + g.h <= y1)
+            .filter((g) => {
+              if (blockOwner(st.doc, g.id)) return false;
+              const r = shownRect(st.doc, specs, g.id);
+              return r.x >= x0 && r.y >= y0 && r.x + r.w <= x1 && r.y + r.h <= y1;
+            })
             .map((g) => g.id),
         ];
         s.setState('sel', [...new Set([...d.add, ...hit])]);
@@ -635,12 +661,12 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
 
   function fit(selection: boolean): void {
     const ids = [...st.doc.modules.map((m) => m.id), ...st.doc.groups.map((g) => g.id)].filter(
-      (id) => !selection || st.sel.includes(id),
+      (id) => (!selection || st.sel.includes(id)) && !blockOwner(st.doc, id),
     );
     if (!ids.length) return;
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
     for (const id of ids) {
-      const r = rectOf(st.doc, specs, id);
+      const r = shownRect(st.doc, specs, id);
       [x0, y0, x1, y1] = [
         Math.min(x0, r.x),
         Math.min(y0, r.y),
@@ -750,45 +776,56 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           style={{ transform: `translate(${st.view.x}px, ${st.view.y}px) scale(${st.view.z})` }}
         >
           <For each={frames()}>
-            {(g) => (
-              <Frame
-                group={g}
-                selected={st.sel.includes(g.id)}
-                drop={drop() === g.id}
-                cabledIn={cabledIn(g.id, 'clkIn')}
-                cabledOut={cabledOut(g.id, 'clkOut')}
-                normal={(() => {
-                  const parent = g.parent && st.doc.groups.find((x) => x.id === g.parent);
-                  return parent && !cabledIn(g.id, 'clkIn') ? `CLK IN ← ${parent.name} (normal)` : undefined;
-                })()}
-                listening={st.listen?.id === g.id}
-                dim={dimmed(g.id)}
-                meter={
-                  st.audio ? s.layout().frames + st.doc.groups.findIndex((x) => x.id === g.id) : undefined
-                }
-                readouts={st.audio && s.nodeOf(g.id) !== null ? s.layout().nodes[s.nodeOf(g.id)!] : undefined}
-                act={{
-                  headDown: (e) => moduleDown(g.id, e),
-                  rename: (name) => s.frame(g.id, { name }, undefined),
-                  tint: () => s.frame(g.id, { tint: (g.tint + 1) % TINTS }, undefined),
-                  resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
-                  hover: (on) => s.setState('hover', on ? g.id : st.hover === g.id ? null : st.hover),
-                  clock: (c, merge) => s.frame(g.id, { clock: c }, merge),
-                  jackDown: (port, e) => jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
-                  fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
-                  fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
-                  mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
-                  stack: () => {
-                    const d = s.current();
-                    const next = setLayout(d, specs, g.id, g.layout === 'stack' ? 'free' : 'stack');
-                    s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
-                  },
-                  save: () => lib.saveGroup(g.id),
-                }}
-              />
-            )}
+            {(g) => {
+              const block = createMemo(() => (g.collapsed ? blockView(g.id) : undefined));
+              return (
+                <Frame
+                  group={g}
+                  block={block()}
+                  selected={st.sel.includes(g.id)}
+                  drop={drop() === g.id}
+                  cabledIn={cabledIn(g.id, 'clkIn')}
+                  cabledOut={cabledOut(g.id, 'clkOut')}
+                  normal={(() => {
+                    const parent = g.parent && st.doc.groups.find((x) => x.id === g.parent);
+                    return parent && !cabledIn(g.id, 'clkIn')
+                      ? `CLK IN ← ${parent.name} (normal)`
+                      : undefined;
+                  })()}
+                  listening={st.listen?.id === g.id}
+                  dim={dimmed(g.id)}
+                  meter={
+                    st.audio ? s.layout().frames + st.doc.groups.findIndex((x) => x.id === g.id) : undefined
+                  }
+                  readouts={
+                    st.audio && s.nodeOf(g.id) !== null ? s.layout().nodes[s.nodeOf(g.id)!] : undefined
+                  }
+                  act={{
+                    headDown: (e) => moduleDown(g.id, e),
+                    rename: (name) => s.frame(g.id, { name }, undefined),
+                    tint: () => s.frame(g.id, { tint: (g.tint + 1) % TINTS }, undefined),
+                    resizeDown: (edge, e) => frameResizeDown(g.id, edge, e),
+                    hover: (on) => s.setState('hover', on ? g.id : st.hover === g.id ? null : st.hover),
+                    clock: (c, merge) => s.frame(g.id, { clock: c }, merge),
+                    jackDown: (port, e) =>
+                      jackDown(g.id, port, port === 'clkIn' ? 'in' : 'out', 'trigger', e),
+                    fieldDown: (e) => fieldDown(g.id, 'clkIn', 'ratio', e),
+                    fieldReset: () => s.frame(g.id, { ratio: 1 }, undefined),
+                    mute: () => s.frame(g.id, { muted: !g.muted }, undefined),
+                    stack: () => {
+                      const d = s.current();
+                      const next = setLayout(d, specs, g.id, g.layout === 'stack' ? 'free' : 'stack');
+                      s.commit(settle(d, next, specs, g.parent ? [g.parent] : []));
+                    },
+                    save: () => lib.saveGroup(g.id),
+                    collapse: (on) => s.collapse([g.id], on),
+                    blockJackDown: (j, e) => jackDown(j.id, j.port, j.dir, j.role, e),
+                  }}
+                />
+              );
+            }}
           </For>
-          <For each={st.doc.modules}>
+          <For each={st.doc.modules.filter((m) => !blockOwner(st.doc, m.id))}>
             {(m) => {
               const node = () => s.nodeOf(m.id);
               return (

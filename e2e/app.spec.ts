@@ -494,6 +494,46 @@ test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half 
   await app.close();
 });
 
+test('C collapses a frame to its connections; a cable dragged from a block jack patches the port inside; ⇧C expands everything', async () => {
+  const { app, page } = await launch();
+  const osc = (await page.locator('[data-type=osc]').boundingBox())!;
+  await drag(
+    page,
+    { x: osc.x - 20, y: osc.y - 20 },
+    { x: osc.x + osc.width + 20, y: osc.y + osc.height + 20 },
+  );
+  await page.keyboard.press('g'); // frames OSC; the frame is selected
+  await expect(page.locator('.sr-frame')).toHaveCount(1);
+  await page.mouse.click(1300, 880); // start audio
+  const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  await expect.poll(master).toBeGreaterThan(0.05);
+
+  await page.keyboard.press('c');
+  await expect(page.locator('[data-type=osc]')).toHaveCount(0);
+  await expect(page.locator('.sr-block .sr-bjack')).toHaveCount(1);
+  await expect(page.locator('.sr-block .sr-bjack')).toHaveText('OSC › OUT');
+  await expect(page.locator('path.cable')).toHaveCount(1);
+  await expect.poll(master).toBeGreaterThan(0.05);
+
+  // from the block jack to OUT's R: the cable starts at OSC's OUT
+  const from = await center(page, page.locator('.sr-block .sr-bjack .sr-jack'));
+  await drag(page, from, await center(page, jack(page, 'out', 'r')));
+  const d = await fullDoc(page);
+  const [o, out] = [d.modules.find((m) => m.type === 'osc')!, d.modules.find((m) => m.type === 'out')!];
+  expect(d.cables).toContainEqual({ from: [o.id, 'out'], to: [out.id, 'r'] });
+
+  await page.keyboard.press('Meta+z'); // the cable
+  await page.keyboard.press('Meta+z'); // the collapse
+  await expect(page.locator('[data-type=osc]')).toBeVisible();
+  await expect.poll(master).toBeGreaterThan(0.05);
+
+  await page.keyboard.press('Shift+C');
+  await expect(page.locator('[data-type=osc]')).toHaveCount(0);
+  await page.keyboard.press('Shift+C');
+  await expect(page.locator('[data-type=osc]')).toBeVisible();
+  await app.close();
+});
+
 test('MUTE: a framed voice goes silent and comes back', async () => {
   const { app, page } = await launch();
   const osc = (await page.locator('[data-type=osc]').boundingBox())!;

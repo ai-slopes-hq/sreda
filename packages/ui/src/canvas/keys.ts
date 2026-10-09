@@ -6,6 +6,7 @@ import {
   isGroupId,
   randomise,
   settle,
+  toggleCollapsedAll,
   unframe,
   type Specs,
 } from '@sreda/core';
@@ -81,6 +82,19 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     const sel = s.state.sel;
     if (sel.length && sel.every(isGroupId)) unframeSelected(k);
     else frame(k);
+  } else if (!meta && !e.altKey && key === 'c') {
+    // C collapses the selected frames (expands them when all are collapsed); ⇧C every frame, or every frame expanded
+    const doc = s.current();
+    if (e.shiftKey) {
+      if (doc.groups.length) s.commit(toggleCollapsedAll(doc));
+      return;
+    }
+    const gids = s.state.sel.filter(isGroupId);
+    if (!gids.length) return;
+    s.collapse(
+      gids,
+      gids.some((id) => !doc.groups.find((g) => g.id === id)?.collapsed),
+    );
   } else if (s.state.sidebar.open && !meta && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     // WIRES: walk the wire rows that are showing
     e.preventDefault();

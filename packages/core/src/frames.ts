@@ -35,13 +35,22 @@ export function rectOf(doc: Doc, specs: Specs, id: string): Rect {
   return { x: m.x, y: m.y, w: L.w, h: L.h };
 }
 
-/** A jack's position on the canvas, for a module's port or a frame's `clkIn` / `clkOut`. */
-export function jackAt(doc: Doc, specs: Specs, id: string, port: string): Pt {
+/**
+ * A jack's position on the canvas, for a module's port or a frame's `clkIn` / `clkOut`. A port under a collapsed frame
+ * is where its block jack is; `blocks` caches the blocks of one document across many calls (a block scans all cables).
+ */
+export function jackAt(doc: Doc, specs: Specs, id: string, port: string, blocks?: Map<string, Block>): Pt {
   const owner = blockOwner(doc, id);
   if (owner) {
     const o = doc.groups.find((x) => x.id === owner)!;
-    const j = blockOf(doc, specs, owner).jacks.find((b) => b.id === id && b.port === port);
+    let block = blocks?.get(owner);
+    if (!block) {
+      block = blockOf(doc, specs, owner);
+      blocks?.set(owner, block);
+    }
+    const j = block.jacks.find((b) => b.id === id && b.port === port);
     if (j) return { x: o.x + j.x, y: o.y + j.y };
+    // an owned port without a crossing jack: its cables are hidden, so nothing is drawn there; fall through
   }
   const g = doc.groups.find((x) => x.id === id);
   if (g) {
@@ -74,11 +83,25 @@ export interface BlockJack {
   y: number;
 }
 
+export interface Block {
+  w: number;
+  h: number;
+  jacks: BlockJack[];
+}
+
+/** What is drawn of an object: a collapsed frame is its block, anything else its rectangle. */
+export function shownRect(doc: Doc, specs: Specs, id: string): Rect {
+  const g = doc.groups.find((x) => x.id === id);
+  if (!g?.collapsed) return rectOf(doc, specs, id);
+  const b = blockOf(doc, specs, id);
+  return { x: g.x, y: g.y, w: b.w, h: b.h };
+}
+
 /**
  * A collapsed frame as a block: a jack per inner port whose cable leaves the frame (inputs left, outputs right,
  * in reading order of their objects, then spec order). The frame's own jacks are not listed here.
  */
-export function blockOf(doc: Doc, specs: Specs, gid: string): { w: number; h: number; jacks: BlockJack[] } {
+export function blockOf(doc: Doc, specs: Specs, gid: string): Block {
   const inner = new Set(descendants(doc, gid));
   const crossing = { in: new Set<string>(), out: new Set<string>() };
   for (const c of doc.cables) {

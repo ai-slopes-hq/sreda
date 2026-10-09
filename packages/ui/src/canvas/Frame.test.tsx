@@ -2,7 +2,7 @@
 import type { Group } from '@sreda/core';
 import { fireEvent, render } from '@solidjs/testing-library';
 import { expect, test, vi } from 'vitest';
-import { Frame, type FrameActions } from './Frame';
+import { Frame, type BlockView, type FrameActions } from './Frame';
 
 const group: Group = {
   id: 'g1',
@@ -20,7 +20,7 @@ const group: Group = {
   clock: { on: false, bpm: 120 },
 };
 
-function frame(g: Partial<Group> = {}, cabledIn = false) {
+function frame(g: Partial<Group> = {}, cabledIn = false, block?: BlockView) {
   const calls: string[] = [];
   const act: FrameActions = {
     headDown: () => calls.push('down'),
@@ -35,6 +35,8 @@ function frame(g: Partial<Group> = {}, cabledIn = false) {
     mute: () => calls.push('mute'),
     stack: () => calls.push('stack'),
     save: () => calls.push('save'),
+    collapse: (on) => calls.push(`collapse ${on}`),
+    blockJackDown: (j) => calls.push(`bjack ${j.id}.${j.port}`),
   };
   const r = render(() => (
     <Frame
@@ -43,6 +45,7 @@ function frame(g: Partial<Group> = {}, cabledIn = false) {
       drop={false}
       cabledIn={cabledIn}
       cabledOut={false}
+      block={block}
       act={act}
     />
   ));
@@ -142,4 +145,55 @@ test('STACK is a frame tool and there is no FIX', () => {
   fireEvent.click(stacked.getByText('STACK'));
   expect(stacked.calls).toEqual(['stack']);
   expect(stacked.queryByText('FIX')).toBeNull();
+});
+
+const block: BlockView = {
+  w: 352,
+  h: 96,
+  jacks: [
+    {
+      id: 'm1',
+      port: 'in',
+      label: 'FILTER › LP',
+      dir: 'in',
+      x: 12,
+      y: 48,
+      role: 'audio',
+      filled: true,
+      listening: false,
+    },
+    {
+      id: 'g2',
+      port: 'clkOut',
+      label: 'INNER › CLK',
+      dir: 'out',
+      x: 340,
+      y: 48,
+      role: 'trigger',
+      filled: false,
+      listening: false,
+    },
+  ],
+};
+
+test('a collapsed frame is a block: a jack per crossing port, no frame body; ▸ expands', () => {
+  const { container, calls, getByLabelText } = frame({ collapsed: true }, false, block);
+  expect(container.querySelector('.sr-block')).not.toBeNull();
+  const jacks = [...container.querySelectorAll('.sr-bjack')];
+  expect(jacks.map((j) => j.textContent)).toEqual(['FILTER › LP', 'INNER › CLK']);
+  expect(container.querySelector('[data-resize]')).toBeNull();
+  expect(container.querySelector('.sr-plabel')).toBeNull();
+  // each wrapper names the inner object and its port, so a dropped cable patches it
+  expect(jacks[0]!.getAttribute('data-module')).toBe('m1');
+  expect(jacks[0]!.getAttribute('data-jack')).toBe('in');
+  expect(jacks[1]!.getAttribute('data-frame')).toBe('g2');
+  fireEvent.pointerDown(jacks[0]!.querySelector('.sr-jack')!, { button: 0 });
+  fireEvent.click(getByLabelText('Expand frame'));
+  expect(calls).toEqual(['bjack m1.in', 'collapse false']);
+});
+
+test('an expanded frame has ▾, which collapses it', () => {
+  const { calls, getByLabelText } = frame();
+  fireEvent.click(getByLabelText('Collapse frame'));
+  expect(calls).toEqual(['collapse true']);
 });
