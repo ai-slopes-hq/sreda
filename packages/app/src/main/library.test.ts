@@ -110,5 +110,33 @@ test('project.save writes only to a path that project.open returned in this run,
   expect(JSON.parse(readFileSync(other, 'utf8'))).toEqual({ a: 1 });
   await files.save(file, { a: 2 });
   expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ a: 2 });
-  await expect(files.open(join(dir, 'missing.json'))).rejects.toThrow();
+  expect(await files.open(join(dir, 'missing.json'))).toEqual({
+    path: join(dir, 'missing.json'),
+    error: true,
+  });
+  writeFileSync(other, 'not json');
+  expect(await files.open(other)).toEqual({ path: other, error: true });
+  await expect(files.save(other, { a: 3 })).rejects.toThrow();
+});
+
+test('a later run seeded with the remembered paths may save to them; a path never opened still refuses', async () => {
+  const dir = tmp();
+  const file = join(dir, 'x.sreda.json');
+  writeFileSync(file, '{"a":1}');
+  let remembered: string[] = [];
+  await openedFiles([], async (r) => void (remembered = r)).open(file);
+  expect(remembered).toEqual([file]);
+  const next = openedFiles(remembered);
+  await next.save(file, { a: 2 });
+  expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ a: 2 });
+  await expect(next.save(join(dir, 'never.json'), {})).rejects.toThrow();
+  // at most 20, most recent first
+  const many = openedFiles([], async (r) => void (remembered = r));
+  for (let i = 0; i < 25; i++) {
+    const f = join(dir, `f${i}.json`);
+    writeFileSync(f, '{}');
+    await many.open(f);
+  }
+  expect(remembered).toHaveLength(20);
+  expect(remembered[0]).toBe(join(dir, 'f24.json'));
 });

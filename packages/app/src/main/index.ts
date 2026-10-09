@@ -109,12 +109,17 @@ const pathOf = (p: unknown): string => {
   return p; // library.ts refuses invalid paths and anything outside the folder
 };
 
-const projectFiles = openedFiles();
+// paths `project:open` handed out survive a relaunch in settings.json, so ⌘S still works on a resumed project
+const projectFiles = (async () => {
+  const saved = (await readSettings(settingsFile()))['openedFiles'];
+  const list = Array.isArray(saved) ? saved.filter((p): p is string => typeof p === 'string') : [];
+  return openedFiles(list, (recent) => mergeSettings(settingsFile(), { openedFiles: recent }));
+})();
 
 function serveLibrary(): void {
   // ⌘O: any project file on disk (e2e: SREDA_E2E_OPEN stands in for the dialog)
   ipcMain.handle('project:open', async () => {
-    let file = process.env['SREDA_E2E_OPEN'] ?? null;
+    let file = e2e ? (process.env['SREDA_E2E_OPEN'] ?? null) : null;
     if (!file) {
       const r = await dialog.showOpenDialog({
         title: 'Open a project',
@@ -123,9 +128,11 @@ function serveLibrary(): void {
       });
       file = r.canceled ? null : (r.filePaths[0] ?? null);
     }
-    return file ? projectFiles.open(file) : null;
+    return file ? (await projectFiles).open(file) : null;
   });
-  ipcMain.handle('project:save', (_e, path: unknown, doc: unknown) => projectFiles.save(path, doc));
+  ipcMain.handle('project:save', async (_e, path: unknown, doc: unknown) =>
+    (await projectFiles).save(path, doc),
+  );
   ipcMain.handle('library:folder', () => libraryFolder());
   ipcMain.handle('library:choose', async () => {
     const r = await dialog.showOpenDialog({
@@ -169,6 +176,7 @@ void app.whenReady().then(() => {
   serveRenderer();
   serveLibrary();
   // e2e runs open the starter patch on a first launch, not the factory project Pulse
+  ipcMain.handle('sreda:e2e', () => e2e);
   ipcMain.handle('sreda:first', () => (process.env['SREDA_FIRST'] === 'starter' ? 'starter' : null));
   createWindow();
 });

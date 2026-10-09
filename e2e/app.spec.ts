@@ -781,7 +781,8 @@ test('⌘O opens a project file outside the library; ⌘S writes it back there, 
   rmSync(join(library, 'projects', 'seed.sreda.json'));
   const before = readFileSync(file, 'utf8');
 
-  const { app, page } = await launch(undefined, 'starter', library, file);
+  const dir = mkdtempSync(join(tmpdir(), 'sreda-e2e-'));
+  const { app, page } = await launch(dir, 'starter', library, file);
   await page.keyboard.press('Meta+o');
   await expect(page.locator('.sr-brand')).toContainText('tune.sreda.json');
   await dragKnob(page, 'osc', 'freq', -60);
@@ -790,7 +791,18 @@ test('⌘O opens a project file outside the library; ⌘S writes it back there, 
   await expect(page.locator('.sr-dirty')).toHaveCount(0);
   expect(readFileSync(file, 'utf8')).not.toBe(before);
   expect(readdirSync(join(library, 'projects'))).toEqual([]);
+  await page.waitForTimeout(800); // the autosave (500 ms debounce) keeps the project for the relaunch
   await app.close();
+
+  // relaunched with the same user data: the project resumes as that file, and ⌘S still writes it back
+  const saved = readFileSync(file, 'utf8');
+  const again = await launch(dir, 'starter', library);
+  await expect(again.page.locator('.sr-brand')).toContainText('tune.sreda.json');
+  await dragKnob(again.page, 'osc', 'freq', 60);
+  await again.page.keyboard.press('Meta+s');
+  await expect(again.page.locator('.sr-dirty')).toHaveCount(0);
+  expect(readFileSync(file, 'utf8')).not.toBe(saved);
+  await again.app.close();
 });
 
 test('library: ⌘S on a selected frame saves a group; the picker places it twice with fresh ids', async () => {

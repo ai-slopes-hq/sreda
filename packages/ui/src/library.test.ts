@@ -9,7 +9,7 @@ function fakeBridge(folder: string | null = '/lib') {
   const key = (kind: string, path: string) => `${kind}:${path}`;
   const calls: string[] = [];
   const disk = {
-    opened: null as { path: string; doc: unknown } | null,
+    opened: null as { path: string; doc?: unknown; error?: true } | null,
     saved: [] as { path: string; doc: unknown }[],
   };
   let chosen = folder;
@@ -176,4 +176,12 @@ test('⌘O on something that is not a SREDA document leaves the session alone an
   expect(s.state.project).toBeNull();
   s.undo();
   expect(s.current()).toBe(before);
+});
+
+test('⌘O on an unreadable file names it in the notice', async () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { bridge, disk } = fakeBridge();
+  disk.opened = { path: '/x/broken.sreda.json', error: true };
+  expect(await libraryActions(s, SPECS, bridge).open()).toBe(false);
+  expect(s.state.notice).toBe('BROKEN.SREDA.JSON COULD NOT BE OPENED');
 });

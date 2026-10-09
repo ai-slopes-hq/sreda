@@ -145,18 +145,33 @@ export async function writeJsonAtomic(file: string, doc: unknown): Promise<void>
   await rename(tmp, file);
 }
 
-/** Project files outside the library: only a path `open` handed out in this run may be written back. */
-export function openedFiles() {
-  const opened = new Set<string>();
+/** the most opened paths remembered across runs */
+export const OPENED_LIMIT = 20;
+
+/**
+ * Project files outside the library: only a path `open` handed out (in this run, or in an earlier one that
+ * `persist`ed it) may be written back.
+ */
+export function openedFiles(
+  initial: string[] = [],
+  persist: (recent: string[]) => Promise<void> = async () => {},
+) {
+  let recent = initial.slice(0, OPENED_LIMIT);
   return {
-    /** the file's parsed JSON; its path may be saved to from now on */
-    async open(file: string): Promise<{ path: string; doc: unknown }> {
-      const doc: unknown = JSON.parse(await readFile(file, 'utf8'));
-      opened.add(file);
+    /** the file's parsed JSON; its path may be saved to from now on. A file that is not JSON comes back as `error`. */
+    async open(file: string): Promise<{ path: string; doc?: unknown; error?: true }> {
+      let doc: unknown;
+      try {
+        doc = JSON.parse(await readFile(file, 'utf8'));
+      } catch {
+        return { path: file, error: true };
+      }
+      recent = [file, ...recent.filter((p) => p !== file)].slice(0, OPENED_LIMIT);
+      await persist(recent);
       return { path: file, doc };
     },
     async save(path: unknown, doc: unknown): Promise<void> {
-      if (typeof path !== 'string' || !opened.has(path)) throw new Error('not an opened project file');
+      if (typeof path !== 'string' || !recent.includes(path)) throw new Error('not an opened project file');
       await writeJsonAtomic(path, doc);
     },
   };

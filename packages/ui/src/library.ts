@@ -9,6 +9,8 @@ type Kind = 'group' | 'project';
 export interface SredaBridge {
   /** e2e runs ask for the starter patch on a first launch instead of the factory project Pulse */
   first(): Promise<'starter' | null>;
+  /** an e2e run (test hooks on `window.__sreda`) */
+  e2e?(): Promise<boolean>;
   settings: {
     /** the saved skin name, or null */
     skin(): Promise<string | null>;
@@ -16,8 +18,8 @@ export interface SredaBridge {
     setSkin(name: string): Promise<void>;
   };
   project: {
-    /** ⌘O: a file dialog, then the file's parsed JSON; null when cancelled; throws on bad JSON */
-    open(): Promise<{ path: string; doc: unknown } | null>;
+    /** ⌘O: a file dialog, then the file's parsed JSON; null when cancelled; `error` when it is not readable JSON */
+    open(): Promise<{ path: string; doc?: unknown; error?: true } | null>;
     /** writes back to a path `open` returned in this run (main refuses any other) */
     save(path: string, doc: unknown): Promise<void>;
   };
@@ -170,7 +172,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
     /** ⌘O: any project file; true when it replaced the canvas */
     async open(): Promise<boolean> {
       if (!bridge) return false;
-      let file: { path: string; doc: unknown } | null;
+      let file: { path: string; doc?: unknown; error?: true } | null;
       try {
         file = await bridge.project.open();
       } catch {
@@ -178,7 +180,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
         return false;
       }
       if (!file) return false;
-      const doc = validateDoc(file.doc, specs);
+      const doc = file.error ? null : validateDoc(file.doc, specs);
       if (!doc) {
         s.setState('notice', `${fileName(file.path).toUpperCase()} COULD NOT BE OPENED`);
         return false;

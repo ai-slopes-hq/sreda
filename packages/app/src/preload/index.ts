@@ -4,13 +4,15 @@ import { contextBridge, ipcRenderer } from 'electron';
 type Kind = 'group' | 'project';
 
 contextBridge.exposeInMainWorld('sreda', {
+  e2e: (): Promise<boolean> => ipcRenderer.invoke('sreda:e2e'),
   first: (): Promise<'starter' | null> => ipcRenderer.invoke('sreda:first'),
   settings: {
     skin: (): Promise<string | null> => ipcRenderer.invoke('settings:skin'),
     setSkin: (name: string): Promise<void> => ipcRenderer.invoke('settings:setSkin', name),
   },
   project: {
-    open: (): Promise<{ path: string; doc: unknown } | null> => ipcRenderer.invoke('project:open'),
+    open: (): Promise<{ path: string; doc?: unknown; error?: true } | null> =>
+      ipcRenderer.invoke('project:open'),
     save: (path: string, doc: unknown): Promise<void> => ipcRenderer.invoke('project:save', path, doc),
   },
   library: {

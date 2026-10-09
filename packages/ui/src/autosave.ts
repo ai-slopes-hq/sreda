@@ -72,6 +72,7 @@ function readProject(x: unknown): Project {
 
 /** Save the canvas and its project name 500 ms after the last call. */
 export function scheduleSave(doc: Doc, project: Project): void {
+  project = project && { ...project }; // a store proxy cannot be cloned into IndexedDB
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
