@@ -819,9 +819,9 @@ test('library: ⌘S on a selected frame saves a group; the picker places it twic
   await page.keyboard.press('g');
   await page.keyboard.press('Meta+s');
   await expect(page.getByLabel('Name')).toHaveValue('group 1');
-  await page.getByLabel('Name').fill('kit/drums');
+  await page.getByLabel('Name').fill('kit/mine');
   await page.keyboard.press('Enter');
-  await expect.poll(() => existsSync(join(library, 'groups', 'kit', 'drums.sreda-group.json'))).toBe(true);
+  await expect.poll(() => existsSync(join(library, 'groups', 'kit', 'mine.sreda-group.json'))).toBe(true);
   for (const at of [
     { x: 300, y: 700 },
     { x: 900, y: 700 },
@@ -830,7 +830,7 @@ test('library: ⌘S on a selected frame saves a group; the picker places it twic
     await page.keyboard.press('/');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
-    await page.keyboard.type('drums');
+    await page.keyboard.type('mine');
     await expect(page.locator('.sr-pitem')).toHaveCount(1);
     await page.keyboard.press('Enter');
   }

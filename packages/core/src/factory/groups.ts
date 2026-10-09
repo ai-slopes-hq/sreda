@@ -1,7 +1,46 @@
 // The factory groups (spec §6): each one top frame with everything inside it.
 import type { Builder } from './build';
+import {
+  chaoticBells,
+  clap,
+  drone,
+  fmBass,
+  frozenSpace,
+  grainCloud,
+  hats,
+  kick,
+  pad,
+  pluck,
+  reese,
+  snare,
+  technoDrums,
+  type Voice,
+} from './voices';
 
-export const GROUPS: { name: string; build(b: Builder): void }[] = [
+/** A voice as a group: its own frame with its own clock (so it plays when dropped in). */
+function voiceGroup(
+  name: string,
+  frame: string,
+  voice: (S: Builder, x: number, y: number) => Voice,
+  bpm: number,
+  tint: number,
+) {
+  return {
+    name,
+    build(S: Builder): [string, string] {
+      const v = voice(S, 0, 0);
+      const g = S.frame(v.ids, frame, { bpm, tint });
+      for (const [id, port, ratio] of v.clocks) {
+        S.wire(g, 'clkOut', id, port);
+        if (ratio !== 1) S.rat(id, port, ratio);
+      }
+      return v.out;
+    },
+  };
+}
+
+/** Each group's `build` returns its main output (tests wire it into an OUT). */
+export const GROUPS: { name: string; build(b: Builder): [string, string] }[] = [
   {
     // the ACID voice without delay and out, own clock 128 BPM
     name: '303 voice',
@@ -34,6 +73,7 @@ export const GROUPS: { name: string; build(b: Builder): void }[] = [
       S.att(fl, '@cutoff', 0.35);
       S.wire(ec, 'out', fl, '@cutoff');
       S.wire(ea, 'out', va, '@level');
+      return [va, 'out'];
     },
   },
   {
@@ -51,6 +91,7 @@ export const GROUPS: { name: string; build(b: Builder): void }[] = [
       S.wire(sl, 'eoc', lp, 'ping');
       S.wire(un, 'smooth', fo, '@fold');
       S.att(fo, '@fold', 0.4);
+      return [lp, 'out'];
     },
   },
   {
@@ -70,6 +111,7 @@ export const GROUPS: { name: string; build(b: Builder): void }[] = [
       S.wire(un, 'quant', q, 'in');
       S.wire(q, 'out', os, 'pitch');
       S.wire(os, 'out', lp, 'in');
+      return [lp, 'out'];
     },
   },
   {
@@ -84,6 +126,20 @@ export const GROUPS: { name: string; build(b: Builder): void }[] = [
       S.wire(g, 'clkOut', lp, 'ping');
       S.wire(sl, 'out', va, '@level');
       S.wire(va, 'out', lp, 'in');
+      return [lp, 'out'];
     },
   },
+  voiceGroup('kick', 'KICK', kick, 124, 1),
+  voiceGroup('snare', 'SNARE', snare, 124, 1),
+  voiceGroup('hats', 'HATS', hats, 124, 1),
+  voiceGroup('clap', 'CLAP', clap, 124, 1),
+  voiceGroup('noisy techno drums', 'TECHNO DRUMS', technoDrums, 132, 1),
+  voiceGroup('fm bass', 'FM BASS', fmBass, 124, 2),
+  voiceGroup('reese', 'REESE', reese, 124, 2),
+  voiceGroup('pluck', 'PLUCK', pluck, 118, 3),
+  voiceGroup('chaotic bells', 'CHAOTIC BELLS', chaoticBells, 70, 5),
+  voiceGroup('pad', 'PAD', pad, 30, 5),
+  voiceGroup('drone', 'DRONE', drone, 60, 6),
+  voiceGroup('grain cloud', 'GRAIN CLOUD', grainCloud, 40, 6),
+  voiceGroup('frozen space', 'FROZEN SPACE', frozenSpace, 20, 4),
 ];

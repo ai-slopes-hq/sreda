@@ -1,5 +1,59 @@
 // The factory projects (spec §6), built only from the first modules.
 import type { Builder } from './build';
+import {
+  chaoticBells,
+  clap,
+  drone,
+  fmBass,
+  grainCloud,
+  hats,
+  kick,
+  pluck,
+  snare,
+  technoDrums,
+  type Voice,
+} from './voices';
+
+/**
+ * A project of voices (spec §6, revision 31): each voice in its own named frame inside one clock frame, mixed, through
+ * the effects, into one OUT.
+ */
+function voicesProject(
+  S: Builder,
+  name: string,
+  bpm: number,
+  parts: [string, (S: Builder, x: number, y: number) => Voice, number][],
+  fx: (
+    S: Builder,
+    x: number,
+  ) => { ids: string[]; inp: [string, string]; out: [string, string]; clocks?: [string, string][] },
+): void {
+  let y = 0;
+  const ids: string[] = [];
+  const clocks: [string, string, number][] = [];
+  const voices = parts.map(([frame, voice, tint]) => {
+    const v = voice(S, 0, y);
+    y += 1200;
+    S.frame(v.ids, frame, { tint });
+    ids.push(...v.ids);
+    clocks.push(...v.clocks);
+    return v;
+  });
+  const levels = ['la', 'lb', 'lc', 'ld'];
+  const mx = S.add('mix', 2400, 0, Object.fromEntries(voices.map((_, i) => [levels[i]!, 0.7])));
+  voices.forEach((v, i) => S.wire(v.out[0], v.out[1], mx, 'abcd'[i]!));
+  const f = fx(S, 2700);
+  S.wire(mx, 'out', f.inp[0], f.inp[1]);
+  const o = S.add('out', 3600, 0, { level: 0.7 });
+  S.wire(f.out[0], f.out[1], o, 'l');
+  ids.push(mx, ...f.ids, o);
+  const g = S.frame(ids, name, { bpm, tint: 1 });
+  for (const [id, port, ratio] of clocks) {
+    S.wire(g, 'clkOut', id, port);
+    if (ratio !== 1) S.rat(id, port, ratio);
+  }
+  for (const [id, port] of f.clocks ?? []) S.wire(g, 'clkOut', id, port);
+}
 
 export const PROJECTS: { name: string; build(b: Builder): void }[] = [
   {
@@ -178,6 +232,98 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
       S.att(fl, '@cutoff', 0.35);
       S.wire(ec, 'out', fl, '@cutoff');
       S.wire(ea, 'out', va, '@level');
+    },
+  },
+  {
+    // noisy techno drums, an FM bass and hats at 130 BPM through a short synced delay
+    name: 'techno',
+    build(S) {
+      voicesProject(
+        S,
+        'TECHNO',
+        130,
+        [
+          ['DRUMS', technoDrums, 1],
+          ['FM BASS', fmBass, 2],
+          ['CLAP', clap, 1],
+        ],
+        (S, x) => {
+          const dl = S.add('delay', x, 0, { time: 0.375, feedback: 0.3, mix: 0.15, type: 0 });
+          return { ids: [dl], inp: [dl, 'in'], out: [dl, 'l'], clocks: [[dl, 'clk']] };
+        },
+      );
+    },
+  },
+  {
+    // chaotic bells over a drone, a long delay and a hall
+    name: 'ambient bells',
+    build(S) {
+      voicesProject(
+        S,
+        'AMBIENT BELLS',
+        66,
+        [
+          ['BELLS', chaoticBells, 5],
+          ['DRONE', drone, 6],
+          ['GRAIN CLOUD', grainCloud, 6],
+        ],
+        (S, x) => {
+          const dl = S.add('delay', x, 0, { time: 0.9, feedback: 0.55, mix: 0.3, type: 1, ping: 1 });
+          const rv = S.add('reverb', x + 300, 0, { type: 2, size: 0.9, decay: 12, mix: 0.4 });
+          S.wire(dl, 'l', rv, 'in');
+          return { ids: [dl, rv], inp: [dl, 'in'], out: [rv, 'l'] };
+        },
+      );
+    },
+  },
+  {
+    // kick, snare and a chord stab through a long spring delay and a plate at 75 BPM
+    name: 'dub',
+    build(S) {
+      voicesProject(
+        S,
+        'DUB',
+        75,
+        [
+          ['KICK', (S, x, y) => kick(S, x, y, 4), 1],
+          ['SNARE', snare, 1],
+          ['STAB', pluck, 3],
+        ],
+        (S, x) => {
+          const dl = S.add('delay', x, 0, {
+            time: 0.6,
+            feedback: 0.7,
+            mix: 0.4,
+            type: 2,
+            char: 0.4,
+            ping: 1,
+          });
+          const rv = S.add('reverb', x + 300, 0, { type: 1, decay: 3, mix: 0.25 });
+          S.wire(dl, 'l', rv, 'in');
+          return { ids: [dl, rv], inp: [dl, 'in'], out: [rv, 'l'], clocks: [[dl, 'clk']] };
+        },
+      );
+    },
+  },
+  {
+    // chance-driven quantised bells and plucks, a grain cloud, hats, a room
+    name: 'generative',
+    build(S) {
+      voicesProject(
+        S,
+        'GENERATIVE',
+        96,
+        [
+          ['BELLS', chaoticBells, 5],
+          ['PLUCK', pluck, 3],
+          ['HATS', hats, 1],
+          ['GRAIN CLOUD', grainCloud, 6],
+        ],
+        (S, x) => {
+          const rv = S.add('reverb', x, 0, { type: 0, size: 0.6, decay: 2.5, mix: 0.3 });
+          return { ids: [rv], inp: [rv, 'in'], out: [rv, 'l'] };
+        },
+      );
     },
   },
 ];

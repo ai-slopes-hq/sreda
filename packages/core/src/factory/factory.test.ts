@@ -7,7 +7,7 @@ import { FACTORY } from './index';
 const entry = (name: string) => FACTORY.find((e) => e.name === name)!;
 const knob = (type: string, id: string) => SPECS[type]!.params.find((p) => p.id === id) as KnobParam;
 
-test('the factory: six projects and four groups', () => {
+test('the factory: ten projects and seventeen groups', () => {
   expect(FACTORY.filter((e) => e.kind === 'project').map((e) => e.name)).toEqual([
     'pulse',
     'drone',
@@ -15,12 +15,29 @@ test('the factory: six projects and four groups', () => {
     'polymeter',
     'ratchet',
     'acid',
+    'techno',
+    'ambient bells',
+    'dub',
+    'generative',
   ]);
   expect(FACTORY.filter((e) => e.kind === 'group').map((e) => e.name)).toEqual([
     '303 voice',
     'complex vco',
     'bleep-bloop',
     'vca-lpg',
+    'kick',
+    'snare',
+    'hats',
+    'clap',
+    'noisy techno drums',
+    'fm bass',
+    'reese',
+    'pluck',
+    'chaotic bells',
+    'pad',
+    'drone',
+    'grain cloud',
+    'frozen space',
   ]);
 });
 

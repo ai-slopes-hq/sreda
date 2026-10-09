@@ -19,7 +19,12 @@ export interface Builder {
 
 const snap = (v: number): number => Math.round(v / 8) * 8;
 
-export function build(specs: Specs, f: (b: Builder) => void): Doc {
+export function build(specs: Specs, f: (b: Builder) => unknown): Doc {
+  return buildWith(specs, f).doc;
+}
+
+/** `build`, also handing back what `f` returned (a group's main output, for tests). */
+export function buildWith<T>(specs: Specs, f: (b: Builder) => T): { doc: Doc; value: T } {
   let n = 1;
   let doc: Doc = { version: 1, modules: [], cables: [], groups: [], master: 1, nextId: 1 };
   const mod = (id: string) => doc.modules.find((m) => m.id === id)!;
@@ -83,11 +88,11 @@ export function build(specs: Specs, f: (b: Builder) => void): Doc {
       return id;
     },
   };
-  f(b);
+  const value = f(b);
   doc = recomputeParents({ ...doc, nextId: n }, specs);
   // STACK is on by default: pack the innermost frames first, then their parents
   const depth = (id: string) => chainOf(doc, id).length;
   for (const g of [...doc.groups].sort((a, c) => depth(c.id) - depth(a.id)))
     doc = setLayout(doc, specs, g.id, 'stack');
-  return doc;
+  return { doc, value };
 }
