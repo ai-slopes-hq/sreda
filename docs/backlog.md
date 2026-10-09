@@ -27,6 +27,11 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   colour literal in the UI into the §1a tokens (today `canvas.css` has only the role tokens; `Frame.tsx` keeps
   `TINT_FILL`), then a way to pick the skin (app-wide, not per document).
 
+- **A system mixer for every OUT** (2026-10-09): a patch may hold several OUT modules (one per group or voice), all
+  summed into the master today. A mixer that sees every OUT in the project — a strip per OUT (named after its module
+  or frame) with level, mute, solo and a meter, then the master — probably as a sidebar tab next to WIRES. Open:
+  whether OUT's own LVL knob stays, and whether strips can be grouped per frame.
+
 ## Deep backlog
 
 - **Panels in rows / rails** (2026-10-07): a canvas-wide HP × U lattice with rails between rows, like a case.
