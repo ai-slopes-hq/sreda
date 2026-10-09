@@ -4,7 +4,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 type Kind = 'group' | 'project';
 
 contextBridge.exposeInMainWorld('sreda', {
-  e2e: (): Promise<boolean> => ipcRenderer.invoke('sreda:e2e'),
   first: (): Promise<'starter' | null> => ipcRenderer.invoke('sreda:first'),
   /** File › Import Samples… was chosen in the application menu; returns the unsubscribe */
   onImportSamples: (cb: () => void): (() => void) => {

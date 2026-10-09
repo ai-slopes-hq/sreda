@@ -139,3 +139,12 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **DEFAULT flashes at launch** before the saved skin applies (read the skin before creating the session).
 - **Tint fills and the WIRES row-on text** are close `color-mix` values, not byte-identical to the old DEFAULT
   literals; the mix ratios are scattered numbers in `canvas.css`.
+
+## From the Plan 7 review (deferred, 2026-10-09)
+
+- **The ⌘O dialog filters on `json`, not `*.sreda.json`:** Electron's file filters match the last extension only.
+- **Edits made during an in-flight save are marked saved:** `markSaved()` runs when the write resolves, whatever
+  changed meanwhile.
+- **The real file dialogs and the ⇧⌘I accelerator are not exercised by e2e:** e2e stands in for the dialogs with
+  `SREDA_E2E_OPEN` / `SREDA_E2E_IMPORT` and sends the menu event directly.
+- **Library.tsx duplicates the picker's 120 ms audition timer:** the two should share one helper.

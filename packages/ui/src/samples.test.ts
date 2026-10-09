@@ -3,6 +3,7 @@ import { emptyDoc, type Doc } from '@sreda/core';
 import type { ToEngine } from '@sreda/protocol';
 import { expect, test, vi } from 'vitest';
 import { createSampleRegistry, SampleError, type DecodedSample } from './samples';
+import { WorkerLost } from './samples/analysis';
 
 const doc = (...paths: string[]): Doc => ({
   ...emptyDoc,
@@ -275,4 +276,29 @@ test('one sweep timer; changed() only when something was dropped', async () => {
   } finally {
     vi.useRealTimers();
   }
+});
+
+test('a re-decode at a new rate that fails removes the engine copy sent before it', async () => {
+  const { r, posted } = setup(async (_b, _n, rate) => {
+    if (rate !== 48_000) throw new SampleError('CANNOT BE DECODED');
+    return decoded(2, 100, rate);
+  });
+  await r.load('kick.wav');
+  r.attach((m) => posted.push(m), 48_000);
+  posted.length = 0;
+  r.attach((m) => posted.push(m), 44_100);
+  await vi.waitFor(() => expect(r.status('kick.wav')).toBeUndefined());
+  expect(posted).toEqual([{ t: 'unsample', id: r.id('kick.wav') }]);
+});
+
+test('a decode whose analysis worker was lost is retried once from the kept bytes', async () => {
+  let calls = 0;
+  const { r, notices } = setup(async (_b, _n, rate) => {
+    if (++calls === 1) throw new WorkerLost('gone');
+    return decoded(2, 100, rate);
+  });
+  await r.load('kick.wav');
+  expect(calls).toBe(2);
+  expect(r.status('kick.wav')).toBe('ready');
+  expect(notices).toEqual([]);
 });

@@ -666,10 +666,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     if (item.kind !== 'module') {
       void lib.read(item).then((doc) => {
         if (!doc) return;
-        if (item.kind === 'project') {
-          s.openProject(doc, { path: item.path, factory: item.factory });
-          fit(false);
-        } else s.placeGroup(doc, pk.at, pk.from);
+        s.placeGroup(doc, pk.at, pk.from);
       });
       return;
     }

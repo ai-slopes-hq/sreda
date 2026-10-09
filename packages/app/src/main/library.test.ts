@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
@@ -11,7 +11,9 @@ import {
   openedFiles,
   readEntry,
   readSample,
+  NOT_OPENED,
   writeEntry,
+  writeJsonAtomic,
 } from './library';
 
 const tmp = () => mkdtempSync(join(tmpdir(), 'sreda-lib-'));
@@ -101,14 +103,14 @@ test('project.save writes only to a path that project.open returned in this run,
   const dir = tmp();
   const file = join(dir, 'x.sreda.json');
   const other = join(dir, 'other.sreda.json');
-  writeFileSync(file, '{"a":1}');
-  writeFileSync(other, '{"a":1}');
+  writeFileSync(file, '{"modules":[],"a":1}');
+  writeFileSync(other, '{"modules":[],"a":1}');
   const files = openedFiles();
   await expect(files.save(file, { a: 2 })).rejects.toThrow();
-  expect(await files.open(file)).toEqual({ path: file, doc: { a: 1 } });
+  expect(await files.open(file)).toEqual({ path: file, doc: { modules: [], a: 1 } });
   await expect(files.save(other, { a: 2 })).rejects.toThrow();
   await expect(files.save(42, { a: 2 })).rejects.toThrow();
-  expect(JSON.parse(readFileSync(other, 'utf8'))).toEqual({ a: 1 });
+  expect(JSON.parse(readFileSync(other, 'utf8'))).toEqual({ modules: [], a: 1 });
   await files.save(file, { a: 2 });
   expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ a: 2 });
   expect(await files.open(join(dir, 'missing.json'))).toEqual({
@@ -123,7 +125,7 @@ test('project.save writes only to a path that project.open returned in this run,
 test('a later run seeded with the remembered paths may save to them; a path never opened still refuses', async () => {
   const dir = tmp();
   const file = join(dir, 'x.sreda.json');
-  writeFileSync(file, '{"a":1}');
+  writeFileSync(file, '{"modules":[],"a":1}');
   let remembered: string[] = [];
   await openedFiles([], async (r) => void (remembered = r)).open(file);
   expect(remembered).toEqual([file]);
@@ -135,7 +137,7 @@ test('a later run seeded with the remembered paths may save to them; a path neve
   const many = openedFiles([], async (r) => void (remembered = r));
   for (let i = 0; i < 25; i++) {
     const f = join(dir, `f${i}.json`);
-    writeFileSync(f, '{}');
+    writeFileSync(f, '{"modules":[]}');
     await many.open(f);
   }
   expect(remembered).toHaveLength(20);
@@ -154,4 +156,61 @@ test('importFiles copies picked audio files into samples/; a second kick.wav bec
   ]);
   expect(await importFiles(root, [join(src, 'kick.wav'), join(src, 'missing.wav')])).toEqual(['kick 2.wav']);
   expect(readFileSync(join(root, 'samples', 'kick 2.wav'), 'utf8')).toBe('one');
+});
+
+test('open still resolves when persisting the remembered paths fails', async () => {
+  const file = join(tmp(), 'x.sreda.json');
+  writeFileSync(file, '{"modules":[]}');
+  const files = openedFiles([], async () => {
+    throw new Error('disk full');
+  });
+  expect(await files.open(file)).toEqual({ path: file, doc: { modules: [] } });
+  await files.save(file, { modules: [1] });
+  expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ modules: [1] });
+});
+
+test('a path that aged out of the remembered 20 is refused with the recognisable message', async () => {
+  const dir = tmp();
+  const files = openedFiles();
+  const first = join(dir, 'f0.json');
+  for (let i = 0; i < 21; i++) {
+    const f = join(dir, `f${i}.json`);
+    writeFileSync(f, '{"modules":[]}');
+    await files.open(f);
+  }
+  await expect(files.save(first, {})).rejects.toThrow(NOT_OPENED);
+});
+
+test('save writes through a symlink instead of replacing it', async () => {
+  const dir = tmp();
+  const real = join(dir, 'real.sreda.json');
+  const link = join(dir, 'link.sreda.json');
+  writeFileSync(real, '{"modules":[]}');
+  symlinkSync(real, link);
+  const files = openedFiles();
+  await files.open(link);
+  await files.save(link, { modules: [1] });
+  expect(lstatSync(link).isSymbolicLink()).toBe(true);
+  expect(JSON.parse(readFileSync(real, 'utf8'))).toEqual({ modules: [1] });
+});
+
+test('two concurrent atomic writes to one file both resolve and the last one wins', async () => {
+  const file = join(tmp(), 'x.json');
+  await Promise.all([writeJsonAtomic(file, { n: 1 }), writeJsonAtomic(file, { n: 2 })]);
+  expect([1, 2]).toContain(JSON.parse(readFileSync(file, 'utf8')).n);
+  const big = { pad: 'x'.repeat(200_000) };
+  await Promise.all([writeJsonAtomic(file, { ...big, n: 1 }), writeJsonAtomic(file, { n: 3 })]);
+  // never a torn mix of the two
+  expect(() => JSON.parse(readFileSync(file, 'utf8'))).not.toThrow();
+});
+
+test('open refuses JSON that is not shaped like a project and does not remember its path', async () => {
+  const dir = tmp();
+  const file = join(dir, 'package.json');
+  writeFileSync(file, '{"name":"x"}');
+  let remembered: string[] = [];
+  const files = openedFiles([], async (r) => void (remembered = r));
+  expect(await files.open(file)).toEqual({ path: file, error: true });
+  expect(remembered).toEqual([]);
+  await expect(files.save(file, { modules: [] })).rejects.toThrow(NOT_OPENED);
 });

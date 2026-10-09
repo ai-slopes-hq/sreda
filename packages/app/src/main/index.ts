@@ -72,6 +72,8 @@ function buildMenu(): void {
         accelerator: 'Shift+CmdOrCtrl+I',
         click: () => BrowserWindow.getAllWindows()[0]?.webContents.send('menu:importSamples'),
       },
+      { type: 'separator' },
+      { role: mac ? 'close' : 'quit' },
     ],
   };
   Menu.setApplicationMenu(
@@ -220,7 +222,6 @@ void app.whenReady().then(() => {
   serveLibrary();
   buildMenu();
   // e2e runs open the starter patch on a first launch, not the factory project Pulse
-  ipcMain.handle('sreda:e2e', () => e2e);
   ipcMain.handle('sreda:first', () => (process.env['SREDA_FIRST'] === 'starter' ? 'starter' : null));
   createWindow();
 });

@@ -24,9 +24,20 @@ export function setWorkerFactory(f: () => Worker | null): void {
   makeWorker = f;
 }
 
+/** A worker that never answers is given up on after this long, then the work runs in place. */
+export const WORKER_TIMEOUT_MS = 60_000;
+
+/**
+ * The worker failed after the channels were transferred to it, so they are gone (detached). The caller decodes
+ * again from the bytes it kept; the worker is not used afterwards.
+ */
+export class WorkerLost extends Error {}
+let workerLost = false;
+
 /** One request to a fresh worker (ended after the reply); null when there is no worker or it fails. */
 function ask(req: WorkerRequest, transfer: Transferable[]): Promise<WorkerReply & { ok: true }> | null {
   let w: Worker | null;
+  if (workerLost) return null;
   try {
     w = makeWorker();
   } catch {
@@ -35,40 +46,47 @@ function ask(req: WorkerRequest, transfer: Transferable[]): Promise<WorkerReply 
   if (!w) return null;
   const worker = w;
   return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => fail(new Error('worker timed out')), WORKER_TIMEOUT_MS);
+    const fail = (err: Error) => {
+      clearTimeout(timer);
+      worker.terminate();
+      reject(err);
+    };
     worker.onmessage = (e: MessageEvent<WorkerReply>) => {
+      clearTimeout(timer);
       worker.terminate();
       if (e.data.ok) resolve(e.data);
       else reject(new Error('worker refused'));
     };
-    worker.onerror = () => {
-      worker.terminate();
-      reject(new Error('worker failed'));
-    };
+    worker.onerror = () => fail(new Error('worker failed'));
+    worker.onmessageerror = () => fail(new Error('worker reply unreadable'));
     try {
       worker.postMessage(req, transfer);
     } catch (err) {
-      worker.terminate();
-      reject(err instanceof Error ? err : new Error('post failed'));
+      fail(err instanceof Error ? err : new Error('post failed'));
     }
   });
 }
 
 /** The channels with their onsets and column peaks. The buffers go to the worker and come back, so use the returned
- * channels, not the ones passed in. */
+ * channels, not the ones passed in. Throws `WorkerLost` when the worker failed after taking them. */
 export async function analyseChannels(
   channels: Float32Array[],
   rate: number,
 ): Promise<Analysis & { channels: Float32Array[] }> {
-  // a copy stays here for the fallback: transferring detaches the originals
-  const sent = channels.map((c) => c.slice());
-  const p = ask({ id: 0, kind: 'analyse', channels: sent, rate }, [...sent.map((c) => c.buffer)]);
+  const frames = channels[0]?.length ?? 0;
+  const p = ask({ id: 0, kind: 'analyse', channels, rate }, channels.map((c) => c.buffer));
   if (p) {
     try {
       const r = await p;
       analysisCounts.worker++;
       return { channels: r.channels, hits: r.hits ?? [], peaks: r.peaks ?? peaksOf(r.channels) };
     } catch {
-      // fall through to the in-place run
+      // transferring detached the channels: nothing is left to run in place
+      if (frames > 0 && (channels[0]?.length ?? 0) === 0) {
+        workerLost = true;
+        throw new WorkerLost('analysis worker failed');
+      }
     }
   }
   analysisCounts.fallback++;
@@ -83,7 +101,9 @@ export async function analyse(channels: Float32Array[], rate: number): Promise<A
 
 /** An AIFF file as float channels and its rate, parsed in a worker when there is one. Throws on a bad file. */
 export async function parseAiffOff(bytes: ArrayBuffer): Promise<{ channels: Float32Array[]; rate: number }> {
-  const p = ask({ id: 0, kind: 'aiff', bytes: bytes.slice(0) }, []);
+  // the slice is transferred (one copy, not two); `bytes` stays whole for the in-place parse
+  const sent = bytes.slice(0);
+  const p = ask({ id: 0, kind: 'aiff', bytes: sent }, [sent]);
   if (p) {
     try {
       const r = await p;
@@ -95,4 +115,9 @@ export async function parseAiffOff(bytes: ArrayBuffer): Promise<{ channels: Floa
   }
   analysisCounts.fallback++;
   return parseAiff(bytes);
+}
+
+/** Back to using the worker (tests). */
+export function resetWorkerLost(): void {
+  workerLost = false;
 }

@@ -3,7 +3,7 @@
 // read is MISSING (the module plays nothing; WIRES lists it); one that cannot be used is refused with a notice.
 import type { Doc } from '@sreda/core';
 import type { ToEngine } from '@sreda/protocol';
-import { analyseChannels, parseAiffOff } from './samples/analysis';
+import { analyseChannels, parseAiffOff, WorkerLost } from './samples/analysis';
 import { COLUMNS } from './samples/peaks';
 
 export { peaksOf } from './samples/peaks';
@@ -155,7 +155,14 @@ export function createSampleRegistry(o: {
     const gen = generation.get(path) ?? 0;
     try {
       const at = rate;
-      const s = check(await decode(b.slice(0), path, at));
+      let s: DecodedSample;
+      try {
+        s = check(await decode(b.slice(0), path, at));
+      } catch (e) {
+        // the analysis worker died holding the channels: decode again from the kept bytes (analysis then runs in place)
+        if (!(e instanceof WorkerLost)) throw e;
+        s = check(await decode(b.slice(0), path, at));
+      }
       if ((generation.get(path) ?? 0) !== gen) return;
       // the engine attached at another rate while this decoded: again, at its rate
       if (rate !== at) return decodeAt(path, b);
@@ -164,6 +171,8 @@ export function createSampleRegistry(o: {
       send(path, s);
     } catch (e) {
       if ((generation.get(path) ?? 0) !== gen) return;
+      // an earlier decode (another rate) had been sent: the engine's copy goes too
+      if (ready.has(path)) post?.({ t: 'unsample', id: id(path) });
       status.delete(path);
       bytes.delete(path);
       ready.delete(path);

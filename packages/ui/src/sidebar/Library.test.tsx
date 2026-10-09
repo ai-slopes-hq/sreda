@@ -117,3 +117,30 @@ test('imported samples are shown first; a section collapses', async () => {
   fireEvent.click(container.querySelector('[data-section=SAMPLES] .sr-lhead')!);
   expect(container.querySelectorAll('[data-section=SAMPLES] .sr-lrow')).toHaveLength(0);
 });
+
+test('a highlight that changes while mounted re-lists the samples and marks the new ones', async () => {
+  const session = createSession(SPECS, starterDoc(SPECS));
+  let list = ['kit/kick.wav'];
+  const samples = vi.fn(() => Promise.resolve([...list]));
+  const scrolled = vi.fn();
+  Element.prototype.scrollIntoView = scrolled;
+  const { container } = render(() => (
+    <Library
+      session={session}
+      lib={{ refresh: () => Promise.resolve() } as unknown as LibraryApi}
+      entries={[]}
+      bridge={{ library: { samples } } as unknown as SredaBridge}
+      fit={() => {}}
+      middle={() => ({ x: 0, y: 0 })}
+    />
+  ));
+  const rows = () => [...container.querySelectorAll('[data-section=SAMPLES] .sr-lrow')];
+  await vi.waitFor(() => expect(rows()).toHaveLength(1));
+  list = ['kit/kick.wav', 'new.wav'];
+  session.setState('sidebar', 'highlight', ['new.wav']);
+  await vi.waitFor(() => expect(rows()).toHaveLength(2));
+  expect(samples).toHaveBeenCalledTimes(2);
+  expect(rows()[0]!.getAttribute('data-path')).toBe('new.wav');
+  expect(rows()[0]!.classList.contains('new')).toBe(true);
+  await vi.waitFor(() => expect(scrolled).toHaveBeenCalled());
+});

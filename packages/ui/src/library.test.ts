@@ -208,3 +208,21 @@ test('Import Samples: a selected SAMPLER gets the first file (one undo step); no
   expect(s.state.sidebar).toMatchObject({ open: true, tab: 'LIBRARY', highlight: ['kick.wav', 'kick 2.wav'] });
   expect(s.current().modules.find((m) => m.id === added.id)?.sample).toBeUndefined();
 });
+
+test('⌘S on an opened file main no longer remembers says to open it again; any other failure says it could not be saved', async () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { bridge, disk } = fakeBridge();
+  const lib = libraryActions(s, SPECS, bridge);
+  disk.opened = { path: '/x/jam.sreda.json', doc: structuredClone(starterDoc(SPECS)) };
+  expect(await lib.open()).toBe(true);
+  bridge.project.save = async () => {
+    throw new Error("Error invoking remote method 'project:save': Error: not an opened project file");
+  };
+  await lib.save();
+  expect(s.state.notice).toBe('JAM.SREDA.JSON — OPEN IT AGAIN (⌘O) TO SAVE');
+  bridge.project.save = async () => {
+    throw new Error('EACCES');
+  };
+  await lib.save();
+  expect(s.state.notice).toBe('JAM.SREDA.JSON COULD NOT BE SAVED');
+});

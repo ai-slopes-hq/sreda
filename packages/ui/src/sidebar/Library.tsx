@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { LibEntry } from '../canvas/patching';
 import type { LibraryApi, SredaBridge } from '../library';
 import type { SessionApi } from '../store';
@@ -37,6 +37,7 @@ export function Library(props: {
   bridge?: SredaBridge | undefined;
 }): JSX.Element {
   const s = props.session;
+  let root: HTMLDivElement | undefined;
   const [samples, setSamples] = createSignal<string[]>([]);
   const [open, setOpen] = createSignal<Record<Section, boolean>>({
     PROJECTS: true,
@@ -45,12 +46,27 @@ export function Library(props: {
   });
   const [q, setQ] = createSignal<Record<Section, string>>({ PROJECTS: '', GROUPS: '', SAMPLES: '' });
   const bridge = () => props.bridge ?? window.sreda;
-  const hot = new Set(s.state.sidebar.highlight);
+  // paths just imported (File › Import Samples…, a drop) come first; importing while this tab shows re-lists
+  const hot = createMemo(() => new Set(s.state.sidebar.highlight));
   void props.lib.refresh();
-  void bridge()
-    ?.library.samples()
-    .then(setSamples)
-    .catch(() => setSamples([]));
+  createEffect(() => {
+    const first = s.state.sidebar.highlight[0];
+    let live = true;
+    onCleanup(() => (live = false));
+    void bridge()
+      ?.library.samples()
+      .then((list) => {
+        if (!live) return;
+        setSamples(list);
+        if (first)
+          queueMicrotask(() =>
+            root
+              ?.querySelector('[data-section=SAMPLES] .sr-lrow.new')
+              ?.scrollIntoView?.({ block: 'nearest' }),
+          );
+      })
+      .catch(() => live && setSamples([]));
+  });
 
   const match = (r: Row, sec: Section): boolean => {
     const t = q()[sec].trim().toLowerCase();
@@ -73,7 +89,7 @@ export function Library(props: {
       .filter((r) => match(r, 'SAMPLES'))
       .sort(
         (a, b) =>
-          Number(hot.has(b.path)) - Number(hot.has(a.path)) ||
+          Number(hot().has(b.path)) - Number(hot().has(a.path)) ||
           a.folder.localeCompare(b.folder) ||
           a.name.localeCompare(b.name),
       ),
@@ -138,7 +154,7 @@ export function Library(props: {
   const rowEl = (r: Row, sec: Section, rowProps: JSX.HTMLAttributes<HTMLDivElement>): JSX.Element => (
     <div
       class="sr-lrow"
-      classList={{ new: sec === 'SAMPLES' && hot.has(r.path) }}
+      classList={{ new: sec === 'SAMPLES' && hot().has(r.path) }}
       data-path={r.path}
       {...rowProps}
     >
@@ -149,7 +165,7 @@ export function Library(props: {
     </div>
   );
   return (
-    <div class="sr-lib">
+    <div class="sr-lib" ref={(el) => (root = el)}>
       <div class="sr-lsec" data-section="PROJECTS">
         {head(
           'PROJECTS',
@@ -200,10 +216,6 @@ export function Library(props: {
             {(r) =>
               rowEl(r, 'SAMPLES', {
                 draggable: true,
-                ref: (el: HTMLDivElement) => {
-                  if (hot.has(r.path) && r.path === sampleRows()[0]?.path)
-                    queueMicrotask(() => el.scrollIntoView?.({ block: 'nearest' }));
-                },
                 onMouseEnter: () => hear(r.path),
                 onMouseLeave: () => hear(null),
                 onDragStart: (e) => {

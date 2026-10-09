@@ -5,12 +5,13 @@ import type { Saving, SessionApi } from './store';
 
 type Kind = 'group' | 'project';
 
+/** what main's `project:save` rejects with for a path it no longer remembers (packages/app/src/main/library.ts) */
+const NOT_OPENED = 'not an opened project file';
+
 /** The main process's services (packages/app/src/preload). */
 export interface SredaBridge {
   /** e2e runs ask for the starter patch on a first launch instead of the factory project Pulse */
   first(): Promise<'starter' | null>;
-  /** an e2e run (test hooks on `window.__sreda`) */
-  e2e?(): Promise<boolean>;
   /** File › Import Samples… was chosen in the application menu; returns the unsubscribe */
   onImportSamples?(cb: () => void): () => void;
   settings: {
@@ -116,8 +117,11 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
         try {
           await bridge!.project.save(p.path, s.current());
           s.markSaved();
-        } catch {
-          s.setState('notice', `${fileName(p.path).toUpperCase()} COULD NOT BE SAVED`);
+        } catch (e) {
+          const n = fileName(p.path).toUpperCase();
+          // main no longer remembers the path (it aged out of the last 20 opened)
+          const again = e instanceof Error && e.message.includes(NOT_OPENED);
+          s.setState('notice', again ? `${n} — OPEN IT AGAIN (⌘O) TO SAVE` : `${n} COULD NOT BE SAVED`);
         }
         return;
       }

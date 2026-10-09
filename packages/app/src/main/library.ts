@@ -1,6 +1,7 @@
 // The library folder (spec §6): groups/**/<name>.sreda-group.json and projects/**/<name>.sreda.json. Pure Node; the
 // main process reaches it over IPC (index.ts). Nothing is ever read or written outside the folder.
-import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
+import { mkdir, readdir, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises';
 import { basename, extname, join, sep } from 'node:path';
 
 export type Kind = 'group' | 'project';
@@ -152,12 +153,19 @@ export async function importFiles(root: string, files: string[]): Promise<string
   return out;
 }
 
-/** Replace a file with a document: written to a temporary file, renamed over it. */
+/** Replace a file with a document: written to a temporary file (a name of its own), renamed over it. */
 export async function writeJsonAtomic(file: string, doc: unknown): Promise<void> {
-  const tmp = `${file}.${process.pid}.tmp`;
+  const tmp = `${file}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
   await writeFile(tmp, JSON.stringify(doc, null, 2) + '\n');
   await rename(tmp, file);
 }
+
+/** What `save` rejects with for a path that was not opened (or has aged out of the remembered ones); the renderer looks for it. */
+export const NOT_OPENED = 'not an opened project file';
+
+/** the minimal shape of a SREDA project: an object with a `modules` array (validation proper is the renderer's) */
+const looksLikeProject = (doc: unknown): boolean =>
+  typeof doc === 'object' && doc !== null && Array.isArray((doc as { modules?: unknown }).modules);
 
 /** the most opened paths remembered across runs */
 export const OPENED_LIMIT = 20;
@@ -172,7 +180,7 @@ export function openedFiles(
 ) {
   let recent = initial.slice(0, OPENED_LIMIT);
   return {
-    /** the file's parsed JSON; its path may be saved to from now on. A file that is not JSON comes back as `error`. */
+    /** the file's parsed JSON; its path may be saved to from now on. A file that is not JSON, or not shaped like a project, comes back as `error` and is not remembered. */
     async open(file: string): Promise<{ path: string; doc?: unknown; error?: true }> {
       let doc: unknown;
       try {
@@ -180,13 +188,17 @@ export function openedFiles(
       } catch {
         return { path: file, error: true };
       }
+      if (!looksLikeProject(doc)) return { path: file, error: true };
       recent = [file, ...recent.filter((p) => p !== file)].slice(0, OPENED_LIMIT);
-      await persist(recent);
+      // the file is open either way: a settings file that cannot be written only costs ⌘S after a relaunch
+      await persist(recent).catch(() => {});
       return { path: file, doc };
     },
     async save(path: unknown, doc: unknown): Promise<void> {
-      if (typeof path !== 'string' || !recent.includes(path)) throw new Error('not an opened project file');
-      await writeJsonAtomic(path, doc);
+      if (typeof path !== 'string' || !recent.includes(path)) throw new Error(NOT_OPENED);
+      // a symlink is written through, not replaced
+      const real = await realpath(path).catch(() => path);
+      await writeJsonAtomic(real, doc);
     },
   };
 }
