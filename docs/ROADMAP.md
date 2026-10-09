@@ -79,8 +79,8 @@ of a creative tool; nothing of its UI is ported.
   (`projects/refs/filter/`) — RES means the same on every model (+7 dB at 0.5, ≈ +20 dB at 0.9), the passband holds at
   any RES, each model's saturation matches its reference within ±6 dB; the MODEL glyph follows the live cutoff and RES.
   The sound block from listening (DRIVE, FOLD, FILTER) is done; DRIVE's tuning against renders waits for them.
-- **Next:** choose the next milestone (candidates in `docs/backlog.md`: DICE for the whole project, sends to shared
-  effects, recording and export).
+- **Next:** choose the next milestone (candidates in `docs/backlog.md`: DICE for the whole project, recording and
+  export).
 
 ## The road (vertical slices: something to hear at every stage)
 

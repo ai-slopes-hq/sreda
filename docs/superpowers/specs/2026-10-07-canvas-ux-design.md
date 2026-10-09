@@ -367,7 +367,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   - **Master:** the last strip, a fader for the whole project (the document's `master`, 0…1, default 1, before the
     master stage's DC blocker and limiter, gliding 10 ms) and a meter after the limiter. Listening (§4) and sample
     audition (§7a) go through the master stage but not through the strips.
-  - Later (backlog): sends to shared effects, recording and export.
+  - Later (backlog): recording and export.
 - **LIBRARY** — the library folder (§6) in three sections, each with a filter field and folders as path prefixes:
   - **PROJECTS** (factory first, then the library's): a click opens the project (replaces the canvas, one undo step,
     fits it in view); the section's header holds SAVE AS and NEW. This is the one place library projects are listed

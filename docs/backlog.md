@@ -36,13 +36,7 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - ~~**DRIVE sounds poor and its modes are alike**~~ Done in Plan 9 (seven models, BIAS, matched loudness); tuning
   against Ableton renders waits for `projects/refs/drive/`.
 - ~~**FILTER cutoff animation**~~ Done in Plan 11.
-- **A system mixer for every OUT** (2026-10-09): a patch may hold several OUT modules (one per group or voice), all
-  summed into the master today. A mixer that sees every OUT in the project — a strip per OUT (named after its module
-  or frame) with level, mute, solo and a meter, then the master — probably as a sidebar tab next to WIRES. Open:
-  whether OUT's own LVL knob stays, and whether strips can be grouped per frame.
-
-## Deep backlog
-
+- ~~**A system mixer for every OUT**~~ Done in Plan 6 (the MIX tab). Sends to shared effects: dropped for now (2026-10-10).
 - **Panels in rows / rails** (2026-10-07): a canvas-wide HP × U lattice with rails between rows, like a case.
   Considered and rejected for now (it drifts towards a VCV clone); module sizes are quantised to HP × U instead and
   placement stays free.
