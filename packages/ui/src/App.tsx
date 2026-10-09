@@ -54,18 +54,39 @@ export function App(): JSX.Element {
   return <Show when={session()}>{(s) => <Canvas session={s()} specs={SPECS} />}</Show>;
 }
 
+/**
+ * A hot reload (`pnpm dev`) runs App again with a new session: the previous one's first-click listener and audio host
+ * must go, or the next click starts a second engine over the first and every voice plays twice.
+ */
+const HOT = Symbol.for('sreda.audio.stop');
+type HotGlobal = { [HOT]?: () => void };
+
 function listenForFirstClick(s: SessionApi): void {
+  const g = globalThis as HotGlobal;
+  g[HOT]?.();
   let starting = false;
+  let host: AudioHost | null = null;
+  let stopped = false;
   const first = (): void => {
     if (s.state.notice) s.setState('notice', null);
     if (starting || s.state.audio) return;
     starting = true;
     AudioHost.start()
-      .then((host) => s.attach(host))
+      .then((h) => {
+        if (stopped) return h.close();
+        host = h;
+        s.attach(h);
+      })
       .catch((err: unknown) =>
         s.setState('notice', `AUDIO FAILED · ${err instanceof Error ? err.message : String(err)}`),
       )
       .finally(() => (starting = false));
   };
   window.addEventListener('pointerdown', first, true);
+  g[HOT] = () => {
+    stopped = true;
+    window.removeEventListener('pointerdown', first, true);
+    host?.close();
+    host = null;
+  };
 }

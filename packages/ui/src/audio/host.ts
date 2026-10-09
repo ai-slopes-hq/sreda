@@ -40,6 +40,13 @@ export class AudioHost {
     return new AudioHost(context, node, new Float32Array(shared));
   }
 
+  /** stops the sound for good (a hot reload starts another session) */
+  close(): void {
+    this.node.port.onmessage = null;
+    this.node.disconnect();
+    void this.context.close();
+  }
+
   get sampleRate(): number {
     return this.context.sampleRate;
   }
