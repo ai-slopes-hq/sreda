@@ -33,6 +33,10 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **FILTER models are not convincing** (2026-10-09, from listening): SK (MS-20), LADDER and DIODE do not sound like
   their originals and differ too little from each other (and from SVF). Compare against references (Moog ladder,
   TB-303 diode, MS-20 Sallen-Key) and re-tune drive, resonance and the self-oscillation character per model.
+- **DRIVE sounds poor and its modes are alike** (2026-10-09, from listening): SAT / OD / FUZZ barely differ. Rework it
+  with distinct models like Ableton's Saturator / Overdrive / Pedal and Roar shapes (soft sine, analog clip, tube,
+  digital clip, half / full wave, a fuzz pedal with its bias and gating, a tape stage), each with its own tone stack and
+  matched loudness; listen against those references.
 - **FILTER cutoff animation** (2026-10-09): the response glyph on the panel follows the live cutoff (and resonance)
   with modulation applied, schematically — the curve moves, no waveform.
 
