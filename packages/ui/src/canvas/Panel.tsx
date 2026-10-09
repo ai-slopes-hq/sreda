@@ -199,7 +199,9 @@ export function Panel(props: PanelProps): JSX.Element {
       </div>
       <Show when={ghosts().length}>
         <svg class="sr-ghosts" width={L().w} height={L().h}>
-          <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} style={{ stroke: ROLE[g.role] }} />}</For>
+          <For each={ghosts()}>
+            {(g) => <path class="ghost-normal" d={g.d} style={{ stroke: ROLE[g.role] }} />}
+          </For>
         </svg>
       </Show>
       <Show when={props.spec.display?.kind === 'contour' && L().display}>
@@ -475,6 +477,18 @@ export function Panel(props: PanelProps): JSX.Element {
               closeEpoch={props.closeEpoch ?? 0}
               scope={props.mod.id}
               set={(v, merge) => props.act.option(p.id, v, merge)}
+              live={
+                p.glyph === 'response'
+                  ? {
+                      cut: props.mod.params['cutoff'] ?? 0.5,
+                      res: props.mod.params['res'] ?? 0,
+                      state: props.readouts?.state,
+                      res_knob: props.readouts
+                        ? props.readouts.knobs + knobs().findIndex((k) => k.id === 'res')
+                        : undefined,
+                    }
+                  : undefined
+              }
             />
           );
         }}

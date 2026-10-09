@@ -1340,3 +1340,25 @@ test('LIBRARY: a factory group and a sample are dragged from the sidebar onto th
   await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/snare.wav');
   await app.close();
 });
+
+test("FILTER's response glyph follows the live cutoff", async () => {
+  const { app, page } = await launch();
+  // OSC → FILTER (added wired), then OSC into FILTER's PTCH: the cutoff sweeps at audio rate
+  const out = await center(page, jack(page, 'osc', 'out'));
+  await drag(page, out, { x: out.x + 120, y: out.y + 300 });
+  await page.keyboard.type('filter');
+  await page.keyboard.press('Enter');
+  await drag(
+    page,
+    await center(page, jack(page, 'osc', 'out')),
+    await center(page, jack(page, 'filter', 'pitch')),
+  );
+  const glyph = page.locator('[data-type=filter] [data-option=model] path');
+  const still = await glyph.getAttribute('d');
+  await page.mouse.click(1300, 880); // start audio
+  await expect.poll(async () => (await glyph.getAttribute('d')) !== still, { timeout: 2000 }).toBe(true);
+  const a = await glyph.getAttribute('d');
+  await page.waitForTimeout(150);
+  expect(await glyph.getAttribute('d')).not.toBe(a);
+  await app.close();
+});

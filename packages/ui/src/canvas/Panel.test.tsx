@@ -47,10 +47,19 @@ test('an input value shows when it is not the default', () => {
   expect(container.querySelector('[data-field=pitch]')?.textContent).toBe('');
 });
 
-test("FILTER's MODEL is drawn as a response glyph", () => {
+test("FILTER's MODEL is drawn as a response glyph at its CUT and RES", () => {
   const { container } = render(() => (
     <Panel
-      mod={{ id: 'm1', type: 'filter', x: 0, y: 0, parent: null, params: { model: 2 }, atts: {}, ratios: {} }}
+      mod={{
+        id: 'm1',
+        type: 'filter',
+        x: 0,
+        y: 0,
+        parent: null,
+        params: { model: 2, cutoff: 0.3, res: 0.8 },
+        atts: {},
+        ratios: {},
+      }}
       spec={SPECS['filter']!}
       name="FILTER"
       loud={false}
@@ -60,7 +69,7 @@ test("FILTER's MODEL is drawn as a response glyph", () => {
     />
   ));
   expect(container.querySelector('[data-option=model] path')?.getAttribute('d')).toBe(
-    responseGlyph('DIODE', 24),
+    responseGlyph('DIODE', 24, { cut: 0.3, res: 0.8 }),
   );
 });
 

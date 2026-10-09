@@ -2,6 +2,7 @@ import type { OptionParam } from '@sreda/core';
 import { createSignal, For, onCleanup, Show, type JSX } from 'solid-js';
 import type { Merge } from '@sreda/core';
 import { SCALES } from '@sreda/core';
+import { readoutBuffer, track } from '../live';
 import { responseGlyph, scaleGlyph, waveGlyph } from './glyphs';
 import { panning } from './wheel';
 
@@ -16,18 +17,45 @@ export interface OptionProps {
   /** the module this option belongs to (wheel runs merge per module and option) */
   scope: string;
   set(value: number, merge?: Merge): void;
+  /**
+   * FILTER's response glyph follows the filter: `cut` / `res` from the knobs (0…1), and while audio runs the readout
+   * offsets of the live cutoff (the module's state) and of RES's modulated knob
+   */
+  live?: { cut: number; res: number; state: number | undefined; res_knob: number | undefined } | undefined;
 }
 
 /** An option value drawn as its shape: a waveform, or a scale's 12 semitones; else its name. */
-function Glyph(props: { param: OptionParam; value: number; big: boolean }): JSX.Element {
+function Glyph(props: {
+  param: OptionParam;
+  value: number;
+  big: boolean;
+  live?: OptionProps['live'] | undefined;
+}): JSX.Element {
   const w = () => (props.big ? 30 : 24);
+  const model = () => props.param.options[props.value]!;
+  const at = () => (props.live ? { cut: props.live.cut, res: props.live.res } : undefined);
+  let path: SVGPathElement | undefined;
+  /** every frame while audio runs: the live cutoff and RES */
+  const follow = (off: number) => {
+    const buf = readoutBuffer();
+    const k = props.live?.res_knob;
+    if (!buf || !path || k === undefined) return;
+    path.setAttribute('d', responseGlyph(model(), w(), { cut: buf[off] ?? 0.5, res: buf[k] ?? 0 }));
+  };
   const scale = () => scaleGlyph(SCALES[props.value] ?? [], props.big);
   return (
     <Show
       when={props.param.glyph !== 'response'}
       fallback={
         <svg class="g-svg" width={w()} height="12">
-          <path class="g-wave" d={responseGlyph(props.param.options[props.value]!, w())} />
+          <path
+            class="g-wave"
+            ref={(el) => {
+              path = el;
+              track(el, 'tick', () => props.live?.state, follow);
+            }}
+            d={responseGlyph(model(), w(), at())}
+          />
         </svg>
       }
     >
@@ -109,7 +137,7 @@ export function Option(props: OptionProps): JSX.Element {
         aria-label={`${p().label} ${p().options[props.value]}`}
       >
         <Show when={!toggle()} fallback={p().label}>
-          <Glyph param={p()} value={props.value} big={false} />
+          <Glyph param={p()} value={props.value} big={false} live={props.live} />
           <Show when={p().options.length > 2}>
             <span class="caret">▾</span>
           </Show>

@@ -38,7 +38,11 @@ export function waveGlyph(name: string, w: number): string {
 }
 
 /** A filter model as a small magnitude response in a w × 12 box (high = loud): its slope, peak, teeth or formants. */
-export function responseGlyph(model: string, w: number): string {
+/**
+ * FILTER's MODEL glyph: the model's response. With `at` (spec revision 28) it follows the live filter: the resonant
+ * peak sits at `cut` (the cutoff's position on a 20 Hz…20 kHz log axis, 0…1) and rises with `res` (0…1).
+ */
+export function responseGlyph(model: string, w: number, at?: { cut: number; res: number }): string {
   const pts = (f: (t: number) => number) => {
     let d = '';
     for (let i = 0; i <= 24; i++) {
@@ -47,10 +51,12 @@ export function responseGlyph(model: string, w: number): string {
     }
     return d;
   };
-  // a low-pass of `order` with a resonant bump of `peak` at t = 0.5
+  const c = at ? Math.min(1, Math.max(0, at.cut)) : 0.5;
+  // a low-pass of `order` with a resonant bump of `peak` at t = c (live: the bump grows with RES)
   const lp = (order: number, peak: number) => (t: number) => {
-    const r = Math.max(0, t - 0.5) * 4;
-    return 0.7 / Math.sqrt(1 + r ** (2 * order)) + peak * Math.exp(-(((t - 0.5) / 0.06) ** 2));
+    const r = Math.max(0, t - c) * 4;
+    const bump = at ? 0.02 + 0.55 * at.res ** 2 : peak;
+    return 0.7 / Math.sqrt(1 + r ** (2 * order)) + bump * Math.exp(-(((t - c) / 0.06) ** 2));
   };
   if (model === 'LADDER') return pts(lp(4, 0.25));
   if (model === 'DIODE') return pts(lp(3, 0.3));

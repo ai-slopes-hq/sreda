@@ -314,6 +314,8 @@ pub struct Filter {
     started: bool,
     /// calibration: RES goes to the model as it is, without the law (`print_res_tables`)
     raw_res: bool,
+    /// the live cutoff on a 20 Hz…20 kHz log axis (0…1), for the response glyph
+    cut: f32,
 }
 
 impl Filter {
@@ -333,6 +335,7 @@ impl Filter {
             fade_left: 0,
             started: false,
             raw_res: false,
+            cut: 0.5,
         }
     }
 
@@ -409,7 +412,14 @@ impl Dsp for Filter {
             for (k, v) in y.iter().enumerate() {
                 io.out[k][i] = *v as f32;
             }
+            if i + 1 == to {
+                self.cut = ((fc / 20.0).ln() / 1000f64.ln()).clamp(0.0, 1.0) as f32;
+            }
         }
+    }
+
+    fn state(&self) -> f32 {
+        self.cut
     }
 
     fn reset(&mut self) {
@@ -462,6 +472,19 @@ mod tests {
             .map(|j| h(500.0 * 2f64.powf(j as f64 / 30.0)))
             .fold(0.0, f64::max);
         (20.0 * (peak / h(100.0)).log10(), h(110.0), rings)
+    }
+
+    #[test]
+    fn the_state_is_the_live_cutoff_with_ptch() {
+        let mut b = Bench::new(48_000.0, 2, &[632.5, 0.2, 0.0], &[0.0], 3);
+        b.connected_in = vec![true, true];
+        let mut f = Filter::new(48_000.0);
+        b.run(&mut f, 2, |_, i, inp| inp[1][i] = 0.0);
+        // 632.5 Hz sits at the middle of 20 Hz…20 kHz
+        assert!((f.state() - 0.5).abs() < 1e-3, "{}", f.state());
+        b.run(&mut f, 2, |_, i, inp| inp[1][i] = 1.0);
+        let octave = (2f64.ln() / 1000f64.ln()) as f32;
+        assert!((f.state() - 0.5 - octave).abs() < 1e-3, "{}", f.state());
     }
 
     #[test]
