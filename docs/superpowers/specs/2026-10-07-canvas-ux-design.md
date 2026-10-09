@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 28 (§7a: FILTER — one resonance law and a steady passband across models; each model's saturation after its reference; the response glyph follows the live cutoff) · Status: approved
+Date: 2026-10-07 · Revision 29 (§6: DICE in place of NEW at the top right — a random playable patch, rhythmic or ambient) · Status: approved
 
 ## Why
 
@@ -384,8 +384,20 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
   `CLICK TO START AUDIO`.
-- Top right: **SIDEBAR** (opens the sidebar, §5a; its first tab is WIRES), **SAVE** (saves the project, as ⌘S with no frame selected) and **NEW** (clears the
-  canvas; an undo step). With the listen bar these are the only chrome.
+- Top right: **SIDEBAR** (opens the sidebar, §5a; its first tab is WIRES), **SAVE** (saves the project, as ⌘S with no
+  frame selected) and **DICE** (revision 29, in place of NEW: a random playable patch, below). An empty canvas comes
+  from NEW in LIBRARY › PROJECTS. With the listen bar these are the only chrome.
+- **DICE** replaces the canvas with a new random patch (one undo step, fit in view, the speakers fade in) and the
+  project becomes unnamed. Each throw picks one of two kinds at random:
+  - **rhythmic** — a frame with its own clock (90–150 BPM); RHYTHM (euclid or grid) and / or STAGES (a generated line in
+    a scale) drive 1–3 voices: drums (an OSC sine kick and NOISE hats through pinged LPGs), a bass or a lead (OSC or
+    COMPLEX → FILTER with a random model → LPG, SLOPE envelopes on the cutoff), sometimes a FOLD or DRIVE;
+  - **ambient** — a slow frame clock (40–80 BPM) or cycling SLOPEs; drones and slow lines (COMPLEX / OSC → FILTER
+    or FOLD), long envelopes and slides, UNCERTAINTY and slow SLOPEs on the timbre, long DELAY and a big REVERB
+    (HALL or PLATE), sometimes GRAINS on LIVE fed by the voices.
+  - Voices sit in named STACK frames (`DRUMS`, `BASS`, `LEAD`, `DRONE`, `PAD`…) inside the clock frame; everything mixes
+    into one OUT. Values are chosen inside safe ranges: every throw sounds (no PROBLEMS, a level between −40 and
+    −3 dBFS on the master over its first seconds) and never clips hard.
 - **Library = a folder on disk.** The first save or open asks for a library folder once (a folder dialog; the
   main process keeps its path in the app's settings and reads and writes it with Node `fs`, §8). Inside it:
   `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
