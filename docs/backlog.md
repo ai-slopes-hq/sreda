@@ -34,9 +34,7 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   noisy techno drums, an acid line, ambient chaotic bells, a pad, a drone, a granular cloud, an FM bass… — built from
   the current modules (DRIVE / FOLD / FILTER models, REVERB, GRAINS on LIVE) like the existing factory ones; later DICE
   could draw voices from them.
-- **DICE for the whole project** (2026-10-10): in place of NEW (or beside it), a button that generates a random
-  playable patch — a clock, a sequence source, one or two voices with effects, an OUT — using the generators and
-  per-module DICE that already exist, so a click gives a new starting point that already makes sound.
+- ~~**DICE for the whole project**~~ Done in Plan 12.
 - ~~**DRIVE sounds poor and its modes are alike**~~ Done in Plan 9 (seven models, BIAS, matched loudness); tuning
   against Ableton renders waits for `projects/refs/drive/`.
 - ~~**FILTER cutoff animation**~~ Done in Plan 11.
