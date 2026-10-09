@@ -1,4 +1,4 @@
-import type { JSX } from 'solid-js';
+import { onCleanup, type JSX } from 'solid-js';
 
 /** a gesture on a sample display, `t` the horizontal position 0…1 across it */
 export interface Cursor {
@@ -38,6 +38,10 @@ export function cursorHandlers(o: {
     id = -1;
     dragging = false;
   };
+  // the panel goes away mid-drag (⌘Z, Delete): the scrub must not be left sounding
+  onCleanup(() => {
+    if (id >= 0) finish();
+  });
   return {
     onPointerDown(e) {
       e.stopPropagation();

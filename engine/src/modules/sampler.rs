@@ -123,6 +123,9 @@ pub struct Sampler {
     sc_on: bool,
     sc_pos: f64,
     sc_g: f64,
+    /// the scrub voice's high-pass state (L, R): a pointer at rest decays to silence, like a stopped record
+    sc_lp: [f32; 2],
+    sc_hp: f32,
     /// the last `play` value acted on
     last_play: f64,
 }
@@ -142,7 +145,10 @@ impl Sampler {
             sc_on: false,
             sc_pos: 0.0,
             sc_g: 0.0,
-            last_play: -1.0,
+            sc_lp: [0.0; 2],
+            sc_hp: (1.0 - (-2.0 * std::f64::consts::PI * 25.0 / sample_rate).exp()) as f32,
+            // NaN: adopt the first `fixed[PLAY]` seen without playing it (a stale value after a reset or a new plan)
+            last_play: f64::NAN,
         }
     }
 
@@ -166,6 +172,18 @@ impl Sampler {
             j += 1;
         }
         (lo, b)
+    }
+
+    /// How many slices the region [a, b) has now, and the AUTO strength threshold: SLICES' knob, or the hits (AUTO).
+    fn slice_count(s: &Sample, a: f64, b: f64, knob: f32, auto: bool) -> (usize, f32) {
+        let knob = knob.round().clamp(2.0, 64.0);
+        let min = 1.0 - (knob - 2.0) / 62.0;
+        let n = if auto {
+            Self::auto_count(s, a, b, min)
+        } else {
+            knob as usize
+        };
+        (n, min)
     }
 
     /// The number of slices AUTO finds in [a, b).
@@ -271,13 +289,7 @@ impl Dsp for Sampler {
                         self.start(a, b, rev, true, usize::MAX);
                     }
                     SLICE => {
-                        let knob = io.par[SLICES][i].round().clamp(2.0, 64.0);
-                        let min = 1.0 - (knob - 2.0) / 62.0;
-                        let n = if auto {
-                            Self::auto_count(s, a, b, min)
-                        } else {
-                            knob as usize
-                        };
+                        let (n, min) = Self::slice_count(s, a, b, io.par[SLICES][i], auto);
                         let k = if slice_patched {
                             ((io.inp[SLICE_IN][i].clamp(0.0, 1.0) * n as f32) as usize).min(n - 1)
                         } else {
@@ -293,18 +305,14 @@ impl Dsp for Sampler {
                 }
             }
             self.trig_high = high;
-            if play != self.last_play {
+            if self.last_play.is_nan() {
+                self.last_play = play;
+            } else if play != self.last_play {
                 self.last_play = play;
                 if play >= 0.0 {
                     // the slice holding position p, played once (a click on SLICE's display)
                     let p = (play - play.floor()) * frames;
-                    let knob = io.par[SLICES][i].round().clamp(2.0, 64.0);
-                    let min = 1.0 - (knob - 2.0) / 62.0;
-                    let n = if auto {
-                        Self::auto_count(s, a, b, min)
-                    } else {
-                        knob as usize
-                    };
+                    let (n, min) = Self::slice_count(s, a, b, io.par[SLICES][i], auto);
                     for k in 0..n {
                         let (sa, sb) = Self::slice(s, a, b, n, k, auto, min);
                         if p >= sa && (p < sb || k == n - 1) {
@@ -390,6 +398,9 @@ impl Dsp for Sampler {
                 } else {
                     self.sc_on = true;
                     self.sc_pos = to;
+                    // the high-pass starts at rest on the first sample
+                    let at = to.clamp(0.0, last);
+                    self.sc_lp = [read(&s.channels[0], at), read(&s.channels[1], at)];
                 }
                 self.sc_g = (self.sc_g + 1.0 / self.fade).min(1.0);
             } else if self.sc_on {
@@ -402,8 +413,11 @@ impl Dsp for Sampler {
             if self.sc_on {
                 let at = self.sc_pos.clamp(0.0, last);
                 let g = self.sc_g as f32 * lvl;
-                l += read(&s.channels[0], at) * g;
-                r += read(&s.channels[1], at) * g;
+                let (x0, x1) = (read(&s.channels[0], at), read(&s.channels[1], at));
+                self.sc_lp[0] += (x0 - self.sc_lp[0]) * self.sc_hp;
+                self.sc_lp[1] += (x1 - self.sc_lp[1]) * self.sc_hp;
+                l += (x0 - self.sc_lp[0]) * g;
+                r += (x1 - self.sc_lp[1]) * g;
                 if self.pos < 0.0 {
                     self.pos = (at / frames) as f32;
                 }
@@ -422,7 +436,7 @@ impl Dsp for Sampler {
         self.pos = -1.0;
         self.sc_on = false;
         self.sc_g = 0.0;
-        self.last_play = -1.0;
+        self.last_play = f64::NAN;
     }
 
     fn state(&self) -> f32 {
@@ -674,28 +688,34 @@ mod tests {
         out
     }
 
+    fn tone(n: usize) -> Vec<f32> {
+        (0..n)
+            .map(|i| (i as f32 * 2.0 * std::f32::consts::PI * 200.0 / 48_000.0).sin())
+            .collect()
+    }
+
     #[test]
-    fn scrub_sounds_the_file_at_the_pointer() {
+    fn a_scrub_at_rest_decays_to_silence() {
         let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
         let mut d = Sampler::new(SR);
-        // 20 ms = 960 samples = 15 blocks
-        let o = scrubbed(&mut b, &mut d, 20, |_| 0.5);
-        let want = 0.1 + 0.9 * 0.5;
-        assert!((o[o.len() - 1] - want).abs() < 0.01, "{}", o[o.len() - 1]);
-        assert!(o[0].abs() < 0.05, "fades in: {}", o[0]);
+        // 150 ms at one point: ~100 ms after the press the tail is gone
+        let o = scrubbed(&mut b, &mut d, 113, |_| 0.5);
+        assert!(o[0].abs() < 0.05, "starts at rest: {}", o[0]);
+        let tail = &o[o.len() - 64..];
+        assert!(tail.iter().all(|x| x.abs() < 0.01), "{:?}", &tail[..4]);
         assert!((d.state() - 0.5).abs() < 0.01);
     }
 
     #[test]
-    fn scrub_moving_makes_a_rising_ramp_without_steps() {
-        let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
+    fn a_moving_scrub_is_audible_and_smooth() {
+        let mut b = bench(SR, sample(tone(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
         let mut d = Sampler::new(SR);
         scrubbed(&mut b, &mut d, 40, |_| 0.2);
-        // 0.2 → 0.8 over 100 ms (75 blocks of 64)
-        let o = scrubbed(&mut b, &mut d, 75, |k| 0.2 + 0.6 * k as f64 / 74.0);
-        assert!(max_step(&o) < 0.05, "{}", max_step(&o));
-        assert!(o[o.len() - 1] > o[0] + 0.2);
-        assert!(o.windows(2).all(|w| w[1] >= w[0] - 1e-6));
+        // 0.2 → 0.8 over 0.5 s (375 blocks): about natural speed
+        let o = scrubbed(&mut b, &mut d, 375, |k| 0.2 + 0.6 * k as f64 / 374.0);
+        let peak = o.iter().fold(0.0f32, |a, x| a.max(x.abs()));
+        assert!(peak > 0.05, "{peak}");
+        assert!(max_step(&o) < 0.1, "{}", max_step(&o));
     }
 
     #[test]
@@ -711,18 +731,37 @@ mod tests {
 
     #[test]
     fn a_scrub_voice_sums_with_a_triggered_voice() {
-        let mut b = bench(
-            SR,
-            sample(vec![0.2; 48_000], vec![]),
-            [0.0, 0.0, 1.0, 10.0, 0.5, 8.0],
-            [0.0, 0.0, 0.0],
-        );
-        let mut d = Sampler::new(SR);
-        b.fixed[SCRUB] = 0.5;
-        let o = b.run(&mut d, 40, trigs(&[0]));
-        // 0.2 · LVL 0.5 each
-        assert!((o[0][2000] - 0.2).abs() < 1e-3, "{}", o[0][2000]);
-        assert_eq!(o[0], o[1]);
+        let run = |scrub: f64, trig: bool| {
+            let mut b = bench(
+                SR,
+                sample(tone(48_000), vec![]),
+                [0.0, 0.0, 1.0, 10.0, 0.5, 8.0],
+                [0.0, 0.0, 0.0],
+            );
+            let mut d = Sampler::new(SR);
+            let mut out = vec![];
+            for k in 0..30usize {
+                // the scrub rests for 5 blocks, then moves
+                b.fixed[SCRUB] = if scrub < 0.0 {
+                    -1.0
+                } else if k < 5 {
+                    scrub
+                } else {
+                    scrub + 0.1
+                };
+                let o = b.run(&mut d, 1, move |_, i, inp| {
+                    inp[TRIG][i] = if trig && k == 0 && i < 48 { 1.0 } else { 0.0 }
+                });
+                out.extend_from_slice(&o[0]);
+            }
+            vec![out.clone(), out]
+        };
+        let (both, one, scr) = (run(0.3, true), run(-1.0, true), run(0.3, false));
+        assert!(scr[0][500..1900].iter().any(|x| x.abs() > 0.01) && sounding(&one[0]) > 1000);
+        for i in 0..1900 {
+            assert!((both[0][i] - one[0][i] - scr[0][i]).abs() < 1e-5, "{i}");
+        }
+        assert_eq!(both[0], both[1]);
     }
 
     #[test]
@@ -748,6 +787,8 @@ mod tests {
             [2.0, 0.0, 0.0],
         );
         let mut d = Sampler::new(SR);
+        b.fixed[PLAY] = -1.0;
+        b.run(&mut d, 1, |_, i, inp| inp[TRIG][i] = 0.0);
         b.fixed[PLAY] = 3.0 + 0.6; // the third click
         let o = b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
         assert!(sounding(&o[0]).abs_diff(12_000) <= 1, "{}", sounding(&o[0]));
@@ -758,6 +799,24 @@ mod tests {
         b.fixed[PLAY] = 4.0 + 0.1;
         let o = b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
         assert!(sounding(&o[0]) > 11_000);
+    }
+
+    #[test]
+    fn a_stale_play_value_after_a_reset_does_not_retrigger() {
+        let mut b = bench(
+            SR,
+            sample(ramp(48_000), vec![]),
+            [0.0, 0.0, 1.0, 10.0, 1.0, 4.0],
+            [2.0, 0.0, 0.0],
+        );
+        let mut d = Sampler::new(SR);
+        b.fixed[PLAY] = -1.0;
+        b.run(&mut d, 1, |_, i, inp| inp[TRIG][i] = 0.0);
+        b.fixed[PLAY] = 2.5;
+        b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
+        d.reset();
+        let o = b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
+        assert_eq!(sounding(&o[0]), 0);
     }
 
     #[test]

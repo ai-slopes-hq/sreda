@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { render } from '@solidjs/testing-library';
 import { expect, test } from 'vitest';
-import { Grains, grainsPaths } from './Grains';
+import { Grains, grainsPaths, livePos } from './Grains';
 
 test('one dot per grain that plays (a negative position is an idle slot); POS is a line', () => {
   const p = grainsPaths(200, 60, { grains: [0.1, -1, 0.5, -1, 0.9], head: -1, live: false, pos: 0.25 });
@@ -107,4 +107,21 @@ test('without a sample a click on GRAINS opens the dialog; LIVE has nothing to l
   expect(loads).toBe(1);
   mk(true);
   expect(loads).toBe(1);
+});
+
+test('LIVE: a click position maps to the POS whose line grainsPaths draws there (relative to the head)', () => {
+  for (const head of [0.5, 0.02, 0.97]) {
+    for (const t of [0, 0.1, 0.5, 0.99]) {
+      const pos = livePos(head, t);
+      expect(pos).toBeGreaterThanOrEqual(0);
+      expect(pos).toBeLessThanOrEqual(1);
+      const ring = grainsPaths(200, 60, { grains: [], head, live: true, pos }).ring;
+      const x = Number(/^M([\d.]+)/.exec(ring)![1]);
+      // the line lands under the pointer (mod the ring's wrap at POS 0 / 1)
+      const d = Math.abs(x / 200 - t);
+      expect(Math.min(d, 1 - d)).toBeLessThan(0.006);
+    }
+  }
+  expect(livePos(0.5, 0.5)).toBe(1); // the head itself is the newest audio
+  expect(livePos(-1, 0.3)).toBe(0.3); // no head yet: as FILE
 });

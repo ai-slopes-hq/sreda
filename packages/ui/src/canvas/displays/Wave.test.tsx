@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { render } from '@solidjs/testing-library';
+import { cleanup, render } from '@solidjs/testing-library';
 import { expect, test } from 'vitest';
 import type { Cursor } from './gesture';
 import { Wave, wavePaths } from './Wave';
@@ -123,4 +123,13 @@ test('without a sample a click opens the dialog and a drag does nothing', () => 
   box.dispatchEvent(ptr('pointerdown', 150));
   box.dispatchEvent(ptr('pointerup', 150));
   expect(loads).toBe(1);
+});
+
+test('unmounting mid-drag ends the scrub', () => {
+  const events: Cursor[] = [];
+  const box = cursorWave(events);
+  box.dispatchEvent(ptr('pointerdown', 120));
+  box.dispatchEvent(ptr('pointermove', 160));
+  cleanup();
+  expect(events.at(-1)).toEqual({ phase: 'end', t: 0.3 });
 });

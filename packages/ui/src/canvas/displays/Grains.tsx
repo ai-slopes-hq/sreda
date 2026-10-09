@@ -40,6 +40,11 @@ export function grainsPaths(
   return { dots: dots.trim(), ring: `M${X(at)} 0 V${h}`, shade };
 }
 
+/** The POS a click at `t` across the display means in LIVE: the inverse of `grainsPaths`' line (relative to the head). */
+export function livePos(head: number, t: number): number {
+  return head >= 0 ? 1 - ((((head - t) % 1) + 1) % 1) : t;
+}
+
 export function Grains(props: {
   x: number;
   y: number;
@@ -82,7 +87,7 @@ export function Grains(props: {
         return;
       }
       // LIVE draws POS 1 at the head and POS 0 eight seconds before it: the inverse of `grainsPaths`
-      const pos = props.live && head >= 0 ? 1 - (((head - c.t) % 1) + 1) % 1 : c.t;
+      const pos = props.live ? livePos(head, c.t) : c.t;
       props.onPos?.(pos, c.phase);
     },
   });
