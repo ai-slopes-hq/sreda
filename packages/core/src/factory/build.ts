@@ -76,6 +76,7 @@ export function build(specs: Specs, f: (b: Builder) => void): Doc {
         tint: o.tint ?? 0,
         layout: 'free',
         muted: false,
+        collapsed: false,
         clock: { on: o.bpm !== undefined, bpm: o.bpm ?? 120 },
       };
       doc = { ...doc, groups: [...doc.groups, g] };

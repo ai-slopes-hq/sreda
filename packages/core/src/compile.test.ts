@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import { bigPatch } from './bigpatch';
 import { clockNode, compile } from './compile';
-import { editFrame, frameSelection, unframe } from './frames';
+import { editFrame, frameSelection, setCollapsed, unframe } from './frames';
 import { TRACE_LEN } from './plan';
 import { emptyDoc, starterDoc, type Doc } from './doc';
 import {
@@ -329,4 +329,11 @@ test("a module's sample goes into its fixed slot as the registry's id (−1 with
   expect(plan.nodes[0]!.fixed).toEqual([1, 7]);
   expect(plan.nodes[1]!.fixed).toEqual([1, -1]);
   expect(compile(doc, SAMPLING, 1).nodes[0]!.fixed).toEqual([1, -1]);
+});
+
+test('compile gives the same plan for a collapsed and an expanded document', () => {
+  let doc = addModule(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'out', 400, 0).doc;
+  doc = connect(doc, SPECS, ['m1', 'out'], ['m2', 'l']);
+  const f = frameSelection(doc, SPECS, ['m1', 'm2']);
+  expect(compile(setCollapsed(f.doc, [f.id], true), SPECS, 1)).toEqual(compile(f.doc, SPECS, 1));
 });

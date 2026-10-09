@@ -50,6 +50,7 @@ const frame = (id: string, o: Partial<Group> = {}): Group => ({
   tint: 3,
   layout: 'free',
   muted: true,
+  collapsed: false,
   clock: { on: true, bpm: 128 },
   ...o,
 });

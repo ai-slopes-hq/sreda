@@ -1,8 +1,9 @@
 // Frames (spec §5): geometry, membership by containment, and the edits that make, unmake and resize them.
 // Pure functions from a document to a new one, like ops.ts.
-import type { Doc, Group, Layout } from './doc';
+import type { Cable, Doc, Group, Layout } from './doc';
 import { layoutPanel } from './panel';
-import type { Specs } from './spec';
+import { inputPorts, type Specs } from './spec';
+import { portLabel } from './wires';
 
 export const GHEAD = 28,
   GPAD = 16,
@@ -36,14 +37,115 @@ export function rectOf(doc: Doc, specs: Specs, id: string): Rect {
 
 /** A jack's position on the canvas, for a module's port or a frame's `clkIn` / `clkOut`. */
 export function jackAt(doc: Doc, specs: Specs, id: string, port: string): Pt {
+  const owner = blockOwner(doc, id);
+  if (owner) {
+    const o = doc.groups.find((x) => x.id === owner)!;
+    const j = blockOf(doc, specs, owner).jacks.find((b) => b.id === id && b.port === port);
+    if (j) return { x: o.x + j.x, y: o.y + j.y };
+  }
   const g = doc.groups.find((x) => x.id === id);
   if (g) {
+    if (g.collapsed && port === 'clkOut') return { x: g.x + BLOCK_W, y: g.y + GHEAD / 2 };
     const j = FRAME_JACKS[port]!;
     return { x: g.x + j.x, y: g.y + j.y };
   }
   const m = doc.modules.find((x) => x.id === id)!;
   const j = layoutPanel(specs[m.type]!).jacks[port]!;
   return { x: m.x + j.x, y: m.y + j.y };
+}
+
+const BLOCK_W = FRAME_MIN.w;
+const BLOCK_ROW = 24;
+
+/** The outermost collapsed frame strictly containing a module or frame; null: it is visible. */
+export function blockOwner(doc: Doc, id: string): string | null {
+  let owner: string | null = null;
+  for (const g of chainOf(doc, id)) if (g !== id && doc.groups.find((x) => x.id === g)?.collapsed) owner = g;
+  return owner;
+}
+
+/** A jack of a collapsed frame's block, relative to the block's top-left. */
+export interface BlockJack {
+  id: string;
+  port: string;
+  label: string;
+  dir: 'in' | 'out';
+  x: number;
+  y: number;
+}
+
+/**
+ * A collapsed frame as a block: a jack per inner port whose cable leaves the frame (inputs left, outputs right,
+ * in reading order of their objects, then spec order). The frame's own jacks are not listed here.
+ */
+export function blockOf(doc: Doc, specs: Specs, gid: string): { w: number; h: number; jacks: BlockJack[] } {
+  const inner = new Set(descendants(doc, gid));
+  const crossing = { in: new Set<string>(), out: new Set<string>() };
+  for (const c of doc.cables) {
+    const a = inner.has(c.from[0]);
+    const b = inner.has(c.to[0]);
+    if (a && !b && c.to[0] !== gid) crossing.out.add(c.from.join('\0'));
+    if (b && !a && c.from[0] !== gid) crossing.in.add(c.to.join('\0'));
+  }
+  const objects = sortReading(
+    [...inner].map((id) => ({ id, r: rectOf(doc, specs, id) })),
+    false,
+  );
+  const ins: BlockJack[] = [];
+  const outs: BlockJack[] = [];
+  const add = (list: BlockJack[], dir: 'in' | 'out', id: string, port: string, label: string) =>
+    list.push({ id, port, label, dir, x: dir === 'in' ? 12 : BLOCK_W - 12, y: 0 });
+  for (const { id } of objects) {
+    const g = doc.groups.find((x) => x.id === id);
+    const ports: { dir: 'in' | 'out'; port: string; label: string }[] = [];
+    if (g)
+      ports.push(
+        { dir: 'in', port: 'clkIn', label: `${g.name} › CLK` },
+        { dir: 'out', port: 'clkOut', label: `${g.name} › CLK` },
+      );
+    else {
+      const spec = specs[doc.modules.find((m) => m.id === id)!.type]!;
+      for (const p of inputPorts(spec))
+        ports.push({ dir: 'in', port: p.id, label: portLabel(doc, specs, id, p.id) });
+      for (const p of spec.outputs)
+        ports.push({ dir: 'out', port: p.id, label: portLabel(doc, specs, id, p.id) });
+    }
+    for (const p of ports) {
+      const key = `${id}\0${p.port}`;
+      if (p.dir === 'in' ? crossing.in.has(key) : crossing.out.has(key))
+        add(p.dir === 'in' ? ins : outs, p.dir, id, p.port, p.label);
+    }
+  }
+  for (const list of [ins, outs]) list.forEach((j, i) => (j.y = GHEAD + 8 + BLOCK_ROW * i + 12));
+  const h = Math.max(FRAME_MIN.h, GHEAD + 16 + BLOCK_ROW * Math.max(ins.length, outs.length));
+  return { w: BLOCK_W, h, jacks: [...ins, ...outs] };
+}
+
+/** A cable inside a block, or between a collapsed frame's own jack and what it holds: not drawn. */
+export function cableHidden(doc: Doc, c: Cable): boolean {
+  const [a, b] = [c.from[0], c.to[0]];
+  const oa = blockOwner(doc, a);
+  if (oa && oa === blockOwner(doc, b)) return true;
+  const own = (g: string, other: string) =>
+    !!doc.groups.find((x) => x.id === g)?.collapsed && descendants(doc, g).includes(other);
+  return own(a, b) || own(b, a);
+}
+
+const setGroups = (doc: Doc, gids: readonly string[], f: (g: Group) => Group): Doc => ({
+  ...doc,
+  groups: doc.groups.map((g) => (gids.includes(g.id) ? f(g) : g)),
+});
+
+export const setCollapsed = (doc: Doc, gids: readonly string[], on: boolean): Doc =>
+  setGroups(doc, gids, (g) => (g.collapsed === on ? g : { ...g, collapsed: on }));
+
+/** Every frame collapsed when any is expanded, else every frame expanded. */
+export function toggleCollapsedAll(doc: Doc): Doc {
+  return setCollapsed(
+    doc,
+    doc.groups.map((g) => g.id),
+    doc.groups.some((g) => !g.collapsed),
+  );
 }
 
 const parentOf = (doc: Doc, id: string): string | null =>
@@ -165,6 +267,7 @@ export function frameSelection(doc: Doc, specs: Specs, ids: readonly string[]): 
     tint: 0,
     layout: 'free',
     muted: false,
+    collapsed: false,
     clock: { on: false, bpm: 120 },
   };
   const set = new Set(roots);

@@ -16,6 +16,7 @@ const group: Group = {
   tint: 0,
   layout: 'free',
   muted: false,
+  collapsed: false,
   clock: { on: false, bpm: 120 },
 };
 

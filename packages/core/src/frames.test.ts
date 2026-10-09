@@ -3,6 +3,11 @@ import { emptyDoc, validateDoc, type Doc } from './doc';
 import { layoutPanel } from './panel';
 import { SPECS } from './spec';
 import {
+  blockOf,
+  blockOwner,
+  cableHidden,
+  setCollapsed,
+  toggleCollapsedAll,
   descendants,
   extractGroup,
   mergeDoc,
@@ -455,4 +460,106 @@ test('extractGroup takes a frame with everything inside and the cables among the
   expect(twice.groups.find((g) => g.id === map[g2.id])!.parent).toBe(map[g1.id]);
   expect(rectOf(twice, S, map[g1.id]!).x).toBe(rectOf(g2.doc, S, g1.id).x + 5000);
   expect(twice.nextId).toBeGreaterThan(Math.max(...fresh.map((id) => Number(id.slice(1)))));
+});
+
+// Collapsed frames (spec §5): blocks, their jacks, hidden cables
+function collapsedFixture() {
+  let doc = emptyDoc;
+  const add = (type: string, x: number, y: number) => {
+    const a = addModule(doc, SPECS, type, x, y);
+    doc = a.doc;
+    return a.id;
+  };
+  const osc = add('osc', 0, 0);
+  const filter = add('filter', 400, 0);
+  const out = add('out', 1600, 0);
+  const lfo = add('osc', 0, 1200);
+  doc = connect(doc, SPECS, [osc, 'out'], [filter, 'in']);
+  doc = connect(doc, SPECS, [filter, 'lp'], [out, 'l']);
+  doc = connect(doc, SPECS, [lfo, 'out'], [filter, '@cutoff']);
+  const f = frameSelection(doc, SPECS, [osc, filter]);
+  return { doc: setCollapsed(f.doc, [f.id], true), g: f.id, osc, filter, out, lfo };
+}
+
+test('a collapsed frame lists its crossing ports', () => {
+  const { doc, g, filter } = collapsedFixture();
+  const b = blockOf(doc, SPECS, g);
+  expect(b.w).toBe(352);
+  expect(b.h).toBe(96);
+  expect(b.jacks.filter((j) => j.dir === 'in').map((j) => [j.id, j.port, j.label])).toEqual([
+    [filter, '@cutoff', 'FILTER › CUT'],
+  ]);
+  const outs = b.jacks.filter((j) => j.dir === 'out');
+  expect(outs.map((j) => j.label)).toEqual(['FILTER › LP']);
+  expect(outs[0]).toMatchObject({ x: 340, y: 28 + 8 + 12 });
+  // a second cable from the same port is the same jack
+  const extra = addModule(doc, SPECS, 'out', 1600, 400);
+  const d2 = connect(extra.doc, SPECS, [filter, 'lp'], [extra.id, 'l']);
+  expect(blockOf(d2, SPECS, g).jacks.filter((j) => j.dir === 'out')).toHaveLength(1);
+});
+
+test('cables end on the block; the ones inside are hidden', () => {
+  const { doc, g, osc, filter, out } = collapsedFixture();
+  const gr = doc.groups.find((x) => x.id === g)!;
+  const j = blockOf(doc, SPECS, g).jacks.find((x) => x.dir === 'out')!;
+  expect(jackAt(doc, SPECS, filter, 'lp')).toEqual({ x: gr.x + j.x, y: gr.y + j.y });
+  const [c1, c2] = [doc.cables.find((c) => c.from[0] === osc)!, doc.cables.find((c) => c.to[0] === out)!];
+  expect(cableHidden(doc, c1)).toBe(true);
+  expect(cableHidden(doc, c2)).toBe(false);
+});
+
+test('two collapsed frames cabled together keep that cable; a frame CLK OUT into itself is hidden', () => {
+  const { doc, g, osc, filter, out } = collapsedFixture();
+  const f2 = frameSelection(doc, SPECS, [out]);
+  const d = setCollapsed(f2.doc, [f2.id], true);
+  const c = d.cables.find((x) => x.to[0] === out)!;
+  expect(cableHidden(d, c)).toBe(false);
+  const mine = blockOf(d, SPECS, g).jacks.find((x) => x.id === filter && x.port === 'lp')!;
+  const theirs = blockOf(d, SPECS, f2.id).jacks.find((x) => x.id === out)!;
+  expect(jackAt(d, SPECS, filter, 'lp')).toEqual({
+    x: d.groups.find((x) => x.id === g)!.x + mine.x,
+    y: d.groups.find((x) => x.id === g)!.y + mine.y,
+  });
+  expect(jackAt(d, SPECS, out, 'l')).toEqual({
+    x: d.groups.find((x) => x.id === f2.id)!.x + theirs.x,
+    y: d.groups.find((x) => x.id === f2.id)!.y + theirs.y,
+  });
+  const patched = {
+    ...d,
+    cables: [...d.cables, { from: [g, 'clkOut'] as [string, string], to: [osc, 'sync'] as [string, string] }],
+  };
+  expect(cableHidden(patched, patched.cables.at(-1)!)).toBe(true);
+  const gr = d.groups.find((x) => x.id === g)!;
+  expect(jackAt(d, SPECS, g, 'clkOut')).toEqual({ x: gr.x + 352, y: gr.y + 14 });
+  expect(jackAt(d, SPECS, g, 'clkIn')).toEqual({ x: gr.x, y: gr.y + 14 });
+});
+
+test('nested collapsed frames: the outermost owns', () => {
+  const { doc, g, filter, osc } = collapsedFixture();
+  const outer = frameSelection(doc, SPECS, [g]);
+  const d = setCollapsed(outer.doc, [outer.id], true);
+  expect(blockOwner(d, filter)).toBe(outer.id);
+  expect(blockOwner(d, g)).toBe(outer.id);
+  expect(blockOwner(d, outer.id)).toBeNull();
+  expect(blockOwner(setCollapsed(d, [outer.id], false), osc)).toBe(g);
+  expect(blockOf(d, SPECS, outer.id).jacks.map((j) => j.label)).toEqual(['FILTER › CUT', 'FILTER › LP']);
+});
+
+test('toggleCollapsedAll collapses all when any is expanded, else expands all', () => {
+  const { doc, g } = collapsedFixture();
+  const two = frameSelection(doc, SPECS, ['m3']);
+  expect(toggleCollapsedAll(two.doc).groups.every((x) => x.collapsed)).toBe(true);
+  const all = toggleCollapsedAll(two.doc);
+  expect(toggleCollapsedAll(all).groups.some((x) => x.collapsed)).toBe(false);
+  expect(g).toBeTruthy();
+});
+
+test('collapsed survives a save and extractGroup; absent means expanded', () => {
+  const { doc, g } = collapsedFixture();
+  const back = validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)!;
+  expect(back.groups.find((x) => x.id === g)!.collapsed).toBe(true);
+  expect(extractGroup(doc, g).groups[0]!.collapsed).toBe(true);
+  const plain = JSON.parse(JSON.stringify(doc));
+  delete plain.groups[0].collapsed;
+  expect(validateDoc(plain, SPECS)!.groups[0]!.collapsed).toBe(false);
 });

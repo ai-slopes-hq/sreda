@@ -34,6 +34,8 @@ export interface Group {
   tint: number;
   layout: Layout;
   muted: boolean;
+  /** drawn as a block: a header and the jacks that cross its edge (spec §5) */
+  collapsed: boolean;
   clock: { on: boolean; bpm: number };
 }
 export interface Doc {
@@ -121,6 +123,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
       // Plan 3's WIRE FIX ('route') is a STACK now; it is packed below
       layout: g['layout'] === 'route' || g['layout'] === 'stack' ? 'stack' : 'free',
       muted: g['muted'] === true,
+      collapsed: g['collapsed'] === true,
       clock: { on: clock['on'] === true, bpm },
     });
   }
