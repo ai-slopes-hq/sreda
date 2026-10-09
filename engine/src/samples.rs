@@ -21,6 +21,9 @@ impl Sample {
         let (l, r) = if channels > 1 {
             let mut r = data.split_off(frames);
             r.truncate(frames);
+            // the left channel kept the whole staging buffer's capacity: cut it to its frames
+            data.shrink_to_fit();
+            r.shrink_to_fit();
             (data, r)
         } else {
             data.truncate(frames);
@@ -47,6 +50,12 @@ impl SamplePool {
             return None;
         }
         self.slots.get(id as usize)?.as_ref()
+    }
+    /// Frees an id's sample (between blocks); a later `insert` under the id works.
+    pub fn remove(&mut self, id: usize) {
+        if let Some(slot) = self.slots.get_mut(id) {
+            *slot = None;
+        }
     }
     /// Puts a sample under an id, replacing the one there (between blocks: this allocates).
     pub fn insert(&mut self, id: usize, s: Sample) {
@@ -87,5 +96,23 @@ mod tests {
         );
         assert_eq!(s.hits, vec![(1, 0.5)]);
         assert!(p.get(0).is_none());
+    }
+
+    #[test]
+    fn remove_frees_the_slot_and_the_id_can_be_filled_again() {
+        let mut p = SamplePool::default();
+        p.insert(2, Sample::from_planar(vec![0.5], 1, 1, 0));
+        p.remove(2);
+        p.remove(9);
+        assert!(p.get(2).is_none());
+        p.insert(2, Sample::from_planar(vec![0.25], 1, 1, 0));
+        assert_eq!(p.get(2).unwrap().channels[0], vec![0.25]);
+    }
+
+    #[test]
+    fn a_stereo_sample_holds_only_its_frames() {
+        let s = Sample::from_planar(vec![0.0; 2 * 100 + 4], 100, 2, 2);
+        assert_eq!(s.channels[0].capacity(), 100);
+        assert_eq!(s.channels[1].capacity(), 100);
     }
 }

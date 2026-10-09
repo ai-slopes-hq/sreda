@@ -63,6 +63,9 @@ class SredaProcessor extends AudioWorkletProcessor {
       case 'sample':
         this.engine.sample(msg.id, msg.channels, msg.hits, msg.strengths);
         break;
+      case 'unsample':
+        this.engine.unsample(msg.id);
+        break;
       case 'audition':
         this.engine.audition(msg.id);
         break;

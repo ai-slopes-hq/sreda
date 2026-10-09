@@ -18,6 +18,8 @@ export type ToEngine =
   | { t: 'master'; value: number }
   /** a decoded sample at the engine's rate for the pool, under `id`; its buffers are transferred */
   | { t: 'sample'; id: number; channels: Float32Array[]; hits: Uint32Array; strengths: Float32Array }
+  /** a sample no document names any more: its pool slot is freed */
+  | { t: 'unsample'; id: number }
   /** play a sample from its start in place of the mix; null stops */
   | { t: 'audition'; id: number | null };
 

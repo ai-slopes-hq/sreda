@@ -23,6 +23,8 @@ export interface WasmEngine {
   master(v: number): void;
   /** a sample into the pool under `id` (one or two channels at the engine's rate; hits as positions and strengths) */
   sample(id: number, channels: Float32Array[], hits: Uint32Array, strengths: Float32Array): void;
+  /** frees a sample's pool slot (a missing id plays silence) */
+  unsample(id: number): void;
   /** play a sample in place of the mix, once; null stops */
   audition(id: number | null): void;
   /** Views into WASM memory, valid until the next call. */
@@ -45,6 +47,7 @@ interface Exports {
   engine_master(e: number, v: number): void;
   engine_sample_alloc(e: number, id: number, frames: number, channels: number, hits: number): number;
   engine_sample_commit(e: number): void;
+  engine_unsample(e: number, id: number): void;
   engine_audition(e: number, id: number): void;
   engine_process(e: number): number;
   engine_readouts(e: number): number;
@@ -122,6 +125,10 @@ class Engine implements WasmEngine {
       mem[n * frames + 2 * k + 1] = strengths[k]!;
     }
     this.x.engine_sample_commit(this.e);
+  }
+
+  unsample(id: number): void {
+    this.x.engine_unsample(this.e, id);
   }
 
   audition(id: number | null): void {

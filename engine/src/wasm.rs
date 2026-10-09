@@ -123,6 +123,15 @@ pub unsafe extern "C" fn engine_sample_commit(e: *mut Engine) {
     unsafe { (*e).sample_commit() }
 }
 
+/// Frees a sample's pool slot.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_unsample(e: *mut Engine, id: u32) {
+    unsafe { (*e).unsample(id as usize) }
+}
+
 /// `id` −1 stops.
 ///
 /// # Safety

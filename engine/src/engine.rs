@@ -1017,6 +1017,11 @@ impl Engine {
         }
     }
 
+    /// Frees a sample's slot (between blocks). A module or the audition still naming the id hears silence.
+    pub fn unsample(&mut self, id: usize) {
+        self.ctx.samples.remove(id);
+    }
+
     /// Plays a sample from its start, once, in place of the mix (through the master); −1 stops.
     pub fn audition(&mut self, id: i32) {
         self.audition = (id >= 0).then_some((id, 0));

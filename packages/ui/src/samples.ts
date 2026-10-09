@@ -24,6 +24,8 @@ export interface DecodedSample {
 const MAX_S = 600;
 /** the engine's pool slot the audition uses (replaced each time, so browsing keeps one sample in memory) */
 const AUDITION_ID = 0;
+/** a loaded sample no shown document names for this long is dropped (its bytes, floats and the engine's copy) */
+export const UNLOAD_MS = 30_000;
 
 async function resample(src: AudioBuffer, rate: number): Promise<Float32Array[]> {
   const n = Math.min(2, src.numberOfChannels);
@@ -96,7 +98,7 @@ export interface SampleRegistry {
   peaks(path: string): Float32Array | null;
   /** reads, decodes and sends a path (once per session; a missing or refused one is tried again) */
   load(path: string): Promise<void>;
-  /** loads every path a document names */
+  /** loads every path a document names; a loaded path it does not name starts its 30 s to unloading */
   loadDoc(doc: Doc): void;
   /** the engine is there: everything ready goes to it, decoded again if its rate differs */
   attach(post: (msg: ToEngine) => void, rate: number): void;
@@ -112,13 +114,18 @@ export function createSampleRegistry(o: {
   notice: (text: string) => void;
   /** a status changed (the plan and WIRES follow) */
   changed: () => void;
+  /** the clock (tests) */
+  now?: () => number;
 }): SampleRegistry {
   const decode = o.decode ?? decodeSample;
+  const now = o.now ?? Date.now;
   const ids = new Map<string, number>();
   const status = new Map<string, SampleStatus>();
   const bytes = new Map<string, ArrayBuffer>();
   const ready = new Map<string, DecodedSample>();
   const pending = new Map<string, Promise<void>>();
+  /** loaded paths the last shown document did not name: since when */
+  const unnamed = new Map<string, number>();
   let post: ((msg: ToEngine) => void) | null = null;
   let rate = 48_000;
   /** the audition's turn: a newer audition (or a stop) makes an older decode give up */
@@ -181,6 +188,21 @@ export function createSampleRegistry(o: {
     return p;
   };
 
+  const sweep = () => {
+    const t = now();
+    for (const [path, since] of [...unnamed]) {
+      if (t - since < UNLOAD_MS || status.get(path) === 'loading') continue;
+      unnamed.delete(path);
+      const sent = ready.has(path);
+      bytes.delete(path);
+      ready.delete(path);
+      status.delete(path);
+      pending.delete(path);
+      if (sent) post?.({ t: 'unsample', id: id(path) });
+    }
+    o.changed();
+  };
+
   return {
     id,
     status: (path) => status.get(path),
@@ -191,7 +213,15 @@ export function createSampleRegistry(o: {
     },
     load,
     loadDoc(doc) {
-      for (const m of doc.modules) if (m.sample) void load(m.sample);
+      const named = new Set<string>();
+      for (const m of doc.modules) if (m.sample) named.add(m.sample);
+      for (const path of named) {
+        unnamed.delete(path);
+        void load(path);
+      }
+      const t = now();
+      for (const path of status.keys()) if (!named.has(path) && !unnamed.has(path)) unnamed.set(path, t);
+      if (unnamed.size > 0) setTimeout(sweep, UNLOAD_MS + 1);
     },
     attach(p, r) {
       post = p;

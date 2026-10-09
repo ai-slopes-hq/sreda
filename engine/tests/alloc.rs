@@ -156,6 +156,30 @@ fn process_with_a_sample_loaded_and_auditioning_allocates_nothing() {
 }
 
 #[test]
+fn process_after_an_unsample_allocates_nothing() {
+    let mut e = Engine::new(48_000.0, 1);
+    let plan = fixture("all-a");
+    let sampler = plan
+        .nodes
+        .iter()
+        .position(|n| n.type_ == "sampler")
+        .unwrap();
+    e.apply(plan).unwrap();
+    e.fixed(sampler, 3, 0.0);
+    let p = e.sample_alloc(0, 48_000, 2, 4);
+    unsafe { std::ptr::write_bytes(p, 0, 2 * 48_000 + 8) };
+    e.sample_commit();
+    e.audition(0);
+    e.process();
+    e.unsample(0);
+    let before = allocs();
+    for _ in 0..500 {
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+}
+
+#[test]
 fn mute_solo_and_master_messages_allocate_nothing() {
     let mut e = Engine::new(48_000.0, 1);
     let plan = fixture("starter");

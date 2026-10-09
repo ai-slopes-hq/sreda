@@ -109,8 +109,8 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 - **Onsets run on the renderer's main thread:** a 10-minute stereo file is ~230 M multiply-adds, about a second of
   frozen UI on load. Move `onsets` (and the AIFF render) to a worker, or run it in chunks.
-- **Loaded samples stay for the session:** the registry keeps raw bytes and decoded floats, the engine keeps its copy;
-  WASM memory never shrinks. Evict samples no open document names. (Audition no longer adds to this: it decodes on the
+- ~~**Loaded samples stay for the session:** the registry keeps raw bytes and decoded floats, the engine keeps its copy;
+  WASM memory never shrinks. Evict samples no open document names.~~ Done in Plan 7. (Audition no longer adds to this: it decodes on the
   side into slot 0.) ~~`Sample::from_planar` copied the staging buffer instead of taking it.~~ Done in Plan 6.
 
 ## From the Plan 5 review (deferred, 2026-10-09)
@@ -134,8 +134,8 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 - **STACK fallback is not a strict fixed point:** when the re-pack loop finds a true cycle it keeps the lowest pack
   after 8 rounds; a second press can still move children (deterministic, never seen in a 600-frame fuzz).
-- **Stereo samples hold ~3× frames of memory:** after `split_off` the left channel keeps the staging buffer's whole
-  capacity (`shrink_to_fit` off the audio thread, or with the eviction item above).
+- ~~**Stereo samples hold ~3× frames of memory:** after `split_off` the left channel keeps the staging buffer's whole
+  capacity (`shrink_to_fit` off the audio thread, or with the eviction item above).~~ Done in Plan 7.
 - **DEFAULT flashes at launch** before the saved skin applies (read the skin before creating the session).
 - **Tint fills and the WIRES row-on text** are close `color-mix` values, not byte-identical to the old DEFAULT
   literals; the mix ratios are scattered numbers in `canvas.css`.

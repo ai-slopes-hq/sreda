@@ -160,3 +160,49 @@ test('audition decodes on the side into slot 0 and keeps nothing; ids of samples
   await r.audition(null);
   expect(posted.at(-1)).toEqual({ t: 'audition', id: null });
 });
+
+test('a path no shown document names for 30 s is unloaded; named again in time it stays', async () => {
+  vi.useFakeTimers();
+  try {
+    const { r, posted } = setup();
+    r.loadDoc(doc('kick.wav', 'snare.wav'));
+    await vi.advanceTimersByTimeAsync(10);
+    const kick = r.id('kick.wav');
+    r.loadDoc(doc('snare.wav'));
+    await vi.advanceTimersByTimeAsync(20_000);
+    r.loadDoc(doc('kick.wav', 'snare.wav')); // back in time
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(r.status('kick.wav')).toBe('ready');
+    r.loadDoc(doc('snare.wav'));
+    await vi.advanceTimersByTimeAsync(29_000);
+    expect(r.status('kick.wav')).toBe('ready');
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(r.status('kick.wav')).toBeUndefined();
+    expect(r.peaks('kick.wav')).toBeNull();
+    expect(r.status('snare.wav')).toBe('ready');
+    expect(posted.filter((m) => m.t === 'unsample')).toEqual([{ t: 'unsample', id: kick }]);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('a dropped sample asked for again is read again, ready under the same id, and sent anew', async () => {
+  vi.useFakeTimers();
+  try {
+    const { r, read, posted } = setup();
+    r.loadDoc(doc('kick.wav'));
+    await vi.advanceTimersByTimeAsync(10);
+    const id = r.id('kick.wav');
+    r.loadDoc(doc());
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(r.status('kick.wav')).toBeUndefined();
+    r.loadDoc(doc('kick.wav'));
+    await vi.advanceTimersByTimeAsync(10);
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(r.status('kick.wav')).toBe('ready');
+    expect(r.id('kick.wav')).toBe(id);
+    expect(posted.filter((m) => m.t === 'sample' && m.id === id)).toHaveLength(2);
+  } finally {
+    vi.useRealTimers();
+  }
+});
