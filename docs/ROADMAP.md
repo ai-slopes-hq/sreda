@@ -51,11 +51,12 @@ of a creative tool; nothing of its UI is ported.
   WIRES); frames collapse to a block with a jack per crossing port (C / ⇧C, `▾` / `▸`). Executed with subagents
   (token-lean); reviewed per task and as a whole branch; deferred items in `docs/backlog.md` ("From the Plan 5
   review").
-- **Plan 6 done on the branch `plan-6-mixer-skins`** (2026-10-09), awaiting the final whole-branch review and the
-  user's hands-on check (skins in SETTINGS; MIX on a project with several OUTs): the Plan 4–5 review minors, every
-  colour a skin token, sidebar tabs with SETTINGS (skin choice), the mixer (OUT LVL / mute / solo in the engine, the
-  master fader) and the MIX tab (M): a strip per OUT in reading order (frame name when the frame holds only that OUT),
-  faders, M / S, meters, MASTER. Merge into `main` after the user's OK.
+- **Plan 6 done and merged into `main`** (2026-10-09), spec revision 22: the Plan 4–5 review minors; every UI colour
+  is a skin token (six skins, §1a); sidebar tabs WIRES / MIX / SETTINGS; SETTINGS chooses the skin (hover tries it,
+  kept in `settings.json`); the mixer — OUT mute / solo, the master fader (listening and audition skip it), the MIX
+  tab with a strip per OUT. Subagent-driven, token-lean; final review fixes in; deferred items in `docs/backlog.md`
+  ("From the Plan 6 review").
+- **Next:** choose the next milestone (candidates in `docs/backlog.md`).
 
 ## The road (vertical slices: something to hear at every stage)
 
