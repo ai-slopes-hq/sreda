@@ -196,6 +196,13 @@ export function createSession(
     sentKey = '';
     host?.post(msg);
   }
+  /** the master last sent to the engine (NaN: none yet) */
+  let sentMaster = Number.NaN;
+  function sendMaster(master: number): void {
+    if (!host || master === sentMaster) return;
+    sentMaster = master;
+    host.post({ t: 'master', value: master });
+  }
   const structure = (d: Doc): string =>
     JSON.stringify([
       d.modules.map((m) => [
@@ -234,6 +241,7 @@ export function createSession(
     }
     setState('doc', reconcile(structuredClone(doc), { key: 'id', merge: true }));
     samples.loadDoc(doc);
+    sendMaster(doc.master); // an undo, a redo or an opened project can carry another master
     updateMissing(); // an undo can bring back a module whose sample is known to be missing
     setState('dirty', history.current !== saved);
     scheduleSave(doc, state.project);
@@ -271,6 +279,7 @@ export function createSession(
       setState('audio', true);
       samples.attach((msg) => h.post(msg), h.sampleRate);
       send(true);
+      sendMaster(history.current.master);
       h.post({ t: 'fade', ms: 200 }); // the patch fades in
     },
     commit(doc: Doc, merge?: Merge): void {
@@ -443,6 +452,12 @@ export function createSession(
         index: visible.findIndex((p) => p.id === param),
         value: doc.modules[node]!.params[param]!,
       });
+    },
+    /** the master fader (MIX): one undo step per drag; a master message, no new plan */
+    setMaster(v: number, merge: Merge): void {
+      const doc: Doc = { ...history.current, master: Math.min(1, Math.max(0, v)) };
+      history.commit(doc, merge);
+      show(doc);
     },
     /** an attenuverter drag: the document and an att message, no new plan */
     att(id: string, port: string, v: number | null, merge: Merge): void {

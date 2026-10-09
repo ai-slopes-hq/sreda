@@ -1,10 +1,11 @@
 import type { Specs } from '@sreda/core';
 import { Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
+import { Mix } from './Mix';
 import { Settings } from './Settings';
 import { Wires } from './Wires';
 
-/** The sidebar (spec §5a): docked right, its left edge dragged (320 px … 70 % of the window); tabs WIRES and SETTINGS (MIX comes with the mixer). */
+/** The sidebar (spec §5a): docked right, its left edge dragged (320 px … 70 % of the window); tabs WIRES, MIX and SETTINGS. */
 export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: string): void }): JSX.Element {
   const s = props.session;
   const st = s.state;
@@ -35,6 +36,13 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
             onClick={() => s.setState('sidebar', 'tab', 'WIRES')}
           >
             WIRES
+          </button>
+          <button
+            class="sr-gbtn"
+            classList={{ on: st.sidebar.tab === 'MIX' }}
+            onClick={() => s.setState('sidebar', 'tab', 'MIX')}
+          >
+            MIX
           </button>
           <button
             class="sr-gbtn"
@@ -76,6 +84,9 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
             }}
           />
           <Wires session={s} specs={props.specs} focus={props.focus} />
+        </Show>
+        <Show when={st.sidebar.tab === 'MIX'}>
+          <Mix session={s} specs={props.specs} />
         </Show>
         <Show when={st.sidebar.tab === 'SETTINGS'}>
           <Settings session={s} />

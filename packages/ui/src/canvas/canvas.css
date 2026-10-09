@@ -1531,3 +1531,94 @@
   border: 1px solid var(--line-2);
   border-radius: 2px;
 }
+
+.sr-mix {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  padding: 12px;
+  overflow: auto;
+}
+.sr-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 72px;
+  flex: none;
+  padding: 8px 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.sr-strip.master {
+  margin-left: auto;
+  border-color: var(--line-2);
+}
+.sr-strip.muted {
+  opacity: 0.45;
+}
+.sr-sname {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font:
+    500 9px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+div.sr-sname {
+  color: var(--heading);
+  cursor: default;
+}
+button.sr-sname:hover {
+  color: var(--accent);
+}
+.sr-fader {
+  position: relative;
+  width: 24px;
+  height: 120px;
+  background: var(--raised);
+  border-radius: 2px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.sr-fader-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--line-2);
+  border-radius: 2px;
+}
+.sr-fader-cap {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 4px;
+  background: var(--text);
+  border-radius: 1px;
+}
+.sr-smeter {
+  width: 40px;
+  height: 3px;
+  background: var(--raised);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.sr-smeter div {
+  height: 3px;
+  width: 0;
+  background: var(--text);
+}
+.sr-sbtns {
+  display: flex;
+  gap: 4px;
+}

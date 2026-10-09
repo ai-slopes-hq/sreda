@@ -145,6 +145,11 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
     const sb = s.state.sidebar;
     if (sb.open && sb.tab === 'WIRES') s.setState('sidebar', 'open', false);
     else s.setState('sidebar', { open: true, tab: 'WIRES' });
+  } else if (!meta && !e.altKey && key === 'm') {
+    // M: opens on MIX; on MIX it closes; on another tab it switches to MIX
+    const sb = s.state.sidebar;
+    if (sb.open && sb.tab === 'MIX') s.setState('sidebar', 'open', false);
+    else s.setState('sidebar', { open: true, tab: 'MIX' });
   } else if (meta && key === 'd') {
     // ⌘D: copies of the selected modules with the cables between them
     e.preventDefault();

@@ -1084,3 +1084,39 @@ test('SETTINGS: W opens WIRES; choosing NORD recolours the canvas and is remembe
     .toBe('rgb(46, 52, 64)');
   await again.app.close();
 });
+
+test('MIX: M opens a strip per OUT and the master; M / S, the faders and ⌘Z; the canvas knob moves the strip', async () => {
+  const { app, page } = await launch();
+  await page.mouse.click(1300, 880); // start audio
+  const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  await expect.poll(master).toBeGreaterThan(0.05);
+  await page.keyboard.press('m');
+  await expect(page.locator('.sr-strip[data-out]')).toHaveCount(1);
+  await expect(page.locator('.sr-strip[data-out] .sr-sname')).toHaveText('OUT');
+  await expect(page.locator('.sr-strip.master')).toBeVisible();
+  const strip = page.locator('.sr-strip[data-out]');
+  await strip.getByRole('button', { name: 'S', exact: true }).click(); // solo keeps the sound
+  await page.waitForTimeout(100);
+  expect(await master()).toBeGreaterThan(0.05);
+  await strip.getByRole('button', { name: 'M', exact: true }).click();
+  await expect.poll(master, { timeout: 500 }).toBeLessThan(0.001);
+  await page.keyboard.press('Meta+z');
+  await expect.poll(master).toBeGreaterThan(0.05);
+  // the master fader to 0: silence; ⌘Z: sound
+  const mf = (await page.locator('.sr-strip.master .sr-fader').boundingBox())!;
+  const x = mf.x + mf.width / 2;
+  await page.mouse.move(x, mf.y + 10);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i++) await page.mouse.move(x, mf.y + 10 + 20 * i);
+  await page.mouse.up();
+  await expect.poll(master, { timeout: 500 }).toBeLessThan(0.001);
+  await page.keyboard.press('Meta+z');
+  await expect.poll(master).toBeGreaterThan(0.05);
+  // OUT's LVL knob on the canvas moves the strip's fader
+  const before = await strip.locator('.sr-fader').getAttribute('aria-valuenow');
+  await dragKnob(page, 'out', 'level', 40);
+  await expect.poll(() => strip.locator('.sr-fader').getAttribute('aria-valuenow')).not.toBe(before);
+  await page.keyboard.press('m');
+  await expect(page.locator('.sr-side')).toHaveCount(0);
+  await app.close();
+});

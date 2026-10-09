@@ -31,6 +31,9 @@ const GLIDE_MS: f64 = 10.0;
 pub struct Out {
     /// mute / solo gain, gliding toward its target
     gain: f32,
+    /// false until the first processed block: the gain starts at its target, so a new OUT created muted (or
+    /// under another OUT's solo) does not blip
+    primed: bool,
     step: f32,
     /// the peak of this block after LVL, mute and solo
     peak: f32,
@@ -40,6 +43,7 @@ impl Out {
     pub fn new(sample_rate: f64) -> Self {
         Out {
             gain: 1.0,
+            primed: false,
             step: (1.0 / (GLIDE_MS * 0.001 * sample_rate).max(1.0)) as f32,
             peak: 0.0,
         }
@@ -59,6 +63,10 @@ impl Dsp for Out {
         if from == 0 {
             self.peak = 0.0;
         }
+        if !self.primed {
+            self.primed = true;
+            self.gain = target;
+        }
         for i in from..to {
             if self.gain < target {
                 self.gain = (self.gain + self.step).min(target);
@@ -75,6 +83,7 @@ impl Dsp for Out {
 
     fn reset(&mut self) {
         self.gain = 1.0;
+        self.primed = false;
         self.peak = 0.0;
     }
 
@@ -115,11 +124,13 @@ mod tests {
 
     #[test]
     fn mute_silences_within_ten_ms_without_a_click() {
-        let mut b = Bench::new(48_000.0, 2, &[1.0], &[1.0, 0.0], 0);
+        let mut b = Bench::new(48_000.0, 2, &[1.0], &[0.0, 0.0], 0);
         b.connected_in[0] = true;
         let out = {
             // the bench keeps only the last block's master; collect per block
             let mut dsp = Out::new(48_000.0);
+            b.run(&mut dsp, 1, |_, i, inp| inp[0][i] = 0.5); // plays unmuted first
+            b.fixed[0] = 1.0;
             let mut all = Vec::new();
             for _ in 0..6 {
                 b.run(&mut dsp, 1, |_, i, inp| inp[0][i] = 0.5);
@@ -133,6 +144,19 @@ mod tests {
             out[480..].iter().all(|x| x.abs() < 1e-6),
             "silent after 10 ms"
         );
+    }
+
+    #[test]
+    fn an_out_that_starts_muted_or_under_a_solo_is_silent_from_the_first_sample() {
+        let mut b = Bench::new(48_000.0, 2, &[1.0], &[1.0, 0.0], 0);
+        b.connected_in[0] = true;
+        b.run(&mut Out::new(48_000.0), 1, |_, i, inp| inp[0][i] = 0.5);
+        assert!(b.ctx.master[0].iter().all(|x| *x == 0.0), "muted at birth");
+        let mut b = Bench::new(48_000.0, 2, &[1.0], &[0.0, 0.0], 0);
+        b.connected_in[0] = true;
+        b.ctx.solo_any = true;
+        b.run(&mut Out::new(48_000.0), 1, |_, i, inp| inp[0][i] = 0.5);
+        assert!(b.ctx.master[0].iter().all(|x| *x == 0.0), "under another solo");
     }
 
     #[test]
