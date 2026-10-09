@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 26 (§7a: DRIVE gets seven models — SOFT, TUBE, OD, DIST, FUZZ, RECT, DIGI — and a BIAS knob; 6×1) · Status: approved
+Date: 2026-10-07 · Revision 27 (§7a: FOLD gets four models — SINE, TRI, WRAP, CHEB — FOLD up to ×40, a LEVEL knob and matched loudness; 5×1) · Status: approved
 
 ## Why
 
@@ -446,7 +446,7 @@ Size is `HP × U`.
 | Shaping | **SLOPE** — Serge DUSG / Maths | trig (trigger), in (audio, slew) | rise, fall, shape (log…lin…exp), cycle OFF/ON | out (mod uni), eor (trigger), eoc (trigger) | trig ← eoc, when cycle is ON |
 | | **LPG** — low-pass gate and VCA in one | in (audio), cv (mod), ping (trigger) | level, decay (vactrol-like), mode VCA/LP/BOTH | out (audio) | cv ← the ping envelope while PING is patched, else 1 (so with nothing patched LPG is a plain VCA on LEVEL) |
 | | **FILTER** — state-variable, all outputs at once | in (audio) | cutoff, res | lp, bp, hp (audio) | — |
-| | **FOLD** | in (audio) | fold, symmetry | out (audio) | — |
+| | **FOLD** | in (audio) | fold, symmetry, level; MODEL (revision 27, §7a) | out (audio) | — |
 | Time & logic | **STAGES** — Buchla 248 style, generative, drawn as a contour | adv (trigger), reset (trigger), addr (mod: 0…1 picks a stage), dice (trigger) | per stage 1–16 (in the contour, not as knobs): voltage, time, pulse ON/OFF, slide (80 ms into the stage); LEN 1–16; GEN 303/MOTIF/WALK/TURING/ARP/PHRASE/PEDAL; SCALE; ROOT; DICE button | cv (mod bi), pulse (trigger), eoc (trigger) | adv ← internal stage timer (advances when the stage's time is up) |
 | | **RHYTHM** — 16-step rhythm sequencer, generative, drawn as pads | clk (trigger), reset (trigger), dice (trigger) | 16 steps OFF / ON / TIE, 16 accent steps; LEN 1–16, HITS 0–16, ROT 0–15, DENS 1–16; MODE EUCLID/GRID; DICE button | gate (trigger), acc (trigger), eoc (trigger) | — |
 | | **CHANCE** — Bernoulli gate | trig (trigger) | P (0…1) | a, b (trigger): each event goes to A with probability P, else to B | — |
@@ -464,7 +464,7 @@ Size is `HP × U`.
 | | **SCOPE** — with thru, like a Mordax DATA | a, b (audio), trig (trigger) | time (1 ms–10 s per screen), gain a, gain b, mode A·B / XY | thruA, thruB (audio: the inputs unchanged; gains affect the display only) | — |
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
-- Sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 4×1,
+- Sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 5×1 (revision 27),
   STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 3×1, COMPARE 3×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2, S&H 2×1, QUANT 3×1,
   MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1 (24 modules).
 - Displays in lanes: STAGES' contour 8 (then LEN and ROOT, then GEN ▾ · SCALE ▾ · DICE), RHYTHM's pads 4 (then LEN,
@@ -539,6 +539,18 @@ Stereo outputs are two mono outputs (cables stay mono).
   - Old documents: MODE SAT / OD / FUZZ open as SOFT / OD / FUZZ.
   - Models are tuned by ear and against reference renders of those devices (a 110 Hz sine and a drum loop),
     comparing harmonic levels.
+- **FOLD** (revision 27, after listening: it added little level and few harmonics). Four models, references Serge,
+  Buchla 259 and Ableton Roar's folders:
+  - **SINE** — a sine folder (sin of the driven signal): smooth, vocal folds (Serge-like).
+  - **TRI** — a triangle folder: straight segments with corners, brighter and more glassy (Buchla 259-like).
+  - **WRAP** — wrap-around: the signal leaves one edge and comes back at the other; hard and spiky.
+  - **CHEB** — Chebyshev polynomials: FOLD brings in harmonics 2…16 one after another, clean and organ-like.
+  - **FOLD** drives the signal into the folder from ×1 to ×40 (+32 dB, exponential); at FOLD 0 the signal passes
+    dry and the folder fades in over the first quarter. **SYM** (−1…1) offsets it: asymmetric folds, even harmonics;
+    the DC is removed after. **LEVEL** −12…+12 dB after the folder.
+  - The output level is matched across models and FOLD (±1.5 dB RMS on a −6 dBFS sine), so FOLD adds harmonics,
+    not a drop or a jump in loudness. ADAA (SINE, TRI, WRAP) and 2× oversampling.
+  - Old documents: FOLD keeps its drive (old ×(1 + 8·FOLD)) and opens as SINE at LEVEL 0 dB.
 - **DELAY types:** DIGI clean, CHAR = bit depth and sample-rate reduction; TAPE wow and flutter, saturation and
   high-frequency loss on every repeat, CHAR = wear; SPRING a dispersive allpass chain (the chirp), CHAR = drip.
   PING alternates repeats between L and R. With CLK patched, TIME snaps to divisions of its period (1/16 … 4).
