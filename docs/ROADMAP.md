@@ -51,8 +51,9 @@ of a creative tool; nothing of its UI is ported.
   WIRES); frames collapse to a block with a jack per crossing port (C / ⇧C, `▾` / `▸`). Executed with subagents
   (token-lean); reviewed per task and as a whole branch; deferred items in `docs/backlog.md` ("From the Plan 5
   review").
-- **Next:** choose the next milestone (candidates in `docs/backlog.md`: the system mixer for every OUT, skin
-  switching from §1a, the Plan 4 / Plan 5 backlog items).
+- **Next:** Plan 6 (`docs/superpowers/plans/2026-10-09-6-mixer-skins-minors.md`, 5 tasks, spec revision 22): the
+  Plan 4–5 review minors, every colour a skin token, sidebar tabs with SETTINGS (skin choice), the mixer (OUT mute /
+  solo, master fader) and the MIX tab. Subagent-driven, token-lean, on a branch `plan-6-mixer-skins`.
 
 ## The road (vertical slices: something to hear at every stage)
 
