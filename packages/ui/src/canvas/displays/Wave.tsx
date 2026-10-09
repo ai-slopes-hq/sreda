@@ -1,5 +1,6 @@
 import { Show, type JSX } from 'solid-js';
 import { track } from '../../live';
+import { cursorHandlers, type Cursor } from './gesture';
 
 const MODES = ['ONE', 'LOOP', 'SLICE'];
 
@@ -62,8 +63,10 @@ export function Wave(
     rev?: boolean;
     /** the readout offset of the playhead (0…1, −1 silent) */
     state: number | undefined;
-    /** a click on the waveform: choose a sample */
+    /** a click while there is no sample (or it is missing): choose one */
     onLoad?: (() => void) | undefined;
+    /** a loaded display: a click, a drag (every move) and its end, `t` across the width (spec §7a) */
+    onCursor?: ((c: Cursor) => void) | undefined;
   },
 ): JSX.Element {
   const paths = () => wavePaths(props.w, props.h, props);
@@ -85,6 +88,15 @@ export function Wave(
       .filter(Boolean)
       .join(' · ');
   };
+  const loaded = () => !!props.peaks && !!props.path && !props.missing;
+  const handlers = cursorHandlers({
+    drag: loaded,
+    on: (c) => {
+      if (!loaded()) {
+        if (c.phase === 'click') props.onLoad?.();
+      } else props.onCursor?.(c);
+    },
+  });
   let head: SVGPathElement | undefined;
   const move = (v: number) => {
     if (!head) return;
@@ -95,8 +107,7 @@ export function Wave(
       class="sr-disp sr-wave-box"
       classList={{ missing: props.missing }}
       style={{ left: props.x + 'px', top: props.y + 'px', width: props.w + 'px', height: props.h + 'px' }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={() => props.onLoad?.()}
+      {...handlers}
     >
       <svg class="sr-wave" width={props.w} height={props.h} style={{ display: 'block' }}>
         <Show when={props.peaks}>

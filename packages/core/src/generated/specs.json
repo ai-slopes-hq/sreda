@@ -2147,6 +2147,26 @@
         "taper": "lin",
         "step": 1.0,
         "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "scrub",
+        "label": "SCRUB",
+        "min": -1.0,
+        "max": 1.0,
+        "def": -1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "play",
+        "label": "PLAY",
+        "min": -1.0,
+        "max": 1000000000.0,
+        "def": -1.0,
+        "taper": "lin",
+        "hidden": true
       }
     ],
     "normals": [],

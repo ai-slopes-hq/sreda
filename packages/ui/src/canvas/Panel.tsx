@@ -20,6 +20,7 @@ import { Pads } from './displays/Pads';
 import { Room } from './displays/Room';
 import { Grains } from './displays/Grains';
 import { Wave } from './displays/Wave';
+import type { Cursor } from './displays/gesture';
 import { Scope } from './displays/Scope';
 
 export type FieldKind = 'att' | 'ratio';
@@ -37,6 +38,8 @@ export interface PanelActions {
   moduleDown?(e: PointerEvent): void;
   /** double-click on the name: the picker as REPLACE <MODULE> */
   replace?(e: MouseEvent): void;
+  /** a hidden knob a display drives by message only (SAMPLER's `scrub` and `play`): the engine, not the document */
+  fixed?(param: string, value: number): void;
   /** an action button (DICE) */
   action?(param: string): void;
   /** a display edit: several params in one undo step */
@@ -93,6 +96,35 @@ export function Panel(props: PanelProps): JSX.Element {
     if (p.id !== 'slices' || props.spec.type !== 'sampler' || props.mod.params['auto'] !== 1) return p;
     const { step: _step, ...rest } = p;
     return { ...rest, label: 'SENS', min: 0, max: 1 };
+  };
+  /** one gesture on a display = one undo step: its knob changes share a merge key until it ends */
+  let strokes = 0;
+  let stroke = '';
+  const merge = (): Merge => {
+    if (!stroke) stroke = `display:${props.mod.id}:${++strokes}`;
+    return { key: stroke, stroke: true };
+  };
+  /** one-shot requests to SAMPLER's `play`: a counter + the position, so every click is a new value */
+  let plays = 0;
+  /** SAMPLER's display (spec §7a): ONE / LOOP click = START, drag = scrub + START; SLICE click = play that slice */
+  const waveCursor = (c: Cursor) => {
+    const slice = (props.mod.params['mode'] ?? 0) === 2;
+    if (c.phase === 'click') {
+      if (slice) props.act.fixed?.('play', ++plays + Math.min(c.t, 0.999999));
+      else props.act.knob('start', c.t, undefined);
+    } else if (c.phase === 'drag') {
+      props.act.fixed?.('scrub', c.t);
+      if (!slice) props.act.knob('start', c.t, merge());
+    } else {
+      props.act.fixed?.('scrub', -1);
+      stroke = '';
+    }
+  };
+  /** GRAINS' display: POS follows the pointer, one undo step per gesture */
+  const grainsCursor = (pos: number, phase: Cursor['phase']) => {
+    if (phase === 'click') props.act.knob('pos', pos, undefined);
+    else if (phase === 'drag') props.act.knob('pos', pos, merge());
+    else stroke = '';
   };
   const knobValue = (id: string) => {
     const p = props.spec.params.find((x) => x.id === id);
@@ -240,6 +272,7 @@ export function Panel(props: PanelProps): JSX.Element {
               hits={(props.sample?.hits ?? []).filter((h) => h.strength >= 1 - sens()).map((h) => h.at)}
               state={props.readouts?.state}
               onLoad={() => props.act.load?.()}
+              onCursor={waveCursor}
             />
           );
         }}
@@ -259,6 +292,7 @@ export function Panel(props: PanelProps): JSX.Element {
             peaks={props.sample?.peaks ?? null}
             trace={props.readouts?.trace ?? undefined}
             onLoad={() => props.act.load?.()}
+            onPos={grainsCursor}
           />
         )}
       </Show>

@@ -44,3 +44,67 @@ test('the tag: the file, or LIVE · 8 s BUFFER (· FROZEN); MISSING when the fil
   expect(tag({ path: 'pads/air.wav', missing: true })).toBe('MISSING · air.wav');
   expect(tag({})).toBe('NO SAMPLE · CLICK TO LOAD');
 });
+
+test('a click or drag reports POS; LIVE reads relative to the head, as the display draws it', () => {
+  const got: [number, string][] = [];
+  const r = render(() => (
+    <Grains
+      x={0}
+      y={0}
+      w={200}
+      h={60}
+      pos={0.5}
+      live={false}
+      frozen={false}
+      path="a.wav"
+      missing={false}
+      peaks={new Float32Array(512)}
+      trace={undefined}
+      onPos={(p, ph) => got.push([p, ph])}
+    />
+  ));
+  const box = r.container.querySelector('.sr-wave-box') as HTMLElement;
+  box.getBoundingClientRect = () => ({ left: 0, width: 200, top: 0, height: 60 }) as DOMRect;
+  const ptr = (type: string, clientX: number) =>
+    new PointerEvent(type, { clientX, pointerId: 1, button: 0, bubbles: true });
+  box.dispatchEvent(ptr('pointerdown', 50));
+  box.dispatchEvent(ptr('pointerup', 50));
+  box.dispatchEvent(ptr('pointerdown', 20));
+  box.dispatchEvent(ptr('pointermove', 100));
+  box.dispatchEvent(ptr('pointerup', 100));
+  expect(got).toEqual([
+    [0.25, 'click'],
+    [0.1, 'drag'],
+    [0.5, 'drag'],
+    [0.5, 'end'],
+  ]);
+});
+
+test('without a sample a click on GRAINS opens the dialog; LIVE has nothing to load', () => {
+  let loads = 0;
+  const mk = (live: boolean) => {
+    const r = render(() => (
+      <Grains
+        x={0}
+        y={0}
+        w={200}
+        h={60}
+        pos={0.5}
+        live={live}
+        frozen={false}
+        missing={false}
+        peaks={null}
+        trace={undefined}
+        onLoad={() => loads++}
+      />
+    ));
+    const box = r.container.querySelector('.sr-wave-box') as HTMLElement;
+    box.getBoundingClientRect = () => ({ left: 0, width: 200, top: 0, height: 60 }) as DOMRect;
+    box.dispatchEvent(new PointerEvent('pointerdown', { clientX: 5, pointerId: 1, button: 0, bubbles: true }));
+    box.dispatchEvent(new PointerEvent('pointerup', { clientX: 5, pointerId: 1, button: 0, bubbles: true }));
+  };
+  mk(false);
+  expect(loads).toBe(1);
+  mk(true);
+  expect(loads).toBe(1);
+});

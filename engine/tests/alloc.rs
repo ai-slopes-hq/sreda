@@ -150,6 +150,19 @@ fn process_with_a_sample_loaded_and_auditioning_allocates_nothing() {
         if i == 1_700 {
             e.audition(-1);
         }
+        // the display's scrub and slice one-shot (SAMPLER's hidden `scrub` and `play`)
+        e.fixed(
+            sampler,
+            4,
+            if (300..900).contains(&i) {
+                (i - 300) as f64 / 600.0
+            } else {
+                -1.0
+            },
+        );
+        if i % 700 == 0 {
+            e.fixed(sampler, 5, (i / 700) as f64 + 0.3);
+        }
         e.process();
     }
     assert_eq!(allocs() - before, 0);

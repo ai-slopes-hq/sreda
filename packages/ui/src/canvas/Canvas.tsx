@@ -884,6 +884,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                     },
                     editParams: (changes, merge) => s.params(m.id, changes, merge),
                     load: () => loadInto(m.id),
+                    fixed: (param, value) => s.sendFixed(m.id, param, value),
                     diceInput: () => s.params(m.id, diced(m.id), undefined, false),
                   }}
                 />

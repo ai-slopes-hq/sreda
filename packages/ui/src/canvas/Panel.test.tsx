@@ -63,3 +63,67 @@ test("FILTER's MODEL is drawn as a response glyph", () => {
     responseGlyph('DIODE', 24),
   );
 });
+
+test('SAMPLER display: a drag scrubs and moves START in one undo stroke; SLICE: a click plays the slice', () => {
+  const calls: string[] = [];
+  const keys = new Set<string | undefined>();
+  const act: PanelActions = {
+    ...noop,
+    knob: (p, k, m) => {
+      calls.push(`knob ${p} ${k.toFixed(2)}`);
+      keys.add(m?.key);
+    },
+    fixed: (p, v) => calls.push(`fixed ${p} ${v.toFixed(2)}`),
+  };
+  const mount = (mode: number) => {
+    const { container } = render(() => (
+      <Panel
+        mod={{
+          id: 'm1',
+          type: 'sampler',
+          x: 0,
+          y: 0,
+          parent: null,
+          params: { mode, start: 0 },
+          atts: {},
+          ratios: {},
+        }}
+        spec={SPECS['sampler']!}
+        name="SAMPLER"
+        loud={false}
+        cabledIn={() => false}
+        cabledOut={() => false}
+        act={act}
+        sample={{ path: 'a.wav', missing: false, peaks: new Float32Array(512), hits: [] }}
+      />
+    ));
+    const box = container.querySelector('.sr-wave-box') as HTMLElement;
+    box.getBoundingClientRect = () => ({ left: 0, width: 200, top: 0, height: 60 }) as DOMRect;
+    return box;
+  };
+  const ptr = (type: string, clientX: number) =>
+    new PointerEvent(type, { clientX, pointerId: 1, button: 0, bubbles: true });
+  const box = mount(0);
+  box.dispatchEvent(ptr('pointerdown', 100));
+  box.dispatchEvent(ptr('pointerup', 100));
+  expect(calls).toEqual(['knob start 0.50']);
+  calls.length = 0;
+  box.dispatchEvent(ptr('pointerdown', 20));
+  box.dispatchEvent(ptr('pointermove', 60));
+  box.dispatchEvent(ptr('pointerup', 60));
+  expect(calls).toEqual([
+    'fixed scrub 0.10',
+    'knob start 0.10',
+    'fixed scrub 0.30',
+    'knob start 0.30',
+    'fixed scrub -1.00',
+  ]);
+  expect([...keys].filter(Boolean)).toHaveLength(1);
+  calls.length = 0;
+  const slice = mount(2);
+  slice.dispatchEvent(ptr('pointerdown', 100));
+  slice.dispatchEvent(ptr('pointerup', 100));
+  slice.dispatchEvent(ptr('pointerdown', 100));
+  slice.dispatchEvent(ptr('pointerup', 100));
+  expect(calls).toEqual(['fixed play 1.50', 'fixed play 2.50']);
+});

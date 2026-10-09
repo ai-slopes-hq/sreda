@@ -2,6 +2,13 @@
 //! one voice looping the region; SLICE: the region in SLICES equal parts or at its hits (AUTO, by SENS), the next
 //! slice per TRIG or the one SLICE points at. REV plays backwards; DEC decays each voice; every start, end, steal
 //! and loop seam has a 1 ms fade; EOC fires at the end of each play-through, loop pass or slice.
+//!
+//! Two hidden, message-only values drive the display (spec §7a, "a cursor and a scrub"); neither is saved:
+//! - `scrub` (−1 off, else a position 0…1): a voice of its own that fades in there and follows the value with a
+//!   10 ms glide, so its speed and direction are the pointer's; −1 fades it out over 1 ms. It sounds beside the
+//!   triggered voices at LVL.
+//! - `play` (a one-shot request): every change of value to `n + p` (p in 0…1, n a counter the UI increments) plays,
+//!   once, the slice that holds position p (SLICE's slices as a trigger would cut them); −1 re-arms.
 
 use crate::dsp::{Ctx, Dsp, Io};
 use crate::samples::Sample;
@@ -46,6 +53,8 @@ pub fn spec() -> ModuleSpec {
                 .step(1.0)
                 .hidden()
                 .into(),
+            knob("scrub", "SCRUB", -1.0, 1.0, -1.0).hidden().into(),
+            knob("play", "PLAY", -1.0, 1e9, -1.0).hidden().into(),
         ],
         normals: vec![],
         display: Some(crate::spec::Display {
@@ -70,6 +79,8 @@ const MODE: usize = 0;
 const REV: usize = 1;
 const AUTO: usize = 2;
 const SAMPLE: usize = 3;
+const SCRUB: usize = 4;
+const PLAY: usize = 5;
 const EOC: usize = 2;
 
 const LOOP: u32 = 1;
@@ -108,6 +119,12 @@ pub struct Sampler {
     eoc_left: u32,
     /// the newest voice's position 0…1, −1 silent
     pos: f32,
+    /// the scrub voice: sounding, its position in frames, its gain 0…1
+    sc_on: bool,
+    sc_pos: f64,
+    sc_g: f64,
+    /// the last `play` value acted on
+    last_play: f64,
 }
 
 impl Sampler {
@@ -122,6 +139,10 @@ impl Sampler {
             next_slice: 0,
             eoc_left: 0,
             pos: -1.0,
+            sc_on: false,
+            sc_pos: 0.0,
+            sc_g: 0.0,
+            last_play: -1.0,
         }
     }
 
@@ -213,6 +234,9 @@ impl Dsp for Sampler {
         let rev = io.fixed[REV] >= 0.5;
         let auto = io.fixed[AUTO] >= 0.5;
         let sample = ctx.samples.get(io.fixed[SAMPLE].round() as i32);
+        let scrub = io.fixed[SCRUB];
+        let play = io.fixed[PLAY];
+        let glide = 1.0 - (-1.0 / (0.01 * self.sample_rate)).exp();
         let slice_patched = io.connected_in[SLICE_IN];
         let sr = self.sample_rate;
         for i in from..to {
@@ -226,6 +250,8 @@ impl Dsp for Sampler {
                 io.out[EOC][i] = if self.eoc_left > 0 { 1.0 } else { 0.0 };
                 self.eoc_left = self.eoc_left.saturating_sub(1);
                 self.pos = -1.0;
+                self.sc_on = false;
+                self.sc_g = 0.0;
                 continue;
             };
             let frames = s.frames as f64;
@@ -267,6 +293,27 @@ impl Dsp for Sampler {
                 }
             }
             self.trig_high = high;
+            if play != self.last_play {
+                self.last_play = play;
+                if play >= 0.0 {
+                    // the slice holding position p, played once (a click on SLICE's display)
+                    let p = (play - play.floor()) * frames;
+                    let knob = io.par[SLICES][i].round().clamp(2.0, 64.0);
+                    let min = 1.0 - (knob - 2.0) / 62.0;
+                    let n = if auto {
+                        Self::auto_count(s, a, b, min)
+                    } else {
+                        knob as usize
+                    };
+                    for k in 0..n {
+                        let (sa, sb) = Self::slice(s, a, b, n, k, auto, min);
+                        if p >= sa && (p < sb || k == n - 1) {
+                            self.start(sa, sb, rev, false, VOICES);
+                            break;
+                        }
+                    }
+                }
+            }
 
             let rate = (io.par[PITCH][i] as f64 / 12.0 + io.inp[PITCH_IN][i] as f64).exp2();
             let dec = io.par[DEC][i] as f64;
@@ -334,6 +381,33 @@ impl Dsp for Sampler {
                     }
                 }
             }
+            // the scrub voice: it follows `scrub` through a one-pole glide, with 1 ms fades at both ends
+            let last = (frames - 1.0).max(0.0);
+            if scrub >= 0.0 {
+                let to = scrub.min(1.0) * last;
+                if self.sc_on {
+                    self.sc_pos += (to - self.sc_pos) * glide;
+                } else {
+                    self.sc_on = true;
+                    self.sc_pos = to;
+                }
+                self.sc_g = (self.sc_g + 1.0 / self.fade).min(1.0);
+            } else if self.sc_on {
+                self.sc_g -= 1.0 / self.fade;
+                if self.sc_g <= 0.0 {
+                    self.sc_on = false;
+                    self.sc_g = 0.0;
+                }
+            }
+            if self.sc_on {
+                let at = self.sc_pos.clamp(0.0, last);
+                let g = self.sc_g as f32 * lvl;
+                l += read(&s.channels[0], at) * g;
+                r += read(&s.channels[1], at) * g;
+                if self.pos < 0.0 {
+                    self.pos = (at / frames) as f32;
+                }
+            }
             io.out[0][i] = l;
             io.out[1][i] = r;
             io.out[EOC][i] = if self.eoc_left > 0 { 1.0 } else { 0.0 };
@@ -346,6 +420,9 @@ impl Dsp for Sampler {
         self.eoc_left = 0;
         self.next_slice = 0;
         self.pos = -1.0;
+        self.sc_on = false;
+        self.sc_g = 0.0;
+        self.last_play = -1.0;
     }
 
     fn state(&self) -> f32 {
@@ -374,7 +451,13 @@ mod tests {
     }
     /// [pitch, start, len, dec, lvl, slices], [mode, rev, auto]
     fn bench(sr: f64, s: Sample, par: [f64; 6], fixed: [f64; 3]) -> Bench {
-        let mut b = Bench::new(sr, 4, &par, &[fixed[0], fixed[1], fixed[2], 0.0], 3);
+        let mut b = Bench::new(
+            sr,
+            4,
+            &par,
+            &[fixed[0], fixed[1], fixed[2], 0.0, -1.0, -1.0],
+            3,
+        );
         b.connected_in = vec![true, false, false, false];
         b.ctx.samples.insert(0, s);
         b
@@ -576,6 +659,107 @@ mod tests {
         assert_eq!(sounding(&o[0]), 0);
     }
 
+    /// Run `blocks` blocks with `scrub(block)` as the scrub value of each; the outputs concatenated
+    fn scrubbed(
+        b: &mut Bench,
+        d: &mut Sampler,
+        blocks: usize,
+        scrub: impl Fn(usize) -> f64,
+    ) -> Vec<f32> {
+        let mut out = vec![];
+        for k in 0..blocks {
+            b.fixed[SCRUB] = scrub(k);
+            out.extend_from_slice(&b.run(d, 1, |_, i, inp| inp[TRIG][i] = 0.0)[0]);
+        }
+        out
+    }
+
+    #[test]
+    fn scrub_sounds_the_file_at_the_pointer() {
+        let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
+        let mut d = Sampler::new(SR);
+        // 20 ms = 960 samples = 15 blocks
+        let o = scrubbed(&mut b, &mut d, 20, |_| 0.5);
+        let want = 0.1 + 0.9 * 0.5;
+        assert!((o[o.len() - 1] - want).abs() < 0.01, "{}", o[o.len() - 1]);
+        assert!(o[0].abs() < 0.05, "fades in: {}", o[0]);
+        assert!((d.state() - 0.5).abs() < 0.01);
+    }
+
+    #[test]
+    fn scrub_moving_makes_a_rising_ramp_without_steps() {
+        let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
+        let mut d = Sampler::new(SR);
+        scrubbed(&mut b, &mut d, 40, |_| 0.2);
+        // 0.2 → 0.8 over 100 ms (75 blocks of 64)
+        let o = scrubbed(&mut b, &mut d, 75, |k| 0.2 + 0.6 * k as f64 / 74.0);
+        assert!(max_step(&o) < 0.05, "{}", max_step(&o));
+        assert!(o[o.len() - 1] > o[0] + 0.2);
+        assert!(o.windows(2).all(|w| w[1] >= w[0] - 1e-6));
+    }
+
+    #[test]
+    fn scrub_off_is_silent_within_2_ms() {
+        let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
+        let mut d = Sampler::new(SR);
+        scrubbed(&mut b, &mut d, 20, |_| 0.5);
+        let o = scrubbed(&mut b, &mut d, 3, |_| -1.0);
+        assert!(o[96..].iter().all(|x| *x == 0.0), "{:?}", &o[90..100]);
+        assert!(o.iter().all(|x| x.is_finite() && *x >= 0.0));
+        assert_eq!(d.state(), -1.0);
+    }
+
+    #[test]
+    fn a_scrub_voice_sums_with_a_triggered_voice() {
+        let mut b = bench(
+            SR,
+            sample(vec![0.2; 48_000], vec![]),
+            [0.0, 0.0, 1.0, 10.0, 0.5, 8.0],
+            [0.0, 0.0, 0.0],
+        );
+        let mut d = Sampler::new(SR);
+        b.fixed[SCRUB] = 0.5;
+        let o = b.run(&mut d, 40, trigs(&[0]));
+        // 0.2 · LVL 0.5 each
+        assert!((o[0][2000] - 0.2).abs() < 1e-3, "{}", o[0][2000]);
+        assert_eq!(o[0], o[1]);
+    }
+
+    #[test]
+    fn a_shorter_sample_mid_scrub_stays_finite() {
+        let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
+        let mut d = Sampler::new(SR);
+        scrubbed(&mut b, &mut d, 30, |_| 0.95);
+        b.ctx.samples.insert(0, sample(ramp(100), vec![]));
+        let o = scrubbed(&mut b, &mut d, 30, |_| 0.95);
+        assert!(o.iter().all(|x| x.is_finite()));
+        b.ctx.samples.insert(0, sample(ramp(1), vec![]));
+        let o = scrubbed(&mut b, &mut d, 5, |_| 1.0);
+        assert!(o.iter().all(|x| x.is_finite()));
+    }
+
+    #[test]
+    fn play_plays_the_slice_under_the_position_once() {
+        // 4 equal slices of a 48 000-frame ramp; position 0.6 is slice 2 (24 000…36 000)
+        let mut b = bench(
+            SR,
+            sample(ramp(48_000), vec![]),
+            [0.0, 0.0, 1.0, 10.0, 1.0, 4.0],
+            [2.0, 0.0, 0.0],
+        );
+        let mut d = Sampler::new(SR);
+        b.fixed[PLAY] = 3.0 + 0.6; // the third click
+        let o = b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
+        assert!(sounding(&o[0]).abs_diff(12_000) <= 1, "{}", sounding(&o[0]));
+        assert!((o[0][100] - (0.1 + 0.9 * 24_100.0 / 48_000.0)).abs() < 1e-3);
+        // the same value does not play again; a new one does; −1 re-arms
+        let o = b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
+        assert_eq!(sounding(&o[0]), 0);
+        b.fixed[PLAY] = 4.0 + 0.1;
+        let o = b.run(&mut d, 400, |_, i, inp| inp[TRIG][i] = 0.0);
+        assert!(sounding(&o[0]) > 11_000);
+    }
+
     #[test]
     fn state_is_the_newest_voice_position() {
         let mut b = bench(SR, sample(ramp(48_000), vec![]), PLAIN, [0.0, 0.0, 0.0]);
@@ -608,7 +792,7 @@ mod tests {
                         vec![],
                     ],
                     &[3.0, 0.1, 0.8, 0.5, 0.8, 5.0],
-                    &[mode, rev, 1.0, 0.0],
+                    &[mode, rev, 1.0, 0.0, -1.0, -1.0],
                     3,
                     40,
                 );

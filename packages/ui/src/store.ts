@@ -348,6 +348,20 @@ export function createSession(
       }
     },
     /**
+     * A hidden knob driven by a display (SAMPLER's `scrub` and `play`, spec §7a) as a fixed message in real units:
+     * the engine hears it, the document does not (it is not saved, not an undo step).
+     */
+    sendFixed(id: string, param: string, value: number): void {
+      const node = nodeOf(id);
+      const m = history.current.modules.find((x) => x.id === id);
+      const spec = m && specs[m.type];
+      if (node === null || !spec) return;
+      const f = spec.params
+        .filter((p) => p.kind === 'option' || (p.kind === 'knob' && p.hidden))
+        .findIndex((p) => p.id === param);
+      if (f >= 0) message({ t: 'fixed', node, index: f, value });
+    },
+    /**
      * A frame's name, tint, clock, CLK IN ratio or mute: the document, and messages to the engine (no new plan).
      */
     frame(

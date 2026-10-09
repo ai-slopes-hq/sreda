@@ -1126,6 +1126,49 @@ test('a loaded SAMPLER, triggered, sounds', async () => {
   await app.close();
 });
 
+test('a loaded SAMPLER display: a click moves START (⌘Z undoes it); a drag scrubs the file and START ends where it is released', async () => {
+  const [kick] = sourceFiles(['kick.wav']);
+  const { app, page } = await launch(undefined, 'starter', libraryWithSamples(), undefined, [kick!]);
+  await placeSampler(page);
+  await page.locator('[data-type=sampler] [data-action=load]').click();
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kick.wav');
+  const start = async () =>
+    ((await doc(page)).modules.find((m) => m.type === 'sampler')?.params as Record<string, number>)['start']!;
+  expect(await start()).toBe(0);
+  const wave = page.locator('[data-type=sampler] .sr-wave-box');
+  await wave.click();
+  await expect.poll(start).toBeCloseTo(0.5, 1);
+  await page.keyboard.press('Meta+z');
+  await expect.poll(start).toBe(0);
+  // the OSC leaves the patch so that only the scrub can sound: SAMPLER L → OUT L
+  await page.locator('[data-type=osc]').click({ position: { x: 6, y: 6 } });
+  await page.keyboard.press('Delete');
+  await drag(
+    page,
+    await center(page, jack(page, 'sampler', 'l')),
+    await center(page, jack(page, 'out', 'l')),
+  );
+  await page.mouse.click(1300, 880); // start audio
+  const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  const box = (await wave.boundingBox())!;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + box.width * 0.1, y);
+  await page.mouse.down();
+  let peak = 0;
+  for (let i = 1; i <= 24; i++) {
+    await page.mouse.move(box.x + box.width * (0.1 + (0.5 * i) / 24), y);
+    await page.waitForTimeout(40);
+    peak = Math.max(peak, await master());
+  }
+  expect(peak).toBeGreaterThan(0.05);
+  await page.mouse.up();
+  await expect.poll(start).toBeCloseTo(0.6, 1);
+  // one undo step for the whole gesture
+  await page.keyboard.press('Meta+z');
+  await expect.poll(start).toBe(0);
+  await app.close();
+});
+
 test('an audio file dropped on empty canvas becomes a SAMPLER; another file gives a notice', async () => {
   const { app, page, library } = await launch(undefined, 'starter', libraryWithSamples());
   const dropFile = async (name: string, bytes: number[]) => {

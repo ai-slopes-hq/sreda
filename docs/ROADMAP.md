@@ -62,6 +62,10 @@ of a creative tool; nothing of its UI is ported.
   SAMPLES); LOAD / a click on a sample display open the system file dialog; the picker has ALL · MODULES · GROUPS (no
   PROJECTS, no SAMPLES, S free). Subagent-driven, token-lean; final review fixes in; deferred items in
   `docs/backlog.md` ("From the Plan 7 review").
+- **Plan 8 done on the branch `plan-8-scrub`** (2026-10-09), spec revision 25: a loaded SAMPLER / GRAINS display is a
+  cursor and a scrub — a click moves START (SAMPLER ONE / LOOP) or POS (GRAINS), a drag scrubs the file through the
+  module's outputs (hidden `scrub` voice, 10 ms glide) with START / POS following; in SLICE a click plays the slice
+  (hidden `play` one-shot). Awaiting review and the user's listening check.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: FOLD and FILTER models from listening, the
   FILTER cutoff animation, sends to shared effects, recording and export).
 

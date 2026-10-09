@@ -337,3 +337,29 @@ test('compile gives the same plan for a collapsed and an expanded document', () 
   const f = frameSelection(doc, SPECS, ['m1', 'm2']);
   expect(compile(setCollapsed(f.doc, [f.id], true), SPECS, 1)).toEqual(compile(f.doc, SPECS, 1));
 });
+
+test('the display-driven hidden knobs `scrub` and `play` always compile to −1 and are never saved', async () => {
+  const { validateDoc, defaultParams } = await import('./doc');
+  const hidden = (id: string) =>
+    ({ kind: 'knob', id, label: id, min: -1, max: 1, def: -1, taper: 'lin', hidden: true }) as const;
+  const specs: Specs = {
+    ...SPECS,
+    smp: { ...SAMPLING['smp']!, params: [...SAMPLING['smp']!.params, hidden('scrub'), hidden('play')] },
+  };
+  expect(Object.keys(defaultParams(specs, 'smp')).sort()).toEqual(['gain', 'mode', 'sample']);
+  const m = {
+    id: 'm1',
+    type: 'smp',
+    x: 0,
+    y: 0,
+    parent: null,
+    params: { gain: 1, mode: 0, sample: -1, scrub: 0.5, play: 3 },
+    atts: {},
+    ratios: {},
+  };
+  const doc: Doc = { ...emptyDoc, modules: [m], nextId: 2 };
+  expect(compile(doc, specs, 1).nodes[0]!.fixed).toEqual([0, -1, -1, -1]);
+  const v = validateDoc(JSON.parse(JSON.stringify(doc)), specs)!;
+  expect(v.modules[0]!.params).not.toHaveProperty('scrub');
+  expect(v.modules[0]!.params).not.toHaveProperty('play');
+});

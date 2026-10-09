@@ -11,7 +11,7 @@ import {
   type PlanNode,
   type Step,
 } from './plan';
-import { fromKnob, inputPorts, type ModuleSpec, type Specs } from './spec';
+import { fromKnob, inputPorts, TRANSIENT_PARAMS, type ModuleSpec, type Specs } from './spec';
 
 /** A frame's clock node: frames are compiled after the modules, in document order. */
 export function clockNode(doc: Doc, gid: string): number {
@@ -72,6 +72,7 @@ export function compile(doc: Doc, specs: Specs, seq: number, sampleId?: (path: s
       if (p.kind === 'knob' && !p.hidden) knobs.push(m.params[p.id] ?? 0);
       else if (p.kind === 'knob' && p.id === 'sample')
         fixed.push(m.sample && sampleId ? sampleId(m.sample) : -1);
+      else if (p.kind === 'knob' && TRANSIENT_PARAMS.has(p.id)) fixed.push(-1);
       else if (p.kind === 'knob') fixed.push(fromKnob(p, m.params[p.id] ?? 0));
       else if (p.kind === 'option') fixed.push(m.params[p.id] ?? 0);
     }

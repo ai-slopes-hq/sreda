@@ -1,5 +1,6 @@
 import type { JSX } from 'solid-js';
 import { readoutBuffer, track } from '../../live';
+import { cursorHandlers, type Cursor } from './gesture';
 import { wavePaths } from './Wave';
 
 const GRAINS = 64;
@@ -54,7 +55,10 @@ export function Grains(props: {
   peaks: Float32Array | null;
   /** the readout offset of the trace (head, grains, live peaks) */
   trace: number | undefined;
+  /** a click while FILE has no sample (or it is missing): choose one */
   onLoad?: (() => void) | undefined;
+  /** POS from a click or a drag, as the knob's position 0…1 (LIVE: relative to the head, as the display draws it) */
+  onPos?: ((pos: number, phase: Cursor['phase']) => void) | undefined;
 }): JSX.Element {
   const file = () => props.path?.split('/').pop() ?? '';
   const tag = () => {
@@ -67,6 +71,21 @@ export function Grains(props: {
       ? wavePaths(props.w, props.h, { peaks: props.peaks, mode: 0, start: 0, len: 1, slices: 1, hits: [] })
           .fill
       : '';
+  /** the write head last drawn (LIVE), −1 unknown */
+  let head = -1;
+  const playable = () => props.live || (!!props.peaks && !!props.path && !props.missing);
+  const handlers = cursorHandlers({
+    drag: playable,
+    on: (c) => {
+      if (!playable()) {
+        if (c.phase === 'click') props.onLoad?.();
+        return;
+      }
+      // LIVE draws POS 1 at the head and POS 0 eight seconds before it: the inverse of `grainsPaths`
+      const pos = props.live && head >= 0 ? 1 - (((head - c.t) % 1) + 1) % 1 : c.t;
+      props.onPos?.(pos, c.phase);
+    },
+  });
   let wave: SVGPathElement | undefined;
   let dots: SVGPathElement | undefined;
   let shade: SVGPathElement | undefined;
@@ -76,6 +95,7 @@ export function Grains(props: {
   const draw = (off: number) => {
     const buf = readoutBuffer();
     if (!buf) return;
+    head = buf[off] ?? -1;
     const p = grainsPaths(props.w, props.h, {
       grains: buf.subarray(off + 1, off + 1 + GRAINS),
       head: buf[off] ?? -1,
@@ -101,8 +121,7 @@ export function Grains(props: {
       class="sr-disp sr-wave-box"
       classList={{ missing: props.missing && !props.live }}
       style={{ left: props.x + 'px', top: props.y + 'px', width: props.w + 'px', height: props.h + 'px' }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={() => !props.live && props.onLoad?.()}
+      {...handlers}
     >
       <svg class="sr-wave sr-grains" width={props.w} height={props.h} style={{ display: 'block' }}>
         <path class="d-fill" ref={(el) => (wave = el)} d={props.live ? '' : fileWave()} />

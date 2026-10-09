@@ -1,5 +1,5 @@
 import { chainOf, FRAME_MIN, isGroupId, packFrame, recomputeParents, repackManaged, TINTS } from './frames';
-import { inputPorts, RATIOS, specOf, toKnob, type Specs } from './spec';
+import { inputPorts, RATIOS, specOf, toKnob, TRANSIENT_PARAMS, type Specs } from './spec';
 
 export interface ModuleDoc {
   id: string;
@@ -71,6 +71,7 @@ export function starterDoc(specs: Specs): Doc {
 export function defaultParams(specs: Specs, type: string): Record<string, number> {
   const params: Record<string, number> = {};
   for (const p of specs[type]?.params ?? []) {
+    if (p.kind === 'knob' && TRANSIENT_PARAMS.has(p.id)) continue;
     if (p.kind === 'knob') params[p.id] = toKnob(p, p.def);
     else if (p.kind === 'option') params[p.id] = p.def;
   }

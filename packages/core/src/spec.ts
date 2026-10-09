@@ -91,3 +91,9 @@ export function inputPorts(spec: ModuleSpec): Port[] {
     .map((p) => ({ id: '@' + p.id, label: p.label, role: 'mod' as const }));
   return [...spec.inputs, ...jacks];
 }
+
+/**
+ * Hidden knobs a display drives by message only (SAMPLER's `scrub` and `play`, spec §7a): the engine always starts at
+ * −1 (off), and they are neither in a document's params nor saved.
+ */
+export const TRANSIENT_PARAMS: ReadonlySet<string> = new Set(['scrub', 'play']);
