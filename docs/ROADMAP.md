@@ -56,9 +56,10 @@ of a creative tool; nothing of its UI is ported.
   kept in `settings.json`); the mixer — OUT mute / solo, the master fader (listening and audition skip it), the MIX
   tab with a strip per OUT. Subagent-driven, token-lean; final review fixes in; deferred items in `docs/backlog.md`
   ("From the Plan 6 review").
-- **Next:** Plan 7 (`docs/superpowers/plans/2026-10-09-7-library-tab-samples.md`, 5 tasks, spec revision 23): sample
-  analysis in a worker, unloading unused samples, ⌘O any project file, File › Import Samples…, the LIBRARY tab.
-  Subagent-driven, token-lean, on a branch `plan-7-library`.
+- **Plan 7 done on the branch `plan-7-library`** (2026-10-09), spec revision 23, awaiting the final review and the
+  user's check: sample analysis in a worker, unloading unused samples, ⌘O any project file (⌘S writes it back),
+  File › Import Samples…, the LIBRARY sidebar tab (PROJECTS / GROUPS / SAMPLES: click, hover to audition, drag onto
+  the canvas). Next: the final whole-branch review, one fix wave, the user's hands-on check, then merge.
 
 ## The road (vertical slices: something to hear at every stage)
 

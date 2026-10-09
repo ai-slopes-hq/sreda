@@ -717,10 +717,9 @@ test('the very first launch opens the factory project Pulse', async () => {
 test('picker: a factory project replaces the canvas (⌘Z returns); a group dropped from a trigger output takes it into CLK IN', async () => {
   const { app, page } = await launch();
   await page.mouse.move(700, 500);
-  // no PROJECTS tab any more (Task 5 brings them back under LIBRARY): open through the e2e hook
-  await page.evaluate(() =>
-    (window as unknown as { __sreda: { openFactory(n: string): void } }).__sreda.openFactory('acid'),
-  );
+  await page.keyboard.press('w');
+  await page.getByRole('button', { name: 'LIBRARY' }).click();
+  await page.locator('[data-section=PROJECTS] [data-path="FACTORY/acid"]').click();
   await expect(page.locator('.sr-frame .sr-gname')).toHaveText('ACID');
   await expect(page.locator('[data-type=rhythm]')).toHaveCount(1);
   await page.keyboard.press('Meta+z');
@@ -1126,9 +1125,9 @@ test('File › Import Samples…: with a SAMPLER selected the first file loads i
   files.forEach((f) => writeFileSync(f, wav(0.1, 440)));
   const lib = libraryWithSamples();
   const { app, page } = await launch(undefined, 'starter', lib, undefined, files);
-  expect(
-    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((i) => i.label)),
-  ).toEqual(expect.arrayContaining(['File', 'Edit', 'View', 'Window']));
+  expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((i) => i.label))).toEqual(
+    expect.arrayContaining(['File', 'Edit', 'View', 'Window']),
+  );
   // S → kick ⏎ places a SAMPLER and selects it
   await page.mouse.move(700, 650);
   await page.keyboard.press('s');
@@ -1250,5 +1249,26 @@ test('MIX: M opens a strip per OUT and the master; M / S, the faders and ⌘Z; t
   await expect.poll(() => strip.locator('.sr-fader').getAttribute('aria-valuenow')).not.toBe(before);
   await page.keyboard.press('m');
   await expect(page.locator('.sr-side')).toHaveCount(0);
+  await app.close();
+});
+
+test('LIBRARY: a factory group and a sample are dragged from the sidebar onto the canvas', async () => {
+  const { app, page } = await launch(undefined, 'starter', libraryWithSamples());
+  await page.getByRole('button', { name: 'SIDEBAR' }).click();
+  await page.getByRole('button', { name: 'LIBRARY' }).click();
+  await expect(page.locator('[data-section=SAMPLES] .sr-lrow')).toHaveCount(2);
+  await page
+    .locator('[data-section=GROUPS]')
+    .getByText('303 voice')
+    .dragTo(page.locator('.sr-canvas'), {
+      targetPosition: { x: 500, y: 600 },
+    });
+  await expect(page.locator('.sr-frame .sr-gname')).toHaveText('303 VOICE');
+  await page
+    .locator('[data-section=SAMPLES] [data-path="kit/snare.wav"]')
+    .dragTo(page.locator('.sr-canvas'), {
+      targetPosition: { x: 300, y: 150 },
+    });
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/snare.wav');
   await app.close();
 });

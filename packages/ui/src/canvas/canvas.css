@@ -625,7 +625,11 @@
   border-left: 1px solid var(--dot);
 }
 .sr-crest.on {
-  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--ground) 80%, transparent) 0 3px, color-mix(in srgb, var(--ground) 45%, transparent) 3px 6px);
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ground) 80%, transparent) 0 3px,
+    color-mix(in srgb, var(--ground) 45%, transparent) 3px 6px
+  );
 }
 .sr-cnote {
   font-size: 9px;
@@ -1621,4 +1625,54 @@ button.sr-sname:hover {
 .sr-sbtns {
   display: flex;
   gap: 4px;
+}
+
+.sr-lib {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+.sr-lhead {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 12px;
+  color: var(--heading);
+  font:
+    600 10px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.sr-lhead .sp {
+  flex: 1;
+}
+.sr-lhead .car {
+  width: 10px;
+  color: var(--muted);
+}
+.sr-lrow {
+  display: flex;
+  padding: 5px 12px 5px 28px;
+  color: var(--text);
+  font:
+    500 11px 'IBM Plex Mono',
+    monospace;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.sr-lrow:hover {
+  background: var(--raised);
+}
+.sr-lrow .folder {
+  color: var(--muted);
+  white-space: pre;
+}
+.sr-lrow .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sr-lrow.new .name {
+  color: var(--accent);
 }

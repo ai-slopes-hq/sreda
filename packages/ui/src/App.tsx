@@ -16,7 +16,6 @@ declare global {
       doc(): unknown;
       readout(i: number): number;
       big?(): void;
-      openFactory?(name: string): void;
       analysis: { worker: number; fallback: number };
     };
   }
@@ -34,21 +33,12 @@ export function App(): JSX.Element {
     const saved = await loadSaved(SPECS, first);
     const { doc, notice } = saved;
     const project = !saved.fresh ? saved.project : starter ? null : { path: 'FACTORY/pulse', factory: true };
-    const e2e = (await window.sreda?.e2e?.().catch(() => false)) === true;
     const s = createSession(SPECS, doc, notice, project);
     window.__sreda = {
       doc: () => structuredClone(unwrap(s.state.doc)),
       readout: (i) => s.readout(i),
       analysis: analysisCounts,
     };
-    // e2e: a factory project without a picker tab (they come back with LIBRARY › PROJECTS)
-    if (e2e)
-      window.__sreda.openFactory = (name) =>
-        s.openProject(FACTORY.find((e) => e.name === name)!.build(SPECS), {
-          path: `FACTORY/${name}`,
-          factory: true,
-        });
-
     // dev builds: `__sreda.big()` in the console opens the 200-module patch (the smoothness check)
     if (import.meta.env.DEV)
       window.__sreda.big = () =>

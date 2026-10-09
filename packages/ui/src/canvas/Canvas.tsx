@@ -42,6 +42,7 @@ import { cableAt, cableGeoms, stubAt } from './cablegeom';
 import { magnet, type Snap } from './magnets';
 import { animateView, glideTo } from './glide';
 import { Chrome } from './Chrome';
+import { DRAG_GROUP, DRAG_SAMPLE } from '../sidebar/Library';
 import { Sidebar } from '../sidebar/Sidebar';
 import { Frame, type BlockView, type Edge } from './Frame';
 import { bez, ROLE } from './glyphs';
@@ -145,17 +146,41 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     });
     s.setState('sel', [added.id]);
   }
+  /** the SAMPLER / GRAINS panel under a drop, if any */
+  function sampleTarget(e: DragEvent): string | undefined {
+    const el = (e.target as Element).closest('[data-module]');
+    const type = el?.getAttribute('data-type');
+    return type === 'sampler' || type === 'grains'
+      ? (el!.getAttribute('data-module') ?? undefined)
+      : undefined;
+  }
+  /** a LIBRARY row dropped on the canvas: a group lands at the drop point, a sample goes where files would */
+  function dropRow(e: DragEvent): boolean {
+    const dt = e.dataTransfer;
+    const group = dt?.getData(DRAG_GROUP);
+    const sample = dt?.getData(DRAG_SAMPLE);
+    if (!group && !sample) return false;
+    e.preventDefault();
+    const at = toCanvas(client(e));
+    if (sample) useSample(sample, sampleTarget(e), at);
+    else {
+      const entry = library().find((x) => x.kind === 'group' && x.path === group);
+      if (entry)
+        void lib.read(entry).then((doc) => {
+          if (doc) s.placeGroup(doc, at, null);
+        });
+    }
+    return true;
+  }
   /** files dropped from the Finder: audio is copied into samples/ (spec §7a) */
   function dropFiles(e: DragEvent): void {
+    if (dropRow(e)) return;
     const files = [...(e.dataTransfer?.files ?? [])];
     if (!files.length) return;
     e.preventDefault();
     const bridge = window.sreda;
     if (!bridge) return;
-    const el = (e.target as Element).closest('[data-module]');
-    const type = el?.getAttribute('data-type');
-    const target =
-      type === 'sampler' || type === 'grains' ? (el!.getAttribute('data-module') ?? undefined) : undefined;
+    const target = sampleTarget(e);
     const at = toCanvas(client(e));
     const file = files[0]!;
     if (!/\.(wav|aiff?|flac|mp3|ogg)$/i.test(file.name)) {
@@ -771,7 +796,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         onPointerMove={hoverWires}
         onPointerLeave={() => setHovered(null)}
         onDragOver={(e) => {
-          if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+          const types = e.dataTransfer?.types ?? [];
+          if (types.includes('Files') || types.includes(DRAG_GROUP) || types.includes(DRAG_SAMPLE))
+            e.preventDefault();
         }}
         onDrop={dropFiles}
         onDblClick={(e) => {
@@ -1016,6 +1043,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           s.setState('sel', [id]);
           fit(true);
         }}
+        lib={lib}
+        entries={library()}
+        fit={() => fit(false)}
+        middle={() => toCanvas({ x: W() / 2, y: H() / 2 })}
       />
     </>
   );

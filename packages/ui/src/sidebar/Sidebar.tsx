@@ -1,12 +1,23 @@
 import type { Specs } from '@sreda/core';
 import { Show, type JSX } from 'solid-js';
+import type { LibEntry } from '../canvas/patching';
+import type { LibraryApi } from '../library';
 import type { SessionApi } from '../store';
+import { Library } from './Library';
 import { Mix } from './Mix';
 import { Settings } from './Settings';
 import { Wires } from './Wires';
 
-/** The sidebar (spec §5a): docked right, its left edge dragged (320 px … 70 % of the window); tabs WIRES, MIX and SETTINGS. */
-export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: string): void }): JSX.Element {
+/** The sidebar (spec §5a): docked right, its left edge dragged (320 px … 70 % of the window); tabs WIRES, MIX, LIBRARY and SETTINGS. */
+export function Sidebar(props: {
+  session: SessionApi;
+  specs: Specs;
+  focus(id: string): void;
+  lib: LibraryApi;
+  entries: LibEntry[];
+  fit(): void;
+  middle(): { x: number; y: number };
+}): JSX.Element {
   const s = props.session;
   const st = s.state;
   function gripDown(e: PointerEvent): void {
@@ -43,6 +54,13 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
             onClick={() => s.setState('sidebar', 'tab', 'MIX')}
           >
             MIX
+          </button>
+          <button
+            class="sr-gbtn"
+            classList={{ on: st.sidebar.tab === 'LIBRARY' }}
+            onClick={() => s.setState('sidebar', 'tab', 'LIBRARY')}
+          >
+            LIBRARY
           </button>
           <button
             class="sr-gbtn"
@@ -87,6 +105,15 @@ export function Sidebar(props: { session: SessionApi; specs: Specs; focus(id: st
         </Show>
         <Show when={st.sidebar.tab === 'MIX'}>
           <Mix session={s} specs={props.specs} focus={props.focus} />
+        </Show>
+        <Show when={st.sidebar.tab === 'LIBRARY'}>
+          <Library
+            session={s}
+            lib={props.lib}
+            entries={props.entries}
+            fit={props.fit}
+            middle={props.middle}
+          />
         </Show>
         <Show when={st.sidebar.tab === 'SETTINGS'}>
           <Settings session={s} />
