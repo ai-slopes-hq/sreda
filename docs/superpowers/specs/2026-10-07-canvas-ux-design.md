@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 22 (§5a: sidebar tabs WIRES / MIX / SETTINGS; the MIX tab, a strip per OUT and the master fader; §1a: skins chosen in SETTINGS) · Status: approved
+Date: 2026-10-07 · Revision 23 (§5a/§6: the LIBRARY tab — PROJECTS move there, GROUPS and SAMPLES also there; ⌘O opens any project file; File › Import Samples…; §7a: sample analysis in a worker, unused samples unloaded) · Status: approved
 
 ## Why
 
@@ -320,7 +320,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   it). It does not cover the canvas: the canvas, the top-right buttons, the zoom control and the hint line end at its
   edge. It opens at a fixed width (440 px) with every new window and every opened project; within a session its
   left edge can be dragged (320 px … 70 % of the window). A tab row at its top holds its functions: **WIRES**,
-  **MIX** and **SETTINGS**. W opens the sidebar on WIRES, **M** on MIX (either key again, while that tab shows,
+  **MIX**, **LIBRARY** and **SETTINGS**. W opens the sidebar on WIRES, **M** on MIX (either key again, while that tab shows,
   closes it); the sidebar remembers the last tab within a session.
 - **WIRES** — the patch seen through its wires: to understand it, set depths, rewire and find problems.
 
@@ -368,6 +368,14 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
     master stage's DC blocker and limiter, gliding 10 ms) and a meter after the limiter. Listening (§4) and sample
     audition (§7a) go through the master stage but not through the strips.
   - Later (backlog): sends to shared effects, recording and export.
+- **LIBRARY** — the library folder (§6) in three sections, each with a filter field and folders as path prefixes:
+  - **PROJECTS** (factory first, then the library's): a click opens the project (replaces the canvas, one undo step,
+    fits it in view); the section's header holds SAVE AS and NEW. This is the one place library projects are listed
+    (the picker has no PROJECTS tab).
+  - **GROUPS**: drag a row onto the canvas to place the group at the drop point, or click it to place it at the
+    middle of the view (fresh ids, as from the picker).
+  - **SAMPLES**: hovering a row auditions it (as in the picker's SAMPLES tab); dragging a row onto empty canvas places
+    a SAMPLER with it, onto a SAMPLER or GRAINS sets its sample; the header's IMPORT does File › Import Samples….
 - **SETTINGS** — app-wide settings: for now the skin (§1a).
 
 ## 6. Session, library and factory patches
@@ -388,11 +396,18 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   cables from outside. ⌘S with anything else saves the project (straight away if it already has a name, else a
   name field); ⇧⌘S is save-as. The project's path shows next to SREDA at the top left, with `●` while there are
   unsaved changes. Factory entries are read-only: saving one asks for a new name.
-- **One picker** for modules, groups and projects: the module search (§4) gets tabs ALL · MODULES · GROUPS ·
-  PROJECTS (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows
-  its folder and kind. **/** (or a double-click on empty canvas) opens it at the pointer on ALL; ⌘O opens it on
-  PROJECTS in the middle of the screen. No single-letter keys for tabs (G is taken by frames). Opened from a jack, it
-  offers modules and groups (no projects); in REPLACE mode, modules only.
+- **One picker** for modules, groups and samples: the module search (§4) gets tabs ALL · MODULES · GROUPS · SAMPLES
+  (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows its folder
+  and kind. **/** (or a double-click on empty canvas) opens it at the pointer on ALL. No single-letter keys for tabs
+  (G is taken by frames). Opened from a jack, it offers modules and groups; in REPLACE mode, modules only. Projects
+  are opened from LIBRARY › PROJECTS (§5a) or with ⌘O.
+- **⌘O** opens the system file dialog for a project file (`*.sreda.json`) anywhere on disk. The project opens
+  (replacing the canvas, one undo step) and its path shows next to SREDA; ⌘S saves back to that same file, even
+  outside the library; ⇧⌘S saves a copy into the library. A file that cannot be read or is not a SREDA document shows
+  `<NAME> COULD NOT BE OPENED` and the current project stays.
+- **File › Import Samples…** (⇧⌘I, also IMPORT in LIBRARY › SAMPLES) opens the system file dialog for audio files
+  (several at once); they are copied into `samples/` under free names. If a SAMPLER or GRAINS is selected, the first
+  file becomes its sample (one undo step); otherwise the sidebar opens on LIBRARY › SAMPLES showing them.
   - A **group** lands with its frame's top-left at the drop point, with fresh ids; opened from a trigger output, the
     cable goes into the group's CLK in (from any other jack the group lands unwired).
   - A **project** replaces the canvas (one undo step) and fits it in view.
@@ -539,6 +554,13 @@ Stereo outputs are two mono outputs (cables stay mono).
     or GRAINS it replaces their sample.
   - A missing file shows `MISSING · <name>` on the display, outputs silence, and is listed under PROBLEMS in WIRES.
   - Saved groups and projects reference samples by path; they do not copy audio.
+- **Sample analysis off the main thread** (revision 23): parsing AIFF, finding hits and computing the display peaks
+  run in a Web Worker (the channels are transferred, not copied); decoding and resampling stay with the browser's
+  own asynchronous decoder. Loading a 10-minute file never freezes the UI.
+- **Unused samples are unloaded** (revision 23): a sample the shown document has not named for 30 s is dropped from
+  the registry (bytes, audio, peaks) and from the engine's pool (an `unsample` message; freed while handling the
+  message, never in `process`). Asked for again (an undo, an opened project), it is read from disk again: a short
+  silence, then sound.
 - **Engine additions:** a sample pool (memory sized on load, not in `process`); per-module voices and grain pools
   allocated on construction; the plan carries a module's sample id in its fixed values.
 
