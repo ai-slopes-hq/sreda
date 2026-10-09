@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 19 (§7a records how the sound pack was built: samples, ids, migration, audition, readouts) · Status: approved
+Date: 2026-10-07 · Revision 20 (§5: STACK packs densely as a frame mode; resizing a STACK / FIX frame re-packs it; frames collapse to a block, C / ⇧C) · Status: approved
 
 ## Why
 
@@ -234,6 +234,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   `randomRange` (default: full range; pitch and frequency knobs declare narrower, musical ranges). Options,
   attenuverters and ratios are left alone. One undo step.
 - **Fit:** F fits the whole patch in view, ⇧F the selection.
+- **Collapse:** C collapses / expands the selected frames, ⇧C all of them (§5).
 - **Undo:** ⌘Z / ⇧⌘Z for every edit. One drag is one step; a wheel run on one control merges into one step until a
   0.7 s pause.
 - Knobs: drag vertically (200 px = full range, Shift = ×0.1), wheel (1 % per notch, one step for stepped knobs),
@@ -248,8 +249,9 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 ## 5. Groups (frames)
 
 - A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
-  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, FIX, SAVE, M) show while the header is hovered, and stay visible
-  while FIX or M is on. Drag an edge or corner to resize (minimum 352 × 96);
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, FIX, SAVE, M, collapse) show while the header is hovered, and stay visible
+  while STACK, FIX or M is on. Drag an edge or corner to resize (minimum 352 × 96); a STACK or FIX frame re-packs its
+  children to the new width as you drag (see below);
   drag the header to move the frame and everything inside it; click the header to select it.
 - **Membership is containment.** Every module and frame has a `parent` (a frame or none): the innermost frame that
   contains its centre, never itself or one of its descendants. It is recomputed only for what an action touched:
@@ -277,12 +279,18 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - **Frame tools** in the header:
   - **Tint** (a small swatch): click cycles the fill through neutral (≈ 4 % white) and six muted hues (≈ 8 %).
     Nested frames layer, so the hierarchy reads without extra lines.
-  - **STACK:** packs the frame's direct children (modules, and child frames as single blocks) flush inside 16 px
-    padding, in the **same rows as WIRE FIX** (children in reading order: rows by position, then x; row breaks
-    chosen as WIRE FIX would, at about 1.6 × the side of a square of the children's area, at least the widest
-    child), rows top-aligned. STACK turns WIRE FIX off (a routed frame needs its channels). Switching STACK ↔ FIX
-    keeps every child in its row and order; pressing either again changes nothing. One action, one undo step.
-  - After STACK or FIX the frame fits its content: the same margin on all four sides (16 px or 32 px).
+  - **STACK:** a frame mode (`layout: 'stack'`), toggled. It packs the frame's direct children (modules, and child
+    frames as single blocks) **densely** inside 16 px padding, with no gaps: in reading order (rows by position, then
+    x), each child goes to the highest free place it fits in, the leftmost of equal ones (skyline packing), so 1U
+    modules fill the room beside and under taller ones. Like WIRE FIX, a STACK frame manages its own layout: anything
+    dropped into, moved within or taken out of it re-packs it (where a module is dropped sets its place in the reading
+    order). STACK and WIRE FIX exclude each other; turning either off leaves a free frame and keeps the layout.
+  - **The packing width** is the frame's inner width. Turning STACK or FIX on in a free frame chooses it: the
+    smallest area at about 1.6 : 1, at least the widest child. Switching STACK ↔ FIX keeps the frame's width and the
+    children's order (FIX lays them out in its rows again). Dragging the right edge or a corner of a STACK or FIX
+    frame changes the width (never below the widest child) and re-packs live; the height always follows the content.
+    Pressing STACK or FIX on a frame already in that mode changes nothing. Each is one undo step.
+  - After a pack the frame fits its content: the same margin on all four sides (16 px for STACK, 32 px for FIX).
   - **WIRE FIX** (button `FIX`): a frame mode (`layout: 'route'`), toggled, **on by default** — ⌘G frames and
     factory frames start packed in rows with routed wires (innermost frames first). A WIRE FIX frame manages its own layout: its direct children
     sit in strict rows in reading order with 32 px channels between rows, between neighbours, and as padding (the
@@ -298,6 +306,16 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
     and everything inside keep running, so the voice comes back in time. A cable is silenced by the innermost
     frame that holds its source but not its target, when that frame or one of its parents is muted. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
+- **Collapse** (the big picture): **C** collapses or expands the selected frames, **⇧C** collapses all frames (or
+  expands all, when every frame is collapsed); the header's `▾` / `▸` does the same for one frame. A collapsed frame
+  is a block at the frame's top-left: its header (name, level meter, CLK in / out, M, `▸`), then one jack per port
+  inside it that has a cable crossing its edge — inputs on the left, outputs on the right, labelled `MODULE › PORT`;
+  several cables from one port share its jack. Cables inside are hidden; cables crossing the edge end on the block's
+  jacks, and a new cable can be dragged from them (it is that port). A port with no cable out is not on the block:
+  expand to patch it. Neighbours do not move (the frame's room stays free); expanding brings the frame back as it
+  was. A collapsed parent hides its children; the block lists every crossing port of everything inside it. Collapsing
+  changes only the view (the sound is the same), is saved in the document (`collapsed`) and is one undo step. The
+  block can be moved (its frame moves with it), selected, deleted, muted and saved like the frame.
 
 ## 5a. Sidebar and the WIRES editor
 
