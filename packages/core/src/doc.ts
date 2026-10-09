@@ -18,6 +18,8 @@ export interface Cable {
   from: [string, string];
   to: [string, string];
 }
+/** A frame's layout: loose, packed densely (STACK) or packed in rows with routed wires (WIRE FIX). */
+export type Layout = 'free' | 'stack' | 'route';
 /** A frame (spec §5). Its jacks are `[id, 'clkIn']` and `[id, 'clkOut']`. */
 export interface Group {
   id: string;
@@ -30,7 +32,7 @@ export interface Group {
   /** the CLK IN ratio */
   ratio: number;
   tint: number;
-  layout: 'free' | 'route';
+  layout: Layout;
   muted: boolean;
   clock: { on: boolean; bpm: number };
 }
@@ -114,7 +116,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
       parent: typeof g['parent'] === 'string' ? g['parent'] : null,
       ratio: isNum(g['ratio']) && RATIOS.includes(g['ratio']) ? g['ratio'] : 1,
       tint: tint >= 0 && tint < TINTS ? tint : 0,
-      layout: g['layout'] === 'route' ? 'route' : 'free',
+      layout: g['layout'] === 'route' || g['layout'] === 'stack' ? g['layout'] : 'free',
       muted: g['muted'] === true,
       clock: { on: clock['on'] === true, bpm },
     });

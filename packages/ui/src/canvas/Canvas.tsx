@@ -13,7 +13,6 @@ import {
   jackAt,
   landingFrame,
   moveObjects,
-  packFrame,
   setLayout,
   settle,
   mulberry32,
@@ -762,7 +761,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   stack: () => {
                     const d = s.current();
                     s.commit(
-                      settle(d, packFrame(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []),
+                      settle(d, setLayout(d, specs, g.id, 'stack'), specs, g.parent ? [g.parent] : []),
                     );
                   },
                   save: () => lib.saveGroup(g.id),

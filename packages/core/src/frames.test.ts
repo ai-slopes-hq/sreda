@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { emptyDoc, type Doc } from './doc';
+import { emptyDoc, validateDoc, type Doc } from './doc';
+import { SPECS } from './spec';
 import {
   descendants,
   extractGroup,
@@ -16,6 +17,7 @@ import {
   rectOf,
   resizeFrame,
   unframe,
+  type Rect,
 } from './frames';
 import { addModule, connect, deleteObjects, moveObjects, RuleError } from './ops';
 import { TEST_SPECS as S } from './testspecs';
@@ -97,7 +99,7 @@ test('a moved frame never captures what it lands on, nor nests in its own child'
   const a = frameSelection(doc, S, [ids[0]!]);
   // a big frame B around the module far right
   const b = frameSelection(a.doc, S, [ids[1]!]);
-  const big = resizeFrame(b.doc, S, b.id, { x: 2000, y: -500, w: 3000, h: 2000 });
+  const big = resizeFrame(setLayout(b.doc, S, b.id, 'free'), S, b.id, { x: 2000, y: -500, w: 3000, h: 2000 });
   // A dropped onto the lone module at (0, 2000): the module stays loose
   const onModule = moveObjects(big, S, [a.id], 0, 2000);
   expect(parentOf(onModule, ids[2]!)).toBeNull();
@@ -118,6 +120,7 @@ test('a moved frame never captures what it lands on, nor nests in its own child'
 test('resizing a frame over a module attaches it; the size is clamped to 352 × 96', () => {
   const { doc, ids } = mods(['src', 0, 0], ['fx', 600, 0]);
   const g = frameSelection(doc, S, [ids[0]!]);
+  g.doc = setLayout(g.doc, S, g.id, 'free'); // a loose frame: free resize
   const r = rectOf(g.doc, S, g.id);
   const grown = resizeFrame(g.doc, S, g.id, { ...r, w: 1000 });
   expect(parentOf(grown, ids[1]!)).toBe(g.id);
@@ -182,44 +185,180 @@ function three() {
 }
 const rectsOf = (doc: Doc, ids: string[]) => ids.map((id) => rectOf(doc, S, id));
 
-test('STACK packs flush rows 16 px inside the frame and fits the frame with equal margins; FIX goes off', () => {
+test('STACK packs densely with no gaps, 16 px inside, and sets the mode', () => {
   const { doc, ids, gid } = three();
-  const d = packFrame(doc, S, gid, 'stack');
+  const d = setLayout(doc, S, gid, 'stack');
   const g = rectOf(d, S, gid);
   const r = rectsOf(d, ids);
-  expect(d.groups[0]!.layout).toBe('free');
-  // one row of three would be wider than packWidth (√(3·200·176)·1.6 → 520): two, then one
-  expect(r.map((x) => [x.x - g.x, x.y - g.y])).toEqual([
-    [GPAD, GHEAD + GPAD],
-    [GPAD + 168, GHEAD + GPAD],
-    [GPAD, GHEAD + GPAD + 144],
-  ]);
-  expect(g.w).toBe(GPAD + 2 * 168 + GPAD);
-  expect(g.x + g.w - (r[1]!.x + r[1]!.w)).toBe(GPAD);
-  expect(g.y + g.h - (r[2]!.y + r[2]!.h)).toBe(GPAD);
+  expect(d.groups[0]!.layout).toBe('stack');
+  expect(r.every((x) => x.x - g.x >= GPAD && x.y - g.y >= GHEAD + GPAD)).toBe(true);
+  expect(g.x + g.w - Math.max(...r.map((x) => x.x + x.w))).toBeGreaterThanOrEqual(GPAD);
+  expect(g.y + g.h - Math.max(...r.map((x) => x.y + x.h))).toBe(GPAD);
 });
 
-test('pressing STACK or FIX again changes nothing; switching keeps the rows and their order', () => {
-  const { doc, ids, gid } = three();
-  const stacked = packFrame(doc, S, gid, 'stack');
-  expect(packFrame(stacked, S, gid, 'stack')).toEqual(stacked);
-  const fixed = setLayout(stacked, S, gid, 'route');
-  expect(fixed.groups[0]!.layout).toBe('route');
-  expect(setLayout(fixed, S, gid, 'route')).toEqual(fixed);
-  const order = (d: Doc) =>
-    [...ids].sort((a, b) => rectOf(d, S, a).y - rectOf(d, S, b).y || rectOf(d, S, a).x - rectOf(d, S, b).x);
-  expect(order(fixed)).toEqual(order(stacked));
-  const back = packFrame(fixed, S, gid, 'stack');
+/** the user's patch: eight modules in this reading order in a free frame */
+function patch() {
+  const types = ['osc', 'osc', 'rhythm', 'stages', 'complex', 'lpg', 'att', 'delay'];
+  let doc = emptyDoc;
+  const ids: string[] = [];
+  types.forEach((t, i) => {
+    const a = addModule(doc, SPECS, t, 0, i * 400);
+    doc = a.doc;
+    ids.push(a.id);
+  });
+  const g = frameSelection(doc, SPECS, ids);
+  return { doc: setLayout(g.doc, SPECS, g.id, 'free'), ids, gid: g.id };
+}
+const overlap = (a: Rect, b: Rect) =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+test('stack packs densely in reading order', () => {
+  const { doc, ids, gid } = patch();
+  const d = setLayout(doc, SPECS, gid, 'stack');
+  const g = rectOf(d, SPECS, gid);
+  expect(g.w).toBe(1152);
+  expect(g.h).toBe(GHEAD + GPAD + 688 + GPAD);
+  const r = rectsOf2(d, ids);
+  for (let i = 0; i < r.length; i++)
+    for (let j = i + 1; j < r.length; j++) expect(overlap(r[i]!, r[j]!)).toBe(false);
+  const at = (i: number) => [r[i]!.x - g.x - GPAD, r[i]!.y - g.y - GHEAD - GPAD];
+  expect(at(3)).toEqual([0, 144]);
+  expect(at(4)).toEqual([560, 272]);
+  expect(at(6)).toEqual([560, 416]);
+  expect(at(7)).toEqual([0, 544]);
+  expect(r.every((x) => (x.x - g.x) % 8 === 0 && (x.y - g.y - GHEAD) % 8 === 0)).toBe(true);
+});
+const rectsOf2 = (doc: Doc, ids: string[]) => ids.map((id) => rectOf(doc, SPECS, id));
+
+test('stack again changes nothing; stack <-> fix keeps width and order', () => {
+  const { doc, gid } = patch();
+  const stacked = setLayout(doc, SPECS, gid, 'stack');
+  expect(setLayout(stacked, SPECS, gid, 'stack')).toBe(stacked);
+  const fixed = setLayout(stacked, SPECS, gid, 'route');
+  expect(fixed.groups.find((g) => g.id === gid)!.layout).toBe('route');
+  expect(rectOf(fixed, SPECS, gid).w).toBe(rectOf(stacked, SPECS, gid).w);
+  expect(setLayout(fixed, SPECS, gid, 'route')).toBe(fixed);
+  const back = setLayout(fixed, SPECS, gid, 'stack');
   expect(back).toEqual(stacked);
-  // FIX off keeps the layout, only the routing goes
-  const off = setLayout(fixed, S, gid, 'free');
+  expect(packFrame(stacked, SPECS, gid)).toEqual(stacked);
+  // FIX off keeps the layout, only the mode goes
+  const off = setLayout(fixed, SPECS, gid, 'free');
   expect(off.modules).toEqual(fixed.modules);
+});
+
+test('a resize of a stack or fix frame re-packs to the new width', () => {
+  const { doc, ids, gid } = patch();
+  for (const mode of ['stack', 'route'] as const) {
+    const d = setLayout(doc, SPECS, gid, mode);
+    const r = rectOf(d, SPECS, gid);
+    const wide = resizeFrame(d, SPECS, gid, { ...r, w: 1700, x: r.x + 50, y: r.y + 50 });
+    const rw = rectOf(wide, SPECS, gid);
+    expect(rw).toMatchObject({ x: r.x, y: r.y, w: 1700 });
+    expect(rw.h).toBeLessThan(r.h);
+    const rs = rectsOf2(wide, ids);
+    for (let i = 0; i < rs.length; i++)
+      for (let j = i + 1; j < rs.length; j++) expect(overlap(rs[i]!, rs[j]!)).toBe(false);
+    const widest = Math.max(...rectsOf2(d, ids).map((x) => x.w));
+    const narrow = resizeFrame(d, SPECS, gid, { ...r, w: 100 });
+    expect(rectOf(narrow, SPECS, gid).w).toBe(widest + 2 * (mode === 'stack' ? GPAD : RGAP));
+  }
+  const sw = rectOf(setLayout(doc, SPECS, gid, 'stack'), SPECS, gid);
+  expect(sw.w).toBe(1152);
+  // a free frame resized keeps its children where they were
+  const free = resizeFrame(doc, SPECS, gid, { ...rectOf(doc, SPECS, gid), w: 1700 });
+  expect(free.modules.map((m) => [m.x, m.y])).toEqual(doc.modules.map((m) => [m.x, m.y]));
+});
+
+test('a drop into a stack frame re-packs it', () => {
+  const { doc, gid } = patch();
+  const stacked = setLayout(doc, SPECS, gid, 'stack');
+  const extra = addModule(stacked, SPECS, 'lpg', 5000, 5000);
+  const g = rectOf(extra.doc, SPECS, gid);
+  const moved = moveObjects(extra.doc, SPECS, [extra.id], g.x + 5 - 5000, g.y + GHEAD + 5 - 5000);
+  expect(parentOf(moved, extra.id)).toBe(gid);
+  const settled = settle(extra.doc, moved, SPECS);
+  const r = rectOf(settled, SPECS, extra.id);
+  const gg = rectOf(settled, SPECS, gid);
+  expect([r.x - gg.x, r.y - gg.y]).toEqual([GPAD, GHEAD + GPAD]);
+});
+
+function mulberry32(a: number) {
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+test('packing is a fixed point', () => {
+  for (let seed = 1; seed <= 50; seed++) {
+    const rnd = mulberry32(seed);
+    const pick = <T>(xs: T[]): T => xs[Math.floor(rnd() * xs.length)]!;
+    const n = 3 + Math.floor(rnd() * 10);
+    let doc = emptyDoc;
+    const loose: string[] = [];
+    const add = (t: string) => {
+      const a = addModule(doc, SPECS, t, Math.floor(rnd() * 100) * 40, Math.floor(rnd() * 80) * 40);
+      doc = a.doc;
+      return a.id;
+    };
+    for (let i = 0; i < n; i++) {
+      if (rnd() < 0.2) {
+        const inner = Array.from({ length: 1 + Math.floor(rnd() * 3) }, () =>
+          add(pick(['osc', 'lpg', 'stages'])),
+        );
+        const f = frameSelection(doc, SPECS, inner);
+        doc = setLayout(f.doc, SPECS, f.id, 'stack');
+        loose.push(f.id);
+      } else loose.push(add(pick(['osc', 'lpg', 'stages', 'rhythm'])));
+    }
+    const g = frameSelection(doc, SPECS, loose);
+    const free = setLayout(g.doc, SPECS, g.id, 'free');
+    for (const mode of ['stack', 'route'] as const) {
+      const d = setLayout(free, SPECS, g.id, mode);
+      const again = packFrame(d, SPECS, g.id);
+      expect(again, `seed ${seed} ${mode}`).toEqual(d);
+    }
+  }
+});
+
+test('old documents keep their frames', () => {
+  const frame = (id: string, layout: string, x: number): unknown => ({
+    id,
+    name: id,
+    x,
+    y: 0,
+    w: 400,
+    h: 200,
+    parent: null,
+    ratio: 1,
+    tint: 0,
+    layout,
+    muted: false,
+    clock: { on: false, bpm: 120 },
+  });
+  const raw = (layouts: string[]) => ({
+    version: 1,
+    modules: [],
+    cables: [],
+    groups: layouts.map((l, i) => frame(`g${i}`, l, i * 500)),
+    nextId: 9,
+  });
+  const old = validateDoc(raw(['route', 'free']), SPECS);
+  expect(old!.groups.map((g) => [g.layout, g.x, g.w, g.h])).toEqual([
+    ['route', 0, 400, 200],
+    ['free', 500, 400, 200],
+  ]);
+  expect(validateDoc(raw(['stack']), SPECS)!.groups[0]!.layout).toBe('stack');
+  expect(validateDoc(raw(['spiral']), SPECS)!.groups[0]!.layout).toBe('free');
 });
 
 test('a WIRE FIX frame re-packs when a module is dropped into it, and when its last module leaves', () => {
   const { doc, ids } = mods(['src', 0, 0], ['fx', 2000, 0]);
   const g = frameSelection(doc, S, [ids[0]!]);
-  const before = g.doc;
+  // the width stays what it was: wide enough for two modules in a row
+  const before = resizeFrame(g.doc, S, g.id, { ...rectOf(g.doc, S, g.id), w: 432 });
   const dropped = moveObjects(before, S, [ids[1]!], -1900, 0);
   const settled = settle(before, dropped, S);
   const r = rectsOf(settled, ids);
@@ -228,7 +367,7 @@ test('a WIRE FIX frame re-packs when a module is dropped into it, and when its l
   // the last module leaves: the empty frame is the minimum, and every number is a number
   const out = moveObjects(settled, S, ids, 0, 3000);
   const empty = rectOf(settle(settled, out, S), S, g.id);
-  expect(empty).toMatchObject({ w: 352, h: 96 });
+  expect(empty).toMatchObject({ w: 432, h: 96 }); // the width stays
   expect(Object.values(empty).every(Number.isFinite)).toBe(true);
 });
 

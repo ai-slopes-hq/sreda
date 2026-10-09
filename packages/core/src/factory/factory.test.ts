@@ -31,7 +31,7 @@ test.each(FACTORY.map((e) => [e.name, e] as const))(
     expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)).toEqual(doc);
     for (const g of doc.groups) {
       expect(g.layout).toBe('route');
-      expect(packFrame(doc, SPECS, g.id, 'route')).toEqual(doc);
+      expect(packFrame(doc, SPECS, g.id)).toEqual(doc);
     }
     if (e.kind === 'group') {
       const tops = doc.groups.filter((g) => g.parent === null);
