@@ -33,6 +33,9 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **FILTER models are not convincing** (2026-10-09, from listening): SK (MS-20), LADDER and DIODE do not sound like
   their originals and differ too little from each other (and from SVF). Compare against references (Moog ladder,
   TB-303 diode, MS-20 Sallen-Key) and re-tune drive, resonance and the self-oscillation character per model.
+- **DICE for the whole project** (2026-10-10): in place of NEW (or beside it), a button that generates a random
+  playable patch — a clock, a sequence source, one or two voices with effects, an OUT — using the generators and
+  per-module DICE that already exist, so a click gives a new starting point that already makes sound.
 - **DRIVE sounds poor and its modes are alike** (2026-10-09, from listening): SAT / OD / FUZZ barely differ. Rework it
   with distinct models like Ableton's Saturator / Overdrive / Pedal and Roar shapes (soft sine, analog clip, tube,
   digital clip, half / full wave, a fuzz pedal with its bias and gating, a tape stage), each with its own tone stack and

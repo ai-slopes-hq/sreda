@@ -69,8 +69,11 @@ of a creative tool; nothing of its UI is ported.
 - **Plan 8 done and merged into `main`** (2026-10-09), spec revision 25: on a loaded SAMPLER / GRAINS display a click
   is the cursor (START / POS) and a drag scrubs (heard through the module's outputs; a pointer at rest fades out;
   SLICE: a click plays that slice); LOAD loads another file. Reviewed; fixes in.
-- **Next:** choose the next milestone (candidates in `docs/backlog.md`: FOLD and FILTER models from listening, the
-  FILTER cutoff animation, sends to shared effects, recording and export).
+- **Plan 9, Task 1 done and merged into `main`** (2026-10-10), spec revision 26: DRIVE has seven models (SOFT, TUBE,
+  OD, DIST, FUZZ, RECT, DIGI), a BIAS knob and loudness matched across models and gains; old MODE values migrate.
+  Task 2 (tuning against Ableton reference renders in `projects/refs/drive/`) waits for the renders.
+- **Next:** the rest of the sound block in `docs/backlog.md` — FOLD, the FILTER models, the FILTER cutoff animation —
+  or another milestone.
 
 ## The road (vertical slices: something to hear at every stage)
 
