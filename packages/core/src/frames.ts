@@ -3,7 +3,7 @@
 import type { Cable, Doc, Group, Layout } from './doc';
 import { layoutPanel } from './panel';
 import { inputPorts, type Specs } from './spec';
-import { portLabel } from './wires';
+import { portLabel } from './names';
 
 export const GHEAD = 28,
   GPAD = 16,
@@ -152,6 +152,11 @@ export function cableHidden(doc: Doc, c: Cable): boolean {
   const own = (g: string, other: string) =>
     !!doc.groups.find((x) => x.id === g)?.collapsed && descendants(doc, g).includes(other);
   return own(a, b) || own(b, a);
+}
+
+/** The outermost collapsed frame a hidden cable sits inside (expanding it shows the cable); null: it is drawn. */
+export function hiddenIn(doc: Doc, c: Cable): string | null {
+  return cableHidden(doc, c) ? (blockOwner(doc, c.to[0]) ?? blockOwner(doc, c.from[0])) : null;
 }
 
 const setGroups = (doc: Doc, gids: readonly string[], f: (g: Group) => Group): Doc => ({
@@ -412,7 +417,7 @@ const snapUp = (v: number): number => Math.ceil(v / 8) * 8;
 /** the height of 1U: a row holds what starts within half of it */
 const U = 144;
 
-interface Item {
+export interface Item {
   id: string;
   r: Rect;
 }
@@ -453,7 +458,7 @@ function shift(doc: Doc, id: string, dx: number, dy: number): Doc {
 }
 
 /** Where each child goes, relative to the inner top-left, and the extent of the result. */
-interface Packed {
+export interface Packed {
   at: Map<string, Pt>;
   w: number;
   h: number;
@@ -489,15 +494,17 @@ function skyline(order: Item[], W: number): Packed {
     w = Math.max(w, bx + k.r.w);
     h = Math.max(h, by + k.r.h);
     const top = by + snapUp(k.r.h);
+    // what is left of a segment starts on the 8 px grid, whatever the child's width
+    const right = snapUp(bx + k.r.w);
     const next: typeof sky = [];
     for (const s of sky) {
-      if (s.x + s.w <= bx || s.x >= bx + k.r.w) next.push(s);
+      if (s.x + s.w <= bx || s.x >= right) next.push(s);
       else {
         if (s.x < bx) next.push({ x: s.x, w: bx - s.x, y: s.y });
-        if (s.x + s.w > bx + k.r.w) next.push({ x: bx + k.r.w, w: s.x + s.w - bx - k.r.w, y: s.y });
+        if (s.x + s.w > right) next.push({ x: right, w: s.x + s.w - right, y: s.y });
       }
     }
-    next.push({ x: bx, w: Math.min(k.r.w, W - bx), y: top });
+    next.push({ x: bx, w: Math.min(right, W) - bx, y: top });
     sky = next.sort((a, b) => a.x - b.x);
   }
   return { at, w, h };
@@ -525,6 +532,33 @@ function autoWidth(order: Item[]): number {
 }
 
 /**
+ * A second press must change nothing: pack again until the reading order of the result is the order used. When the
+ * rounds run out (an order and its pack chase each other) the order with the shortest pack is kept, the earliest on
+ * a tie, so the result is still deterministic. `pack` is injectable for the test of that fallback.
+ */
+export function fixedOrder(
+  order: Item[],
+  inner: number,
+  pack: (order: Item[], inner: number) => Packed = skyline,
+  rounds = 8,
+): { order: Item[]; packed: Packed } {
+  let cur = order;
+  let packed = pack(cur, inner);
+  let best = { order: cur, packed };
+  for (let i = 0; i < rounds; i++) {
+    const next = sortReading(
+      cur.map((k) => ({ id: k.id, r: { ...k.r, ...packed.at.get(k.id)! } })),
+      true,
+    );
+    if (next.every((k, j) => k.id === cur[j]!.id)) return { order: cur, packed };
+    cur = next.map((k) => order.find((o) => o.id === k.id)!);
+    packed = pack(cur, inner);
+    if (packed.h < best.packed.h) best = { order: cur, packed };
+  }
+  return best;
+}
+
+/**
  * Pack a frame by its own layout at its current width (at least the widest child plus the padding): children are
  * placed, then the frame fits them in height with the same margin on all sides. An empty frame is the minimum high.
  */
@@ -544,18 +578,7 @@ export function packFrame(doc: Doc, specs: Specs, gid: string, fresh = false): D
   const widest = Math.max(...order.map((k) => k.r.w));
   const w = Math.max(FRAME_MIN.w, g0.w, widest + 2 * pad);
   const inner = w - 2 * pad;
-  let cur = order;
-  let packed = skyline(cur, inner);
-  // a second press must change nothing: pack again until the reading order of the result is the order used
-  for (let i = 0; i < 8; i++) {
-    const next = sortReading(
-      cur.map((k) => ({ id: k.id, r: { ...k.r, ...packed.at.get(k.id)! } })),
-      true,
-    );
-    if (next.every((k, j) => k.id === cur[j]!.id)) break;
-    cur = next.map((k) => order.find((o) => o.id === k.id)!);
-    packed = skyline(cur, inner);
-  }
+  const { order: cur, packed } = fixedOrder(order, inner);
   let d = doc;
   for (const k of cur) {
     const p = packed.at.get(k.id)!;

@@ -1013,7 +1013,7 @@ impl Engine {
         if let Some((id, frames, channels, hits, buf)) = self.staging.take() {
             self.ctx
                 .samples
-                .insert(id, Sample::from_planar(&buf, frames, channels, hits));
+                .insert(id, Sample::from_planar(buf, frames, channels, hits));
         }
     }
 

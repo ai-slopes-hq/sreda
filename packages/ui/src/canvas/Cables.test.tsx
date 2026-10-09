@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { addModule, connect, emptyDoc, frameSelection } from '@sreda/core';
 import { render } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import { expect, test } from 'vitest';
 import { TEST_SPECS as S } from '../../../core/src/testspecs';
 import { Cables } from './Cables';
@@ -78,4 +79,29 @@ test('a frame clock normal is a stub until it is whole', () => {
   const w = draw(() => false, true);
   expect(w.querySelectorAll('path.ghost-normal')).toHaveLength(3);
   normalWhole = false;
+});
+
+test('ghost normals are rebuilt only when a jack moves, not on any document change', () => {
+  const [doc, setDoc] = createSignal(framed());
+  const { container } = render(() => (
+    <Cables
+      doc={doc()}
+      specs={S}
+      geoms={[]}
+      hover={null}
+      whole={() => false}
+      wholeNormal={() => false}
+      insert={null}
+    />
+  ));
+  const before = [...container.querySelectorAll('path.ghost-normal')];
+  expect(before.length).toBeGreaterThan(0);
+  // another document with the same frames: a name changes, nothing moves
+  setDoc((d) => ({ ...d, groups: d.groups.map((g) => ({ ...g, name: g.name + '!' })) }));
+  const same = [...container.querySelectorAll('path.ghost-normal')];
+  expect(same.every((p, i) => p === before[i])).toBe(true);
+  // the inner frame moves: its normal is drawn anew
+  setDoc((d) => ({ ...d, groups: d.groups.map((g) => (g.parent ? { ...g, x: g.x + 8 } : g)) }));
+  const moved = [...container.querySelectorAll('path.ghost-normal')];
+  expect(moved.some((p, i) => p !== before[i])).toBe(true);
 });

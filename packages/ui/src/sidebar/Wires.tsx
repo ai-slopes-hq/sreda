@@ -196,6 +196,7 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
                             class="sr-wrow"
                             classList={{
                               on: st.sidebar.picked === w().index,
+                              dim: !!w().collapsed,
                               sel: selected().has(w().cable.from[0]) || selected().has(w().cable.to[0]),
                             }}
                             style={{ 'padding-left': 10 + sec.depth * 14 + 'px' }}
@@ -204,7 +205,7 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
                             onMouseLeave={() =>
                               st.sidebar.hover === w().index && s.setState('sidebar', 'hover', null)
                             }
-                            onClick={() => s.setState('sidebar', 'picked', w().index)}
+                            onClick={() => s.pickWire(w().index)}
                           >
                             <span class="dot" style={{ background: ROLE[w().from] }} />
                             <span class="dot" style={{ background: ROLE[w().to] }} />
@@ -230,6 +231,9 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
                               >
                                 {w().toLabel}
                               </span>
+                              <Show when={w().collapsed}>
+                                <span class="collapsed">{'  (collapsed)'}</span>
+                              </Show>
                             </span>
                             <span
                               class="value"

@@ -1,5 +1,5 @@
 import { blockOwner, jackAt, type Cable, type Doc, type Specs } from '@sreda/core';
-import { For, Show, type JSX } from 'solid-js';
+import { createMemo, For, Show, type JSX } from 'solid-js';
 import { bezPts, makeStubs, type CableGeom, type Pt, type StubSet } from './cablegeom';
 import { bez, ROLE } from './glyphs';
 
@@ -24,19 +24,46 @@ export function Cables(props: {
 }): JSX.Element {
   const same = (a: Cable, b: Cable | null) =>
     !!b && a.from[0] === b.from[0] && a.from[1] === b.from[1] && a.to[0] === b.to[0] && a.to[1] === b.to[1];
-  const normals = () =>
-    props.doc.groups.flatMap((g) => {
-      if (
-        !g.parent ||
-        blockOwner(props.doc, g.id) ||
-        !props.doc.groups.some((x) => x.id === g.parent) ||
-        props.doc.cables.some((c) => c.to[0] === g.id && c.to[1] === 'clkIn')
-      )
-        return [];
-      const a = jackAt(props.doc, props.specs, g.parent, 'clkOut');
-      const b = jackAt(props.doc, props.specs, g.id, 'clkIn');
-      return [{ parent: g.parent, id: g.id, d: bez(a, b), stub: makeStubs(bezPts(a, b)) }];
-    });
+  // the two jacks of every ghost normal; equal while no jack moved, so a document change that moves none rebuilds nothing
+  const ends = createMemo(
+    () =>
+      props.doc.groups.flatMap((g) => {
+        if (
+          !g.parent ||
+          blockOwner(props.doc, g.id) ||
+          !props.doc.groups.some((x) => x.id === g.parent) ||
+          props.doc.cables.some((c) => c.to[0] === g.id && c.to[1] === 'clkIn')
+        )
+          return [];
+        return [
+          {
+            parent: g.parent,
+            id: g.id,
+            a: jackAt(props.doc, props.specs, g.parent, 'clkOut'),
+            b: jackAt(props.doc, props.specs, g.id, 'clkIn'),
+          },
+        ];
+      }),
+    [],
+    {
+      equals: (p, n) =>
+        p.length === n.length &&
+        p.every((x, i) => {
+          const y = n[i]!;
+          return (
+            x.parent === y.parent &&
+            x.id === y.id &&
+            x.a.x === y.a.x &&
+            x.a.y === y.a.y &&
+            x.b.x === y.b.x &&
+            x.b.y === y.b.y
+          );
+        }),
+    },
+  );
+  const normals = createMemo(() =>
+    ends().map((e) => ({ parent: e.parent, id: e.id, d: bez(e.a, e.b), stub: makeStubs(bezPts(e.a, e.b)) })),
+  );
   // from the jack (the colour) to the stub's far end (transparent)
   const fade = (id: string, pts: Pt[], color: string) => (
     <linearGradient

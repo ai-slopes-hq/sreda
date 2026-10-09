@@ -1,6 +1,7 @@
 // What WIRES lists (spec §5a): sections of wire rows (and dimmed normals), then PROBLEMS.
 import {
   chainOf,
+  hiddenIn,
   inputPorts,
   portLabel,
   wireProblems,
@@ -23,6 +24,8 @@ export interface WireRow {
   toLabel: string;
   from: Role;
   to: Role;
+  /** the collapsed frame this wire is hidden inside (dimmed, and picking it expands that frame) */
+  collapsed: string | null;
   /** the destination's attenuverter or ratio; audio inputs have none */
   value: { kind: 'att' | 'ratio'; v: number; def: number } | null;
 }
@@ -88,11 +91,13 @@ export function wireSections(
     const toLabel = portLabel(doc, specs, cable.to[0], cable.to[1]);
     const text = `${fromLabel}  →  ${toLabel}`;
     if (!keep(text, [cable.from[0], cable.to[0]])) return;
+    const collapsed = hiddenIn(doc, cable);
     add(wireSection(doc, cable), {
       kind: 'wire',
       index,
       cable,
-      text,
+      text: collapsed ? `${text}  (collapsed)` : text,
+      collapsed,
       fromLabel,
       toLabel,
       from: roleOut(doc, specs, cable.from[0], cable.from[1]),

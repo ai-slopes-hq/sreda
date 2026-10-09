@@ -1,4 +1,4 @@
-import { chainOf, FRAME_MIN, isGroupId, packFrame, recomputeParents, TINTS } from './frames';
+import { chainOf, FRAME_MIN, isGroupId, packFrame, recomputeParents, repackManaged, TINTS } from './frames';
 import { inputPorts, RATIOS, specOf, toKnob, type Specs } from './spec';
 
 export interface ModuleDoc {
@@ -210,5 +210,6 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
   const depth = (id: string) => chainOf(result, id).length;
   for (const id of formerRoutes.sort((a, b) => depth(b) - depth(a)))
     result = packFrame(result, specs, id, true);
-  return result;
+  // a STACK around a shrunken one fits it again
+  return repackManaged(result, specs, formerRoutes);
 }

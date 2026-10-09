@@ -37,6 +37,7 @@ import type { SessionApi } from '../store';
 import { diceModule } from '../dice';
 import { libraryActions } from '../library';
 import { Cables } from './Cables';
+import { focusSetOf, wholeNormal } from './focus';
 import { cableAt, cableGeoms, stubAt } from './cablegeom';
 import { magnet, type Snap } from './magnets';
 import { animateView, glideTo } from './glide';
@@ -292,9 +293,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     stopGlide();
   });
   /** the modules and frames whose cables are drawn whole: the hovered and the selected, with what is inside frames */
-  const focusSet = createMemo(
-    () => new Set(withDescendants(st.doc, [...(st.hover ? [st.hover] : []), ...st.sel])),
-  );
+  const focusSet = createMemo(() => focusSetOf(st.doc, st.hover, st.sel));
   /** is this cable drawn whole (otherwise only its stubs): WIRES open, an end in the focus, or lit / inserting */
   const whole = (c: Cable): boolean => {
     if (st.sidebar.open) return true;
@@ -926,7 +925,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             geoms={geoms()}
             hover={litCable()}
             whole={whole}
-            wholeNormal={(a, b) => st.sidebar.open || focusSet().has(a) || focusSet().has(b)}
+            wholeNormal={(a, b) => wholeNormal(st.sidebar.open, focusSet(), a, b)}
             insert={insert()}
           />
           <Show when={preview()}>

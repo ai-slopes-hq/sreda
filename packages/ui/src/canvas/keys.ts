@@ -108,7 +108,7 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
           ? 0
           : rows.length - 1
         : (at + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length;
-    s.setState('sidebar', 'picked', rows[next]!);
+    s.pickWire(rows[next]!);
   } else if (s.state.sidebar.open && !meta && e.key === 'Enter' && s.state.sidebar.picked !== null) {
     // WIRES: the port list for the picked wire's input end
     const cable = s.current().cables[s.state.sidebar.picked];

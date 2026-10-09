@@ -10,6 +10,7 @@ import {
   editFrame,
   effectiveMuted,
   fromKnob,
+  hiddenIn,
   History,
   inputPorts,
   setAtt,
@@ -394,6 +395,13 @@ export function createSession(
     /** C: collapse or expand frames (one undo step) */
     collapse(gids: readonly string[], on: boolean): void {
       this.commit(setCollapsed(history.current, gids, on));
+    },
+    /** WIRES: pick a row; a wire hidden in a collapsed frame expands the outermost one (one undo step) */
+    pickWire(index: number): void {
+      const cable = history.current.cables[index];
+      const owner = cable ? hiddenIn(history.current, cable) : null;
+      if (owner) this.collapse([owner], false);
+      setState('sidebar', 'picked', index);
     },
     /** an edit of the current document (never of the store's copy) */
     edit(f: (doc: Doc) => Doc, merge?: Merge): void {

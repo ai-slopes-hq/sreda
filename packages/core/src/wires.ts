@@ -1,18 +1,8 @@
 // WIRES (spec §5a): how wires and ports are named, which section a wire is listed in, the port lists, the problems.
 import type { Cable, Doc } from './doc';
 import { chainOf } from './frames';
-import { nameOf } from './names';
+import { nameOf, portLabel } from './names';
 import { inputPorts, type Role, type Specs } from './spec';
-
-/** `SLOPE 2 › EOC`; a frame's jacks are `GROUP 1 › CLK` and `GROUP 1 › CLK IN`. */
-export function portLabel(doc: Doc, specs: Specs, id: string, port: string): string {
-  const g = doc.groups.find((x) => x.id === id);
-  if (g) return `${g.name} › ${port === 'clkIn' ? 'CLK IN' : 'CLK'}`;
-  const m = doc.modules.find((x) => x.id === id);
-  const spec = m && specs[m.type];
-  const label = spec ? [...spec.outputs, ...inputPorts(spec)].find((p) => p.id === port)?.label : undefined;
-  return `${nameOf(doc, specs, id)} › ${label ?? port.toUpperCase()}`;
-}
 
 /** The WIRES section a wire is listed in: the innermost frame holding both ends, else BETWEEN GROUPS or UNGROUPED. */
 export type SectionKey = string;

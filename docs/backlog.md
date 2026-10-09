@@ -100,22 +100,23 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 - **Onsets run on the renderer's main thread:** a 10-minute stereo file is ~230 M multiply-adds, about a second of
   frozen UI on load. Move `onsets` (and the AIFF render) to a worker, or run it in chunks.
-- **Loaded samples stay for the session:** the registry keeps raw bytes and decoded floats, the engine keeps its copy,
-  and `Sample::from_planar` copies the staging buffer (`to_vec`) instead of taking it; WASM memory never shrinks. Evict
-  samples no open document names, and hand the staging buffer over without a copy. (Audition no longer adds to this:
-  it decodes on the side into slot 0.)
+- **Loaded samples stay for the session:** the registry keeps raw bytes and decoded floats, the engine keeps its copy;
+  WASM memory never shrinks. Evict samples no open document names. (Audition no longer adds to this: it decodes on the
+  side into slot 0.) ~~`Sample::from_planar` copied the staging buffer instead of taking it.~~ Done in Plan 6.
 
 ## From the Plan 5 review (deferred, 2026-10-09)
 
-- **Packing:** the fixed-point loop stops silently after 8 rounds (a 600-frame fuzz never needed it); skyline assumes
-  child widths on the 8 px grid (a free frame of off-grid width inside a STACK frame); `autoWidth` runs a full pack
-  per 8 px step (once per click).
-- **Migration:** opening a document re-packs former FIX frames but does not re-fit a STACK / free parent around a
-  shrunken child.
-- **WIRES lists cables hidden inside collapsed frames;** picking one highlights nothing. Show them under their block?
-- **Ghost normals** rebuild their stubs on every document change (not per hover).
-- **Tests to strengthen:** nested resize does not prove `also` re-packs the parent; the migration's reading-order
+- **Packing:** ~~the fixed-point loop stops silently after 8 rounds (a 600-frame fuzz never needed it); skyline assumes
+  child widths on the 8 px grid (a free frame of off-grid width inside a STACK frame);~~ Done in Plan 6 (the loop keeps
+  the shortest pack when it runs out; the skyline snaps to the grid). `autoWidth` runs a full pack per 8 px step (once
+  per click).
+- **Migration:** ~~opening a document re-packs former FIX frames but does not re-fit a STACK parent around a shrunken
+  child.~~ Done in Plan 6 (a free parent is never resized by packing, so it stays as it was).
+- ~~**WIRES lists cables hidden inside collapsed frames;** picking one highlights nothing.~~ Done in Plan 6: they are
+  dimmed with `(collapsed)`, and picking one expands the frame.
+- ~~**Ghost normals** rebuild their stubs on every document change (not per hover).~~ Done in Plan 6.
+- ~~**Tests to strengthen:** nested resize does not prove `also` re-packs the parent; the migration's reading-order
   assertion is weak; no test of the Canvas `wholeNormal` predicate; no block test with more than three jacks a side;
-  the collapse e2e checks the master stays audible, not that it is the same collapsed and expanded.
-- **Code tidy:** `frames.ts` ↔ `wires.ts` import each other (`portLabel` / `chainOf`, safe today); `rectsOf2`
-  duplicates `rectsOf` and a bare `{}` block remains in `frames.test.ts`; a filler assertion at `frames.test.ts:284`.
+  the collapse e2e checks the master stays audible, not that it is the same collapsed and expanded.~~ Done in Plan 6.
+- ~~**Code tidy:** `frames.ts` ↔ `wires.ts` import each other; `rectsOf2` duplicates `rectsOf` and a bare `{}` block
+  remains in `frames.test.ts`; a filler assertion at `frames.test.ts:284`.~~ Done in Plan 6.

@@ -9,21 +9,28 @@ pub struct Sample {
 }
 
 impl Sample {
-    /// From planar floats (`channels` × `frames`), then `hits` pairs (position, strength).
-    pub fn from_planar(data: &[f32], frames: usize, channels: usize, hits: usize) -> Self {
-        let ch = |c: usize| data[c * frames..(c + 1) * frames].to_vec();
-        let l = ch(0);
-        let r = if channels > 1 { ch(1) } else { l.clone() };
-        let h = &data[channels * frames..channels * frames + 2 * hits];
+    /// From planar floats (`channels` × `frames`), then `hits` pairs (position, strength). Takes the staging buffer:
+    /// the left channel is that buffer cut short, not a copy.
+    pub fn from_planar(mut data: Vec<f32>, frames: usize, channels: usize, hits: usize) -> Self {
+        let h: Vec<(usize, f32)> = data[channels * frames..channels * frames + 2 * hits]
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|p| (p[0] as usize, p[1]))
+            .collect();
+        let (l, r) = if channels > 1 {
+            let mut r = data.split_off(frames);
+            r.truncate(frames);
+            (data, r)
+        } else {
+            data.truncate(frames);
+            let r = data.clone();
+            (data, r)
+        };
         Sample {
             channels: [l, r],
             frames,
-            hits: h
-                .as_chunks::<2>()
-                .0
-                .iter()
-                .map(|p| (p[0] as usize, p[1]))
-                .collect(),
+            hits: h,
         }
     }
 }
@@ -58,14 +65,27 @@ mod tests {
     fn insert_get_and_replace() {
         let mut p = SamplePool::default();
         assert!(p.get(-1).is_none() && p.get(3).is_none());
-        p.insert(3, Sample::from_planar(&[0.1, 0.2, 0.3, 5.0, 0.9], 3, 1, 1));
+        p.insert(
+            3,
+            Sample::from_planar(vec![0.1, 0.2, 0.3, 5.0, 0.9], 3, 1, 1),
+        );
         let s = p.get(3).unwrap();
         assert_eq!(s.channels[0], vec![0.1, 0.2, 0.3]);
         assert_eq!(s.channels[1], s.channels[0], "mono: both channels the same");
         assert_eq!(s.hits, vec![(5, 0.9)]);
-        p.insert(3, Sample::from_planar(&[1.0, 2.0], 1, 2, 0));
+        p.insert(3, Sample::from_planar(vec![1.0, 2.0], 1, 2, 0));
         let s = p.get(3).unwrap();
         assert_eq!((s.frames, s.channels[1][0]), (1, 2.0));
+        p.insert(
+            4,
+            Sample::from_planar(vec![1.0, 2.0, 3.0, 4.0, 1.0, 0.5], 2, 2, 1),
+        );
+        let s = p.get(4).unwrap();
+        assert_eq!(
+            (&s.channels[0][..], &s.channels[1][..]),
+            (&[1.0, 2.0][..], &[3.0, 4.0][..])
+        );
+        assert_eq!(s.hits, vec![(1, 0.5)]);
         assert!(p.get(0).is_none());
     }
 }

@@ -3,7 +3,8 @@ import { emptyDoc, starterDoc } from './doc';
 import { addModule, connect } from './ops';
 import { frameSelection } from './frames';
 import { SPECS } from './spec';
-import { allPorts, portLabel, wireProblems, wireSection } from './wires';
+import { portLabel } from './names';
+import { allPorts, wireProblems, wireSection } from './wires';
 
 test('a port is named by its module (numbered when there are several) and its label; a frame by its name', () => {
   const doc = starterDoc(SPECS);

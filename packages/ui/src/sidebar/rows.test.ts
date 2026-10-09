@@ -1,4 +1,4 @@
-import { addModule, connect, emptyDoc, frameSelection, setParam, SPECS, type Doc } from '@sreda/core';
+import { addModule, connect, emptyDoc, frameSelection, setCollapsed, setParam, SPECS, type Doc } from '@sreda/core';
 import { expect, test } from 'vitest';
 import { wireSections } from './rows';
 
@@ -49,4 +49,17 @@ test('the filter matches module and port names; SELECTION keeps the wires touchi
   expect(sel.flatMap((x) => x.rows.filter((r) => r.kind === 'wire').map((r) => r.text))).toEqual([
     'OSC › OUT  →  OUT › L',
   ]);
+});
+
+test('a wire hidden inside a collapsed frame is listed dimmed, marked (collapsed), and names the frame to expand', () => {
+  const { doc, ids } = patch();
+  const g = ids[4]!;
+  const open = wireSections(doc, SPECS, all);
+  expect(open[0]!.rows.every((r) => r.kind !== 'wire' || r.collapsed === null)).toBe(true);
+  const shut = wireSections(setCollapsed(doc, [g], true), SPECS, all);
+  const row = shut[0]!.rows.find((r) => r.kind === 'wire')!;
+  expect(row.kind === 'wire' && row.collapsed).toBe(g);
+  expect(row.text).toBe('OSC › OUT  →  OUT › L  (collapsed)');
+  // a wire that leaves the frame is not hidden
+  expect(shut.flatMap((x) => x.rows).filter((r) => r.kind === 'wire' && r.collapsed === null)).toHaveLength(1);
 });

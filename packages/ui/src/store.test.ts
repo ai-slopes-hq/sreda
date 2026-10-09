@@ -250,3 +250,17 @@ test('collapsing a frame clears the hover of a module that goes out of sight', (
   s.collapse([framed.id], false);
   expect(s.state.hover).toBe(framed.id);
 });
+
+test('picking a WIRES row of a wire hidden in a collapsed frame expands that frame, in one undo step', () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const c = s.current().cables.find((x) => !x.from[0].startsWith('g') && !x.to[0].startsWith('g'))!;
+  const framed = frameSelection(s.current(), SPECS, [c.from[0], c.to[0]]);
+  s.commit(framed.doc);
+  const index = s.current().cables.findIndex((x) => x.from[0] === c.from[0] && x.to[0] === c.to[0]);
+  s.collapse([framed.id], true);
+  s.pickWire(index);
+  expect(s.current().groups.find((g) => g.id === framed.id)!.collapsed).toBe(false);
+  expect(s.state.sidebar.picked).toBe(index);
+  s.undo();
+  expect(s.current().groups.find((g) => g.id === framed.id)!.collapsed).toBe(true);
+});

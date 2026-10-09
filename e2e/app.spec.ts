@@ -534,7 +534,17 @@ test('C collapses a frame to its connections; a cable dragged from a block jack 
   await expect(page.locator('.sr-frame')).toHaveCount(1);
   await page.mouse.click(1300, 880); // start audio
   const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  /** the highest master reading over about half a second */
+  const peak = async () => {
+    let m = 0;
+    for (let i = 0; i < 25; i++) {
+      m = Math.max(m, await master());
+      await page.waitForTimeout(20);
+    }
+    return m;
+  };
   await expect.poll(master).toBeGreaterThan(0.05);
+  const expanded = await peak();
 
   await page.keyboard.press('c');
   await expect(page.locator('[data-type=osc]')).toHaveCount(0);
@@ -542,6 +552,8 @@ test('C collapses a frame to its connections; a cable dragged from a block jack 
   await expect(page.locator('.sr-block .sr-bjack')).toHaveText('OSC › OUT');
   await expect(page.locator('path.cable')).toHaveCount(1);
   await expect.poll(master).toBeGreaterThan(0.05);
+  // collapsing changes the picture, not the sound: the same peak within 10 %
+  expect(Math.abs((await peak()) - expanded)).toBeLessThanOrEqual(expanded * 0.1);
 
   // from the block jack to OUT's R: the cable starts at OSC's OUT
   const from = await center(page, page.locator('.sr-block .sr-bjack .sr-jack'));
