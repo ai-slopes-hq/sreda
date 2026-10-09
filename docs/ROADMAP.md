@@ -36,9 +36,14 @@ of a creative tool; nothing of its UI is ported.
   replace / ⌘D / R, the sidebar with WIRES, and a 200-module patch in real time (16.6 % natively, ~36 % in WASM).
   Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 3 review").
   Spec revision 16: the top-right button is SIDEBAR. **The first build is complete.**
-- **Next:** milestone 2, the sound pack (spec §7a) — Plan 4 written (`docs/superpowers/plans/2026-10-08-4-sound-pack.md`,
-  10 tasks); execute it natively on a branch `plan-4-sound-pack`; skins (§1a, revision 18 in progress) are written
-  down only.
+- **Plan 4 done on `plan-4-sound-pack`** (2026-10-09), milestone 2, the sound pack (spec §7a): real 2× oversampling
+  (`Os2x`) and ADAA; DRIVE; FILTER models SVF / LADDER / DIODE / SK / COMB / VOWEL with DRV and PTCH; DELAY types DIGI /
+  TAPE / SPRING with CHAR, PING, CLK sync, L / R; REVERB ROOM / PLATE / HALL with FREEZE and the room display; samples
+  as a system (library `samples/`, decoding and resampling, AIFF, onsets, the engine's pool, MISSING, audition);
+  SAMPLER (ONE / LOOP / SLICE, AUTO); the SAMPLES picker, S, LOAD, drop to load; GRAINS (FILE / LIVE, FREEZE). Rulings
+  are in `.superpowers/sdd/2026-10-08-4-sound-pack/progress.md`; the 200-module patch runs at 21.5 % natively.
+- **Next:** the fresh review of the Plan 4 branch, its fixes, merge into `main`; then record Plan 4's decisions in the
+  spec as a new revision once the user's revision 18 (skins, §1a) is committed.
 
 ## The road (vertical slices: something to hear at every stage)
 
@@ -48,7 +53,7 @@ of a creative tool; nothing of its UI is ported.
 | **B. Playable canvas** — specs from Rust, OSC + OUT, document → compile → engine, generic panels, patching | Plan 1, Tasks 3–7 | OSC → OUT on the canvas, knobs turn the sound — **checkpoint after Task 6**; two OSCs patched FM / PTCH — **checkpoint after Task 7** | done, merged |
 | **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (`2026-10-07-2-modules.md`) | the 24 first-build modules | done, merged |
 | **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 (`2026-10-08-3-organisation.md`) | the first build complete | done, merged |
-| **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | its own plan | spec §7a | — |
+| **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | Plan 4 (`2026-10-08-4-sound-pack.md`) | spec §7a | done on the branch, in review |
 
 **Plan 2 order** (chosen so real patches come together early): SCOPE (see signals) → LPG, SLOPE, NOISE (*Pulse*) →
 FILTER, MIX → RHYTHM, STAGES, QUANT with generators and DICE (*Acid*) → FOLD, COMPLEX, DELAY (*Drone*) →

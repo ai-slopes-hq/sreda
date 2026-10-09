@@ -57,8 +57,9 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 ## From the Plan 2 review (deferred, 2026-10-07)
 
-- **The folder's "2× oversampling" is a no-op:** averaging ADAA over linear-interpolated midpoints equals 1× ADAA. Either
-  real 2× (a half-band decimator) or drop it and fix the spec / plan text.
+- ~~**The folder's "2× oversampling" is a no-op:** averaging ADAA over linear-interpolated midpoints equals 1× ADAA. Either
+  real 2× (a half-band decimator) or drop it and fix the spec / plan text.~~ Done in Plan 4: `Os2x`, a polyphase
+  half-band, under FOLD, DRIVE and FILTER's nonlinear models.
 - **FOLLOW's GATE latches on for THR < 0.02** (the envelope never goes below THR − 0.02); scale the hysteresis with THR.
 - **QUANT `snap` overflows** for absurd inputs (1e30 from a runaway): clamp `rel` (debug panics; release wraps).
 - **SCOPE TIME below ~5 ms** does nothing (256-sample minimum sweep); spec says 1 ms.
