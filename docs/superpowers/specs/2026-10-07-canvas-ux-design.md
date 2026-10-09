@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 24 (§6/§7a: LOAD and a click on a sample display open the system file dialog; the picker has no SAMPLES tab and S is free; samples are browsed in LIBRARY › SAMPLES) · Status: approved
+Date: 2026-10-07 · Revision 25 (§7a: a loaded sample display takes a click as the cursor and a drag as a scrub; LOAD alone loads another file) · Status: approved
 
 ## Why
 
@@ -537,9 +537,17 @@ Stereo outputs are two mono outputs (cables stay mono).
   next slice, or the one SLICE picks when patched — a break follows its clock by re-triggering, pitch independent.
   REV plays backwards. 1 ms fades at every boundary. EOC fires at the end of a play-through or slice. Its display
   shows the waveform, START / LEN markers (ONE / LOOP) or slice markers (SLICE), the playhead in amber and the file
-  name; clicking the display (`NO SAMPLE · CLICK TO LOAD` when empty) or LOAD opens the system file dialog for an audio
-  file; the file is copied into `samples/` (asking for the library folder first if none is chosen) and becomes this
-  module's sample (one undo step). GRAINS' display and LOAD do the same.
+  name; LOAD — and a click on the display while it is empty (`NO SAMPLE · CLICK TO LOAD`) — opens the system file
+  dialog for an audio file; the file is copied into `samples/` (asking for the library folder first if none is chosen)
+  and becomes this module's sample (one undo step). GRAINS' display and LOAD do the same.
+  - **A loaded display is a cursor and a scrub** (revision 25). SAMPLER in ONE / LOOP: a click on the waveform moves
+    START there (one undo step); pressing and dragging scrubs — the file plays at the point under the pointer, its
+    speed and direction following the pointer (1 ms fades in and out, the position gliding over 10 ms so a jerky
+    pointer stays smooth), heard through the module's own outputs at LVL; START follows and stays where the pointer
+    is released (the whole gesture one undo step). The scrub is a voice of its own beside the triggered ones; while it
+    sounds TRIG still plays. In SLICE a click plays the slice under the pointer (START unchanged) and a drag scrubs
+    the whole file. GRAINS: a click or drag moves POS (one undo step per gesture); the grain cloud follows the pointer;
+    in LIVE positions are relative to the write head, as the knob.
 - **GRAINS.** Grains (Hann window, up to 64 at once) spawn on TRIG rises, or at DENS per second when TRIG is
   unpatched; each reads from POS (± SPRAY), lasts SIZE, plays at PITCH (± DETUNE), reversed with probability REV %,
   panned within SPREAD. SOURCE FILE reads a library sample; LIVE records IN into an 8-second ring buffer, and FREEZE
