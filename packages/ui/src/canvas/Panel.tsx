@@ -167,7 +167,7 @@ export function Panel(props: PanelProps): JSX.Element {
       </div>
       <Show when={ghosts().length}>
         <svg class="sr-ghosts" width={L().w} height={L().h}>
-          <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} stroke={ROLE[g.role]} />}</For>
+          <For each={ghosts()}>{(g) => <path class="ghost-normal" d={g.d} style={{ stroke: ROLE[g.role] }} />}</For>
         </svg>
       </Show>
       <Show when={props.spec.display?.kind === 'contour' && L().display}>
@@ -341,7 +341,7 @@ export function Panel(props: PanelProps): JSX.Element {
                     style={{
                       left: j().x + 11 + 'px',
                       top: j().y + 1 + 'px',
-                      color: value() === 1 ? '#5d594f' : undefined,
+                      color: value() === 1 ? 'var(--faint)' : undefined,
                     }}
                     onPointerDown={(e) => props.act.fieldDown?.(port.id, kind(), e)}
                     onDblClick={() => props.act.fieldReset?.(port.id, kind())}

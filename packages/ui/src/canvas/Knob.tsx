@@ -116,7 +116,7 @@ export function Knob(props: KnobProps): JSX.Element {
         </svg>
       </div>
       <div class="sr-clabel">{p().label}</div>
-      <div class="sr-cval" data-value style={{ color: props.modulated ? '#6cb4ee' : undefined }}>
+      <div class="sr-cval" data-value style={{ color: props.modulated ? 'var(--role-mod)' : undefined }}>
         <Show when={props.loud || props.modulated}>
           <Show when={p().glyph === 'curve'} fallback={fmt(p(), fromKnob(p(), props.value))}>
             <svg class="g-svg" width="22" height="9">

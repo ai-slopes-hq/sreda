@@ -941,7 +941,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                 <path
                   class="ghost"
                   d={`M${g().a.x} ${g().a.y} L${g().b.x} ${g().b.y}`}
-                  stroke={ROLE[g().role]}
+                  style={{ stroke: ROLE[g().role] }}
                 />
               </svg>
             )}

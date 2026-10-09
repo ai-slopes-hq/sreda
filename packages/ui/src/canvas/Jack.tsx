@@ -40,11 +40,11 @@ export function Jack(props: JackProps): JSX.Element {
         top: props.y - 5.5 + 'px',
         'border-color': ROLE[props.role],
         'border-style': props.normalled ? 'dashed' : 'solid',
-        background: props.filled ? ROLE[props.role] : '#121210',
+        background: props.filled ? ROLE[props.role] : 'var(--ground)',
         'box-shadow': props.ring
-          ? '0 0 0 2px #121210, 0 0 0 3.5px #f5a524'
+          ? '0 0 0 2px var(--ground), 0 0 0 3.5px var(--accent)'
           : props.listening
-            ? `0 0 0 2px #121210, 0 0 0 3.5px ${ROLE[props.role]}`
+            ? `0 0 0 2px var(--ground), 0 0 0 3.5px ${ROLE[props.role]}`
             : undefined,
       }}
     />

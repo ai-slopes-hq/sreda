@@ -14,13 +14,13 @@ import { Jack } from './Jack';
 
 /** Fills (≈ 4 % neutral, ≈ 8 % hues) and swatch colours, by tint index. */
 export const TINT_FILL = [
-  ['rgba(233,228,216,0.035)', '#8f897c'],
-  ['rgba(217,119,87,0.09)', '#d97757'],
-  ['rgba(240,200,110,0.08)', '#d8b25e'],
-  ['rgba(154,209,139,0.08)', '#8fbf80'],
-  ['rgba(110,200,190,0.08)', '#62b3a8'],
-  ['rgba(108,180,238,0.09)', '#6cb4ee'],
-  ['rgba(196,140,220,0.09)', '#b98ad0'],
+  ['color-mix(in srgb, var(--tint-0) 4%, transparent)', 'var(--tint-0)'],
+  ['color-mix(in srgb, var(--tint-1) 8%, transparent)', 'var(--tint-1)'],
+  ['color-mix(in srgb, var(--tint-2) 8%, transparent)', 'var(--tint-2)'],
+  ['color-mix(in srgb, var(--tint-3) 8%, transparent)', 'var(--tint-3)'],
+  ['color-mix(in srgb, var(--tint-4) 8%, transparent)', 'var(--tint-4)'],
+  ['color-mix(in srgb, var(--tint-5) 8%, transparent)', 'var(--tint-5)'],
+  ['color-mix(in srgb, var(--tint-6) 8%, transparent)', 'var(--tint-6)'],
 ] as const;
 
 export type Edge = 'l' | 'r' | 'b' | 'bl' | 'br';
@@ -292,7 +292,7 @@ export function Frame(props: FrameProps): JSX.Element {
         class="sr-gfield"
         data-field="clkIn"
         title="CLK IN ratio ÷16…×8 · drag, double-click resets"
-        style={{ color: g().ratio === 1 ? '#5d594f' : undefined }}
+        style={{ color: g().ratio === 1 ? 'var(--faint)' : undefined }}
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           e.stopPropagation();

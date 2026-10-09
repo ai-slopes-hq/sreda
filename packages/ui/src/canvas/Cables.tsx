@@ -74,8 +74,8 @@ export function Cables(props: {
       x2={pts[pts.length - 1]!.x}
       y2={pts[pts.length - 1]!.y}
     >
-      <stop offset="0" stop-color={color} />
-      <stop offset="1" stop-color={color} stop-opacity="0" />
+      <stop offset="0" style={{ 'stop-color': color }} />
+      <stop offset="1" style={{ 'stop-color': color }} stop-opacity="0" />
     </linearGradient>
   );
   const stubPair = (id: string, s: StubSet, ca: string, cb: string, cls: string) => (
@@ -84,8 +84,8 @@ export function Cables(props: {
         {fade(`${id}0`, s.a, ca)}
         {fade(`${id}1`, s.b, cb)}
       </defs>
-      <path class={cls} d={s.da} stroke={`url(#${id}0)`} />
-      <path class={cls} d={s.db} stroke={`url(#${id}1)`} />
+      <path class={cls} d={s.da} style={{ stroke: `url(#${id}0)` }} />
+      <path class={cls} d={s.db} style={{ stroke: `url(#${id}1)` }} />
     </>
   );
   return (
@@ -95,7 +95,7 @@ export function Cables(props: {
           <>
             {stubPair(`ng${i()}`, n.stub, ROLE.trigger, ROLE.trigger, 'ghost-normal')}
             <Show when={props.wholeNormal(n.parent, n.id)}>
-              <path class="ghost-normal" d={n.d} stroke={ROLE.trigger} />
+              <path class="ghost-normal" d={n.d} style={{ stroke: ROLE.trigger }} />
             </Show>
           </>
         )}
@@ -116,8 +116,8 @@ export function Cables(props: {
                     x2={q().x}
                     y2={q().y}
                   >
-                    <stop offset="0.4" stop-color={ROLE[g.from]} />
-                    <stop offset="0.6" stop-color={ROLE[g.to]} />
+                    <stop offset="0.4" style={{ 'stop-color': ROLE[g.from] }} />
+                    <stop offset="0.6" style={{ 'stop-color': ROLE[g.to] }} />
                   </linearGradient>
                 </defs>
               </Show>
@@ -130,7 +130,7 @@ export function Cables(props: {
                     insert: same(g.cable, props.insert),
                   }}
                   d={g.d}
-                  stroke={g.from === g.to ? ROLE[g.from] : `url(#cg${i()})`}
+                  style={{ stroke: g.from === g.to ? ROLE[g.from] : `url(#cg${i()})` }}
                 />
               </Show>
             </>

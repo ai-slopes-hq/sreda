@@ -2,10 +2,10 @@
 import type { KnobParam, Role } from '@sreda/core';
 
 export const ROLE: Record<Role, string> = {
-  audio: '#e9e4d8',
-  mod: '#6cb4ee',
-  pitch: '#9ad18b',
-  trigger: '#f5a524',
+  audio: 'var(--role-audio)',
+  mod: 'var(--role-mod)',
+  pitch: 'var(--role-pitch)',
+  trigger: 'var(--role-trigger)',
 };
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
