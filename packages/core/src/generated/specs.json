@@ -598,9 +598,9 @@
   {
     "type": "drive",
     "label": "DRIVE",
-    "desc": "saturation, overdrive, fuzz",
+    "desc": "saturation, overdrive, distortion, fuzz",
     "size": [
-      5,
+      6,
       1
     ],
     "inputs": [
@@ -623,10 +623,19 @@
         "id": "gain",
         "label": "GAIN",
         "min": 0.0,
-        "max": 24.0,
-        "def": 6.0,
+        "max": 36.0,
+        "def": 12.0,
         "taper": "lin",
         "unit": "db"
+      },
+      {
+        "kind": "knob",
+        "id": "bias",
+        "label": "BIAS",
+        "min": -1.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
       },
       {
         "kind": "knob",
@@ -648,14 +657,18 @@
       },
       {
         "kind": "option",
-        "id": "mode",
-        "label": "MODE",
+        "id": "model",
+        "label": "MODEL",
         "options": [
-          "SAT",
+          "SOFT",
+          "TUBE",
           "OD",
-          "FUZZ"
+          "DIST",
+          "FUZZ",
+          "RECT",
+          "DIGI"
         ],
-        "def": 1
+        "def": 2
       }
     ],
     "normals": []

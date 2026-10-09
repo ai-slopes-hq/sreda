@@ -156,7 +156,10 @@ mod tests {
         b.connected_in[0] = true;
         b.ctx.solo_any = true;
         b.run(&mut Out::new(48_000.0), 1, |_, i, inp| inp[0][i] = 0.5);
-        assert!(b.ctx.master[0].iter().all(|x| *x == 0.0), "under another solo");
+        assert!(
+            b.ctx.master[0].iter().all(|x| *x == 0.0),
+            "under another solo"
+        );
     }
 
     #[test]

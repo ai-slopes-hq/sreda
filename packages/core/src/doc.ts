@@ -87,6 +87,20 @@ const RENAMED: Record<string, string> = { sah: 'snh' };
 /** Outputs that were renamed, by module type: DELAY's `out` became `l` (Plan 4). */
 const RENAMED_OUTPUTS: Record<string, Record<string, string>> = { delay: { out: 'l' } };
 
+/**
+ * Params of an older module version, moved to the current one before validation. DRIVE (Plan 9): MODE SAT / OD / FUZZ
+ * became MODEL SOFT / TUBE / OD / DIST / FUZZ / RECT / DIGI, and GAIN's range grew from 0…24 dB to 0…36 dB.
+ */
+function migrateParams(type: string, params: Record<string, number>): Record<string, number> {
+  if (type === 'drive' && 'mode' in params && !('model' in params)) {
+    const { mode, ...rest } = params;
+    const next: Record<string, number> = { ...rest, model: [0, 2, 4][Math.round(mode ?? 1)] ?? 2 };
+    if ('gain' in params) next['gain'] = ((params['gain'] ?? 0.25) * 24) / 36;
+    return next;
+  }
+  return params;
+}
+
 const isObj = (x: unknown): x is Record<string, unknown> =>
   typeof x === 'object' && x !== null && !Array.isArray(x);
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
@@ -145,7 +159,8 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
     const ratios = m['ratios'] ?? {};
     if (!numRecord(params) || !numRecord(atts) || !numRecord(ratios)) return null;
     const merged = defaultParams(specs, spec.type);
-    for (const key of Object.keys(merged)) if (key in params) merged[key] = params[key]!;
+    const given = migrateParams(spec.type, params);
+    for (const key of Object.keys(merged)) if (key in given) merged[key] = given[key]!;
     const mod: ModuleDoc = {
       id: m['id'],
       type: spec.type,

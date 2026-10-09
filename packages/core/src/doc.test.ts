@@ -226,3 +226,33 @@ test('a starter OUT gets mute: 0 and solo: 0', () => {
   expect(out.params['mute']).toBe(0);
   expect(out.params['solo']).toBe(0);
 });
+
+test('a Plan 4 DRIVE opens with its model and its gain in dB (MODE SAT / OD / FUZZ → SOFT / OD / FUZZ)', () => {
+  const drive = (mode: number) => ({
+    id: `m${mode + 1}`,
+    type: 'drive',
+    x: 0,
+    y: 0,
+    params: { mode, gain: 0.5 },
+  });
+  const d = validateDoc(
+    { version: 1, modules: [drive(0), drive(1), drive(2)], cables: [], nextId: 4 },
+    SPECS,
+  )!;
+  expect(d.modules.map((m) => m.params['model'])).toEqual([0, 2, 4]);
+  // 0.5 of the old 0…24 dB is 12 dB, a third of the new 0…36 dB
+  for (const m of d.modules) expect(m.params['gain']).toBeCloseTo(1 / 3, 6);
+  expect('mode' in d.modules[0]!.params).toBe(false);
+  // a new document keeps its params
+  const n = validateDoc(
+    {
+      version: 1,
+      modules: [{ id: 'm1', type: 'drive', x: 0, y: 0, params: { model: 5, gain: 0.5 } }],
+      cables: [],
+      nextId: 2,
+    },
+    SPECS,
+  )!;
+  expect(n.modules[0]!.params['model']).toBe(5);
+  expect(n.modules[0]!.params['gain']).toBe(0.5);
+});

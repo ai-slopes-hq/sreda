@@ -2325,6 +2325,9 @@ mod tests {
         m.apply(two_outs(1, [0.0, 1.0], [0.0, 0.0])).unwrap();
         m.master(0.0);
         run(&mut m, 100);
-        assert!(peak(&run(&mut m, 5)) < 1e-3, "the mix is silent at master 0");
+        assert!(
+            peak(&run(&mut m, 5)) < 1e-3,
+            "the mix is silent at master 0"
+        );
     }
 }
