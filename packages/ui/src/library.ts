@@ -23,11 +23,9 @@ export interface SredaBridge {
     samples(): Promise<string[]>;
     /** a sample's raw bytes; throws when it is not there */
     readSample(path: string): Promise<ArrayBuffer>;
-    /** copies an audio file into samples/ under a free name; returns its path */
-    importSample(absolutePath: string): Promise<string>;
+    /** writes a dropped audio file into samples/ under a free name; returns its path */
+    importSample(name: string, bytes: ArrayBuffer): Promise<string>;
   };
-  /** a dropped file's path on disk */
-  pathForFile(file: File): string;
 }
 
 declare global {

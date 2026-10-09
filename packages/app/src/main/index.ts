@@ -129,10 +129,11 @@ function serveLibrary(): void {
   );
   ipcMain.handle('library:samples', async () => listSamples(await root()));
   ipcMain.handle('library:readSample', async (_e, path: unknown) => readSample(await root(), pathOf(path)));
-  // any file the user dropped (an absolute path from the renderer): copied in, never read elsewhere
-  ipcMain.handle('library:importSample', async (_e, path: unknown) =>
-    importSample(await root(), pathOf(path)),
-  );
+  // a file the user dropped: its name and bytes, written into samples/ (nothing is read from elsewhere)
+  ipcMain.handle('library:importSample', async (_e, name: unknown, bytes: unknown) => {
+    if (!(bytes instanceof ArrayBuffer) && !(bytes instanceof Uint8Array)) throw new Error('bad bytes');
+    return importSample(await root(), pathOf(name), bytes);
+  });
 }
 
 void app.whenReady().then(() => {

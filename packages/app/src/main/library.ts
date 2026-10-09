@@ -1,6 +1,6 @@
 // The library folder (spec §6): groups/**/<name>.sreda-group.json and projects/**/<name>.sreda.json. Pure Node; the
 // main process reaches it over IPC (index.ts). Nothing is ever read or written outside the folder.
-import { copyFile, mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { basename, extname, join, sep } from 'node:path';
 
 export type Kind = 'group' | 'project';
@@ -110,11 +110,16 @@ export async function readSample(root: string, path: string): Promise<ArrayBuffe
   return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
 }
 
-/** Copies an audio file from anywhere into samples/ under a free name (`kick 2.wav`); returns its path. */
-export async function importSample(root: string, src: string): Promise<string> {
-  if (!isSample(src)) throw new Error(`not an audio file: ${src}`);
-  const ext = extname(src);
-  const stem = basename(src, ext);
+/** Writes a dropped audio file into samples/ under a free name (`kick 2.wav`); returns its path. */
+export async function importSample(
+  root: string,
+  name: string,
+  bytes: ArrayBuffer | Uint8Array,
+): Promise<string> {
+  const base = basename(name);
+  if (!isSample(base)) throw new Error(`not an audio file: ${name}`);
+  const ext = extname(base);
+  const stem = basename(base, ext);
   await mkdir(join(root, 'samples'), { recursive: true });
   for (let n = 1; ; n++) {
     const name = n === 1 ? stem + ext : `${stem} ${n}${ext}`;
@@ -122,7 +127,9 @@ export async function importSample(root: string, src: string): Promise<string> {
     try {
       await stat(file);
     } catch {
-      await copyFile(src, file);
+      await writeFile(file, new Uint8Array(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)), {
+        flag: 'wx',
+      });
       return name;
     }
   }

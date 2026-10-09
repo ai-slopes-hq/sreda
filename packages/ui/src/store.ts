@@ -265,6 +265,16 @@ export function createSession(
       send();
     },
     /** a change made by the patch itself (a DICE input): shown, saved and played, but not an undo step */
+    /** a module's sample (one undo step; the sample loads and the plan follows) */
+    setSample(id: string, path: string): void {
+      const doc: Doc = {
+        ...history.current,
+        modules: history.current.modules.map((m) => (m.id === id ? { ...m, sample: path } : m)),
+      };
+      history.commit(doc);
+      show(doc);
+      send();
+    },
     replaceDoc(doc: Doc): void {
       history.replace(doc);
       show(doc);

@@ -94,7 +94,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     tab: PickerTab;
     /** REPLACE mode: the module being replaced */
     replace?: string;
+    /** LOAD: the module whose sample is being chosen */
+    forModule?: string;
   } | null>(null);
+  /** the library's samples (listed again whenever the picker opens) */
+  const [samples, setSamples] = createSignal<string[]>([]);
   const lib = libraryActions(s, specs);
   void lib.refresh();
   /** the groups and projects the picker offers: the factory's, then the library folder's */
@@ -106,8 +110,65 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   const library = () => [...factory, ...st.library];
   // the folder may have changed in the Finder: list it again whenever the picker opens
   createEffect(() => {
-    if (picker()) void lib.refresh();
+    if (!picker()) return;
+    void lib.refresh();
+    void window.sreda?.library
+      .samples()
+      .then(setSamples)
+      .catch(() => setSamples([]));
   });
+  /** audition: the highlighted SAMPLES row plays 120 ms after it is highlighted; anything else stops it */
+  let auditionTimer: ReturnType<typeof setTimeout> | undefined;
+  let auditioned: string | null = null;
+  function highlight(item: PickerItem | null): void {
+    clearTimeout(auditionTimer);
+    const path = item?.kind === 'sample' ? item.path : null;
+    if (path === auditioned) return;
+    if (auditioned) s.samples.audition(null);
+    auditioned = path;
+    if (!path) return;
+    auditionTimer = setTimeout(() => {
+      void s.samples.load(path).then(() => {
+        if (auditioned === path) s.samples.audition(path);
+      });
+    }, 120);
+  }
+  /** a module gets a sample, or a SAMPLER with it lands at `at` */
+  function useSample(path: string, target: string | undefined, at: Pt): void {
+    if (target) {
+      s.setSample(target, path);
+      return;
+    }
+    const added = addModule(s.current(), specs, 'sampler', at.x, at.y);
+    s.commit({
+      ...added.doc,
+      modules: added.doc.modules.map((m) => (m.id === added.id ? { ...m, sample: path } : m)),
+    });
+    s.setState('sel', [added.id]);
+  }
+  /** files dropped from the Finder: audio is copied into samples/ (spec §7a) */
+  function dropFiles(e: DragEvent): void {
+    const files = [...(e.dataTransfer?.files ?? [])];
+    if (!files.length) return;
+    e.preventDefault();
+    const bridge = window.sreda;
+    if (!bridge) return;
+    const el = (e.target as Element).closest('[data-module]');
+    const type = el?.getAttribute('data-type');
+    const target =
+      type === 'sampler' || type === 'grains' ? (el!.getAttribute('data-module') ?? undefined) : undefined;
+    const at = toCanvas(client(e));
+    const file = files[0]!;
+    if (!/\.(wav|aiff?|flac|mp3|ogg)$/i.test(file.name)) {
+      s.setState('notice', `NOT A SAMPLE · ${file.name}`);
+      return;
+    }
+    void file
+      .arrayBuffer()
+      .then((bytes) => bridge.library.importSample(file.name, bytes))
+      .then((path) => useSample(path, target, at))
+      .catch(() => s.setState('notice', `${file.name.toUpperCase()} COULD NOT BE IMPORTED`));
+  }
   /** the frame a dragged selection would land in */
   const [drop, setDrop] = createSignal<string | null>(null);
   let drag: Drag | null = null;
@@ -526,6 +587,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       s.setState('sel', [id]);
       return;
     }
+    if (item.kind === 'sample') {
+      useSample(item.path, pk.forModule, pk.at);
+      return;
+    }
     if (item.kind !== 'module') {
       void lib.read(item).then((doc) => {
         if (!doc) return;
@@ -656,6 +721,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         onPointerDown={rootDown}
         onPointerMove={hoverWires}
         onPointerLeave={() => setHovered(null)}
+        onDragOver={(e) => {
+          if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+        }}
+        onDrop={dropFiles}
         onDblClick={(e) => {
           if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
           setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
@@ -752,6 +821,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                       if (param === 'dice') s.params(m.id, diced(m.id), undefined);
                     },
                     editParams: (changes, merge) => s.params(m.id, changes, merge),
+                    load: () =>
+                      setPicker({
+                        screen: pointer,
+                        at: { x: m.x, y: m.y },
+                        from: null,
+                        tab: 'SAMPLES',
+                        forModule: m.id,
+                      }),
                     diceInput: () => s.params(m.id, diced(m.id), undefined, false),
                   }}
                 />
@@ -841,6 +918,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
               library={library()}
               tab={pk.tab}
               replace={pk.replace ? nameOf(st.doc, specs, pk.replace) : null}
+              samples={samples()}
+              highlight={highlight}
               pick={place}
               close={() => setPicker(null)}
             />

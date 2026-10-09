@@ -75,12 +75,11 @@ test('samples: listed under samples/ with their extension, others ignored; read 
 
 test('importing a file copies it into samples/ under a free name', async () => {
   const root = tmp();
-  const src = join(tmp(), 'kick.wav');
-  writeFileSync(src, 'boom');
-  expect(await importSample(root, src)).toBe('kick.wav');
-  expect(await importSample(root, src)).toBe('kick 2.wav');
+  const boom = new TextEncoder().encode('boom');
+  expect(await importSample(root, 'kick.wav', boom)).toBe('kick.wav');
+  expect(await importSample(root, 'kick.wav', boom)).toBe('kick 2.wav');
   expect(readFileSync(join(root, 'samples', 'kick 2.wav'), 'utf8')).toBe('boom');
-  const txt = join(tmp(), 'readme.txt');
-  writeFileSync(txt, 'no');
-  await expect(importSample(root, txt)).rejects.toThrow();
+  // only the file's name counts: no folders, no way out of samples/
+  expect(await importSample(root, '../../evil.wav', boom)).toBe('evil.wav');
+  await expect(importSample(root, 'readme.txt', boom)).rejects.toThrow();
 });

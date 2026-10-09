@@ -6,11 +6,12 @@ export interface End {
   dir: 'in' | 'out';
   role: Role;
 }
-export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS' | 'PROJECTS';
-export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS', 'PROJECTS'];
+export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS' | 'PROJECTS' | 'SAMPLES';
+export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS', 'PROJECTS', 'SAMPLES'];
 export type PickerItem =
   | { kind: 'module'; type: string; label: string; desc: string }
-  | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean };
+  | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean }
+  | { kind: 'sample'; path: string; label: string; folder: string };
 /** a group or project the picker can offer: factory paths are 'FACTORY/<name>' */
 export interface LibEntry {
   kind: 'group' | 'project';
@@ -34,12 +35,24 @@ export function pickerItems(
   specs: Specs,
   query: string,
   from: End | null,
-  o: { tab: PickerTab; replace: boolean; library: LibEntry[] },
+  o: { tab: PickerTab; replace: boolean; library: LibEntry[]; samples?: string[] },
 ): PickerItem[] {
   const q = query.trim().toLowerCase();
   const out: PickerItem[] = [];
   if (o.tab === 'ALL' || o.tab === 'MODULES') out.push(...moduleItems(specs, q, from));
   if (o.replace) return out;
+  // samples only on their own tab, never from a jack (spec §7a)
+  if (o.tab === 'SAMPLES') {
+    if (from) return out;
+    const split = (path: string) => {
+      const i = path.lastIndexOf('/');
+      return { label: path.slice(i + 1), folder: i > 0 ? path.slice(0, i) : '' };
+    };
+    return (o.samples ?? [])
+      .filter((p) => !q || p.toLowerCase().includes(q))
+      .map((path) => ({ kind: 'sample' as const, path, ...split(path) }))
+      .sort((a, b) => a.folder.localeCompare(b.folder) || a.label.localeCompare(b.label));
+  }
   for (const kind of ['group', 'project'] as const) {
     if (o.tab !== 'ALL' && o.tab !== (kind === 'group' ? 'GROUPS' : 'PROJECTS')) continue;
     if (kind === 'project' && from) continue;

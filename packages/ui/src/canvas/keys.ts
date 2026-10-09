@@ -158,5 +158,8 @@ export function handleKey(e: KeyboardEvent, k: KeyCtx): void {
   } else if (e.key === '/' && !meta) {
     e.preventDefault();
     k.openPicker(k.pointer());
+  } else if (key === 's' && !meta && !e.shiftKey && !e.altKey) {
+    e.preventDefault();
+    k.openPicker(k.pointer(), 'SAMPLES');
   } else if (key === 'f' && !meta) k.fit(e.shiftKey);
 }

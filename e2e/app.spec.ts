@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
@@ -554,7 +554,8 @@ test('picker: a factory project replaces the canvas (⌘Z returns); a group drop
   const { app, page } = await launch();
   await page.mouse.move(700, 500);
   await page.keyboard.press('/');
-  await page.keyboard.press('Shift+Tab'); // ALL → PROJECTS
+  await page.keyboard.press('Shift+Tab'); // ALL → SAMPLES
+  await page.keyboard.press('Shift+Tab'); // → PROJECTS
   await page.keyboard.type('acid');
   await expect(page.locator('.sr-pitem')).toHaveCount(1);
   await page.keyboard.press('Enter');
@@ -820,5 +821,94 @@ test("REVERB's room fills with the tail once audio runs", async () => {
   await expect
     .poll(async () => (await fill.boundingBox())?.height ?? 0, { timeout: 2000 })
     .toBeGreaterThan(empty + 2);
+  await app.close();
+});
+
+/** A 16-bit mono WAV: `seconds` of a decaying 110 Hz sine at 48 kHz. */
+function wav(seconds = 0.5, hz = 110): Buffer {
+  const n = Math.round(48_000 * seconds);
+  const b = Buffer.alloc(44 + 2 * n);
+  b.write('RIFF', 0);
+  b.writeUInt32LE(36 + 2 * n, 4);
+  b.write('WAVEfmt ', 8);
+  b.writeUInt32LE(16, 16);
+  b.writeUInt16LE(1, 20);
+  b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(48_000, 24);
+  b.writeUInt32LE(96_000, 28);
+  b.writeUInt16LE(2, 32);
+  b.writeUInt16LE(16, 34);
+  b.write('data', 36);
+  b.writeUInt32LE(2 * n, 40);
+  for (let i = 0; i < n; i++)
+    b.writeInt16LE(
+      Math.round(30_000 * Math.exp(-i / 12_000) * Math.sin((2 * Math.PI * hz * i) / 48_000)),
+      44 + 2 * i,
+    );
+  return b;
+}
+function libraryWithSamples(): string {
+  const library = mkdtempSync(join(tmpdir(), 'sreda-lib-'));
+  mkdirSync(join(library, 'samples', 'kit'), { recursive: true });
+  writeFileSync(join(library, 'samples', 'kit', 'kick.wav'), wav());
+  writeFileSync(join(library, 'samples', 'kit', 'snare.wav'), wav(0.3, 220));
+  return library;
+}
+type SampleMod = { id: string; type: string; sample?: string };
+const samplers = async (page: Page) =>
+  ((await doc(page)).modules as unknown as SampleMod[]).filter((m) => m.type === 'sampler');
+
+test('S → kick ⏎ places a SAMPLER with that sample; triggered, it sounds; LOAD changes it, ⌘Z restores', async () => {
+  const { app, page } = await launch(undefined, 'starter', libraryWithSamples());
+  await page.mouse.move(700, 650);
+  await page.keyboard.press('s');
+  await expect(page.locator('.sr-ptab.on')).toHaveText('SAMPLES');
+  await page.keyboard.type('kick');
+  await expect(page.locator('.sr-pitem')).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/kick.wav');
+  await expect(page.locator('[data-type=sampler] .sr-dtag')).toHaveText(/^kick\.wav/);
+  // OSC's saw into TRIG, SAMPLER L into OUT L (in place of OSC)
+  await drag(
+    page,
+    await center(page, jack(page, 'osc', 'out')),
+    await center(page, jack(page, 'sampler', 'trig')),
+  );
+  await drag(
+    page,
+    await center(page, jack(page, 'sampler', 'l')),
+    await center(page, jack(page, 'out', 'r')),
+  );
+  await page.mouse.click(1300, 880); // start audio
+  const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
+  await expect.poll(master, { timeout: 2000 }).toBeGreaterThan(0.05);
+  // LOAD → snare
+  await page.locator('[data-type=sampler] [data-action=load]').click();
+  await page.keyboard.type('snare');
+  await page.keyboard.press('Enter');
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/snare.wav');
+  await page.keyboard.press('Meta+z');
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('kit/kick.wav');
+  await app.close();
+});
+
+test('an audio file dropped on empty canvas becomes a SAMPLER; another file gives a notice', async () => {
+  const { app, page, library } = await launch(undefined, 'starter', libraryWithSamples());
+  const dropFile = async (name: string, bytes: number[]) => {
+    const dt = await page.evaluateHandle(
+      ([n, b]) => {
+        const d = new DataTransfer();
+        d.items.add(new File([new Uint8Array(b as number[])], n as string));
+        return d;
+      },
+      [name, bytes] as const,
+    );
+    await page.dispatchEvent('.sr-canvas', 'drop', { dataTransfer: dt, clientX: 700, clientY: 650 });
+  };
+  await dropFile('hat.wav', [...wav(0.1, 3000)]);
+  await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('hat.wav');
+  expect(existsSync(join(library, 'samples', 'hat.wav'))).toBe(true);
+  await dropFile('notes.txt', [1, 2, 3]);
+  await expect(page.locator('.sr-line.notice')).toHaveText('NOT A SAMPLE · notes.txt');
   await app.close();
 });

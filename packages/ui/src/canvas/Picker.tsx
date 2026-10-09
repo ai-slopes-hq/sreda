@@ -1,5 +1,5 @@
 import type { Specs } from '@sreda/core';
-import { createEffect, createMemo, createSignal, For, onMount, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, type JSX } from 'solid-js';
 import { pickerItems, TABS, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 
 export interface PickerProps {
@@ -15,6 +15,10 @@ export interface PickerProps {
   tab: PickerTab;
   /** REPLACE mode: the replaced module's name (modules only) */
   replace?: string | null;
+  /** the library's samples (the SAMPLES tab) */
+  samples?: string[];
+  /** the highlighted row changed (null: none, or the picker closed): SAMPLES auditions it */
+  highlight?(item: PickerItem | null): void;
   pick(item: PickerItem): void;
   close(): void;
 }
@@ -29,8 +33,14 @@ export function Picker(props: PickerProps): JSX.Element {
       tab: tab(),
       replace: !!props.replace,
       library: props.library,
+      samples: props.samples ?? [],
     }),
   );
+  /** the tabs on offer: modules only when replacing, no SAMPLES from a jack */
+  const tabs = (): PickerTab[] =>
+    props.replace ? ['MODULES'] : props.from ? TABS.filter((t) => t !== 'SAMPLES') : TABS;
+  createEffect(() => props.highlight?.(items()[idx()] ?? null));
+  onCleanup(() => props.highlight?.(null));
   let input: HTMLInputElement | undefined;
   let list: HTMLDivElement | undefined;
   onMount(() => input?.focus());
@@ -47,8 +57,9 @@ export function Picker(props: PickerProps): JSX.Element {
     if (e.key === 'ArrowDown') setIdx((idx() + 1) % Math.max(1, n));
     else if (e.key === 'ArrowUp') setIdx((idx() + n - 1) % Math.max(1, n));
     else if (e.key === 'Tab' && !props.replace) {
-      const i = TABS.indexOf(tab());
-      setTab(TABS[(i + (e.shiftKey ? TABS.length - 1 : 1)) % TABS.length]!);
+      const t = tabs();
+      const i = t.indexOf(tab());
+      setTab(t[(i + (e.shiftKey ? t.length - 1 : 1)) % t.length]!);
     } else if (e.key === 'Enter') {
       const it = items()[idx()];
       if (it) props.pick(it);
@@ -68,7 +79,7 @@ export function Picker(props: PickerProps): JSX.Element {
       onWheel={(e) => e.stopPropagation()}
     >
       <div class="sr-ptabs">
-        <For each={props.replace ? (['MODULES'] as PickerTab[]) : TABS}>
+        <For each={tabs()}>
           {(t) => (
             <button
               class="sr-ptab"
