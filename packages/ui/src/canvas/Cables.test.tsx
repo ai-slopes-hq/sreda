@@ -1,10 +1,16 @@
 // @vitest-environment happy-dom
-import { addModule, connect, emptyDoc } from '@sreda/core';
+import { addModule, connect, emptyDoc, frameSelection } from '@sreda/core';
 import { render } from '@solidjs/testing-library';
 import { expect, test } from 'vitest';
 import { TEST_SPECS as S } from '../../../core/src/testspecs';
 import { Cables } from './Cables';
 import { cableGeoms } from './cablegeom';
+
+function framed() {
+  const d = patch();
+  const inner = frameSelection(d, S, [d.modules[0]!.id, d.modules[1]!.id]);
+  return frameSelection(inner.doc, S, [inner.id, d.modules[2]!.id]).doc;
+}
 
 function patch() {
   let doc = emptyDoc;
@@ -23,8 +29,9 @@ function patch() {
   return doc;
 }
 
-const draw = (whole: (i: number) => boolean) => {
-  const doc = patch();
+let normalWhole = false;
+const draw = (whole: (i: number) => boolean, nested = false) => {
+  const doc = nested ? framed() : patch();
   const geoms = cableGeoms(doc, S);
   const { container } = render(() => (
     <Cables
@@ -33,6 +40,7 @@ const draw = (whole: (i: number) => boolean) => {
       geoms={geoms}
       hover={null}
       whole={(c) => whole(doc.cables.indexOf(c))}
+      wholeNormal={() => normalWhole}
       insert={null}
     />
   ));
@@ -60,4 +68,14 @@ test('each stub is 14 px long along the path', () => {
       len += Math.hypot(pts[k]![0]! - pts[k - 1]![0]!, pts[k]![1]! - pts[k - 1]![1]!);
     expect(Math.abs(len - 14)).toBeLessThanOrEqual(1);
   }
+});
+
+test('a frame clock normal is a stub until it is whole', () => {
+  normalWhole = false;
+  const c = draw(() => false, true);
+  expect(c.querySelectorAll('path.ghost-normal')).toHaveLength(2);
+  normalWhole = true;
+  const w = draw(() => false, true);
+  expect(w.querySelectorAll('path.ghost-normal')).toHaveLength(3);
+  normalWhole = false;
 });

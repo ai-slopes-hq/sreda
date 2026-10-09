@@ -287,11 +287,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     }
     // a whole cable by its path, any cable by its stubs
     const gs = geoms();
-    const shown = gs.filter((g) => whole(g.cable));
     const at = toCanvas(pointer);
-    const i = cableAt(shown, at, 6 / st.view.z);
+    const i = cableAt(gs, at, 6 / st.view.z, (g) => whole(g.cable));
     const j = i === null ? stubAt(gs, at, 6 / st.view.z) : null;
-    const cable = i !== null ? shown[i]!.cable : j !== null ? gs[j]!.cable : null;
+    const cable = i !== null ? gs[i]!.cable : j !== null ? gs[j]!.cable : null;
     const h = hovered();
     if (!cable) {
       if (h) setHovered(null);
@@ -883,6 +882,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             geoms={geoms()}
             hover={litCable()}
             whole={whole}
+            wholeNormal={(a, b) => st.sidebar.open || focusSet().has(a) || focusSet().has(b)}
             insert={insert()}
           />
           <Show when={preview()}>

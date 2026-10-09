@@ -3,13 +3,15 @@
 import { jackAt, type Cable, type Doc, type Role, type Specs } from '@sreda/core';
 import { bez } from './glyphs';
 
-type Pt = { x: number; y: number };
+export type Pt = { x: number; y: number };
 
 export interface CableGeom {
   key: string;
   cable: Cable;
   pts: Pt[];
   d: string;
+  /** the two stubs, computed once with the geometry */
+  stub: StubSet;
   from: Role;
   to: Role;
 }
@@ -60,7 +62,8 @@ export function cableGeoms(doc: Doc, specs: Specs): CableGeom[] {
     let geom = memo.get(key);
     if (!geom || geom.from !== from || geom.to !== to) {
       geomStats.computed++;
-      geom = { key, cable: c, pts: bezPts(a, b), d: bez(a, b), from, to };
+      const pts = bezPts(a, b);
+      geom = { key, cable: c, pts, d: bez(a, b), stub: makeStubs(pts), from, to };
       memo.set(key, geom);
     }
     out.push(geom.cable === c ? geom : { ...geom, cable: c });
@@ -78,11 +81,17 @@ function segDist(p: Pt, a: Pt, b: Pt): number {
   return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
 }
 
-/** The cable nearest to `p` within `thr` (canvas px), or null. */
-export function cableAt(geoms: CableGeom[], p: Pt, thr: number): number | null {
+/** The cable nearest to `p` within `thr` (canvas px), or null; `only` skips the cables it rejects. */
+export function cableAt(
+  geoms: CableGeom[],
+  p: Pt,
+  thr: number,
+  only?: (g: CableGeom) => boolean,
+): number | null {
   let best: number | null = null;
   let bd = thr + 1e-9;
   geoms.forEach((g, i) => {
+    if (only && !only(g)) return;
     for (let k = 0; k < g.pts.length - 1; k++) {
       const d = segDist(p, g.pts[k]!, g.pts[k + 1]!);
       if (d <= bd) {
@@ -116,17 +125,21 @@ function head(pts: Pt[], len: number): Pt[] {
   return out;
 }
 
-/** The two stubs as point lists, each starting at its jack: the output end `a`, the input end `b`. */
-export function stubPts(g: CableGeom): { a: Pt[]; b: Pt[] } {
-  return { a: head(g.pts, STUB_LEN), b: head([...g.pts].reverse(), STUB_LEN) };
-}
-
 const path = (pts: Pt[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ');
 
-/** The first and last 14 px of the cable's own path, as two SVG paths (each from its jack inwards). */
-export function stubs(g: CableGeom): { a: string; b: string } {
-  const s = stubPts(g);
-  return { a: path(s.a), b: path(s.b) };
+/** A cable's two stubs: point lists and SVG paths, each from its jack inwards (`a` the output end, `b` the input end). */
+export interface StubSet {
+  a: Pt[];
+  b: Pt[];
+  da: string;
+  db: string;
+}
+
+/** The first and last 14 px of a path, as two stubs. */
+export function makeStubs(pts: Pt[]): StubSet {
+  const a = head(pts, STUB_LEN);
+  const b = head(pts.slice().reverse(), STUB_LEN);
+  return { a, b, da: path(a), db: path(b) };
 }
 
 /** The cable whose stub is nearest to `p` within `thr` (canvas px), or null. */
@@ -134,8 +147,9 @@ export function stubAt(geoms: CableGeom[], p: Pt, thr: number): number | null {
   let best: number | null = null;
   let bd = thr + 1e-9;
   geoms.forEach((g, i) => {
-    const s = stubPts(g);
-    for (const pts of [s.a, s.b])
+    const s = g.stub;
+    for (let e = 0; e < 2; e++) {
+      const pts = e ? s.b : s.a;
       for (let k = 0; k < pts.length - 1; k++) {
         const d = segDist(p, pts[k]!, pts[k + 1]!);
         if (d <= bd) {
@@ -143,6 +157,7 @@ export function stubAt(geoms: CableGeom[], p: Pt, thr: number): number | null {
           best = i;
         }
       }
+    }
   });
   return best;
 }
