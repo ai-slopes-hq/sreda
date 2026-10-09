@@ -154,3 +154,22 @@ fn process_with_a_sample_loaded_and_auditioning_allocates_nothing() {
     }
     assert_eq!(allocs() - before, 0);
 }
+
+#[test]
+fn mute_solo_and_master_messages_allocate_nothing() {
+    let mut e = Engine::new(48_000.0, 1);
+    let plan = fixture("starter");
+    let out = plan.nodes.iter().position(|n| n.type_ == "out").unwrap();
+    e.apply(plan).unwrap();
+    e.process();
+    let before = allocs();
+    for i in 0..2_000 {
+        if i % 100 == 0 {
+            e.fixed(out, 0, ((i / 100) % 2) as f64); // MUTE
+            e.fixed(out, 1, ((i / 200) % 2) as f64); // SOLO
+            e.master((i % 1000) as f64 / 1000.0);
+        }
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+}

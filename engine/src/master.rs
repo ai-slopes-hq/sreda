@@ -14,6 +14,9 @@ pub struct Master {
     y1: [f64; 2],
     gain: f64,
     gain_step: f64,
+    /// the fader (0…1), gliding 10 ms toward `level`
+    level: f64,
+    level_target: f64,
     sample_rate: f64,
 }
 
@@ -25,6 +28,8 @@ impl Master {
             y1: [0.0; 2],
             gain: 1.0,
             gain_step: 0.0,
+            level: 1.0,
+            level_target: 1.0,
             sample_rate,
         }
     }
@@ -35,12 +40,29 @@ impl Master {
         self.gain_step = 1.0 / (ms * 0.001 * self.sample_rate).max(1.0);
     }
 
+    /// The master fader, 0…1; the output glides there over 10 ms.
+    pub fn set_level(&mut self, v: f64) {
+        self.level_target = if v.is_finite() {
+            v.clamp(0.0, 1.0)
+        } else {
+            1.0
+        };
+    }
+
     pub fn process(&mut self, l: &mut [f32; BLOCK], r: &mut [f32; BLOCK]) {
         let (pole, gain0, step) = (self.pole, self.gain, self.gain_step);
+        let (level0, target) = (self.level, self.level_target);
+        let level_step = 1.0 / (0.010 * self.sample_rate).max(1.0);
         for (ch, buf) in [l, r].into_iter().enumerate() {
             let (mut x1, mut y1, mut gain) = (self.x1[ch], self.y1[ch], gain0);
+            let mut level = level0;
             for s in buf.iter_mut() {
-                let x = *s as f64;
+                if level < target {
+                    level = (level + level_step).min(target);
+                } else if level > target {
+                    level = (level - level_step).max(target);
+                }
+                let x = *s as f64 * level;
                 if !x.is_finite() {
                     // a non-finite sample is dropped and the filter restarts
                     x1 = 0.0;
@@ -60,6 +82,7 @@ impl Master {
             self.y1[ch] = y1;
             if ch == 1 {
                 self.gain = gain;
+                self.level = level;
             }
         }
         if self.gain >= 1.0 {

@@ -522,7 +522,7 @@
       "id": "m10",
       "type": "out",
       "knobs": [0.2054697866551578],
-      "fixed": [],
+      "fixed": [0, 0],
       "inputs": [
         {
           "sources": [

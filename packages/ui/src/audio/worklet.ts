@@ -57,6 +57,9 @@ class SredaProcessor extends AudioWorkletProcessor {
       case 'fade':
         this.engine.fadeIn(msg.ms);
         break;
+      case 'master':
+        this.engine.master(msg.value);
+        break;
       case 'sample':
         this.engine.sample(msg.id, msg.channels, msg.hits, msg.strengths);
         break;

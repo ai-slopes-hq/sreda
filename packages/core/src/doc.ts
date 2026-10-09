@@ -43,10 +43,12 @@ export interface Doc {
   modules: ModuleDoc[];
   cables: Cable[];
   groups: Group[];
+  /** the master fader, 0…1 */
+  master: number;
   nextId: number;
 }
 
-export const emptyDoc: Doc = { version: 1, modules: [], cables: [], groups: [], nextId: 1 };
+export const emptyDoc: Doc = { version: 1, modules: [], cables: [], groups: [], master: 1, nextId: 1 };
 
 /** The patch a first launch opens until the factory projects arrive (Plan 3): OSC (saw, 110 Hz) → OUT L. */
 export function starterDoc(specs: Specs): Doc {
@@ -60,6 +62,7 @@ export function starterDoc(specs: Specs): Doc {
     modules: [osc, out],
     cables: [{ from: ['m1', 'out'], to: ['m2', 'l'] }],
     groups: [],
+    master: 1,
     nextId: 3,
   };
 }
@@ -191,6 +194,7 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
     modules: out,
     cables: outCables,
     groups: outGroups,
+    master: isNum(json['master']) ? Math.min(1, Math.max(0, json['master'])) : 1,
     nextId: Math.max(json['nextId'], highest + 1),
   };
   // parents must name a frame and never loop; otherwise membership is recomputed from containment

@@ -1022,8 +1022,17 @@ impl Engine {
         self.audition = (id >= 0).then_some((id, 0));
     }
 
+    /// The master fader, 0…1.
+    pub fn master(&mut self, v: f64) {
+        self.master.set_level(v);
+    }
+
     pub fn process(&mut self) -> (&[f32; BLOCK], &[f32; BLOCK]) {
         self.ctx.master = [[0.0; BLOCK]; 2];
+        // a soloed OUT in the plan silences the others
+        self.ctx.solo_any = self.pool.iter().flatten().any(|s| {
+            s.writes_master && s.layout.is_some() && s.fixed.get(1).is_some_and(|&v| v >= 0.5)
+        });
         // this block's frame gains, gliding toward mute / unmute
         for (g, buf) in self.gains.iter_mut().zip(self.gain_buf.iter_mut()) {
             for x in buf.iter_mut() {
@@ -1345,7 +1354,7 @@ mod tests {
             id,
             "out",
             &[level],
-            &[],
+            &[0.0, 0.0], // MUTE, SOLO
             vec![
                 input(vec![src(from, false)], Kind::Sum),
                 none(Kind::Sum),
@@ -2224,5 +2233,66 @@ mod tests {
             e.process();
         }
         assert!(peak(e.process().0) < 1e-2);
+    }
+
+    /// two sines through two OUTs at LVL 0.1: [osc, out x, osc, out y]; `x` and `y` are (mute, solo)
+    fn two_outs(seq: u32, x: [f64; 2], y: [f64; 2]) -> Plan {
+        let mut ox = out("x", 0, 0.1);
+        ox.fixed = x.to_vec();
+        let mut oy = out("y", 2, 0.1);
+        oy.fixed = y.to_vec();
+        plan(seq, vec![sine("a"), ox, sine("b"), oy], chain(4))
+    }
+
+    #[test]
+    fn solo_silences_the_other_outs_and_mute_beats_solo() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(two_outs(1, [0.0, 0.0], [0.0, 0.0])).unwrap();
+        run(&mut e, 10);
+        let both = peak(&run(&mut e, 20));
+        assert!(both > 0.1, "{both}");
+        e.fixed(1, 1, 1.0); // solo x
+        run(&mut e, 10);
+        let one = peak(&run(&mut e, 20));
+        assert!((one / both - 0.5).abs() < 0.01, "{one} of {both}");
+        e.fixed(1, 0, 1.0); // x is muted and soloed: it is silent, and so is y
+        run(&mut e, 100); // the DC blocker's tail
+        assert!(peak(&run(&mut e, 20)) < 1e-3);
+        // the soloed OUT goes: the other sounds again
+        let mut oy = out("y", 0, 0.1);
+        oy.fixed = vec![0.0, 0.0];
+        e.apply(plan(2, vec![sine("b"), oy], chain(2))).unwrap();
+        run(&mut e, 10);
+        let back = peak(&run(&mut e, 20));
+        assert!((back / both - 0.5).abs() < 0.01, "{back} of {both}");
+    }
+
+    #[test]
+    fn out_state_is_the_peak_after_its_gain() {
+        let mut e = Engine::new(SR, 1);
+        let p = two_outs(1, [0.0, 0.0], [0.0, 0.0]);
+        let state = p.layout.nodes[1].state;
+        e.apply(p).unwrap();
+        run(&mut e, 10);
+        assert!(e.readouts()[state] > 0.05);
+        e.fixed(1, 0, 1.0);
+        run(&mut e, 10);
+        assert!(e.readouts()[state] < 1e-6);
+    }
+
+    #[test]
+    fn the_master_fader_scales_the_output_over_10_ms() {
+        let mut e = Engine::new(SR, 1);
+        e.apply(two_outs(1, [0.0, 1.0], [0.0, 0.0])).unwrap();
+        run(&mut e, 20);
+        let full = peak(&run(&mut e, 10));
+        e.master(0.5);
+        let down = run(&mut e, 10);
+        assert!(down.windows(2).all(|w| (w[1] - w[0]).abs() < 0.05));
+        let half = peak(&run(&mut e, 10));
+        assert!((half / full - 0.5).abs() < 0.01, "{half} of {full}");
+        e.master(0.0);
+        run(&mut e, 100); // the DC blocker's tail, after the fader
+        assert!(peak(&run(&mut e, 5)) < 1e-3);
     }
 }

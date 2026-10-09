@@ -641,6 +641,7 @@ export function extractGroup(doc: Doc, gid: string): Doc {
     modules: doc.modules.filter((m) => ids.has(m.id)),
     groups: doc.groups.filter((g) => ids.has(g.id)).map((g) => (g.id === gid ? { ...g, parent: null } : g)),
     cables: doc.cables.filter((c) => ids.has(c.from[0]) && ids.has(c.to[0])),
+    master: 1,
     nextId: doc.nextId,
   };
 }

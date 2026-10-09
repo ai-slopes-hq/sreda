@@ -14,6 +14,8 @@ export type ToEngine =
   | { t: 'mute'; frame: number; on: boolean }
   /** the speakers fade in (a project just opened) */
   | { t: 'fade'; ms: number }
+  /** the master fader, 0…1 (glides over 10 ms) */
+  | { t: 'master'; value: number }
   /** a decoded sample at the engine's rate for the pool, under `id`; its buffers are transferred */
   | { t: 'sample'; id: number; channels: Float32Array[]; hits: Uint32Array; strengths: Float32Array }
   /** play a sample from its start in place of the mix; null stops */

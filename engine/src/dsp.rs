@@ -36,6 +36,8 @@ pub struct Ctx {
     pub rng: Rng,
     /// OUT modules add into this; the engine sends it through the master stage.
     pub master: [[f32; BLOCK]; 2],
+    /// some OUT is soloed (set by the engine before the nodes run): the others fall silent
+    pub solo_any: bool,
     /// decoded samples by id (SAMPLER, GRAINS)
     pub samples: crate::samples::SamplePool,
 }
@@ -46,6 +48,7 @@ impl Ctx {
             sample_rate,
             rng: Rng::new(seed),
             master: [[0.0; BLOCK]; 2],
+            solo_any: false,
             samples: crate::samples::SamplePool::default(),
         }
     }

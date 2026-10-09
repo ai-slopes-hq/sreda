@@ -38,7 +38,7 @@ const MODULES: &[Entry] = &[
     ("mix", mix::spec, |_| Box::new(mix::Mix)),
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),
     ("osc", osc::spec, |sr| Box::new(osc::Osc::new(sr))),
-    ("out", out::spec, |_| Box::new(out::Out)),
+    ("out", out::spec, |sr| Box::new(out::Out::new(sr))),
     ("quant", quant::spec, |_| Box::new(quant::Quant)),
     ("reverb", reverb::spec, |sr| {
         Box::new(reverb::Reverb::new(sr))

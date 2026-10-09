@@ -117,3 +117,12 @@ test('a sample into the pool, then auditioned: it plays in place of the mix and 
   // then the starter's saw again
   expect(meanPeriod(heard, 14 * 128)).toBeCloseTo(48_000 / 110, -1);
 });
+
+test('master(0) silences the starter patch', () => {
+  const e = loadEngine(wasm, 48_000, 1);
+  e.apply(compile(starterDoc(SPECS), SPECS, 1));
+  play(e, 20);
+  e.master(0);
+  play(e, 100); // the glide, then the DC blocker's tail
+  expect(play(e, 20).reduce((a, x) => Math.max(a, Math.abs(x)), 0)).toBeLessThan(1e-3);
+});

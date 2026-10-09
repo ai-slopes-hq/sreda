@@ -75,6 +75,15 @@ pub unsafe extern "C" fn engine_fade_in(e: *mut Engine, ms: f64) {
     unsafe { (*e).fade_in(ms) }
 }
 
+/// The master fader, 0…1.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_master(e: *mut Engine, v: f64) {
+    unsafe { (*e).master(v) }
+}
+
 /// `node` −1 ends listening.
 ///
 /// # Safety

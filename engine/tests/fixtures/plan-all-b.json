@@ -1312,7 +1312,7 @@
       "id": "m18",
       "type": "out",
       "knobs": [0.7],
-      "fixed": [],
+      "fixed": [0, 0],
       "inputs": [
         {
           "sources": [

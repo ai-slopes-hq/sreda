@@ -21,7 +21,7 @@ const snap = (v: number): number => Math.round(v / 8) * 8;
 
 export function build(specs: Specs, f: (b: Builder) => void): Doc {
   let n = 1;
-  let doc: Doc = { version: 1, modules: [], cables: [], groups: [], nextId: 1 };
+  let doc: Doc = { version: 1, modules: [], cables: [], groups: [], master: 1, nextId: 1 };
   const mod = (id: string) => doc.modules.find((m) => m.id === id)!;
   const b: Builder = {
     add(type, x, y, values = {}) {

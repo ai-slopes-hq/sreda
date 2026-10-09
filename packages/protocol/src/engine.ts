@@ -19,6 +19,8 @@ export interface WasmEngine {
   mute(frame: number, on: boolean): void;
   /** the speakers fade in over `ms` (a project just opened) */
   fadeIn(ms: number): void;
+  /** the master fader, 0…1 */
+  master(v: number): void;
   /** a sample into the pool under `id` (one or two channels at the engine's rate; hits as positions and strengths) */
   sample(id: number, channels: Float32Array[], hits: Uint32Array, strengths: Float32Array): void;
   /** play a sample in place of the mix, once; null stops */
@@ -40,6 +42,7 @@ interface Exports {
   engine_listen(e: number, node: number, port: number): void;
   engine_mute(e: number, frame: number, on: number): void;
   engine_fade_in(e: number, ms: number): void;
+  engine_master(e: number, v: number): void;
   engine_sample_alloc(e: number, id: number, frames: number, channels: number, hits: number): number;
   engine_sample_commit(e: number): void;
   engine_audition(e: number, id: number): void;
@@ -101,6 +104,10 @@ class Engine implements WasmEngine {
 
   fadeIn(ms: number): void {
     this.x.engine_fade_in(this.e, ms);
+  }
+
+  master(v: number): void {
+    this.x.engine_master(this.e, v);
   }
 
   sample(id: number, channels: Float32Array[], hits: Uint32Array, strengths: Float32Array): void {

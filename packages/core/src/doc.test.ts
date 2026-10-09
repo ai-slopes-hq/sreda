@@ -11,6 +11,7 @@ const good = (): Doc => ({
   ],
   cables: [{ from: ['m1', 'out'], to: ['m2', 'in'] }],
   groups: [],
+  master: 1,
   nextId: 3,
 });
 
@@ -209,4 +210,19 @@ test('a module keeps a string `sample` and drops anything else', () => {
   )!;
   expect(d.modules[0]!.sample).toBe('drums/kick.wav');
   expect('sample' in d.modules[1]!).toBe(false);
+});
+
+test('master: absent means 1, out of range clamps to 0…1', () => {
+  const { master: _, ...bare } = good();
+  expect(validateDoc(bare, TEST_SPECS)!.master).toBe(1);
+  expect(validateDoc({ ...good(), master: 3 }, TEST_SPECS)!.master).toBe(1);
+  expect(validateDoc({ ...good(), master: -2 }, TEST_SPECS)!.master).toBe(0);
+  expect(validateDoc({ ...good(), master: 0.4 }, TEST_SPECS)!.master).toBe(0.4);
+});
+
+test('a starter OUT gets mute: 0 and solo: 0', () => {
+  const d = validateDoc(JSON.parse(JSON.stringify(starterDoc(SPECS))), SPECS)!;
+  const out = d.modules.find((m) => m.type === 'out')!;
+  expect(out.params['mute']).toBe(0);
+  expect(out.params['solo']).toBe(0);
 });

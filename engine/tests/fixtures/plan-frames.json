@@ -62,7 +62,7 @@
       "id": "m2",
       "type": "out",
       "knobs": [0.7],
-      "fixed": [],
+      "fixed": [0, 0],
       "inputs": [
         {
           "sources": [
@@ -106,7 +106,7 @@
       "id": "m3",
       "type": "out",
       "knobs": [0.7],
-      "fixed": [],
+      "fixed": [0, 0],
       "inputs": [
         {
           "sources": [

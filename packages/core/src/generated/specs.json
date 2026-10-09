@@ -1321,6 +1321,28 @@
         "max": 1.0,
         "def": 0.7,
         "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "mute",
+        "label": "MUTE",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "solo",
+        "label": "SOLO",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0,
+        "hidden": true
       }
     ],
     "normals": [
