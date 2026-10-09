@@ -206,3 +206,73 @@ test('a dropped sample asked for again is read again, ready under the same id, a
     vi.useRealTimers();
   }
 });
+
+test('a path still loading when its time comes is dropped once it is ready, without another document', async () => {
+  vi.useFakeTimers();
+  try {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    const { r, posted } = setup(async (_b, _n, rate) => {
+      await gate;
+      return decoded(2, 100, rate);
+    });
+    r.loadDoc(doc('kick.wav'));
+    await vi.advanceTimersByTimeAsync(10);
+    r.loadDoc(doc());
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(r.status('kick.wav')).toBe('loading');
+    release();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(r.status('kick.wav')).toBeUndefined();
+    expect(posted.some((m) => m.t === 'unsample')).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('a rate change decoding again while the sample is dropped does not bring it back', async () => {
+  vi.useFakeTimers();
+  try {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    const { r, posted } = setup(async (_b, _n, rate) => {
+      if (rate !== 48_000) await gate;
+      return decoded(2, 100, rate);
+    });
+    r.loadDoc(doc('kick.wav'));
+    await vi.advanceTimersByTimeAsync(10);
+    r.loadDoc(doc());
+    await vi.advanceTimersByTimeAsync(29_000);
+    r.attach((m) => posted.push(m), 44_100); // decodes again, held
+    await vi.advanceTimersByTimeAsync(2_000); // the sweep drops it meanwhile
+    expect(r.status('kick.wav')).toBeUndefined();
+    posted.length = 0;
+    release();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(r.status('kick.wav')).toBeUndefined();
+    expect(posted).toEqual([]);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('one sweep timer; changed() only when something was dropped', async () => {
+  vi.useFakeTimers();
+  try {
+    const { r, changed } = setup();
+    r.loadDoc(doc('kick.wav'));
+    await vi.advanceTimersByTimeAsync(10);
+    r.loadDoc(doc());
+    r.loadDoc(doc());
+    r.loadDoc(doc());
+    expect(vi.getTimerCount()).toBe(1);
+    changed.mockClear();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(changed).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(21_000);
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {
+    vi.useRealTimers();
+  }
+});

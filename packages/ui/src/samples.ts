@@ -126,6 +126,9 @@ export function createSampleRegistry(o: {
   const pending = new Map<string, Promise<void>>();
   /** loaded paths the last shown document did not name: since when */
   const unnamed = new Map<string, number>();
+  /** bumped when a path is dropped: a decode started before it gives up */
+  const generation = new Map<string, number>();
+  let timer: ReturnType<typeof setTimeout> | null = null;
   let post: ((msg: ToEngine) => void) | null = null;
   let rate = 48_000;
   /** the audition's turn: a newer audition (or a stop) makes an older decode give up */
@@ -149,15 +152,18 @@ export function createSampleRegistry(o: {
     });
   };
   const decodeAt = async (path: string, b: ArrayBuffer): Promise<void> => {
+    const gen = generation.get(path) ?? 0;
     try {
       const at = rate;
       const s = check(await decode(b.slice(0), path, at));
+      if ((generation.get(path) ?? 0) !== gen) return;
       // the engine attached at another rate while this decoded: again, at its rate
       if (rate !== at) return decodeAt(path, b);
       ready.set(path, s);
       status.set(path, 'ready');
       send(path, s);
     } catch (e) {
+      if ((generation.get(path) ?? 0) !== gen) return;
       status.delete(path);
       bytes.delete(path);
       ready.delete(path);
@@ -189,18 +195,34 @@ export function createSampleRegistry(o: {
   };
 
   const sweep = () => {
+    timer = null;
     const t = now();
+    let dropped = false;
     for (const [path, since] of [...unnamed]) {
+      if (!status.has(path)) {
+        unnamed.delete(path);
+        continue;
+      }
       if (t - since < UNLOAD_MS || status.get(path) === 'loading') continue;
       unnamed.delete(path);
       const sent = ready.has(path);
+      generation.set(path, (generation.get(path) ?? 0) + 1);
       bytes.delete(path);
       ready.delete(path);
       status.delete(path);
       pending.delete(path);
       if (sent) post?.({ t: 'unsample', id: id(path) });
+      dropped = true;
     }
-    o.changed();
+    if (dropped) o.changed();
+    arm();
+  };
+  /** one timer: it fires when the earliest unnamed path is due (a loading one is looked at again in a second) */
+  const arm = () => {
+    if (timer !== null || unnamed.size === 0) return;
+    let due = Infinity;
+    for (const since of unnamed.values()) due = Math.min(due, since + UNLOAD_MS);
+    timer = setTimeout(sweep, Math.max(1_000, due - now() + 1));
   };
 
   return {
@@ -221,7 +243,7 @@ export function createSampleRegistry(o: {
       }
       const t = now();
       for (const path of status.keys()) if (!named.has(path) && !unnamed.has(path)) unnamed.set(path, t);
-      if (unnamed.size > 0) setTimeout(sweep, UNLOAD_MS + 1);
+      arm();
     },
     attach(p, r) {
       post = p;
