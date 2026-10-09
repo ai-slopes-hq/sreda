@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 27 (§7a: FOLD gets four models — SINE, TRI, WRAP, CHEB — FOLD up to ×40, a LEVEL knob and matched loudness; 5×1) · Status: approved
+Date: 2026-10-07 · Revision 28 (§7a: FILTER — one resonance law and a steady passband across models; each model's saturation after its reference; the response glyph follows the live cutoff) · Status: approved
 
 ## Why
 
@@ -520,6 +520,16 @@ Stereo outputs are two mono outputs (cables stay mono).
   ladder; SK the MS-20's Sallen-Key pair; COMB tuned by CUT + PITCH, LP = positive feedback, BP = negative, HP = comb
   minus dry; VOWEL formants morphing A-E-I-O-U on CUT, LP = all formants, BP = the first, HP = the upper ones.
   DRV drives the nonlinear models (ADAA, 2× oversampling); NOTCH is dropped (four outputs do not fit 1U).
+  - **Revision 28, after listening against Ableton's Auto Filter (SVF, PRD, DFM, MS2 renders in
+    `projects/refs/filter/`):** RES means the same on every model — a +7 dB peak at RES 0.5 and about +20 dB at 0.9
+    (measured at 1 kHz on white noise), self-oscillation only at the very end of the knob; the passband holds its level
+    within ±1 dB at any RES (no model loses 10–15 dB as RES rises). Slopes stay those of the originals: SVF and SK
+    12 dB/oct, DIODE about 18, LADDER 24. Each model's saturation follows its reference (a 110 Hz sine at −14 dBFS
+    peak, within ±6 dB on the 2nd and 3rd harmonics): SVF clean; LADDER asymmetric — 2nd and 3rd near −55 / −49 dB
+    at RES 0, cleaner as RES rises; DIODE a steady 3rd near −55 dB at any RES; SK clean at RES 0, its clipping in the
+    feedback path so the 3rd grows with RES (to about −61 dB at 0.9) with a faint 2nd near −75 dB.
+  - **The response glyph moves:** it draws the live cutoff (knob, modulation and PTCH) and resonance, schematically,
+    from a readout of the engine.
 - **DRIVE** (revision 26, after listening: the three old modes sounded alike). Seven models with distinct
   characters, references Ableton's Saturator, Pedal and Roar:
   - **SOFT** — a soft sine curve: warm, rounded, almost no grit (Saturator Soft Sine).
