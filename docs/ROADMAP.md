@@ -44,8 +44,8 @@ of a creative tool; nothing of its UI is ported.
   are in `.superpowers/sdd/2026-10-08-4-sound-pack/progress.md`; the 200-module patch runs at 21.5 % natively.
   Reviewed by a fresh reviewer; its fixes are in; deferred items are in `docs/backlog.md` ("From the Plan 4 review").
   **Milestone 2 is complete.**
-- **Next:** record Plan 4's decisions in the spec as a new revision once the user's revision 18 (skins, §1a) is
-  committed; then choose the next milestone.
+  Spec revision 18 (skins, §1a, written down only) and revision 19 (how the sound pack was built, §7a) are in.
+- **Next:** choose the next milestone (candidates: skin switching from §1a; the Plan 4 backlog items).
 
 ## The road (vertical slices: something to hear at every stage)
 

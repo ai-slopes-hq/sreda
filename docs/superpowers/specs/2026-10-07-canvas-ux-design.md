@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 18 (skins, §1a: DEFAULT, ANNABIOSIS, KANAGAWA, TOUCH, NORD, TOKYO NIGHT written down; no switching yet) · Status: approved
+Date: 2026-10-07 · Revision 19 (§7a records how the sound pack was built: samples, ids, migration, audition, readouts) · Status: approved
 
 ## Why
 
@@ -510,6 +510,28 @@ Stereo outputs are two mono outputs (cables stay mono).
   - Saved groups and projects reference samples by path; they do not copy audio.
 - **Engine additions:** a sample pool (memory sized on load, not in `process`); per-module voices and grain pools
   allocated on construction; the plan carries a module's sample id in its fixed values.
+
+**How the sound pack was built** (Plan 4; revision 19):
+
+- **A module's sample** is `ModuleDoc.sample?: string`, a path under the library's `samples/`; documents store paths,
+  never audio. Replacing a SAMPLER by GRAINS (or back) keeps it.
+- **Sample ids** are session-local integers handed out by the UI's sample registry, from 1 (0 is the audition's slot).
+  The plan carries a module's id, or −1 for none or MISSING, in its hidden `sample` fixed value; the engine keeps
+  samples by id and a module reads the pool every block, so a sample that arrives after the plan just starts sounding.
+- **Loading:** each path is read once per session, decoded at the audio device's rate (again if the device's rate
+  differs from the one it was decoded at); a MISSING or refused sample is tried again when it is asked for again.
+  Refused with a notice `<FILE> — <reason>`: no audio, longer than 10 minutes, cannot be decoded. File names that the
+  library cannot read back (a segment over 100 characters, a `\`) are not listed; dropped files are shortened.
+- **DELAY's output `out` is now `l`** (with `r` beside it); old documents' cables move to `l` when opened.
+- **Hits for AUTO** are found once per load (a rise in short-time energy, a strength 0…1 each) and sent with the
+  sample; SENS (the SLICES knob while AUTO) keeps the hits at least `1 − SENS` strong.
+- **Audition** (moving through the SAMPLES tab) decodes the highlighted file on the side into slot 0 and plays it
+  once in place of the speakers' mix, through the master stage; it keeps nothing; closing the picker stops it.
+- **Readouts:** REVERB's state is its tail level (0…1); SAMPLER's is the newest voice's position (0…1, −1 silent);
+  GRAINS has a trace: the write head (0…1, −1 for FILE), 64 grain positions (−1 idle), 512 column peaks of the live
+  buffer.
+- **2× oversampling** is a polyphase half-band (63 taps, Kaiser β 8, 31 samples of latency) under FOLD, DRIVE and
+  FILTER's nonlinear models, with first-order ADAA.
 
 ## 8. Technology and architecture
 
