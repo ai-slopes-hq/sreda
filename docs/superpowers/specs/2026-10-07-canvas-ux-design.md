@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 23 (§5a/§6: the LIBRARY tab — PROJECTS move there, GROUPS and SAMPLES also there; ⌘O opens any project file; File › Import Samples…; §7a: sample analysis in a worker, unused samples unloaded) · Status: approved
+Date: 2026-10-07 · Revision 24 (§6/§7a: LOAD and a click on a sample display open the system file dialog; the picker has no SAMPLES tab and S is free; samples are browsed in LIBRARY › SAMPLES) · Status: approved
 
 ## Why
 
@@ -374,7 +374,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
     (the picker has no PROJECTS tab).
   - **GROUPS**: drag a row onto the canvas to place the group at the drop point, or click it to place it at the
     middle of the view (fresh ids, as from the picker).
-  - **SAMPLES**: hovering a row auditions it (as in the picker's SAMPLES tab); dragging a row onto empty canvas places
+  - **SAMPLES**: hovering a row auditions it (120 ms after the pointer settles; leaving stops it); dragging a row onto empty canvas places
     a SAMPLER with it, onto a SAMPLER or GRAINS sets its sample; the header's IMPORT does File › Import Samples….
 - **SETTINGS** — app-wide settings: for now the skin (§1a).
 
@@ -396,8 +396,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   cables from outside. ⌘S with anything else saves the project (straight away if it already has a name, else a
   name field); ⇧⌘S is save-as. The project's path shows next to SREDA at the top left, with `●` while there are
   unsaved changes. Factory entries are read-only: saving one asks for a new name.
-- **One picker** for modules, groups and samples: the module search (§4) gets tabs ALL · MODULES · GROUPS · SAMPLES
-  (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows its folder
+- **One picker** for modules and groups: the module search (§4) gets tabs ALL · MODULES · GROUPS (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows its folder
   and kind. **/** (or a double-click on empty canvas) opens it at the pointer on ALL. No single-letter keys for tabs
   (G is taken by frames). Opened from a jack, it offers modules and groups; in REPLACE mode, modules only. Projects
   are opened from LIBRARY › PROJECTS (§5a) or with ⌘O.
@@ -538,7 +537,9 @@ Stereo outputs are two mono outputs (cables stay mono).
   next slice, or the one SLICE picks when patched — a break follows its clock by re-triggering, pitch independent.
   REV plays backwards. 1 ms fades at every boundary. EOC fires at the end of a play-through or slice. Its display
   shows the waveform, START / LEN markers (ONE / LOOP) or slice markers (SLICE), the playhead in amber and the file
-  name; clicking the waveform or LOAD opens the picker on SAMPLES for this module.
+  name; clicking the display (`NO SAMPLE · CLICK TO LOAD` when empty) or LOAD opens the system file dialog for an audio
+  file; the file is copied into `samples/` (asking for the library folder first if none is chosen) and becomes this
+  module's sample (one undo step). GRAINS' display and LOAD do the same.
 - **GRAINS.** Grains (Hann window, up to 64 at once) spawn on TRIG rises, or at DENS per second when TRIG is
   unpatched; each reads from POS (± SPRAY), lasts SIZE, plays at PITCH (± DETUNE), reversed with probability REV %,
   panned within SPREAD. SOURCE FILE reads a library sample; LIVE records IN into an 8-second ring buffer, and FREEZE
@@ -548,8 +549,8 @@ Stereo outputs are two mono outputs (cables stay mono).
   - Files live in the library folder under `samples/**`: WAV, AIFF, FLAC, MP3, OGG. A module stores the sample's
     library path; on load the UI reads the file (IPC), decodes and resamples it to the engine's rate, and hands the
     channels to the engine, which keeps them in a sample pool by id. Hit detection for AUTO runs once per load.
-  - The picker gains a SAMPLES tab and key **S**; moving through samples with ↑ / ↓ auditions each one through the
-    listen path.
+  - Samples already in the library are browsed and auditioned in the sidebar's LIBRARY › SAMPLES (§5a); the picker
+    has no SAMPLES tab and S is not bound (revision 24).
   - An audio file dropped on the canvas is copied into `samples/` and opens a SAMPLER with it; dropped on a SAMPLER
     or GRAINS it replaces their sample.
   - A missing file shows `MISSING · <name>` on the display, outputs silence, and is listed under PROBLEMS in WIRES.
@@ -578,8 +579,8 @@ Stereo outputs are two mono outputs (cables stay mono).
 - **DELAY's output `out` is now `l`** (with `r` beside it); old documents' cables move to `l` when opened.
 - **Hits for AUTO** are found once per load (a rise in short-time energy, a strength 0…1 each) and sent with the
   sample; SENS (the SLICES knob while AUTO) keeps the hits at least `1 − SENS` strong.
-- **Audition** (moving through the SAMPLES tab) decodes the highlighted file on the side into slot 0 and plays it
-  once in place of the speakers' mix, through the master stage; it keeps nothing; closing the picker stops it.
+- **Audition** (hovering a row in LIBRARY › SAMPLES) decodes the file on the side into slot 0 and plays it once in
+  place of the speakers' mix, through the master stage; it keeps nothing; leaving the row stops it.
 - **Readouts:** REVERB's state is its tail level (0…1); SAMPLER's is the newest voice's position (0…1, −1 silent);
   GRAINS has a trace: the write head (0…1, −1 for FILE), 64 grain positions (−1 idle), 512 column peaks of the live
   buffer.
