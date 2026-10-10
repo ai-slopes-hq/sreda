@@ -508,6 +508,42 @@ test('a note drawn in the drawer is undone by ⌘Z', async () => {
   await app.close();
 });
 
+test("the drawer's DICE writes the pattern in one undo step; ⚄ writes a locked lane", async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(500, 300);
+  await page.keyboard.type('meta');
+  await page.keyboard.press('Enter');
+  const seq = page.locator('[data-type=metaseq]');
+  await expect(seq).toBeVisible();
+  const box = (await seq.boundingBox())!;
+  await page.mouse.dblclick(box.x + 6, box.y + box.height - 6);
+  const drawer = page.locator('.sr-drawer');
+  await expect(drawer).toBeVisible();
+  const params = async () => (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params;
+  const lane = (p: Record<string, number>, l: string) =>
+    Array.from({ length: 16 }, (_, k) => p['a' + l + (k + 1)]);
+  const before = await params();
+  await drawer.locator('[data-act=dice]').click();
+  const diced = await params();
+  expect(lane(diced, 'n')).not.toEqual(lane(before, 'n'));
+  await page.keyboard.press('Meta+z');
+  expect(lane(await params(), 'n')).toEqual(lane(before, 'n'));
+  // lock GATE, then ⚄ on it: GATE changes, NOTE does not
+  const gate = drawer.locator('[data-lane=g]');
+  await gate.locator('[data-lock]').click();
+  const locked = await params();
+  for (
+    let i = 0;
+    i < 5 && JSON.stringify(lane(await params(), 'g')) === JSON.stringify(lane(locked, 'g'));
+    i++
+  )
+    await gate.locator('[data-dice]').click();
+  const after = await params();
+  expect(lane(after, 'g')).not.toEqual(lane(locked, 'g'));
+  expect(lane(after, 'n')).toEqual(lane(locked, 'n'));
+  await app.close();
+});
+
 test('drawer lanes are sliders: a vertical drag in one cell, the LEN marker and the LEN field all follow the pointer', async () => {
   const { app, page } = await launch();
   await page.mouse.dblclick(500, 300);
@@ -519,23 +555,40 @@ test('drawer lanes are sliders: a vertical drag in one cell, the LEN marker and 
   await page.mouse.dblclick(box.x + 6, box.y + box.height - 6);
   const drawer = page.locator('.sr-drawer');
   await expect(drawer).toBeVisible();
-  const param = async (id: string) => (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params[id];
+  const param = async (id: string) =>
+    (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params[id];
   // NOTE: press low in step 1, drag up inside the same cell, release — the note follows to the top
   const n = (await drawer.locator('[data-lane=n] .sr-lane-svg').boundingBox())!;
   const step = n.width / 16;
-  await drag(page, { x: n.x + step * 0.5, y: n.y + n.height * 0.9 }, { x: n.x + step * 0.5, y: n.y + n.height * 0.1 });
+  await drag(
+    page,
+    { x: n.x + step * 0.5, y: n.y + n.height * 0.9 },
+    { x: n.x + step * 0.5, y: n.y + n.height * 0.1 },
+  );
   expect(await param('an1')).toBeGreaterThan(0.75);
   // VEL: the same in one cell, down to the bottom
   const v = (await drawer.locator('[data-lane=v] .sr-lane-svg').boundingBox())!;
-  await drag(page, { x: v.x + step * 0.5, y: v.y + v.height * 0.1 }, { x: v.x + step * 0.5, y: v.y + v.height * 0.95 });
+  await drag(
+    page,
+    { x: v.x + step * 0.5, y: v.y + v.height * 0.1 },
+    { x: v.x + step * 0.5, y: v.y + v.height * 0.95 },
+  );
   expect(await param('av1')).toBeLessThan(0.2);
   // the LEN marker of GATE dragged to step 8
   const m = (await drawer.locator('[data-lane=g] [data-len-marker]').boundingBox())!;
-  await drag(page, { x: m.x + m.width / 2, y: m.y + m.height / 2 }, { x: n.x + step * 8, y: m.y + m.height / 2 });
+  await drag(
+    page,
+    { x: m.x + m.width / 2, y: m.y + m.height / 2 },
+    { x: n.x + step * 8, y: m.y + m.height / 2 },
+  );
   expect(await drawer.locator('[data-lane=g] [data-field=len]').textContent()).toBe('8');
   // the LEN field of ACC dragged down like a knob
   const f = (await drawer.locator('[data-lane=a] [data-field=len]').boundingBox())!;
-  await drag(page, { x: f.x + f.width / 2, y: f.y + f.height / 2 }, { x: f.x + f.width / 2, y: f.y + f.height / 2 + 80 });
+  await drag(
+    page,
+    { x: f.x + f.width / 2, y: f.y + f.height / 2 },
+    { x: f.x + f.width / 2, y: f.y + f.height / 2 + 80 },
+  );
   expect(Number(await drawer.locator('[data-lane=a] [data-field=len]').textContent())).toBeLessThan(16);
   await app.close();
 });
@@ -562,12 +615,17 @@ test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern',
   const drawer = page.locator('.sr-drawer');
   await expect(drawer).toBeVisible();
   await page.mouse.click(1300, 900); // start audio
-  const param = async (id: string) => (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params[id];
+  const param = async (id: string) =>
+    (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params[id];
   await expect(drawer.locator('[data-act=paste]')).toBeDisabled();
   // A: a note on step 3, then COPY
   const n = (await drawer.locator('[data-lane=n] .sr-lane-svg').boundingBox())!;
   const step = n.width / 16;
-  await drag(page, { x: n.x + step * 2.5, y: n.y + n.height * 0.9 }, { x: n.x + step * 2.5, y: n.y + n.height * 0.1 });
+  await drag(
+    page,
+    { x: n.x + step * 2.5, y: n.y + n.height * 0.9 },
+    { x: n.x + step * 2.5, y: n.y + n.height * 0.1 },
+  );
   const a3 = await param('an3');
   expect(a3).toBeGreaterThan(0.75);
   await drawer.locator('[data-act=copy]').click();
@@ -586,7 +644,11 @@ test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern',
   // PAT → B (a short drag up on the knob): the playing tab follows once the GATE lane wraps
   await expect(drawer.locator('[data-pattern=A]')).toHaveClass(/\bplay\b/, { timeout: 5000 });
   const k = (await seq.locator('[data-knob=pat] .sr-knob').boundingBox())!;
-  await drag(page, { x: k.x + k.width / 2, y: k.y + k.height / 2 }, { x: k.x + k.width / 2, y: k.y + k.height / 2 - 40 });
+  await drag(
+    page,
+    { x: k.x + k.width / 2, y: k.y + k.height / 2 },
+    { x: k.x + k.width / 2, y: k.y + k.height / 2 - 40 },
+  );
   await expect.poll(async () => Math.round((await param('pat'))! * 7)).toBe(1);
   await expect(drawer.locator('[data-pattern=B]')).toHaveClass(/\bplay\b/, { timeout: 8000 });
   await app.close();

@@ -35,9 +35,34 @@ export interface LaneProps {
   /** the module id (wheel runs merge per module and control) */
   scope: string;
   edit(changes: Record<string, number>, merge: Merge): void;
+  /** ⚄: DICE this lane alone (locked or not), one undo step */
+  dice?(): void;
   /** the lane's cursor, moved by the drawer from the readout without a render */
   cursor?: (el: SVGRectElement) => void;
   grid?: (el: HTMLDivElement) => void;
+}
+
+/** ⚄ drawn: the drawer's font has no die glyph */
+function Die(): JSX.Element {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-label="⚄">
+      <rect
+        x="0.75"
+        y="0.75"
+        width="10.5"
+        height="10.5"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.2"
+      />
+      <circle cx="3.75" cy="3.75" r="1" fill="currentColor" />
+      <circle cx="8.25" cy="3.75" r="1" fill="currentColor" />
+      <circle cx="6" cy="6" r="1" fill="currentColor" />
+      <circle cx="3.75" cy="8.25" r="1" fill="currentColor" />
+      <circle cx="8.25" cy="8.25" r="1" fill="currentColor" />
+    </svg>
+  );
 }
 
 export const LANE_NAME: Record<LaneId, string> = {
@@ -234,7 +259,10 @@ export function Lane(props: LaneProps): JSX.Element {
     <div class="sr-lane" classList={{ up: LANES.indexOf(l()) >= 3 }} data-lane={l()}>
       <div class="sr-lane-head">
         <span class="sr-lane-name">{LANE_NAME[l()]}</span>
-        <span class="sr-lane-field" data-field="len" title="LEN (drag or wheel)"
+        <span
+          class="sr-lane-field"
+          data-field="len"
+          title="LEN (drag or wheel)"
           onPointerDown={fieldDown}
           onPointerMove={fieldMove}
           onPointerUp={() => (lenDrag.key = '')}
@@ -265,9 +293,14 @@ export function Lane(props: LaneProps): JSX.Element {
         >
           🔒
         </button>
-        <span class="sr-lane-btn" title="DICE this lane">
-          ⚄
-        </span>
+        <button
+          class="sr-lane-btn sr-lane-dice"
+          data-dice
+          title="DICE this lane"
+          onClick={() => props.dice?.()}
+        >
+          <Die />
+        </button>
       </div>
       <div class="sr-lane-grid" ref={(el) => props.grid?.(el)}>
         <svg

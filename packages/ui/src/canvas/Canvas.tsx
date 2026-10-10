@@ -34,7 +34,7 @@ import {
 } from '@sreda/core';
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, type JSX } from 'solid-js';
 import type { SessionApi } from '../store';
-import { diceModule } from '../dice';
+import { diceChanges } from '../dice';
 import { libraryActions } from '../library';
 import { Cables } from './Cables';
 import { focusSetOf, wholeNormal } from './focus';
@@ -690,12 +690,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   }
 
   /** the params DICE writes into a module, as changes (sent as messages, not a plan) */
-  function diced(id: string): Record<string, number> {
-    const after = diceModule(s.current(), specs, id, mulberry32((Math.random() * 2 ** 32) >>> 0));
-    const before = s.current().modules.find((x) => x.id === id)!.params;
-    const now = after.modules.find((x) => x.id === id)!.params;
-    return Object.fromEntries(Object.entries(now).filter(([k, v]) => before[k] !== v));
-  }
+  const diced = (id: string) =>
+    diceChanges(s.current(), specs, id, mulberry32((Math.random() * 2 ** 32) >>> 0));
 
   function fit(selection: boolean): void {
     const ids = [...st.doc.modules.map((m) => m.id), ...st.doc.groups.map((g) => g.id)].filter(
@@ -813,7 +809,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         onDblClick={(e) => {
           const target = e.target as Element;
           // a double-click on a control (a knob reset, a field reset, a jack, a button, a list) is that control's own
-          if (target.closest('.sr-cell, .sr-jack, .sr-plabel, .sr-field, .sr-action, .sr-menu, button, input')) return;
+          if (
+            target.closest('.sr-cell, .sr-jack, .sr-plabel, .sr-field, .sr-action, .sr-menu, button, input')
+          )
+            return;
           const seqMod = target.closest('[data-type=metaseq]');
           if (seqMod) {
             s.openSeq(seqMod.getAttribute('data-module')!);

@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import {
   copyPattern,
+  diceLanes,
   laneLen,
   laneParam,
   laneLocked,
@@ -17,6 +18,7 @@ import {
   stepId,
   writeLane,
 } from './metaseq';
+import { mulberry32, SCALES, type Algo } from './generators';
 
 test('step ids: pattern letter, lane, 1-based step', () => {
   expect(PATTERNS).toBe(8);
@@ -137,4 +139,104 @@ test('pasting a default pattern over a drawn one resets it', () => {
   expect(laneSteps(merged, 1, 'g')[2]).toBe(0);
   expect(laneLen(merged, 1, 'n')).toBe(16);
   expect(noteMode(merged, 1)).toBe(0);
+});
+
+const ALGOS: Algo[] = ['303', 'MOTIF', 'WALK', 'TURING', 'ARP', 'PHRASE', 'PEDAL', 'EUCLID'];
+
+test('DICE: every style writes notes in the scale from the root, ACC only on GATE, TIE only after a hit', () => {
+  for (const algo of ALGOS)
+    for (let seed = 1; seed <= 30; seed++) {
+      const out = diceLanes({}, 2, algo, 3, 5, mulberry32(seed));
+      const m = { ...out };
+      const n = laneSteps(m, 2, 'n');
+      const g = laneSteps(m, 2, 'g');
+      const t = laneSteps(m, 2, 't');
+      const a = laneSteps(m, 2, 'a');
+      const v = laneSteps(m, 2, 'v');
+      const why = `${algo} seed ${seed}`;
+      expect(Object.keys(out).length, why).toBe(6 * 16);
+      for (const s of n) expect(SCALES[3]!.includes((((s - 5) % 12) + 12) % 12), `${why}: ${s}`).toBe(true);
+      expect(
+        g.some((x) => x === 1),
+        why,
+      ).toBe(true);
+      for (let k = 0; k < 16; k++) {
+        if (a[k] === 1) expect(g[k], `${why} acc ${k}`).toBe(1);
+        if (t[k] === 1) expect(k > 0 && g[k - 1] === 1, `${why} tie ${k}`).toBe(true);
+        if (g[k] === 1) expect(v[k]! >= 0.6 && v[k]! <= 1, why).toBe(true);
+      }
+      expect(laneSteps(m, 2, 'c')).toEqual(Array(16).fill(1));
+      if (algo === 'EUCLID')
+        expect(
+          t.every((x) => x === 0),
+          why,
+        ).toBe(true);
+    }
+});
+
+test('DICE: 303 slides (TIE on a hit after a hit) and long notes (TIE on a rest after a hit) appear', () => {
+  let slides = 0;
+  let holds = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const m = diceLanes({}, 0, '303', 2, 0, mulberry32(seed));
+    const g = laneSteps(m, 0, 'g');
+    const t = laneSteps(m, 0, 't');
+    for (let k = 1; k < 16; k++)
+      if (t[k]) {
+        if (g[k]) slides++;
+        else holds++;
+      }
+  }
+  expect(slides).toBeGreaterThan(0);
+  expect(holds).toBeGreaterThan(0);
+});
+
+test('DICE leaves locked lanes, LEN, RATE and other patterns alone; only the first LEN steps are written', () => {
+  const params: Record<string, number> = {
+    [laneParam(1, 'g', 'lock')]: 1,
+    [laneParam(1, 'n', 'len')]: 6 / 15, // LEN 7
+    [laneParam(1, 'v', 'rate')]: 5,
+    [stepId(1, 'n', 9)]: 0.75,
+  };
+  const out = diceLanes(params, 1, 'WALK', 2, 0, mulberry32(9));
+  for (const k of Object.keys(out)) {
+    expect(k.startsWith('b'), k).toBe(true);
+    expect(k.endsWith('len') || k.endsWith('rate') || k.endsWith('lock'), k).toBe(false);
+    expect(k.startsWith('bg'), k).toBe(false);
+  }
+  expect(Object.keys(out).filter((k) => k.startsWith('bn')).length).toBe(7);
+  expect(out[stepId(1, 'n', 9)]).toBeUndefined();
+  expect(out[stepId(1, 't', 1)]).toBeDefined();
+});
+
+test('⚄ writes the one lane, even locked, consistent with the GATE drawn', () => {
+  const gate = [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0];
+  const params: Record<string, number> = {
+    ...writeLane(0, 'g', gate),
+    [laneParam(0, 'a', 'lock')]: 1,
+    [laneParam(0, 't', 'lock')]: 1,
+  };
+  for (let seed = 1; seed <= 20; seed++) {
+    const acc = diceLanes(params, 0, '303', 2, 0, mulberry32(seed), 'a');
+    expect(
+      Object.keys(acc).every((k) => k.startsWith('aa')),
+      `seed ${seed}`,
+    ).toBe(true);
+    expect(Object.keys(acc).length).toBe(16);
+    laneSteps(acc, 0, 'a').forEach((x, k) => x && expect(gate[k], `seed ${seed} step ${k}`).toBe(1));
+    const tie = diceLanes(params, 0, '303', 2, 0, mulberry32(seed), 't');
+    expect(Object.keys(tie).every((k) => k.startsWith('at'))).toBe(true);
+    laneSteps(tie, 0, 't').forEach((x, k) => x && expect(k > 0 && gate[k - 1] === 1).toBe(true));
+  }
+  expect(diceLanes(params, 0, '303', 2, 0, mulberry32(1))[stepId(0, 'a', 1)]).toBeUndefined();
+});
+
+test('DICE is seed-stable', () => {
+  for (const algo of ALGOS)
+    expect(diceLanes({}, 0, algo, 1, 3, mulberry32(77))).toEqual(
+      diceLanes({}, 0, algo, 1, 3, mulberry32(77)),
+    );
+  expect(diceLanes({}, 0, '303', 1, 3, mulberry32(1))).not.toEqual(
+    diceLanes({}, 0, '303', 1, 3, mulberry32(2)),
+  );
 });

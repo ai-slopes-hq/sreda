@@ -1,6 +1,6 @@
 // META-SEQ's hidden params (spec §7b): the id scheme, and reading / writing a lane as plain step values.
 // The document stores knobs as positions 0…1 and options as indices; these helpers speak the param units.
-import { SCALES } from './generators';
+import { euclid, genNotes, SCALES, type Algo } from './generators';
 
 export const PATTERNS = 8;
 export const LANES = ['n', 'g', 't', 'a', 'v', 'c'] as const;
@@ -142,5 +142,70 @@ export function pastePattern(clip: Record<string, number>, to: number): Record<s
     for (const w of ['len', 'rate', 'lock'] as const) out[laneParam(to, l, w)] = clip[l + w]!;
   }
   out[noteModeParam(to)] = clip['nmode']!;
+  return out;
+}
+
+/** DICE (spec §7b): the document changes that write pattern `pattern`'s unlocked lanes, or only lane `only` (locked or
+ * not: ⚄ is explicit), in GEN style `algo`. `scale` is an index into SCALES, `root` semitones 0…11 (callers convert the
+ * ROOT knob). LEN and RATE stay; only the first LEN steps of a lane are written. Every lane is generated (so the draws,
+ * and the result, do not depend on the locks); TIE, ACC and VEL follow the GATE that will sound: the new one when GATE is
+ * written, the drawn one when it is not. */
+export function diceLanes(
+  params: Record<string, number>,
+  pattern: number,
+  algo: Algo,
+  scale: number,
+  root: number,
+  R: () => number,
+  only?: Lane,
+): Record<string, number> {
+  const p = pattern;
+  const len = (l: Lane) => laneLen(params, p, l);
+  const writes = (l: Lane) => (only === undefined ? !laneLocked(params, p, l) : only === l);
+  /** the lane's current steps with its first LEN replaced by `fresh` */
+  const merged = (l: Lane, fresh: number[]) =>
+    laneSteps(params, p, l).map((x, k) => (k < len(l) ? fresh[k]! : x));
+
+  const notes = genNotes(algo === 'EUCLID' ? 'PEDAL' : algo, len('n'), SCALES[scale] ?? SCALES[2]!, root, R);
+
+  // GATE: euclid-spread hits at a random rotation; DENS → 4…16 hits per 16 steps (scaled to the lane's LEN)
+  const gl = len('g');
+  let hits: number;
+  if (algo === 'EUCLID') hits = 3 + Math.floor(R() * (gl - 3));
+  else {
+    const dens = Math.min(1, Math.max(0, params['dens'] ?? 0.5));
+    hits = Math.round(((4 + 12 * dens) * gl) / 16);
+  }
+  const act = euclid(gl, hits, Math.floor(R() * gl)).map((x) => (x ? 1 : 0));
+  const gate = writes('g') ? merged('g', act) : laneSteps(params, p, 'g');
+
+  // TIE: long notes (a rest after a hit holds it, odds as RHYTHM's DICE), slides of 303 / MOTIF (20 % of hits after a hit)
+  const idx = Math.max(0, Math.min(15, Math.round((hits * 16) / Math.max(1, gl))));
+  const t1 = 5 + (idx / 15) * 45;
+  const t2 = 10 + Math.pow(idx / 15, 1.2) * 30;
+  const slides = algo === '303' || algo === 'MOTIF';
+  const tie: number[] = [];
+  for (let k = 0; k < 16; k++) {
+    const after = k > 0 && gate[k - 1] === 1;
+    const long = (R() * 100 < t1 ? 1 : 0) + (R() * 100 < t2 ? 1 : 0) === 2;
+    const slide = R() < 0.2;
+    tie.push(algo !== 'EUCLID' && after && (gate[k] === 1 ? slides && slide : long) ? 1 : 0);
+  }
+  const acc: number[] = [];
+  const vel: number[] = [];
+  for (let k = 0; k < 16; k++) {
+    const a = R() < 0.3;
+    const v = 0.6 + 0.4 * R();
+    acc.push(gate[k] === 1 && a ? 1 : 0);
+    vel.push(gate[k] === 1 ? v : 1);
+  }
+
+  const fresh: Record<Lane, number[]> = { n: notes, g: act, t: tie, a: acc, v: vel, c: Array(16).fill(1) };
+  const out: Record<string, number> = {};
+  for (const l of LANES) {
+    if (!writes(l)) continue;
+    const w = writeLane(p, l, merged(l, fresh[l]));
+    for (let k = 1; k <= len(l); k++) out[stepId(p, l, k)] = w[stepId(p, l, k)]!;
+  }
   return out;
 }

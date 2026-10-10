@@ -34,7 +34,7 @@ export function euclid(n: number, k: number, rot: number): boolean[] {
   return out;
 }
 
-export type Algo = '303' | 'MOTIF' | 'WALK' | 'TURING' | 'ARP' | 'PHRASE' | 'PEDAL';
+export type Algo = '303' | 'MOTIF' | 'WALK' | 'TURING' | 'ARP' | 'PHRASE' | 'PEDAL' | 'EUCLID';
 
 /** A line of n notes as semitones 0…24, all in the scale from the root. */
 export function genNotes(algo: Algo, n: number, scale: number[], root: number, R: () => number): number[] {

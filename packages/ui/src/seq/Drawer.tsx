@@ -1,14 +1,17 @@
 // META-SEQ's editor (spec §7b): a drawer docked under the canvas at the window's full width. The header (name,
 // pattern tabs, COPY / PASTE, SCALE, ROOT, GEN, DICE, MUTATE, ✕), then one row per lane on one step grid in clock time.
 // The tabs choose the edited pattern, SCALE / ROOT / GEN write, the lanes take their gestures (Lane.tsx), ✕ closes;
-// COPY / PASTE copy the edited pattern into a clip and write it back as one undo step; DICE, MUTATE and ⚄ are drawn but inert.
+// COPY / PASTE copy the edited pattern into a clip and write it back as one undo step; DICE writes the edited pattern's
+// unlocked lanes and ⚄ one lane (locked or not), each one undo step; MUTATE is drawn but inert.
 import {
   copyPattern,
   fromKnob,
   laneLen,
   laneRate,
   LANES,
+  mulberry32,
   nameOf,
+  type Lane as LaneId,
   pastePattern,
   type KnobParam,
   type Merge,
@@ -17,6 +20,7 @@ import {
 } from '@sreda/core';
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from 'solid-js';
 import { Option } from '../canvas/Option';
+import { diceChanges } from '../dice';
 import { readoutBuffer, track } from '../live';
 import type { SessionApi } from '../store';
 import { cells } from './grid';
@@ -88,6 +92,12 @@ export function Drawer(props: DrawerProps): JSX.Element {
     if (c) s.params(props.id, pastePattern(c, edited()), undefined);
   };
   const edit = (changes: Record<string, number>, merge: Merge) => s.params(props.id, changes, merge);
+  /** DICE (all unlocked lanes of the edited pattern) or ⚄ (`only`): one undo step */
+  const dice = (only?: LaneId) =>
+    edit(
+      diceChanges(s.current(), props.specs, props.id, mulberry32((Math.random() * 2 ** 32) >>> 0), only),
+      undefined,
+    );
 
   // ── ROOT: vertical drag or the wheel, a semitone a step ──
   const root = () => Math.round(knobValue('root'));
@@ -222,7 +232,9 @@ export function Drawer(props: DrawerProps): JSX.Element {
         </span>
         <span class="sr-drawer-field">GEN</span>
         {headOption('gen', 72)}
-        <button class="sr-gbtn">DICE</button>
+        <button class="sr-gbtn" data-act="dice" onClick={() => dice()}>
+          DICE
+        </button>
         <span class="sr-drawer-field">
           MUTATE <b>{Math.round(knobValue('mut') * 100)}%</b>
         </span>
@@ -241,6 +253,7 @@ export function Drawer(props: DrawerProps): JSX.Element {
               spec={spec()}
               scope={props.id}
               edit={edit}
+              dice={() => dice(l)}
               cursor={(el) => (cursors[li()] = el)}
               grid={(el) => li() === 0 && (gridEl = el)}
             />
