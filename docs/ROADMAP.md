@@ -91,6 +91,9 @@ of a creative tool; nothing of its UI is ported.
   STACK frames on open. The rest of the review is in `docs/backlog.md` ("From the UI / UX review").
   The prototype's live boards (Main, Panels, SoundPack) follow it; the picker stays inside the window. Next by the
   user's choice: reworking the big modules RHYTHM and STAGES.
+- **Plan 14 (META-SEQ, spec §7b rev 33) in progress on the branch `plan-14-metaseq`**, subagent-driven; ledger in
+  `.superpowers/sdd/2026-10-10-14-metaseq/progress.md`. Slice 1 done (Tasks 1–2: the engine module and its panel with
+  the overview display); **Checkpoint 1: the user listens** before Task 3.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 
 ## The road (vertical slices: something to hear at every stage)
