@@ -95,7 +95,9 @@ of a creative tool; nothing of its UI is ported.
   `.superpowers/sdd/2026-10-10-14-metaseq/progress.md`. Slice 1 done (Tasks 1–2: the engine module and its panel with
   the overview display), Checkpoint 1 passed. Slice 2 done (Tasks 3–4: the editor drawer under the canvas, opened by
   a double-click on META-SEQ; lane drawing — NOTE snapped to SCALE / ROOT, GATE / TIE / ACC paint, VEL / CHNC bars,
-  LEN / RATE / lock, header SCALE / ROOT / GEN); **Checkpoint 2: the user draws and listens** before Task 5.
+  LEN / RATE / lock, header SCALE / ROOT / GEN), Checkpoint 2 passed (lanes fixed to act as sliders). Slice 3 done (Task 5: patterns
+  A–H — the playing tab lit from the readout, COPY / PASTE as one undo step); **Checkpoint 3: the user listens** (a
+  second META-SEQ's CV into the first's PAT mod jack) before Task 6.
 - **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 
