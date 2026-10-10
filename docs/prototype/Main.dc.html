@@ -367,8 +367,9 @@ body{margin:0;background:#121210}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
 var ROLE = { audio: '#e9e4d8', mod: '#6cb4ee', pitch: '#9ad18b', trigger: '#f5a524' };
-// panel units (air): HP 56 wide, header 32, lanes of 32 under a 6 px inset, 10 px under the last lane → 1U 144, 2U 272, 3U 400
-var G = 8, HEAD = 32, GUT = 48, GHEAD = 28, GPAD = 16, HP = 56, LANE = 32, TOP = HEAD + 6, FOOT = 10, LANES = { 1: 3, 2: 7, 3: 11 };
+// panel units (air): HP 56 wide, header 32, lanes of 32 under a 6 px inset, ≥ 10 px under the last lane; a panel is exactly
+// n × 1U high (1U 144, 2U 288, 3U 432) with as many lanes as fit (3, 7, 12) — spec revision 32
+var G = 8, HEAD = 32, GUT = 48, GHEAD = 28, GPAD = 16, HP = 56, LANE = 32, TOP = HEAD + 6, FOOT = 10, LANES = { 1: 3, 2: 7, 3: 12 };
 var U = TOP + 3 * LANE + FOOT;   // the height of 1U
 var TINTS = [["rgba(233,228,216,0.035)", "#8f897c"], ["rgba(217,119,87,0.09)", "#d97757"], ["rgba(240,200,110,0.08)", "#d8b25e"], ["rgba(154,209,139,0.08)", "#8fbf80"], ["rgba(110,200,190,0.08)", "#62b3a8"], ["rgba(108,180,238,0.09)", "#6cb4ee"], ["rgba(196,140,220,0.09)", "#b98ad0"]];
 var NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -414,7 +415,7 @@ var SPECS = {
     ins: [P('in', 'audio')], outs: [P('lp', 'audio'), P('bp', 'audio'), P('hp', 'audio')],
     params: [K('cutoff', 'CUT', 20, 20000, 1000, { exp: 1, unit: 'hz', rr: [100, 8000], md: 0.25 }), K('res', 'RES', 0, 1, 0.2)] },
   fold: { label: 'FOLD', desc: 'wavefolder', cols: 2, ins: [P('in', 'audio')], outs: [P('out', 'audio')], params: [K('fold', 'FOLD', 0, 1, 0.3), K('sym', 'SYM', -1, 1, 0)] },
-  stages: { label: 'STAGES', desc: '16 stages drawn as a contour: note, time, pulse, slide · generative', display: { lanes: 8, kind: 'contour' },
+  stages: { label: 'STAGES', desc: '16 stages drawn as a contour: note, time, pulse, slide · generative', display: { lanes: 9, kind: 'contour' },
     ins: [P('adv', 'trigger'), P('reset', 'trigger', 'RST'), P('addr', 'mod'), P('dice', 'trigger')], outs: [P('cv', 'mod'), P('pulse', 'trigger', 'PLS'), P('eoc', 'trigger')],
     params: range(16, function (i) { return hide(K('v' + i, '' + i, -1, 1, 0)); })
       .concat(range(16, function (i) { return hide(K('t' + i, 'T' + i, 0.01, 4, 0.25, { exp: 1, unit: 's' })); }))
@@ -525,7 +526,7 @@ function lay(type) {
   if (LAY[type]) return LAY[type];
   var s = SPECS[type], vis = s.params.filter(function (p) { return !p.hidden; });
   var knobs = vis.filter(function (p) { return p.kind === 'k'; }), modes = vis.filter(function (p) { return p.kind !== 'k'; });
-  var C = s.size[0] - 2, w = s.size[0] * HP, lanes = LANES[s.size[1]], h = TOP + lanes * LANE + FOOT, dl = s.display ? s.display.lanes : 0;
+  var C = s.size[0] - 2, w = s.size[0] * HP, lanes = LANES[s.size[1]], h = s.size[1] * U, dl = s.display ? s.display.lanes : 0;
   var jacks = {}, cells = {};
   s.ins.forEach(function (p, i) { jacks[p.id] = { x: 13, y: TOP + i * LANE + LANE / 2, role: p.role, dir: 'in', label: p.label }; });
   s.outs.forEach(function (p, i) { jacks[p.id] = { x: w - 13, y: TOP + i * LANE + LANE / 2, role: p.role, dir: 'out', label: p.label }; });
@@ -1448,7 +1449,7 @@ function relayoutRoutes(doc, gids) {
   gids.forEach(function (gid) { var g = findGrp(doc, gid); if (g && g.layout === 'route') doc = layoutRows(doc, gid); });
   return doc;
 }
-var SAVE_KEY = 'sreda2-proto-v11';
+var SAVE_KEY = 'sreda2-proto-v12';
 function validDoc(d) {
   if (!d || !Array.isArray(d.mods) || !Array.isArray(d.cables) || !Array.isArray(d.groups) || typeof d.next !== 'number') return false;
   var ids = {};

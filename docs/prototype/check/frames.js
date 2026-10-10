@@ -7,10 +7,10 @@ c.newSeed();
 const a = place('chance', 0, 0), b = place('spread', 300, 0), d = place('att', 0, 300);
 c.setState({ sel: [a, b, d] }); c.group();
 const gid = c.state.doc.groups[0].id;
-const SZ = { chance: [3, 1], spread: [4, 2], att: [6, 2] }, LN = { 1: 3, 2: 7, 3: 11 };
+const SZ = { chance: [3, 1], spread: [4, 2], att: [6, 2] };   // a panel is exactly n × 1U (144 px) high
 function report(label) {
   const doc = c.state.doc, g = doc.groups.find(x => x.id === gid);
-  const R = doc.mods.map(m => ({ t: m.type, x: m.x, y: m.y, w: SZ[m.type][0] * 56, h: 38 + LN[SZ[m.type][1]] * 32 + 10 }));
+  const R = doc.mods.map(m => ({ t: m.type, x: m.x, y: m.y, w: SZ[m.type][0] * 56, h: SZ[m.type][1] * 144 }));
   let minGap = 1e9, ov = 0;
   for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) {
     const p = R[i], q = R[j]; const gx = Math.max(q.x - (p.x + p.w), p.x - (q.x + q.w)), gy = Math.max(q.y - (p.y + p.h), p.y - (q.y + q.h));
