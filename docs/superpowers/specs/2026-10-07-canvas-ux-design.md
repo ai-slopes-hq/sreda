@@ -686,12 +686,14 @@ RHYTHM and STAGES (§7) leave the picker and the engine; §7 keeps them only as 
 - **Lanes**, six per pattern, each with its own **LEN** 1–16, **RATE** (÷4 ÷3 ÷2 ×1 ×2 ×3 ×4, steps per clock) and
   **lock**:
   - **GATE** — the step plays or rests.
-  - **TIE** — the step continues the one before: GATE stays high (no new rise, envelopes do not retrigger); when the
-    note differs, CV glides to it in 80 ms (the 303 slide; there is no separate SLIDE lane). A step with TIE on is a tie
-    whatever GATE says there; GATE off and TIE off is a rest. A TIE after a rest plays like a hit; an accent on a TIE
+  - **TIE** — the step continues the one before: GATE stays high (no new rise, envelopes do not retrigger). With GATE
+    on as well it is a **slide**: the step plays its note (NOTE in PLAYED advances) and CV glides to it in 80 ms (the
+    303 slide; there is no separate SLIDE lane). With GATE off it is a **hold**: the note sounding goes on (NOTE in
+    PLAYED does not advance; in STEP a differing note glides). GATE off and TIE off is a rest. A TIE after a rest plays like a hit; an accent on a TIE
     is ignored.
   - **NOTE** — a scale degree from ROOT in SCALE (24 semitones, as STAGES' voltages). Its own mode **STEP / PLAYED**
-    (default PLAYED): PLAYED advances only on a hit that sounds (not on a rest, a TIE or a hit CHNC dropped), so a
+    (default PLAYED): PLAYED advances on a hit that sounds and on a slide (not on a rest, a hold or a hit CHNC
+    dropped), so a
     7-note phrase is heard whole over any rhythm; STEP advances on its own steps like every other lane.
   - **ACC** — the hit also fires ACC. **VEL** — 0…1 on VEL with the hit. **CHNC** — the odds the hit sounds.
 - **DENS** scales every CHNC: at 0.5 the lane plays as drawn, below it thins, above it fills (a step's odds become
