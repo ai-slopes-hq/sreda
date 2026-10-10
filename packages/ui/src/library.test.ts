@@ -198,6 +198,28 @@ test('⌘O on something that is not a SREDA document leaves the session alone an
   expect(s.current()).toBe(before);
 });
 
+test('an old STAGES opens as META-SEQ, from ⌘O or the library, and the notice says what changed', async () => {
+  const s = createSession(SPECS, starterDoc(SPECS));
+  const { bridge, disk, files } = fakeBridge();
+  const lib = libraryActions(s, SPECS, bridge);
+  const old = {
+    version: 1,
+    modules: [{ id: 'm1', type: 'stages', x: 400, y: 0, parent: null, params: {}, atts: {}, ratios: {} }],
+    cables: [],
+    groups: [],
+    master: 1,
+    nextId: 2,
+  };
+  disk.opened = { path: '/x/old.sreda.json', doc: old };
+  expect(await lib.open()).toBe(true);
+  expect(s.current().modules.map((m) => m.type)).toEqual(['metaseq', 'slope']);
+  expect(s.state.notice).toBe('STAGES › free-running timing now follows a clock');
+  s.setState('notice', null);
+  files.set('project:old', old);
+  expect((await lib.read({ kind: 'project', path: 'old', factory: false }))!.modules[0]!.type).toBe('metaseq');
+  expect(s.state.notice).toBe('STAGES › free-running timing now follows a clock');
+});
+
 test('⌘O on an unreadable file names it in the notice', async () => {
   const s = createSession(SPECS, starterDoc(SPECS));
   const { bridge, disk } = fakeBridge();

@@ -270,7 +270,11 @@ test('the 200-module patch validates, compiles, and compiles in under 10 ms', as
   const doc = bigPatch(SPECS);
   expect(doc.modules).toHaveLength(200);
   expect(doc.groups).toHaveLength(20);
-  expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)).toEqual(doc);
+  // until Task 9 rebuilds it on META-SEQ, its RHYTHM and STAGES migrate on open: the round trip is checked on the
+  // migrated document
+  const opened = validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)!;
+  expect(opened).not.toBeNull();
+  expect(validateDoc(JSON.parse(JSON.stringify(opened)), SPECS)).toEqual(opened);
   const times: number[] = [];
   for (let i = 0; i < 6; i++) {
     const t = performance.now();

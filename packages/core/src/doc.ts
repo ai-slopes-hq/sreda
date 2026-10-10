@@ -1,4 +1,5 @@
 import { chainOf, FRAME_MIN, isGroupId, packFrame, recomputeParents, repackManaged, TINTS } from './frames';
+import { migrateSequencers } from './migrate/seq';
 import { inputPorts, RATIOS, specOf, toKnob, TRANSIENT_PARAMS, type Specs } from './spec';
 
 export interface ModuleDoc {
@@ -116,9 +117,11 @@ const isEnd = (x: unknown): x is [string, string] =>
 
 /**
  * A document from storage or a file, checked against the specs: the whole thing or nothing (null).
- * Missing params get their defaults; unknown params are dropped.
+ * Missing params get their defaults; unknown params are dropped. Old RHYTHM and STAGES open as META-SEQ first; what the
+ * user should know about that goes to `notes`.
  */
-export function validateDoc(json: unknown, specs: Specs): Doc | null {
+export function validateDoc(json: unknown, specs: Specs, notes: string[] = []): Doc | null {
+  json = migrateSequencers(json, notes);
   if (!isObj(json) || json['version'] !== 1 || !isNum(json['nextId'])) return null;
   const { modules, cables } = json;
   const groups = json['groups'] ?? [];

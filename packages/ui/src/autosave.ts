@@ -43,12 +43,14 @@ export async function loadSaved(
         : null;
     const project = saved ? readProject(saved.project) : null;
     let doc: Doc | null = null;
+    // what migrating an old document changed (spec §7b): the first is the opening notice
+    const notes: string[] = [];
     try {
-      doc = validateDoc(saved ? saved.doc : raw, specs);
+      doc = validateDoc(saved ? saved.doc : raw, specs, notes);
     } catch {
       doc = null;
     }
-    if (doc) return { doc, notice: null, fresh: false, project };
+    if (doc) return { doc, notice: notes[0] ?? null, fresh: false, project };
     // keep the unreadable save, and replace it so the next launch opens quietly
     await request(db, 'readwrite', (s) => s.put(raw, `backup-${new Date().toISOString()}`));
     await request(db, 'readwrite', (s) => s.put({ doc: first, project: null }, KEY));

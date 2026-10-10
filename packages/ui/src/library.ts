@@ -180,12 +180,14 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
     async read(entry: LibEntry): Promise<Doc | null> {
       if (entry.factory) return FACTORY.find((e) => `FACTORY/${e.name}` === entry.path)?.build(specs) ?? null;
       let doc: Doc | null;
+      const notes: string[] = [];
       try {
-        doc = lib ? validateDoc(await lib.read(entry.kind, entry.path), specs) : null;
+        doc = lib ? validateDoc(await lib.read(entry.kind, entry.path), specs, notes) : null;
       } catch {
         doc = null;
       }
       if (!doc) s.setState('notice', `${entry.path.toUpperCase()} COULD NOT BE OPENED`);
+      else if (notes[0]) s.setState('notice', notes[0]);
       return doc;
     },
     /** ⌘O: any project file; true when it replaced the canvas */
@@ -199,12 +201,14 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
         return false;
       }
       if (!file) return false;
-      const doc = file.error ? null : validateDoc(file.doc, specs);
+      const notes: string[] = [];
+      const doc = file.error ? null : validateDoc(file.doc, specs, notes);
       if (!doc) {
         s.setState('notice', `${fileName(file.path).toUpperCase()} COULD NOT BE OPENED`);
         return false;
       }
       s.openProject(doc, { path: file.path, factory: false, file: true });
+      if (notes[0]) s.setState('notice', notes[0]);
       return true;
     },
     /** File › Import Samples…: the first file goes into a selected SAMPLER / GRAINS, else the LIBRARY tab shows them */

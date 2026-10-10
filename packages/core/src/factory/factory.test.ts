@@ -45,7 +45,11 @@ test.each(FACTORY.map((e) => [e.name, e] as const))(
   '%s is a valid document, its frames packed as STACK',
   (_n, e) => {
     const doc = e.build(SPECS);
-    expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)).toEqual(doc);
+    // until Task 9 rebuilds the factory on META-SEQ, its RHYTHM and STAGES migrate on open: the round trip is checked on
+    // the migrated document
+    const opened = validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)!;
+    expect(opened).not.toBeNull();
+    expect(validateDoc(JSON.parse(JSON.stringify(opened)), SPECS)).toEqual(opened);
     for (const g of doc.groups) {
       expect(g.layout).toBe('stack');
       expect(packFrame(doc, SPECS, g.id)).toEqual(doc);
