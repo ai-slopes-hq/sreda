@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 32 (§2: a module's height is exactly n × 1U, so 2U and 3U line up with stacked 1U in STACK) · Status: approved
+Date: 2026-10-07 · Revision 33 (§7b: META-SEQ, one sequencer in place of RHYTHM and STAGES) · Status: approved
 
 ## Why
 
@@ -459,6 +459,9 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 
 ## 7. First modules
 
+> RHYTHM and STAGES below are replaced by META-SEQ (§7b, revision 33); they stay described here as the source of
+> its migration.
+
 Ports are `name (role)`; normals are written `input ← source`.
 
 Size is `HP × U`.
@@ -660,6 +663,104 @@ Stereo outputs are two mono outputs (cables stay mono).
   buffer.
 - **2× oversampling** is a polyphase half-band (63 taps, Kaiser β 8, 31 samples of latency) under FOLD, DRIVE and
   FILTER's nonlinear models, with first-order ADAA.
+
+## 7b. META-SEQ: one sequencer in place of RHYTHM and STAGES (revision 33)
+
+Almost every patch paired them the same way (RHYTHM › GATE → STAGES › ADV, 10×2 + 10×3 HP, two DICE), so they
+become one sequencer module: a small panel on the canvas, the depth in an editor docked under the canvas, in the
+manner of software sequencers (Bitwig Stepic, Hypnus, Riffer, Elektron) since SREDA stays in the computer.
+RHYTHM and STAGES (§7) leave the picker and the engine; §7 keeps them only as the source of the migration below.
+
+**The module.** META-SEQ, 6 × 2U, one voice.
+
+| | ports |
+|---|---|
+| in | **CLK** (trigger; unpatched: the frame's clock, as RHYTHM's; its ×N / ÷N ratio stays) · **RST** (trigger: every lane goes to its step 1 on the next clock) · **PAT** (mod; with the PAT knob, 0…1 → patterns A…H) · **DICE** (trigger) · **MUT** (mod; with the MUT knob) |
+| out | **CV** (pitch: the note plus TRNS) · **GATE** (trigger) · **ACC** (trigger, with the hit) · **VEL** (mod 0…1, held until the next hit) · **EOC** (trigger, when the GATE lane wraps) |
+
+- Panel: a 4-lane overview display, then the knobs PAT, TRNS (±24 semitones along the scale), MUT, DENS, then the
+  mode strip GEN ▾ · DICE. The display is read-only: the playing pattern's NOTE contour, the GATE steps with the
+  current one ringed amber, thin ACC and VEL strips, the lane lengths. A click on the display or a double-click on the
+  module opens the editor.
+- **Lanes**, six per pattern, each with its own **LEN** 1–16, **RATE** (÷4 ÷3 ÷2 ×1 ×2 ×3 ×4, steps per clock) and
+  **lock**:
+  - **GATE** — the step plays or rests.
+  - **TIE** — the step continues the one before: GATE stays high (no new rise, envelopes do not retrigger); when the
+    note differs, CV glides to it in 80 ms (the 303 slide; there is no separate SLIDE lane). A step with TIE on is a tie
+    whatever GATE says there; GATE off and TIE off is a rest. A TIE after a rest plays like a hit; an accent on a TIE
+    is ignored.
+  - **NOTE** — a scale degree from ROOT in SCALE (24 semitones, as STAGES' voltages). Its own mode **STEP / PLAYED**
+    (default PLAYED): PLAYED advances only on a hit that sounds (not on a rest, a TIE or a hit CHNC dropped), so a
+    7-note phrase is heard whole over any rhythm; STEP advances on its own steps like every other lane.
+  - **ACC** — the hit also fires ACC. **VEL** — 0…1 on VEL with the hit. **CHNC** — the odds the hit sounds.
+- **DENS** scales every CHNC: at 0.5 the lane plays as drawn, below it thins, above it fills (a step's odds become
+  `clamp(chnc · 2 · DENS)`). Rests stay rests.
+- **Time.** Each lane steps at its RATE against the clock; ×N lanes subdivide the last clock interval (as an input's
+  ×N ratio does). A hit holds GATE for half a GATE-lane step.
+- **Patterns.** Eight (A–H), each a whole set of lanes with their LEN, RATE, locks and STEP / PLAYED. PAT (knob + CV)
+  picks the playing one; the change waits until the GATE lane wraps, so it never cuts a bar. Another META-SEQ's CV
+  into PAT is a sequencer of sequences; that is how long songs are built (there is no chain list).
+
+**The editor (bottom drawer).** Docked under the canvas at the window's full width, about 300 px high by default,
+its top edge dragged; the canvas above it shrinks rather than being covered, and scrolls so the module stays in
+view. It shows one META-SEQ: opened by a double-click on the module or a click on its display, switched by a click
+on another META-SEQ, closed by Esc or ✕.
+
+- Header: the module's name, pattern tabs **A–H** (the playing one lit, the edited one selected; any pattern may be
+  edited while another plays), COPY / PASTE pattern, SCALE ▾, ROOT, GEN ▾, DICE, MUTATE.
+- One row per lane; on its left: name, LEN, RATE, STEP / PLAYED (NOTE), 🔒, ⚄ (DICE this lane).
+- **One step grid for all lanes**, a step ≈ 1/16 of the width, in clock time: a ÷2 lane's steps are twice as wide,
+  a ×2 lane's half. A lane shorter than the window repeats as a faint **ghost** to the end, so it shows where NOTE (7)
+  meets GATE (16) and where accents line up; only the bright first cycle is edited. Each lane's cursor moves live
+  from the engine's readout.
+- Gestures: NOTE — press and drag draws notes snapped to the scale (one undo step per stroke), note names under the
+  lane; GATE / TIE / ACC — a click toggles, a drag paints the same value; VEL / CHNC — press and drag draws bars, a
+  double-click restores the default; LEN — drag the lane's end marker, or the wheel over LEN; RATE and STEP / PLAYED —
+  a click opens the list. ⌘Z as everywhere; each action is one undo step.
+
+**Generation.**
+
+- **GEN ▾** styles: 303, MOTIF, WALK, TURING, ARP, PHRASE, PEDAL (STAGES' note generators with their slides as TIE,
+  and RHYTHM's 303-style gates, long notes and accents) and **EUCLID** (gates by Euclid with random HITS and ROT,
+  notes as PEDAL). EUCLID is no longer a live mode.
+- **DICE** (button, or a rise on DICE) writes the edited pattern's unlocked lanes in the GEN style and leaves LEN and
+  RATE alone (the style fills, you shape the polymeter). The button is one undo step; the input changes the patch
+  without one.
+- **⚄ on a lane** writes that lane alone, in the same style and consistent with the others (ACC only on hits, TIE
+  only after a hit, NOTE in the scale).
+- **MUTATE** (MUT knob + CV, 0…1): when an unlocked lane wraps, each of its steps changes with odds MUT² to the value
+  ⚄ would give it. The engine draws from a bank of 8 variants per lane the UI generates beforehand (refreshed when
+  GEN, SCALE, ROOT or the pattern changes), so nothing runs a generator or allocates on the audio thread. Mutated
+  steps sound at once and reach the document through the readout once per GATE cycle as one batch, without an undo step (as from the
+  DICE input).
+
+**Storage.** Every lane step and lane setting is a hidden param of the module (8 patterns × 6 lanes × 16 steps plus
+LEN, RATE, lock and STEP / PLAYED per lane, about 800): undo, saving, DICE writes and migration work as for STAGES'
+hidden params; R leaves them alone. The engine holds all eight patterns, so PAT switches without a message. If the
+200-module benchmark shows a cost, the engine may pack them differently; the document does not change.
+
+**Migration** (when a document is opened):
+
+- A RHYTHM whose GATE feeds a STAGES' ADV merges with it into one META-SEQ in the STAGES' place: STAGES' stages →
+  the NOTE lane (PLAYED), slides → TIE on those steps; RHYTHM's pads → GATE and TIE (OFF / ON / TIE), accents → ACC;
+  each module's LEN → its lanes' LEN; an EUCLID pattern is written out as steps. Cables move: CLK, RST, DICE from
+  RHYTHM; CV, GATE, ACC; EOC from RHYTHM.
+- A RHYTHM alone → META-SEQ with GATE, TIE and ACC; NOTE holds ROOT.
+- A STAGES alone → META-SEQ with NOTE on STEP and GATE from its pulses. A free-running STAGES (ADV unpatched) takes
+  the frame's clock, or outside a frame a cycling SLOPE placed beside it; the opening notice says the timing may
+  differ.
+- A 6×2 META-SEQ fits where either stood; STACK frames re-pack on open (revision 32).
+- Factory projects and groups and the DICE patch generator are rebuilt on META-SEQ; each is still tested to sound.
+
+**Built in five audible slices:** (1) the engine module and its panel, playing where RHYTHM + STAGES played; (2) the
+editor; (3) patterns and PAT; (4) DICE, ⚄ and MUTATE; (5) migration, factory content, and RHYTHM / STAGES removed.
+
+**Tests.** Engine: polymeter (NOTE 7 × GATE 16 repeats after 112 clocks), RATE ×2 / ÷2, PLAYED vs STEP, TIE holds
+GATE and glides on a new note, CHNC and DENS by seed, PAT switches only on the GATE wrap, MUTATE from the bank, no
+allocation in `process`, the 200-module benchmark with META-SEQ. Core: the three migrations on old-format documents,
+generators and ⚄, DICE leaves locked lanes, LEN and RATE alone, the factory sounds and nothing overlaps. UI: the
+ghost grid geometry, lane gestures and undo. e2e: a double-click opens the editor, a note drawn, ⌘Z, a pattern
+switched, the canvas shrinks above the editor.
 
 ## 8. Technology and architecture
 
