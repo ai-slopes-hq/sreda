@@ -1273,7 +1273,7 @@ mod tests {
                 let trace = s
                     .display
                     .as_ref()
-                    .is_some_and(|d| d.kind == "scope" || d.kind == "grains")
+                    .is_some_and(|d| matches!(d.kind, "scope" | "grains" | "metaseq"))
                     .then(|| {
                         off += crate::dsp::TRACE_LEN;
                         off - crate::dsp::TRACE_LEN

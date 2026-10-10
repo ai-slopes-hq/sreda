@@ -35,6 +35,9 @@ const MODULES: &[Entry] = &[
         Box::new(grains::Grains::new(sr))
     }),
     ("lpg", lpg::spec, |sr| Box::new(lpg::Lpg::new(sr))),
+    ("metaseq", metaseq::spec, |sr| {
+        Box::new(metaseq::MetaSeq::new(sr))
+    }),
     ("mix", mix::spec, |_| Box::new(mix::Mix)),
     ("noise", noise::spec, |_| Box::new(noise::Noise::new())),
     ("osc", osc::spec, |sr| Box::new(osc::Osc::new(sr))),

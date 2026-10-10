@@ -16,7 +16,7 @@ export interface KnobParam {
   def: number;
   taper: 'lin' | 'exp';
   step?: number;
-  unit?: 'hz' | 's' | 'note' | 'db';
+  unit?: 'hz' | 's' | 'note' | 'db' | 'pattern';
   randomRange?: [number, number];
   modDepth?: number;
   hidden?: boolean;

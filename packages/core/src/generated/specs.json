@@ -1134,6 +1134,10277 @@
     ]
   },
   {
+    "type": "metaseq",
+    "label": "META-SEQ",
+    "desc": "six polymetric lanes, eight patterns: note, gate, tie, accent, velocity, chance · generative",
+    "size": [
+      6,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
+      },
+      {
+        "id": "reset",
+        "label": "RST",
+        "role": "trigger"
+      },
+      {
+        "id": "dice",
+        "label": "DICE",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "cv",
+        "label": "CV",
+        "role": "pitch"
+      },
+      {
+        "id": "gate",
+        "label": "GATE",
+        "role": "trigger"
+      },
+      {
+        "id": "acc",
+        "label": "ACC",
+        "role": "trigger"
+      },
+      {
+        "id": "vel",
+        "label": "VEL",
+        "role": "mod"
+      },
+      {
+        "id": "eoc",
+        "label": "EOC",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "an1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "an16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "anlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "anrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "anlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 1,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 1,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 1,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 1,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ag16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "aglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "agrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "at16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "atlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "atrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "atlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aa16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "aalen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aarate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aalock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "av16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "avlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "avrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "avlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ac16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "aclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "acrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "aclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "anmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bn16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bnlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bnrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bnlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bgrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bt16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "btlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "btrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "btlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ba16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "balen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "barate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "balock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bv16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bvlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bvrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bvlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bc16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "bclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bcrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "bnmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cn16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cnlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cnrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cnlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cgrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ct16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ctlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ctrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ctlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ca16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "calen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "carate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "calock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cv16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cvlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cvrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cvlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cc16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "cclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ccrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "cnmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dn16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dnlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dnrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dnlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dgrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dt16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dtlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dtrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dtlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "da16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dalen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "darate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dalock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dv16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dvlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dvrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dvlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dc16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "dclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dcrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "dnmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "en16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "enlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "enrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "enlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "eglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "egrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "et16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "etlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "etrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "etlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ea16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ealen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "earate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ealock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ev16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "evlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "evrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "evlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ec16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "eclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ecrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "eclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "enmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fn16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fnlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fnrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fnlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fgrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ft16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "ftlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ftrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ftlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fa16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "falen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "farate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "falock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fv16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fvlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fvrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fvlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fc16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "fclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fcrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "fnmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gn16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gnlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gnrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gnlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ggrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gt16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gtlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gtrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gtlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ga16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "galen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "garate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "galock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gv16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gvlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gvrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gvlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gc16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "gclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gcrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "gnmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn1",
+        "label": "1",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn2",
+        "label": "2",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn3",
+        "label": "3",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn4",
+        "label": "4",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn5",
+        "label": "5",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn6",
+        "label": "6",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn7",
+        "label": "7",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn8",
+        "label": "8",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn9",
+        "label": "9",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn10",
+        "label": "10",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn11",
+        "label": "11",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn12",
+        "label": "12",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn13",
+        "label": "13",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn14",
+        "label": "14",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn15",
+        "label": "15",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hn16",
+        "label": "16",
+        "min": 0.0,
+        "max": 24.0,
+        "def": 12.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hnlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hnrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hnlock",
+        "label": "NOTE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hg16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hglen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hgrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hglock",
+        "label": "GATE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ht16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "htlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "htrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "htlock",
+        "label": "TIE",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha1",
+        "label": "1",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha2",
+        "label": "2",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha3",
+        "label": "3",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha4",
+        "label": "4",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha5",
+        "label": "5",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha6",
+        "label": "6",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha7",
+        "label": "7",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha8",
+        "label": "8",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha9",
+        "label": "9",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha10",
+        "label": "10",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha11",
+        "label": "11",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha12",
+        "label": "12",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha13",
+        "label": "13",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha14",
+        "label": "14",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha15",
+        "label": "15",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "ha16",
+        "label": "16",
+        "options": [
+          "·",
+          "●"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "halen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "harate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "halock",
+        "label": "ACC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hv16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hvlen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hvrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hvlock",
+        "label": "VEL",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc1",
+        "label": "1",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc2",
+        "label": "2",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc3",
+        "label": "3",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc4",
+        "label": "4",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc5",
+        "label": "5",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc6",
+        "label": "6",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc7",
+        "label": "7",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc8",
+        "label": "8",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc9",
+        "label": "9",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc10",
+        "label": "10",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc11",
+        "label": "11",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc12",
+        "label": "12",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc13",
+        "label": "13",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc14",
+        "label": "14",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc15",
+        "label": "15",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hc16",
+        "label": "16",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 1.0,
+        "taper": "lin",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "hclen",
+        "label": "LEN",
+        "min": 1.0,
+        "max": 16.0,
+        "def": 16.0,
+        "taper": "lin",
+        "step": 1.0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hcrate",
+        "label": "RATE",
+        "options": [
+          "÷4",
+          "÷3",
+          "÷2",
+          "×1",
+          "×2",
+          "×3",
+          "×4"
+        ],
+        "def": 3,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hclock",
+        "label": "CHNC",
+        "options": [
+          "·",
+          "L"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "hnmode",
+        "label": "NOTE",
+        "options": [
+          "PLAYED",
+          "STEP"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "scale",
+        "label": "SCALE",
+        "options": [
+          "CHR",
+          "MAJ",
+          "MIN",
+          "DOR",
+          "PHR",
+          "PMIN",
+          "PMAJ",
+          "WHL"
+        ],
+        "def": 2,
+        "glyph": "scale",
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "root",
+        "label": "ROOT",
+        "min": 0.0,
+        "max": 11.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0,
+        "unit": "note",
+        "hidden": true
+      },
+      {
+        "kind": "option",
+        "id": "edit",
+        "label": "EDIT",
+        "options": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H"
+        ],
+        "def": 0,
+        "hidden": true
+      },
+      {
+        "kind": "knob",
+        "id": "pat",
+        "label": "PAT",
+        "min": 0.0,
+        "max": 7.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0,
+        "unit": "pattern"
+      },
+      {
+        "kind": "knob",
+        "id": "trns",
+        "label": "TRNS",
+        "min": -24.0,
+        "max": 24.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "knob",
+        "id": "mut",
+        "label": "MUT",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.0,
+        "taper": "lin"
+      },
+      {
+        "kind": "knob",
+        "id": "dens",
+        "label": "DENS",
+        "min": 0.0,
+        "max": 1.0,
+        "def": 0.5,
+        "taper": "lin"
+      },
+      {
+        "kind": "option",
+        "id": "gen",
+        "label": "GEN",
+        "options": [
+          "303",
+          "MOTIF",
+          "WALK",
+          "TURING",
+          "ARP",
+          "PHRASE",
+          "PEDAL",
+          "EUCLID"
+        ],
+        "def": 0
+      },
+      {
+        "kind": "action",
+        "id": "dice",
+        "label": "DICE"
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 4,
+      "kind": "metaseq"
+    }
+  },
+  {
     "type": "mix",
     "label": "MIX",
     "desc": "4 audio inputs",

@@ -37,6 +37,8 @@ pub enum Unit {
     S,
     Note,
     Db,
+    /// a pattern index 0–7, shown A…H
+    Pattern,
 }
 
 fn is_false(b: &bool) -> bool {

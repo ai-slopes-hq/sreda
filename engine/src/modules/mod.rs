@@ -12,6 +12,7 @@ pub mod fold;
 pub mod follow;
 pub mod grains;
 pub mod lpg;
+pub mod metaseq;
 pub mod mix;
 pub mod noise;
 pub mod osc;
