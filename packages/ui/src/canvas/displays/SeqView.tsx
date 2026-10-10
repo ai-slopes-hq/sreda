@@ -1,4 +1,4 @@
-import { createEffect, For, type JSX } from 'solid-js';
+import { createEffect, createSignal, For, type JSX } from 'solid-js';
 import { laneLen, laneSteps, LANES, seqTrace } from '@sreda/core';
 import { readoutBuffer, track } from '../../live';
 
@@ -28,7 +28,10 @@ export function SeqView(props: SeqViewProps): JSX.Element {
   let vel: SVGPathElement | undefined;
   const cells: SVGRectElement[] = [];
 
-  const patternOf = () => Math.max(0, Math.min(7, Math.round((props.params['pat'] ?? 0) * 7)));
+  const knobPattern = () => Math.max(0, Math.min(7, Math.round((props.params['pat'] ?? 0) * 7)));
+  /** the pattern the engine plays now (a signal written only when it changes); the PAT knob until a trace is read */
+  const [playing, setPlaying] = createSignal<number | undefined>(undefined);
+  const patternOf = () => playing() ?? knobPattern();
   const lens = () => LANES.map((l) => laneLen(props.params, patternOf(), l));
 
   /** paint steps (lane-major in param units) and the GATE cursor */
@@ -71,6 +74,7 @@ export function SeqView(props: SeqViewProps): JSX.Element {
     const t = props.trace;
     if (t && props.traceAt !== undefined) {
       const s = seqTrace(t, props.traceAt);
+      setPlaying(Math.max(0, Math.min(7, Math.round(s.pattern))));
       paint(s.live, Math.round(s.cursors[1]!));
     } else paint(fromParams(), -1);
   });
@@ -79,6 +83,8 @@ export function SeqView(props: SeqViewProps): JSX.Element {
     const buf = readoutBuffer();
     if (!buf) return;
     const s = seqTrace(buf, off);
+    const pat = Math.max(0, Math.min(7, Math.round(s.pattern)));
+    if (pat !== playing()) setPlaying(pat);
     paint(s.live, Math.round(s.cursors[1]!));
   };
 
