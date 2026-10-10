@@ -973,9 +973,9 @@ test('picker: a factory project replaces the canvas (⌘Z returns); a group drop
   await page.getByRole('button', { name: 'LIBRARY' }).click();
   await page.locator('[data-section=PROJECTS] [data-path="FACTORY/acid"]').click();
   await expect(page.locator('.sr-frame .sr-gname')).toHaveText('ACID');
-  await expect(page.locator('[data-type=rhythm]')).toHaveCount(1);
+  await expect(page.locator('[data-type=metaseq]')).toHaveCount(1);
   await page.keyboard.press('Meta+z');
-  await expect(page.locator('[data-type=rhythm]')).toHaveCount(0);
+  await expect(page.locator('[data-type=metaseq]')).toHaveCount(0);
   expect((await fullDoc(page)).modules.map((m) => m.type)).toEqual(['osc', 'out']);
 
   // a SLOPE, then from its EOC (a trigger) into empty space → GROUPS → vca-lpg

@@ -4,7 +4,8 @@
 import type { Doc } from '../doc';
 import { genNotes, mulberry32, SCALES, type Algo } from '../generators';
 import type { Specs } from '../spec';
-import { build, type Builder } from './build';
+import { seqParams } from '../migrate/seq';
+import { build, euclidRhythm, stagesLine, type Builder } from './build';
 
 export type DiceKind = 'rhythmic' | 'ambient';
 
@@ -30,15 +31,15 @@ const logBetween = (R: Rand, a: number, b: number) => a * (b / a) ** R();
 const pick = <T>(R: Rand, xs: readonly T[]): T => xs[Math.floor(R() * xs.length)]!;
 const chance = (R: Rand, p: number) => R() < p;
 
-/** A generated STAGES line: values for S.add (gen, scale, root, length and the 16 notes with a few slides). */
-function line(S: Builder, R: Rand, slides: number): Record<string, number> {
+/** A generated line in STAGES' saved form (for `seqParams`): gen, scale, root, length and 16 notes with a few slides. */
+function line(R: Rand, slides: number): Record<string, number> {
   const algo = Math.floor(R() * ALGOS.length);
   const scale = pick(R, MOODS);
   const root = Math.floor(R() * 12);
   const semis = genNotes(ALGOS[algo]!, 16, SCALES[scale]!, root, R);
   const glide: number[] = [];
   for (let k = 0; k < slides; k++) glide.push(1 + Math.floor(R() * 16));
-  return S.notes({ gen: algo, scale, root, length: pick(R, [8, 16, 16]) }, semis, [...new Set(glide)]);
+  return stagesLine(semis, { gen: algo, scale, root, length: pick(R, [8, 16, 16]), slides: [...new Set(glide)] });
 }
 
 function rhythmic(S: Builder, R: Rand): void {
@@ -52,12 +53,7 @@ function rhythmic(S: Builder, R: Rand): void {
   // drums
   if (chance(R, 0.85)) {
     const d: string[] = [];
-    const kr = S.add('rhythm', 0, lane(), {
-      mode: 0,
-      length: 16,
-      hits: Math.round(between(R, 3, 5)),
-      rot: 0,
-    });
+    const kr = S.seq(0, lane(), seqParams(euclidRhythm(16, Math.round(between(R, 3, 5))), null));
     const kick = S.add('osc', 300, y, { freq: between(R, 45, 62), wave: WAVE.SIN });
     const kl = S.add('lpg', 600, y, { decay: between(R, 0.2, 0.45), mode: LPG.BOTH });
     S.wire(kick, 'out', kl, 'in');
@@ -67,12 +63,8 @@ function rhythmic(S: Builder, R: Rand): void {
     const dm = S.add('mix', 900, y, { la: 0.9, lb: 0.45, lc: 0.55 });
     d.push(dm);
     S.wire(kl, 'out', dm, 'a');
-    const hr = S.add('rhythm', 0, lane(), {
-      mode: 0,
-      length: 16,
-      hits: Math.round(between(R, 5, 11)),
-      rot: Math.floor(R() * 4),
-    });
+    const hits = Math.round(between(R, 5, 11));
+    const hr = S.seq(0, lane(), seqParams(euclidRhythm(16, hits, Math.floor(R() * 4)), null));
     const nz = S.add('noise', 300, y, { level: 0.6 });
     const hl = S.add('lpg', 600, y, { decay: between(R, 0.03, 0.09), mode: LPG.BOTH });
     S.wire(nz, 'white', hl, 'in');
@@ -82,7 +74,7 @@ function rhythmic(S: Builder, R: Rand): void {
     d.push(hr, nz, hl);
     if (chance(R, 0.5)) {
       // a snare: pink noise through a band-pass, on 2 and 4 (rotated)
-      const sr = S.add('rhythm', 0, lane(), { mode: 0, length: 16, hits: 2, rot: 4 });
+      const sr = S.seq(0, lane(), seqParams(euclidRhythm(16, 2, 4), null));
       const sn = S.add('noise', 300, y, { level: 0.7 });
       const sf = S.add('filter', 600, y, { cutoff: between(R, 900, 2200), res: 0.3, model: 0 });
       const sl = S.add('lpg', 900, y, { decay: between(R, 0.08, 0.18), mode: LPG.BOTH });
@@ -101,15 +93,10 @@ function rhythmic(S: Builder, R: Rand): void {
   for (let v = 0; v < pitched; v++) {
     const f: string[] = [];
     const bass = v === 0;
-    const gr = S.add('rhythm', 0, lane(), {
-      mode: 0,
-      length: 16,
-      hits: Math.round(between(R, bass ? 5 : 3, bass ? 10 : 7)),
-      rot: Math.floor(R() * 8),
-    });
+    const hits = Math.round(between(R, bass ? 5 : 3, bass ? 10 : 7));
+    const rhythm = euclidRhythm(16, hits, Math.floor(R() * 8));
+    const gr = S.seq(0, lane(), seqParams(rhythm, line(R, bass ? 3 : 1)));
     clocked.push([gr, 'clk', 4]);
-    const st = S.add('stages', 300, y, line(S, R, bass ? 3 : 1));
-    S.wire(gr, 'gate', st, 'adv');
     const src = chance(R, 0.75)
       ? S.add('osc', 0, lane(), {
           freq: bass ? pick(R, [55, 65.4, 73.4]) : pick(R, [220, 261.6, 293.7]),
@@ -120,7 +107,7 @@ function rhythmic(S: Builder, R: Rand): void {
           ratio: pick(R, [1, 2, 3, 0.5]),
           index: between(R, 0.05, 0.3),
         });
-    S.wire(st, 'cv', src, 'pitch');
+    S.wire(gr, 'cv', src, 'pitch');
     const fl = S.add('filter', 300, y, {
       cutoff: logBetween(R, bass ? 180 : 500, bass ? 700 : 2500),
       res: between(R, 0.35, 0.8),
@@ -144,7 +131,7 @@ function rhythmic(S: Builder, R: Rand): void {
     S.wire(gr, 'gate', env, 'trig');
     S.wire(env, 'out', fl, '@cutoff');
     S.att(fl, '@cutoff', between(R, 0.2, 0.5));
-    f.push(gr, st, src, fl, amp, env);
+    f.push(gr, src, fl, amp, env);
     voices.push({ out: [amp, 'out'], frame: f, name: bass ? 'BASS' : 'LEAD' });
   }
 
@@ -234,7 +221,7 @@ function ambient(S: Builder, R: Rand): void {
   // a slow line: bells or a pad, pinged on the clock (sometimes by chance)
   if (chance(R, 0.8) || voices.length === 0) {
     const f: string[] = [];
-    const st = S.add('stages', 0, lane(), line(S, R, 4));
+    const st = S.seq(0, lane(), seqParams(null, line(R, 4)));
     const bells = chance(R, 0.5);
     const os = S.add('osc', 300, y, {
       freq: bells ? pick(R, [440, 523.3, 587.3]) : pick(R, [110, 130.8, 146.8]),
@@ -250,11 +237,11 @@ function ambient(S: Builder, R: Rand): void {
     if (voices.length > 0 && chance(R, 0.5)) {
       const ch = S.add('chance', 900, y, { p: between(R, 0.35, 0.7) });
       clocked.push([ch, 'trig', 1]);
-      S.wire(ch, 'a', st, 'adv');
+      S.wire(ch, 'a', st, 'clk');
       S.wire(ch, 'a', amp, 'ping');
       f.push(ch);
     } else {
-      clocked.push([st, 'adv', 1]);
+      clocked.push([st, 'clk', 1]);
       clocked.push([amp, 'ping', 1]);
     }
     f.push(st, os, amp);

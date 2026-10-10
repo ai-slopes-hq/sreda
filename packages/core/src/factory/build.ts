@@ -10,14 +10,50 @@ export interface Builder {
   wire(a: string, ap: string, b: string, bp: string): void;
   att(id: string, port: string, v: number): void;
   rat(id: string, port: string, r: number): void;
-  /** STAGES' voltages from semitones 0…24 (12 = 0 V) and slides on the given stages (1-based) */
-  notes(values: Record<string, number>, semis: number[], slides: number[]): Record<string, number>;
-  /** RHYTHM's pads: 'x' on, '-' TIE, '.' off; accents 'A' */
-  grid(id: string, gates: string, accents: string): void;
+  /** a META-SEQ; `params` in the document's units (knob positions, option indices), as `seqParams` gives them */
+  seq(x: number, y: number, params: Record<string, number>): string;
   frame(ids: string[], name: string, o?: { ratio?: number; tint?: number; bpm?: number }): string;
 }
 
 const snap = (v: number): number => Math.round(v / 8) * 8;
+
+// The factory writes its sequences as RHYTHM and STAGES content in their saved form (knob positions, option indices)
+// and turns them into META-SEQ params with the migration's own `seqParams`, so a preset sounds as its old document
+// opens.
+
+/** RHYTHM in EUCLID: HITS spread over LEN, rotated by ROT */
+export const euclidRhythm = (length: number, hits: number, rot = 0): Record<string, number> => ({
+  mode: 0,
+  length: (length - 1) / 15,
+  hits: hits / 16,
+  rot: rot / 15,
+});
+
+/** RHYTHM's GRID over 16 steps: pads 'x' on, '-' TIE, '.' off; accents 'A' */
+export function gridRhythm(gates: string, accents: string): Record<string, number> {
+  const out: Record<string, number> = { mode: 1 };
+  for (let i = 0; i < 16; i++) {
+    out['g' + (i + 1)] = gates[i] === 'x' ? 1 : gates[i] === '-' ? 2 : 0;
+    out['a' + (i + 1)] = accents[i] === 'A' ? 1 : 0;
+  }
+  return out;
+}
+
+/** STAGES: semitones 0…24 (12 = 0 V) on the stages, slides and silent pulses (○) on the given stages (1-based); LEN is
+ * the line's length unless given; SCALE and GEN option indices, ROOT 0…11 */
+export function stagesLine(
+  semis: number[],
+  o: { slides?: number[]; rests?: number[]; length?: number; scale?: number; root?: number; gen?: number } = {},
+): Record<string, number> {
+  const out: Record<string, number> = { length: ((o.length ?? semis.length) - 1) / 15 };
+  semis.forEach((x, i) => (out['v' + (i + 1)] = x / 24));
+  for (const k of o.slides ?? []) out['g' + k] = 1;
+  for (const k of o.rests ?? []) out['p' + k] = 1;
+  if (o.scale !== undefined) out['scale'] = o.scale;
+  if (o.root !== undefined) out['root'] = o.root / 11;
+  if (o.gen !== undefined) out['gen'] = o.gen;
+  return out;
+}
 
 export function build(specs: Specs, f: (b: Builder) => unknown): Doc {
   return buildWith(specs, f).doc;
@@ -49,18 +85,12 @@ export function buildWith<T>(specs: Specs, f: (b: Builder) => T): { doc: Doc; va
     rat(id, port, r) {
       mod(id).ratios[port] = r;
     },
-    notes(values, semis, slides) {
-      const out = { ...values };
-      semis.forEach((s, i) => (out['v' + (i + 1)] = (s - 12) / 12));
-      for (const k of slides) out['g' + k] = 1;
-      return out;
-    },
-    grid(id, gates, accents) {
-      const m = mod(id);
-      for (let i = 0; i < 16; i++) {
-        m.params['g' + (i + 1)] = gates[i] === 'x' ? 1 : gates[i] === '-' ? 2 : 0;
-        m.params['a' + (i + 1)] = accents[i] === 'A' ? 1 : 0;
-      }
+    seq(x, y, params) {
+      const id = b.add('metaseq', x, y);
+      const ids = new Set(specs['metaseq']!.params.map((p) => p.id));
+      for (const k of Object.keys(params)) if (!ids.has(k)) throw new Error(`no param ${k} on metaseq`);
+      Object.assign(mod(id).params, params);
+      return id;
     },
     frame(ids, name, o = {}) {
       const id = `g${n++}`;

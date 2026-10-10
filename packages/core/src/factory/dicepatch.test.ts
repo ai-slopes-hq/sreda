@@ -10,13 +10,17 @@ test('every throw is a valid document with sound reaching OUT and no empty input
   for (let seed = 1; seed <= 200; seed++) {
     const { doc, kind } = dicePatch(SPECS, seed);
     kinds.add(kind);
-    expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS), `seed ${seed}`).not.toBeNull();
+    expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS), `seed ${seed}`).toEqual(doc);
     const problems = wireProblems(doc, SPECS).filter((p) => !p.info);
     expect(
       problems.map((p) => p.text),
       `seed ${seed} (${kind})`,
     ).toEqual([]);
     expect(doc.modules.filter((m) => m.type === 'out')).toHaveLength(1);
+    expect(
+      doc.modules.filter((m) => m.type === 'rhythm' || m.type === 'stages'),
+      `seed ${seed}: sequenced by META-SEQ alone`,
+    ).toEqual([]);
     expect(
       doc.groups.some((g) => g.clock.on),
       `seed ${seed}: a frame with its own clock`,

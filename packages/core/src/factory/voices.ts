@@ -1,7 +1,8 @@
 // Voices for the factory presets (spec §6, revision 31): each builds its modules at (x, y) and tells what it sends
 // out and which jacks want the clock (with a ratio), so a group is a voice in a frame with its own clock and a project
 // is several voices, a mix and effects under one clock frame.
-import type { Builder } from './build';
+import { seqParams } from '../migrate/seq';
+import { euclidRhythm, stagesLine, type Builder } from './build';
 
 export interface Voice {
   ids: string[];
@@ -16,28 +17,28 @@ const WAVE = { SIN: 0, TRI: 1, SAW: 2, SQR: 3 };
 const LPG = { VCA: 0, LP: 1, BOTH: 2 };
 const FILTER = { SVF: 0, LADDER: 1, DIODE: 2, SK: 3 };
 
-/** a euclidean RHYTHM on 16 steps, clocked ×4 (sixteenths) */
+/** a META-SEQ with a euclidean GATE on 16 steps, clocked ×4 (sixteenths) */
 function steps(S: Builder, x: number, y: number, hits: number, rot = 0): string {
-  return S.add('rhythm', x, y, { mode: 0, length: 16, hits, rot });
+  return S.seq(x, y, seqParams(euclidRhythm(16, hits, rot), null));
 }
 
 export function kick(S: Builder, x: number, y: number, hits = 4): Voice {
-  const rh = steps(S, x, y, hits);
+  const sq = steps(S, x, y, hits);
   const os = S.add('osc', x + 300, y, { freq: 48, wave: WAVE.SIN });
   const pe = S.add('slope', x + 300, y + 160, { rise: 0.001, fall: 0.06 });
   const amp = S.add('lpg', x + 600, y, { decay: 0.35, mode: LPG.BOTH });
   const sat = S.add('drive', x + 600, y + 160, { gain: 6, model: 0, mix: 0.5 });
-  S.wire(rh, 'gate', pe, 'trig');
+  S.wire(sq, 'gate', pe, 'trig');
   S.wire(pe, 'out', os, '@freq');
   S.att(os, '@freq', 0.25);
   S.wire(os, 'out', amp, 'in');
-  S.wire(rh, 'gate', amp, 'ping');
+  S.wire(sq, 'gate', amp, 'ping');
   S.wire(amp, 'out', sat, 'in');
-  return { ids: [rh, os, pe, amp, sat], out: [sat, 'out'], clocks: [[rh, 'clk', 4]] };
+  return { ids: [sq, os, pe, amp, sat], out: [sat, 'out'], clocks: [[sq, 'clk', 4]] };
 }
 
 export function snare(S: Builder, x: number, y: number): Voice {
-  const rh = steps(S, x, y, 2, 4);
+  const sq = steps(S, x, y, 2, 4);
   const tone = S.add('osc', x + 300, y, { freq: 190, wave: WAVE.TRI });
   const tl = S.add('lpg', x + 600, y, { decay: 0.12, mode: LPG.BOTH });
   const nz = S.add('noise', x + 300, y + 160, { level: 0.8 });
@@ -45,13 +46,13 @@ export function snare(S: Builder, x: number, y: number): Voice {
   const nl = S.add('lpg', x + 900, y + 160, { decay: 0.18, mode: LPG.BOTH });
   const mx = S.add('mix', x + 900, y, { la: 0.6, lb: 0.9 });
   S.wire(tone, 'out', tl, 'in');
-  S.wire(rh, 'gate', tl, 'ping');
+  S.wire(sq, 'gate', tl, 'ping');
   S.wire(nz, 'white', bp, 'in');
   S.wire(bp, 'bp', nl, 'in');
-  S.wire(rh, 'gate', nl, 'ping');
+  S.wire(sq, 'gate', nl, 'ping');
   S.wire(tl, 'out', mx, 'a');
   S.wire(nl, 'out', mx, 'b');
-  return { ids: [rh, tone, tl, nz, bp, nl, mx], out: [mx, 'out'], clocks: [[rh, 'clk', 4]] };
+  return { ids: [sq, tone, tl, nz, bp, nl, mx], out: [mx, 'out'], clocks: [[sq, 'clk', 4]] };
 }
 
 export function hats(S: Builder, x: number, y: number): Voice {
@@ -80,7 +81,7 @@ export function hats(S: Builder, x: number, y: number): Voice {
 }
 
 export function clap(S: Builder, x: number, y: number): Voice {
-  const rh = steps(S, x, y, 2, 4);
+  const sq = steps(S, x, y, 2, 4);
   const nz = S.add('noise', x + 300, y, { level: 1 });
   const bp = S.add('filter', x + 600, y, { cutoff: 900, res: 0.3, model: FILTER.SVF });
   const amp = S.add('lpg', x + 900, y, { decay: 0.3, mode: LPG.VCA });
@@ -90,10 +91,10 @@ export function clap(S: Builder, x: number, y: number): Voice {
   const sat = S.add('drive', x + 1500, y, { gain: 10, model: 0 });
   S.wire(nz, 'white', bp, 'in');
   S.wire(bp, 'hp', amp, 'in');
-  S.wire(rh, 'gate', amp, 'ping');
+  S.wire(sq, 'gate', amp, 'ping');
   S.wire(amp, 'out', dl, 'in');
   S.wire(dl, 'l', sat, 'in');
-  return { ids: [rh, nz, bp, amp, dl, sat], out: [sat, 'out'], clocks: [[rh, 'clk', 4]] };
+  return { ids: [sq, nz, bp, amp, dl, sat], out: [sat, 'out'], clocks: [[sq, 'clk', 4]] };
 }
 
 export function technoDrums(S: Builder, x: number, y: number): Voice {
@@ -120,7 +121,7 @@ export function technoDrums(S: Builder, x: number, y: number): Voice {
   };
 }
 
-/** STAGES with a fixed line (semitones 0…24 over the scale's root), advanced by a RHYTHM */
+/** a META-SEQ playing a fixed line (semitones 0…24 over the scale's root, NOTE PLAYED) on a euclidean GATE */
 function sequence(
   S: Builder,
   x: number,
@@ -129,55 +130,49 @@ function sequence(
   scale: number,
   hits: number,
   slides: number[] = [],
-): {
-  rh: string;
-  st: string;
-} {
-  const rh = steps(S, x, y, hits, 0);
-  const st = S.add('stages', x + 300, y, S.notes({ scale, length: semis.length }, semis, slides));
-  S.wire(rh, 'gate', st, 'adv');
-  return { rh, st };
+): string {
+  return S.seq(x, y, seqParams(euclidRhythm(16, hits), stagesLine(semis, { scale, slides })));
 }
 
 export function fmBass(S: Builder, x: number, y: number): Voice {
-  const { rh, st } = sequence(S, x, y, [0, 0, 12, 0, 3, 0, 7, 5], 2, 7);
+  const sq = sequence(S, x, y, [0, 0, 12, 0, 3, 0, 7, 5], 2, 7);
   const cx = S.add('complex', x, y + 400, { freq: 55, ratio: 1, index: 0.15 });
   const env = S.add('slope', x + 300, y + 400, { rise: 0.002, fall: 0.2 });
   const amp = S.add('lpg', x + 600, y + 400, { decay: 0.3, mode: LPG.BOTH });
-  S.wire(st, 'cv', cx, 'pitch');
-  S.wire(rh, 'gate', env, 'trig');
+  S.wire(sq, 'cv', cx, 'pitch');
+  S.wire(sq, 'gate', env, 'trig');
   S.wire(env, 'out', cx, '@index');
   S.att(cx, '@index', 0.4);
   S.wire(cx, 'out', amp, 'in');
-  S.wire(rh, 'gate', amp, 'ping');
-  return { ids: [rh, st, cx, env, amp], out: [amp, 'out'], clocks: [[rh, 'clk', 4]] };
+  S.wire(sq, 'gate', amp, 'ping');
+  return { ids: [sq, cx, env, amp], out: [amp, 'out'], clocks: [[sq, 'clk', 4]] };
 }
 
 export function reese(S: Builder, x: number, y: number): Voice {
-  const { rh, st } = sequence(S, x, y, [0, 0, 3, 3, 5, 5, 7, 2], 2, 4);
+  const sq = sequence(S, x, y, [0, 0, 3, 3, 5, 5, 7, 2], 2, 4);
   const a = S.add('osc', x, y + 400, { freq: 55, wave: WAVE.SAW });
   const b = S.add('osc', x, y + 560, { freq: 55.6, wave: WAVE.SAW });
   const mx = S.add('mix', x + 300, y + 400, { la: 0.3, lb: 0.3 });
   const fl = S.add('filter', x + 600, y + 400, { cutoff: 380, res: 0.35, model: FILTER.LADDER });
   const sw = S.add('slope', x + 600, y + 560, { rise: 2, fall: 3, cycle: 1 });
-  S.wire(st, 'cv', a, 'pitch');
-  S.wire(st, 'cv', b, 'pitch');
+  S.wire(sq, 'cv', a, 'pitch');
+  S.wire(sq, 'cv', b, 'pitch');
   S.wire(a, 'out', mx, 'a');
   S.wire(b, 'out', mx, 'b');
   S.wire(mx, 'out', fl, 'in');
   S.wire(sw, 'out', fl, '@cutoff');
   S.att(fl, '@cutoff', 0.25);
-  return { ids: [rh, st, a, b, mx, fl, sw], out: [fl, 'lp'], clocks: [[rh, 'clk', 2]] };
+  return { ids: [sq, a, b, mx, fl, sw], out: [fl, 'lp'], clocks: [[sq, 'clk', 2]] };
 }
 
 export function pluck(S: Builder, x: number, y: number): Voice {
-  const { rh, st } = sequence(S, x, y, [12, 14, 16, 19, 21, 19, 16, 14], 6, 5);
+  const sq = sequence(S, x, y, [12, 14, 16, 19, 21, 19, 16, 14], 6, 5);
   const os = S.add('osc', x, y + 400, { freq: 220, wave: WAVE.SAW });
   const amp = S.add('lpg', x + 300, y + 400, { decay: 0.25, mode: LPG.LP });
-  S.wire(st, 'cv', os, 'pitch');
+  S.wire(sq, 'cv', os, 'pitch');
   S.wire(os, 'out', amp, 'in');
-  S.wire(rh, 'gate', amp, 'ping');
-  return { ids: [rh, st, os, amp], out: [amp, 'out'], clocks: [[rh, 'clk', 4]] };
+  S.wire(sq, 'gate', amp, 'ping');
+  return { ids: [sq, os, amp], out: [amp, 'out'], clocks: [[sq, 'clk', 4]] };
 }
 
 export function chaoticBells(S: Builder, x: number, y: number): Voice {
@@ -205,7 +200,7 @@ export function chaoticBells(S: Builder, x: number, y: number): Voice {
 }
 
 export function pad(S: Builder, x: number, y: number): Voice {
-  const st = S.add('stages', x, y, S.notes({ scale: 2, length: 4 }, [0, 3, 7, 5], [2, 4]));
+  const sq = S.seq(x, y, seqParams(null, stagesLine([0, 3, 7, 5], { scale: 2, slides: [2, 4] })));
   const a = S.add('osc', x, y + 400, { freq: 110, wave: WAVE.SAW });
   const b = S.add('osc', x, y + 560, { freq: 110.7, wave: WAVE.TRI });
   const mx = S.add('mix', x + 300, y + 400, { la: 0.5, lb: 0.6 });
@@ -214,8 +209,8 @@ export function pad(S: Builder, x: number, y: number): Voice {
   const env = S.add('slope', x + 900, y + 560, { rise: 1.5, fall: 3 });
   const amp = S.add('lpg', x + 900, y + 400, { level: 0, mode: LPG.VCA });
   const rv = S.add('reverb', x + 1200, y + 400, { type: 2, size: 0.85, decay: 10, mix: 0.45 });
-  S.wire(st, 'cv', a, 'pitch');
-  S.wire(st, 'cv', b, 'pitch');
+  S.wire(sq, 'cv', a, 'pitch');
+  S.wire(sq, 'cv', b, 'pitch');
   S.wire(a, 'out', mx, 'a');
   S.wire(b, 'out', mx, 'b');
   S.wire(mx, 'out', fl, 'in');
@@ -225,10 +220,10 @@ export function pad(S: Builder, x: number, y: number): Voice {
   S.wire(env, 'out', amp, '@level');
   S.wire(amp, 'out', rv, 'in');
   return {
-    ids: [st, a, b, mx, fl, sw, env, amp, rv],
+    ids: [sq, a, b, mx, fl, sw, env, amp, rv],
     out: [rv, 'l'],
     clocks: [
-      [st, 'adv', 1],
+      [sq, 'clk', 1],
       [env, 'trig', 1],
     ],
   };

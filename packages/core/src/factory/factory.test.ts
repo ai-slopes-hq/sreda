@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { validateDoc } from '../doc';
 import { packFrame, rectOf } from '../frames';
+import { laneLen, laneSteps, noteMode, type Lane } from '../metaseq';
 import { SPECS, toKnob, type KnobParam } from '../spec';
 import { FACTORY } from './index';
 
@@ -45,11 +46,9 @@ test.each(FACTORY.map((e) => [e.name, e] as const))(
   '%s is a valid document, its frames packed as STACK',
   (_n, e) => {
     const doc = e.build(SPECS);
-    // until Task 9 rebuilds the factory on META-SEQ, its RHYTHM and STAGES migrate on open: the round trip is checked on
-    // the migrated document
-    const opened = validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)!;
-    expect(opened).not.toBeNull();
-    expect(validateDoc(JSON.parse(JSON.stringify(opened)), SPECS)).toEqual(opened);
+    expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS)).toEqual(doc);
+    // sequenced by META-SEQ alone
+    expect(doc.modules.filter((m) => m.type === 'rhythm' || m.type === 'stages')).toEqual([]);
     for (const g of doc.groups) {
       expect(g.layout).toBe('stack');
       expect(packFrame(doc, SPECS, g.id)).toEqual(doc);
@@ -62,22 +61,58 @@ test.each(FACTORY.map((e) => [e.name, e] as const))(
   },
 );
 
-test('Acid: x.x-..x.x.xx-.x. with accents on 12 and 15, ×4 on the clock, 16 notes in C minor, frame ACID at 128 BPM', () => {
+test('Acid: one META-SEQ — x.x-..x.x.xx-.x. with accents on 12 and 15, ×4 on the clock, 16 notes in C minor with four slides on their hits, frame ACID at 128 BPM', () => {
   const doc = entry('acid').build(SPECS);
-  const rhythm = doc.modules.find((m) => m.type === 'rhythm')!;
-  const gates = Array.from({ length: 16 }, (_, i) => '.x-'[rhythm.params['g' + (i + 1)]!]).join('');
-  expect(gates).toBe('x.x-..x.x.xx-.x.');
-  expect(rhythm.params['a12']).toBe(1);
-  expect(rhythm.params['a15']).toBe(1);
-  expect(rhythm.params['mode']).toBe(1);
-  expect(rhythm.ratios['clk']).toBe(4);
+  const seqs = doc.modules.filter((m) => m.type === 'metaseq');
+  expect(seqs).toHaveLength(1);
+  const seq = seqs[0]!;
+  const on = (l: Lane) => laneSteps(seq.params, 0, l).flatMap((x, i) => (x ? [i + 1] : []));
+  // hits on 1 3 7 9 11 12 15; TIE pads on 4 and 13; the slides of stages 3, 6, 11, 14 on hits 3, 6, 4, 7 (wrapping)
+  expect(on('g')).toEqual([1, 3, 7, 9, 11, 12, 15]);
+  expect(on('t')).toEqual([4, 7, 9, 12, 13, 15]);
+  expect(on('a')).toEqual([12, 15]);
+  expect(laneSteps(seq.params, 0, 'n')).toEqual([0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15]);
+  expect(noteMode(seq.params, 0)).toBe(0);
+  for (const l of ['n', 'g', 't', 'a'] as const) expect(laneLen(seq.params, 0, l)).toBe(16);
+  expect(seq.params['scale']).toBe(2);
+  expect(seq.ratios['clk']).toBe(4);
   const acid = doc.groups.find((g) => g.name === 'ACID')!;
   expect(acid.clock).toEqual({ on: true, bpm: 128 });
-  expect(doc.cables).toContainEqual({ from: [acid.id, 'clkOut'], to: [rhythm.id, 'clk'] });
-  const stages = doc.modules.find((m) => m.type === 'stages')!;
-  expect(stages.params['scale']).toBe(2);
-  expect([3, 6, 11, 14].map((k) => stages.params['g' + k])).toEqual([1, 1, 1, 1]);
-  expect(stages.params['v3']).toBeCloseTo(toKnob(knob('stages', 'v3'), 0), 6);
+  expect(doc.cables).toContainEqual({ from: [acid.id, 'clkOut'], to: [seq.id, 'clk'] });
+  expect(
+    doc.cables
+      .filter((c) => c.from[0] === seq.id)
+      .map((c) => c.from[1])
+      .sort(),
+  ).toEqual(['acc', 'cv', 'gate', 'gate']);
+});
+
+test('Self-clocked: a lone line — 8 notes on STEP, GATE silent on stages 3 and 6, LEN 8', () => {
+  const doc = entry('self-clocked').build(SPECS);
+  const seq = doc.modules.find((m) => m.type === 'metaseq')!;
+  const on = (l: Lane) => laneSteps(seq.params, 0, l).flatMap((x, i) => (x ? [i + 1] : []));
+  expect(laneSteps(seq.params, 0, 'n').slice(0, 8)).toEqual([12, 15, 19, 12, 22, 17, 15, 10]);
+  expect(noteMode(seq.params, 0)).toBe(1);
+  expect(on('g').filter((k) => k <= 8)).toEqual([1, 2, 4, 5, 7, 8]);
+  for (const l of ['n', 'g', 't'] as const) expect(laneLen(seq.params, 0, l)).toBe(8);
+  const slope = doc.modules.find((m) => m.type === 'slope')!;
+  expect(doc.cables).toContainEqual({ from: [slope.id, 'eoc'], to: [seq.id, 'clk'] });
+});
+
+test('Kick: a euclidean GATE, 4 hits on 16 steps, GEN EUCLID; FM bass: its 8 notes PLAYED on 7 hits', () => {
+  let doc = entry('kick').build(SPECS);
+  let seq = doc.modules.find((m) => m.type === 'metaseq')!;
+  const on = (l: Lane) => laneSteps(seq.params, 0, l).flatMap((x, i) => (x ? [i + 1] : []));
+  expect(on('g')).toEqual([1, 5, 9, 13]);
+  expect(laneLen(seq.params, 0, 'g')).toBe(16);
+  const gen = SPECS['metaseq']!.params.find((p) => p.id === 'gen')!;
+  expect(gen.kind === 'option' && gen.options[seq.params['gen']!]).toBe('EUCLID');
+  doc = entry('fm bass').build(SPECS);
+  seq = doc.modules.find((m) => m.type === 'metaseq')!;
+  expect(on('g')).toHaveLength(7);
+  expect(laneSteps(seq.params, 0, 'n').slice(0, 8)).toEqual([0, 0, 12, 0, 3, 0, 7, 5]);
+  expect(laneLen(seq.params, 0, 'n')).toBe(8);
+  expect(noteMode(seq.params, 0)).toBe(0);
 });
 
 test('Pulse: a 2 Hz square pings a kick LPG and, at ×2, a noise LPG; MIX → OUT', () => {

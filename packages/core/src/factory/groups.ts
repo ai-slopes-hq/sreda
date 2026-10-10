@@ -1,5 +1,6 @@
 // The factory groups (spec §6): each one top frame with everything inside it.
-import type { Builder } from './build';
+import { seqParams } from '../migrate/seq';
+import { gridRhythm, stagesLine, type Builder } from './build';
 import {
   chaoticBells,
   clap,
@@ -45,13 +46,13 @@ export const GROUPS: { name: string; build(b: Builder): [string, string] }[] = [
     // the ACID voice without delay and out, own clock 128 BPM
     name: '303 voice',
     build(S) {
-      const rh = S.add('rhythm', 0, 64, { mode: 1 });
-      S.grid(rh, 'x.x-..x.x.xx-.x.', '...........A..A.');
-      const st = S.add(
-        'stages',
-        528,
+      const sq = S.seq(
+        0,
         64,
-        S.notes({ scale: 2 }, [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], [3, 6, 11, 14]),
+        seqParams(
+          gridRhythm('x.x-..x.x.xx-.x.', '...........A..A.'),
+          stagesLine([0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], { scale: 2, slides: [3, 6, 11, 14] }),
+        ),
       );
       const os = S.add('osc', 0, 448, { freq: 110, wave: 2 });
       const fl = S.add('filter', 336, 448, { cutoff: 260, res: 0.82 });
@@ -59,14 +60,13 @@ export const GROUPS: { name: string; build(b: Builder): [string, string] }[] = [
       const ef = S.add('slope', 0, 608, { rise: 0.002, fall: 0.25 });
       const ea = S.add('slope', 336, 608, { rise: 0.002, fall: 0.2 });
       const ec = S.add('slope', 672, 608, { rise: 0.002, fall: 0.12 });
-      const g = S.frame([rh, st, os, fl, va, ef, ea, ec], '303 VOICE', { bpm: 128, tint: 2 });
-      S.wire(g, 'clkOut', rh, 'clk');
-      S.rat(rh, 'clk', 4);
-      S.wire(rh, 'gate', st, 'adv');
-      S.wire(rh, 'gate', ef, 'trig');
-      S.wire(rh, 'gate', ea, 'trig');
-      S.wire(rh, 'acc', ec, 'trig');
-      S.wire(st, 'cv', os, 'pitch');
+      const g = S.frame([sq, os, fl, va, ef, ea, ec], '303 VOICE', { bpm: 128, tint: 2 });
+      S.wire(g, 'clkOut', sq, 'clk');
+      S.rat(sq, 'clk', 4);
+      S.wire(sq, 'gate', ef, 'trig');
+      S.wire(sq, 'gate', ea, 'trig');
+      S.wire(sq, 'acc', ec, 'trig');
+      S.wire(sq, 'cv', os, 'pitch');
       S.wire(os, 'out', fl, 'in');
       S.wire(fl, 'lp', va, 'in');
       S.wire(ef, 'out', fl, '@cutoff');
