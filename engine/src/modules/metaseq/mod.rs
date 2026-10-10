@@ -569,15 +569,11 @@ impl Dsp for MetaSeq {
                 {
                     self.eoc_until = self.now + self.pulse;
                     if want != self.pat {
-                        // the outgoing pattern's lanes that end their cycle here wrap (and mutate) before it goes
-                        for (l, f) in fires.iter().enumerate() {
+                        // the switch ends the outgoing pattern's run: it is every lane's wrap (NOTE in PLAYED too),
+                        // each mutating once, in lane order (no lane has wrapped yet at this sample)
+                        for l in 0..LANES {
                             let len = self.len(io, l);
-                            if *f
-                                && self.cursor[l].is_some()
-                                && Self::next(self.cursor[l], len) == 0
-                            {
-                                self.mutate(io, ctx, l, len, i);
-                            }
+                            self.mutate(io, ctx, l, len, i);
                         }
                         // PAT waits for the GATE lane's wrap; then every lane starts over
                         self.pat = want;

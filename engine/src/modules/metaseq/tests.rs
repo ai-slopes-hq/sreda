@@ -605,10 +605,10 @@ fn mutation_blockwise_equals_per_sample() {
     );
 }
 
-#[test]
-fn drift_survives_pat_switches() {
-    // A and B alike (busy, every lane 8 steps), PAT alternating every GATE cycle at MUT 1
-    let mut f = busy();
+/// Patterns A and B both as `f`'s A, PAT alternating every GATE cycle (8 clocks) at MUT 1 for six cycles; then MUT 0
+/// and each pattern played once more. Returns the generation and A's and B's live lanes on that last visit.
+fn chained(f: &[f64]) -> (f32, [Vec<Vec<f32>>; 2]) {
+    let mut f = f.to_vec();
     let a: Vec<f64> = f[lane_at(0, 0)..lane_at(1, 0)].to_vec();
     f[lane_at(1, 0)..lane_at(2, 0)].copy_from_slice(&a);
     let mut b = bench(MUT1, &f);
@@ -629,19 +629,39 @@ fn drift_survives_pat_switches() {
         until(&mut b, &mut m, 8 * c + 1, (c % 2) as f32);
         assert_eq!(m.trace().unwrap()[0], (c % 2) as f32, "cycle {c}");
     }
-    assert!(generation(&m) > 0.0, "the lanes mutated");
+    let generation = generation(&m);
     // MUT down: what each pattern drifted to must still be there when it plays again
     b.par[2] = [0.0; BLOCK];
+    let mut out: [Vec<Vec<f32>>; 2] = [vec![], vec![]];
     for c in 6..8 {
         until(&mut b, &mut m, 8 * c + 1, (c % 2) as f32);
-        let p = c % 2;
-        assert_eq!(m.trace().unwrap()[0], p as f32);
-        let drifted = (0..LANES)
-            .filter(|&l| live(&m, l) != written(&f, l))
-            .count();
+        assert_eq!(m.trace().unwrap()[0], (c % 2) as f32);
+        out[c % 2] = (0..LANES).map(|l| live(&m, l)).collect();
+    }
+    (generation, out)
+}
+
+#[test]
+fn drift_survives_pat_switches() {
+    let f = busy();
+    let (generation, lanes) = chained(&f);
+    assert!(generation > 0.0, "the lanes mutated");
+    for (p, lanes) in lanes.iter().enumerate() {
+        let drifted = (0..LANES).filter(|&l| lanes[l] != written(&f, l)).count();
         assert!(
             drifted >= 4,
             "pattern {p}: {drifted} lanes kept their drift"
         );
+    }
+}
+
+#[test]
+fn a_pat_switch_is_every_lane_s_wrap_played_note_included() {
+    // NOTE in PLAYED, LEN 8, over 4 hits a bar: with PAT stepping every bar it never reaches its own wrap
+    let mut f = busy();
+    f[lane_at(0, LANES)] = 0.0;
+    let (_, lanes) = chained(&f);
+    for (p, lanes) in lanes.iter().enumerate() {
+        assert_ne!(lanes[N], written(&f, N), "pattern {p}: NOTE drifted");
     }
 }
