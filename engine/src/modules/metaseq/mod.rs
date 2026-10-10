@@ -268,9 +268,9 @@ pub struct MetaSeq {
     slide_pos: f64,
     /// lane mutations so far (wrapping at GEN_WRAP): the readout writes the live steps back when it moves
     generation: u32,
-    /// the playing pattern's steps as they sound, and the fixed values last seen (an edit wins)
-    live: [[f32; STEPS]; LANES],
-    seen: [[f32; STEPS]; LANES],
+    /// every pattern's steps as they sound (with their drift), and the fixed values last seen (an edit wins)
+    live: [[[f32; STEPS]; LANES]; PATTERNS],
+    seen: [[[f32; STEPS]; LANES]; PATTERNS],
     trace: [f32; TRACE_LEN],
 }
 
@@ -301,9 +301,9 @@ impl MetaSeq {
             target: 0.0,
             slide_pos: f64::INFINITY,
             generation: 0,
-            live: [[0.0; STEPS]; LANES],
+            live: [[[0.0; STEPS]; LANES]; PATTERNS],
             // NaN differs from everything: the first block copies the playing pattern in
-            seen: [[f32::NAN; STEPS]; LANES],
+            seen: [[[f32::NAN; STEPS]; LANES]; PATTERNS],
             trace: [0.0; TRACE_LEN],
         }
     }
@@ -321,27 +321,16 @@ impl MetaSeq {
         io.fixed[lane_at(self.pat, LANES)] < 0.5
     }
 
-    /// Copy the playing pattern's steps into `live` and `seen`.
-    fn load(&mut self, io: &Io) {
-        for l in 0..LANES {
-            let at = lane_at(self.pat, l);
-            for k in 0..STEPS {
-                let v = io.fixed[at + k] as f32;
-                self.live[l][k] = v;
-                self.seen[l][k] = v;
-            }
-        }
-    }
-
-    /// Steps edited in the document since the last look replace their live values.
+    /// The playing pattern's steps edited in the document since its last look replace their live values (a pattern
+    /// that does not play catches up when it plays again).
     fn sync(&mut self, io: &Io) {
         for l in 0..LANES {
             let at = lane_at(self.pat, l);
             for k in 0..STEPS {
                 let v = io.fixed[at + k] as f32;
-                if v.to_bits() != self.seen[l][k].to_bits() {
-                    self.seen[l][k] = v;
-                    self.live[l][k] = v;
+                if v.to_bits() != self.seen[self.pat][l][k].to_bits() {
+                    self.seen[self.pat][l][k] = v;
+                    self.live[self.pat][l][k] = v;
                 }
             }
         }
@@ -398,7 +387,7 @@ impl MetaSeq {
             if ctx.rng.next_f64() >= odds {
                 continue;
             }
-            let lane = &mut self.live[l];
+            let lane = &mut self.live[self.pat][l];
             let was = lane[k];
             match l {
                 G => {
@@ -436,7 +425,7 @@ impl MetaSeq {
                 }
             }
             // (a GATE swap changes step k exactly when the two differ)
-            changed |= self.live[l][k] != was;
+            changed |= self.live[self.pat][l][k] != was;
         }
         if changed {
             self.generation = (self.generation + 1) % GEN_WRAP;
@@ -444,7 +433,7 @@ impl MetaSeq {
     }
 
     fn value(&self, l: usize) -> f32 {
-        self.live[l][self.cursor[l].unwrap_or(0)]
+        self.live[self.pat][l][self.cursor[l].unwrap_or(0)]
     }
 
     /// The NOTE lane's current note plus TRNS, snapped to SCALE from ROOT, in volts (12 semitones = 0 V).
@@ -465,7 +454,7 @@ impl MetaSeq {
             self.interval / (rate - X1 + 1) as u64
         };
         let tie = self.value(T) >= 0.5;
-        let next_tie = self.live[T][Self::next(self.cursor[T], self.len(io, T))] >= 0.5;
+        let next_tie = self.live[self.pat][T][Self::next(self.cursor[T], self.len(io, T))] >= 0.5;
         // before a TIE the gate stays up until it (capped at four steps in case the clock stops); else half a step
         let hold = if next_tie { 4 * step } else { step / 2 }.max(1);
         let sounding = self.now < self.gate_until;
@@ -521,7 +510,7 @@ impl MetaSeq {
         for l in 0..LANES {
             self.trace[TR_CURSORS + l] = self.cursor[l].map_or(-1.0, |c| c as f32);
             self.trace[TR_LIVE + l * STEPS..TR_LIVE + (l + 1) * STEPS]
-                .copy_from_slice(&self.live[l]);
+                .copy_from_slice(&self.live[self.pat][l]);
         }
         self.trace[TR_GEN] = self.generation as f32;
     }
@@ -551,13 +540,11 @@ impl Dsp for MetaSeq {
             }
             let want = (io.par[PAT][i].round().max(0.0) as usize).min(PATTERNS - 1);
             if rise && !self.started {
-                // PAT is read at the first clock (after the start or RST); the same pattern keeps its live steps, so
-                // RST does not undo MUTATE
+                // PAT is read at the first clock (after the start or RST); every pattern keeps its live steps, so RST
+                // does not undo MUTATE
                 self.started = true;
-                if want != self.pat {
-                    self.pat = want;
-                    self.load(io);
-                }
+                self.pat = want;
+                self.sync(io);
             }
             let played = self.played(io);
             let mut fires = [false; LANES];
@@ -582,9 +569,19 @@ impl Dsp for MetaSeq {
                 {
                     self.eoc_until = self.now + self.pulse;
                     if want != self.pat {
+                        // the outgoing pattern's lanes that end their cycle here wrap (and mutate) before it goes
+                        for (l, f) in fires.iter().enumerate() {
+                            let len = self.len(io, l);
+                            if *f
+                                && self.cursor[l].is_some()
+                                && Self::next(self.cursor[l], len) == 0
+                            {
+                                self.mutate(io, ctx, l, len, i);
+                            }
+                        }
                         // PAT waits for the GATE lane's wrap; then every lane starts over
                         self.pat = want;
-                        self.load(io);
+                        self.sync(io);
                         self.cursor = [None; LANES];
                         let played = self.played(io);
                         for (l, f) in fires.iter_mut().enumerate() {

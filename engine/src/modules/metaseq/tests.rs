@@ -604,3 +604,44 @@ fn mutation_blockwise_equals_per_sample() {
         60,
     );
 }
+
+#[test]
+fn drift_survives_pat_switches() {
+    // A and B alike (busy, every lane 8 steps), PAT alternating every GATE cycle at MUT 1
+    let mut f = busy();
+    let a: Vec<f64> = f[lane_at(0, 0)..lane_at(1, 0)].to_vec();
+    f[lane_at(1, 0)..lane_at(2, 0)].copy_from_slice(&a);
+    let mut b = bench(MUT1, &f);
+    let mut m = MetaSeq::new(SR);
+    let mut done = 0;
+    // run until just after clock `k`, PAT asking for `pat`
+    let mut until = |b: &mut Bench, m: &mut MetaSeq, k: usize, pat: f32| {
+        b.par[PAT] = [pat; BLOCK];
+        let to = (k * TICK + 300).div_ceil(BLOCK);
+        b.run(m, to - done, |blk, i, inp| {
+            inp[0][i] = clock((blk + done) * BLOCK + i, usize::MAX)
+        });
+        done = to;
+    };
+    // A plays clocks 0–7, B 8–15, A 16–23, … : the switch is the GATE wrap
+    for c in 0..6 {
+        // PAT set during the cycle before: the wrap at clock 8c switches to it
+        until(&mut b, &mut m, 8 * c + 1, (c % 2) as f32);
+        assert_eq!(m.trace().unwrap()[0], (c % 2) as f32, "cycle {c}");
+    }
+    assert!(generation(&m) > 0.0, "the lanes mutated");
+    // MUT down: what each pattern drifted to must still be there when it plays again
+    b.par[2] = [0.0; BLOCK];
+    for c in 6..8 {
+        until(&mut b, &mut m, 8 * c + 1, (c % 2) as f32);
+        let p = c % 2;
+        assert_eq!(m.trace().unwrap()[0], p as f32);
+        let drifted = (0..LANES)
+            .filter(|&l| live(&m, l) != written(&f, l))
+            .count();
+        assert!(
+            drifted >= 4,
+            "pattern {p}: {drifted} lanes kept their drift"
+        );
+    }
+}

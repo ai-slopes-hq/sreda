@@ -68,20 +68,40 @@ test('the watch writes a mutation once the GATE lane wraps, as one batch', () =>
   expect(writes.length).toBe(1);
 });
 
-test('an edit in the drawer wins: no write-back while it is fresh, and none of the edited step after', () => {
+test('an edit in the drawer wins: the edited step is not written back while fresh; the mutation is', () => {
   const { doc, writes, w } = watch({});
   const live = lanes(doc.params, 0);
   w.frame(trace(10, 0, 5, 0, live), 10, 0);
-  // the user draws NOTE step 3 = 19; the engine's trace still has 12 there and a mutation of ACC step 2
+  // the user draws NOTE step 3 = 19; the engine's trace still has 12 there, and a mutation of ACC step 2
   doc.params = { ...doc.params, ...writeLane(0, 'n', [12, 12, 19]) };
   live[3]![1] = 1;
   w.frame(trace(10, 0, 0, 1, live), 10, 1000);
-  expect(writes, 'the edit is fresh: the trace may not have it yet').toEqual([]);
-  // the engine took the edit
+  expect(writes, 'ACC goes; NOTE step 3 is fresh: the trace may not have it yet').toEqual([
+    { [stepId(0, 'a', 2)]: 1 },
+  ]);
+  expect(laneSteps(doc.params, 0, 'n')[2]).toBe(19);
+  // still stale a frame later: NOTE step 3 is still not written over
+  w.frame(trace(10, 0, 0, 1, live), 10, 1016);
+  expect(writes.length).toBe(1);
+  // the engine took the edit: nothing more to write once it settles
   live[0]![2] = 19;
   w.frame(trace(10, 0, 1, 1, live), 10, 1500);
-  expect(writes).toEqual([{ [stepId(0, 'a', 2)]: 1 }]);
+  expect(writes.length).toBe(1);
   expect(laneSteps(doc.params, 0, 'n')[2]).toBe(19);
+});
+
+test('a step deferred as fresh is written once it settles, if the engine still differs', () => {
+  const { doc, writes, w } = watch({});
+  const live = lanes(doc.params, 0);
+  w.frame(trace(10, 0, 5, 0, live), 10, 0);
+  // VEL step 1 edited to 0.5 while the engine mutated it to 0.25 (it will take 0.5 — unless a later mutation moves it)
+  doc.params = { ...doc.params, [stepId(0, 'v', 1)]: 0.5 };
+  live[4]![0] = 0.25;
+  w.frame(trace(10, 0, 0, 1, live), 10, 1000);
+  expect(writes).toEqual([]);
+  live[4]![0] = 0.375; // drifted again after taking the edit
+  w.frame(trace(10, 0, 0, 2, live), 10, 1400);
+  expect(writes).toEqual([{ [stepId(0, 'v', 1)]: 0.375 }]);
 });
 
 test('a GATE lane of LEN 1 writes on every generation', () => {

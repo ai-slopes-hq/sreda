@@ -320,7 +320,8 @@ export function createSession(
       let doc = history.current;
       for (const [k, v] of Object.entries(changes)) doc = setParam(doc, specs, id, k, v);
       if (undoable) history.commit(doc, merge);
-      else history.replace(doc);
+      // a change by the patch itself does not split a stroke or a wheel run going on in the drawer
+      else history.replace(doc, true);
       show(doc);
       const node = nodeOf(id);
       const m = doc.modules.find((x) => x.id === id);

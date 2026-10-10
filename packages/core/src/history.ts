@@ -31,10 +31,11 @@ export class History {
     this.last = merge ? { key: merge.key, stroke: !!merge.stroke, at } : null;
   }
 
-  /** Swap the current document without an undo step (e.g. a resumed autosave). */
-  replace(doc: Doc): void {
+  /** Swap the current document without an undo step (e.g. a resumed autosave). `keepMerge`: a change the patch made
+   * itself (MUTATE's write-back, the DICE input) in the middle of an edit, which goes on merging as before. */
+  replace(doc: Doc, keepMerge = false): void {
     this.current = doc;
-    this.last = null;
+    if (!keepMerge) this.last = null;
   }
 
   undo(): Doc | null {

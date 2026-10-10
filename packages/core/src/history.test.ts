@@ -44,3 +44,20 @@ test('a commit after undo clears redo; replace adds no step', () => {
   expect(h.current).toEqual(d(5));
   expect(h.undo()).toEqual(d(0));
 });
+
+test('a replace that keeps the merge leaves a stroke or a wheel run one step', () => {
+  const c = clock();
+  const h = new History(d(0), c.now);
+  h.commit(d(1), { key: 'drag', stroke: true });
+  h.replace(d(2), true); // the patch itself changed (MUTATE's write-back) mid-stroke
+  h.commit(d(3), { key: 'drag', stroke: true });
+  expect(h.current).toEqual(d(3));
+  expect(h.undo()).toEqual(d(0));
+  expect(h.undo()).toBeNull();
+  h.commit(d(4), { key: 'knob' });
+  c.wait(300);
+  h.replace(d(5), true);
+  c.wait(300);
+  h.commit(d(6), { key: 'knob' });
+  expect(h.undo()).toEqual(d(0));
+});

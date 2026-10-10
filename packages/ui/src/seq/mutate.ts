@@ -39,14 +39,16 @@ export function mutationChanges(
 }
 
 /** One META-SEQ's write-back, fed every frame from the readout. It reads only three floats a frame; the steps are
- * decoded when the generation has moved, the GATE lane has wrapped since the last write, and no document change is
- * younger than SETTLE_MS (so an edit in the drawer that the engine has not taken yet is not written over). */
+ * decoded when the generation has moved and the GATE lane has wrapped since the last write. A step whose document
+ * value changed less than SETTLE_MS ago is held back: the trace may predate that edit, which must win. A held-back step
+ * keeps the write pending, so it goes once settled if the engine still differs. */
 export class MutationWatch {
   private gen = 0;
   private cursor = -1;
   private wrapped = false;
   private seen: Record<string, number> | undefined = undefined;
-  private changedAt = -Infinity;
+  /** when each param last changed in the document (not by this watch) */
+  private readonly changedAt = new Map<string, number>();
 
   constructor(
     private readonly params: () => Record<string, number> | undefined,
@@ -58,8 +60,10 @@ export class MutationWatch {
     if (!params) return;
     if (this.seen === undefined) this.seen = params;
     else if (params !== this.seen) {
+      const was = this.seen;
+      for (const k in params) if (params[k] !== was[k]) this.changedAt.set(k, now);
+      for (const k in was) if (!(k in params)) this.changedAt.set(k, now);
       this.seen = params;
-      this.changedAt = now;
     }
     const pattern = buf[at + TR_PATTERN] ?? 0;
     const cursor = buf[at + TR_GATE_CURSOR] ?? -1;
@@ -68,13 +72,21 @@ export class MutationWatch {
     if (cursor < this.cursor || (cursor === 0 && laneLen(params, Math.round(pattern), 'g') === 1))
       this.wrapped = true;
     this.cursor = cursor;
-    if (gen === this.gen || !this.wrapped || now - this.changedAt < SETTLE_MS) return;
-    this.gen = gen;
-    this.wrapped = false;
+    if (gen === this.gen || !this.wrapped) return;
     const live: number[][] = [];
     for (let l = 0; l < LANES.length; l++)
       live.push(Array.from(buf.subarray(at + TR_LIVE + l * 16, at + TR_LIVE + (l + 1) * 16)));
     const changes = mutationChanges(params, pattern, live);
+    let held = false;
+    for (const k of Object.keys(changes))
+      if (now - (this.changedAt.get(k) ?? -Infinity) < SETTLE_MS) {
+        delete changes[k];
+        held = true;
+      }
+    if (!held) {
+      this.gen = gen;
+      this.wrapped = false;
+    }
     if (Object.keys(changes).length === 0) return;
     this.write(changes);
     // our own write is not an edit

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { frameSelection, hiddenIn, SPECS, starterDoc, type Plan } from '@sreda/core';
+import { addModule, emptyDoc, frameSelection, hiddenIn, SPECS, starterDoc, type Plan } from '@sreda/core';
 import type { FromEngine, ToEngine } from '@sreda/protocol';
 import { expect, test } from 'vitest';
 import type { AudioHost } from './audio/host';
@@ -340,4 +340,17 @@ test('the drawer closes when its module goes', async () => {
   s.openSeq('m1');
   s.closeSeq();
   expect(s.state.seq.id).toBeNull();
+});
+
+test('a write-back without an undo step (MUTATE) keeps a stroke in the drawer one undo step', () => {
+  const s = createSession(SPECS, emptyDoc);
+  s.commit(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc);
+  const before = s.current();
+  s.params('m1', { an1: 14 / 24 }, { key: 'm1:n', stroke: true });
+  s.params('m1', { aa5: 1 }, undefined, false);
+  s.params('m1', { an2: 15 / 24 }, { key: 'm1:n', stroke: true });
+  const p = s.current().modules[0]!.params;
+  expect([p['an1'], p['aa5'], p['an2']]).toEqual([14 / 24, 1, 15 / 24]);
+  s.undo();
+  expect(s.current()).toEqual(before);
 });
