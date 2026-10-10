@@ -84,8 +84,8 @@ test('the acid pair merges into one META-SEQ in the STAGES place, with its notes
   expect(on(steps(d, 'm3', 't'))).toEqual([2, 5, 7]);
   expect(on(steps(d, 'm3', 'a'))).toEqual([1, 5]);
   for (const l of ['g', 't', 'a'] as const) expect(laneLen(seq.params, 0, l)).toBe(8);
-  // scale, root, gen kept
-  expect(seq.params['scale']).toBe(5);
+  // root and gen kept; 24 and 12 (C) are not in D♯ PMIN, so SCALE opens as CHR and the notes sound as they did
+  expect(seq.params['scale']).toBe(0);
   expect(seq.params['root']).toBeCloseTo(3 / 11);
   expect(seq.params['gen']).toBe(4);
   // cables: CLK, RST from RHYTHM (its RST wins over STAGES'), DICE from STAGES; CV, PLS → GATE; ACC, EOC
@@ -149,6 +149,25 @@ test('a STAGES advanced by two RHYTHMs merges with neither: three META-SEQs, bot
     { from: ['m8', 'gate'], to: ['m3', 'clk'] },
   ]);
   expect(d.cables).toHaveLength(doc.cables.length);
+});
+
+test('STAGES never quantised its stages: an off-scale line opens as CHR, an in-scale one keeps its SCALE', () => {
+  const lone = (v: Record<string, number>, scale?: number) => {
+    const doc = acid();
+    doc.modules = [mod('m3', 'stages', 0, { ...v, length: lenPos(4), ...(scale === undefined ? {} : { scale }), root: 2 / 11 })];
+    doc.cables = [];
+    const d = validateDoc(migrateSequencers(doc, []), SPECS)!;
+    return d.modules[0]!.params;
+  };
+  // D DOR: D E F G A B C — 14 (D), 16 (E), 17 (F), 24 (C) in scale; 13 (C♯) is not
+  const inScale = { v1: vPos(2 / 12), v2: vPos(4 / 12), v3: vPos(5 / 12), v4: vPos(1) };
+  expect(lone(inScale, 3)['scale']).toBe(3);
+  expect(lone({ ...inScale, v2: vPos(1 / 12) }, 3)['scale']).toBe(0);
+  // a stage past LEN never plays: it does not count
+  expect(lone({ ...inScale, v5: vPos(1 / 12) }, 3)['scale']).toBe(3);
+  // no SCALE saved: the default MIN (D minor: D E F G A A♯ C); E is in it, B is not
+  expect(lone(inScale)['scale']).toBe(2);
+  expect(lone({ ...inScale, v2: vPos(11 / 12) })['scale']).toBe(0);
 });
 
 test('a lone RHYTHM in EUCLID 16/5/0 writes its pattern out: GATE on steps 1, 5, 8, 11, 14', () => {

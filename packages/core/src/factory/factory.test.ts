@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { validateDoc } from '../doc';
+import { validateDoc, type ModuleDoc } from '../doc';
 import { packFrame, rectOf } from '../frames';
 import { laneLen, laneSteps, noteMode, type Lane } from '../metaseq';
 import { SPECS, toKnob, type KnobParam } from '../spec';
@@ -100,19 +100,34 @@ test('Self-clocked: a lone line — 8 notes on STEP, GATE silent on stages 3 and
 });
 
 test('Kick: a euclidean GATE, 4 hits on 16 steps, GEN EUCLID; FM bass: its 8 notes PLAYED on 7 hits', () => {
-  let doc = entry('kick').build(SPECS);
-  let seq = doc.modules.find((m) => m.type === 'metaseq')!;
-  const on = (l: Lane) => laneSteps(seq.params, 0, l).flatMap((x, i) => (x ? [i + 1] : []));
-  expect(on('g')).toEqual([1, 5, 9, 13]);
-  expect(laneLen(seq.params, 0, 'g')).toBe(16);
+  const seqOf = (name: string) => entry(name).build(SPECS).modules.find((m) => m.type === 'metaseq')!;
+  const on = (seq: ModuleDoc, l: Lane) => laneSteps(seq.params, 0, l).flatMap((x, i) => (x ? [i + 1] : []));
+  const kick = seqOf('kick');
+  expect(on(kick, 'g')).toEqual([1, 5, 9, 13]);
+  expect(laneLen(kick.params, 0, 'g')).toBe(16);
   const gen = SPECS['metaseq']!.params.find((p) => p.id === 'gen')!;
-  expect(gen.kind === 'option' && gen.options[seq.params['gen']!]).toBe('EUCLID');
-  doc = entry('fm bass').build(SPECS);
-  seq = doc.modules.find((m) => m.type === 'metaseq')!;
-  expect(on('g')).toHaveLength(7);
-  expect(laneSteps(seq.params, 0, 'n').slice(0, 8)).toEqual([0, 0, 12, 0, 3, 0, 7, 5]);
-  expect(laneLen(seq.params, 0, 'n')).toBe(8);
-  expect(noteMode(seq.params, 0)).toBe(0);
+  expect(gen.kind === 'option' && gen.options[kick.params['gen']!]).toBe('EUCLID');
+  const bass = seqOf('fm bass');
+  expect(on(bass, 'g')).toHaveLength(7);
+  expect(laneSteps(bass.params, 0, 'n').slice(0, 8)).toEqual([0, 0, 12, 0, 3, 0, 7, 5]);
+  expect(laneLen(bass.params, 0, 'n')).toBe(8);
+  expect(noteMode(bass.params, 0)).toBe(0);
+});
+
+test('Polymeter: two lines of 5 and 7 notes on STEP, kept unquantised (SCALE CHR, as STAGES played them)', () => {
+  const doc = entry('polymeter').build(SPECS);
+  const seqs = doc.modules.filter((m) => m.type === 'metaseq');
+  expect(seqs).toHaveLength(2);
+  const notes = seqs.map((m) => laneSteps(m.params, 0, 'n').slice(0, laneLen(m.params, 0, 'n')));
+  expect(notes).toEqual([
+    [12, 16, 14, 19, 17],
+    [6, 8, 6, 10, 6, 7, 9],
+  ]);
+  const scale = SPECS['metaseq']!.params.find((p) => p.id === 'scale')!;
+  for (const m of seqs) {
+    expect(scale.kind === 'option' && scale.options[m.params['scale']!]).toBe('CHR');
+    expect(noteMode(m.params, 0)).toBe(1);
+  }
 });
 
 test('Pulse: a 2 Hz square pings a kick LPG and, at ×2, a noise LPG; MIX → OUT', () => {

@@ -2,7 +2,7 @@
 // positions 0…1 and options indices, as saved. A RHYTHM whose GATE feeds only a STAGES' ADV merges with it; every other
 // RHYTHM or STAGES converts alone.
 import { euclid } from '../generators';
-import { laneParam, noteModeParam, writeLane, type Lane } from '../metaseq';
+import { laneParam, noteModeParam, snap, writeLane, type Lane } from '../metaseq';
 
 export const FREE_RUNNING_NOTE = 'STAGES › free-running timing now follows a clock';
 
@@ -49,12 +49,25 @@ function stagesLanes(p: Raw): { len: number; n: number[]; t: number[]; g: number
   };
 }
 
+/** SCALE's index of CHR, and STAGES' default SCALE (MIN) */
+const SCALE_CHR = 0;
+const SCALE_DEFAULT = 2;
+
+/** STAGES wrote its stages unquantised (SCALE and ROOT only fed GEN), META-SEQ snaps NOTE to SCALE from ROOT: a line
+ * with a stage off its scale opens as CHR, so it sounds as it did. Stages past LEN never play and do not count. */
+function stagesScale(s: Raw, sl: { len: number; n: number[] }): number {
+  const scale = option(s, 'scale', SCALE_DEFAULT);
+  const root = Math.round(knob(s, 'root', 0, 11, 0));
+  return sl.n.slice(0, sl.len).every((x) => snap(x, scale, root) === x) ? scale : SCALE_CHR;
+}
+
 /** GEN's EUCLID index, which a lone RHYTHM in EUCLID mode takes */
 const GEN_EUCLID = 7;
 
 /** Merged, NOTE is PLAYED: stage k sounds on RHYTHM's k-th hit, so its slide goes on that hit's step (stages past the
  * hits of one RHYTHM cycle wrap over them; with no hits there is nowhere to slide). */
 function slidesOnHits(rl: { len: number; g: number[] }, sl: { len: number; t: number[] }): number[] {
+  // with fewer stages than hits, a slide lands only on its own hit k (later hits of the cycle get none)
   const hits = STEPS.filter((k) => k < rl.len && rl.g[k] === 1);
   const out = STEPS.map(() => 0);
   if (hits.length === 0) return out;
@@ -86,6 +99,8 @@ export function seqParams(r: Raw | null, s: Raw | null): Record<string, number> 
     lane('n', sl.n, sl.len);
     out[noteModeParam(0)] = rl ? 0 : 1; // merged: PLAYED; alone: STEP
     for (const id of ['scale', 'root', 'gen']) if (isNum(s[id])) out[id] = s[id];
+    const scale = stagesScale(s, sl);
+    if (scale !== option(s, 'scale', SCALE_DEFAULT)) out['scale'] = scale;
   }
   return out;
 }
