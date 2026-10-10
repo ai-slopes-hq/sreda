@@ -1676,3 +1676,38 @@ button.sr-sname:hover {
 .sr-lrow.new .name {
   color: var(--accent);
 }
+
+/* META-SEQ's overview (spec §7b) */
+.sr-seq {
+  cursor: pointer;
+}
+.sr-seq .d-note {
+  fill: none;
+  stroke: var(--role-mod);
+  stroke-width: 1.2;
+}
+.sr-seq-cell {
+  fill: var(--raised);
+}
+.sr-seq-cell.on {
+  fill: var(--muted);
+}
+.sr-seq-cell.past {
+  fill-opacity: 0.4;
+}
+.sr-seq-cell.cur {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.sr-seq .d-acc {
+  fill: var(--accent);
+}
+.sr-seq .d-vel {
+  fill: var(--role-mod);
+  fill-opacity: 0.6;
+}
+.sr-seq-lens {
+  fill: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}

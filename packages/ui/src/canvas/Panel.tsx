@@ -22,6 +22,7 @@ import { Grains } from './displays/Grains';
 import { Wave } from './displays/Wave';
 import type { Cursor } from './displays/gesture';
 import { Scope } from './displays/Scope';
+import { SeqView } from './displays/SeqView';
 
 export type FieldKind = 'att' | 'ratio';
 
@@ -48,6 +49,8 @@ export interface PanelActions {
   diceInput?(): void;
   /** LOAD, or a click on a sample display: choose this module's sample */
   load?(): void;
+  /** META-SEQ: a click on its display opens the editor drawer */
+  openSeq?(): void;
 }
 
 /** What a sample display shows of the module's sample. */
@@ -324,6 +327,20 @@ export function Panel(props: PanelProps): JSX.Element {
             h={d().h}
             mode={props.mod.params['mode'] ?? 0}
             trace={props.readouts?.trace ?? undefined}
+          />
+        )}
+      </Show>
+      <Show when={props.spec.display?.kind === 'metaseq' && L().display}>
+        {(d) => (
+          <SeqView
+            x={d().x}
+            y={d().y}
+            w={d().w}
+            h={d().h}
+            params={props.mod.params}
+            trace={undefined}
+            traceAt={props.readouts?.trace ?? undefined}
+            onOpen={() => props.act.openSeq?.()}
           />
         )}
       </Show>

@@ -76,3 +76,10 @@ test('a module whose sample is missing is a problem: MISSING and its name', () =
   expect(texts).toContain('OSC — MISSING · kick.wav');
   expect(wireProblems(doc, SPECS, () => false).map((p) => p.text)).not.toContain('OSC — MISSING · kick.wav');
 });
+
+test('problems: a META-SEQ without a clock lists META-SEQ › CLK — no clock', () => {
+  const { doc, ids } = patch('metaseq');
+  const p = wireProblems(doc, SPECS);
+  expect(p.map((x) => x.text)).toContain('META-SEQ › CLK — no clock');
+  expect(p.find((x) => x.text.startsWith('META-SEQ'))!.id).toBe(ids[0]);
+});

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { responseGlyph } from './glyphs';
+import { SPECS, type KnobParam } from '@sreda/core';
+import { fmt, responseGlyph } from './glyphs';
 
 /** the x and y of the curve's highest point (smallest y) */
 function peak(d: string): { x: number; y: number } {
@@ -17,4 +18,9 @@ test('the response glyph puts its resonant peak at the cutoff and raises it with
     const sharp = peak(responseGlyph(model, 30, { cut: 0.5, res: 0.9 }));
     expect(sharp.y).toBeLessThan(flat.y - 2);
   }
+});
+
+test('a pattern knob reads A…H', () => {
+  const pat = SPECS['metaseq']!.params.find((p) => p.id === 'pat') as KnobParam;
+  expect([0, 1, 7].map((v) => fmt(pat, v))).toEqual(['A', 'B', 'H']);
 });
