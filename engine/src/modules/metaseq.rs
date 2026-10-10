@@ -394,8 +394,14 @@ impl MetaSeq {
         let hold = if next_tie { 4 * step } else { step / 2 }.max(1);
         let sounding = self.now < self.gate_until;
         if tie && sounding {
+            // TIE with GATE on is a slide: the step plays its note; TIE alone holds the one sounding (in STEP a
+            // differing note still glides). Neither retriggers the gate.
             self.gate_until = self.now + hold;
-            if !played {
+            let slide = self.value(G) >= 0.5;
+            if played && slide {
+                self.cursor[N] = Some(Self::next(self.cursor[N], self.len(io, N)));
+            }
+            if slide || !played {
                 let to = self.note_volts(io, i);
                 if to != self.target {
                     self.slide_from = self.cv;
@@ -739,6 +745,45 @@ mod tests {
         assert!(o[CV][TICK + 10] < 0.1, "a glide, not a jump");
         assert_eq!(o[CV][TICK + 4000], 1.0, "arrived");
         assert_eq!(rises(&o[ACC]).len(), 0);
+    }
+
+    /// PLAYED, NOTE 12 / 24, TIE `.x`, GATE `gate`: two clocks, then on past any glide.
+    fn played_tie(gate: &str) -> Vec<Vec<f32>> {
+        let mut f = with_gate(0, gate);
+        steps(&mut f, 0, N, &[12.0, 24.0]);
+        set_len(&mut f, 0, N, 2);
+        steps(&mut f, 0, T, &pads(".x"));
+        set_len(&mut f, 0, T, 2);
+        f[SCALE] = 0.0;
+        let mut b = bench(PAR, &f);
+        b.run(
+            &mut MetaSeq::new(SR),
+            8000usize.div_ceil(BLOCK),
+            |blk, i, inp| {
+                inp[0][i] = clock(blk * BLOCK + i, 2 * TICK);
+            },
+        )
+    }
+
+    #[test]
+    fn played_tie_with_gate_slides_to_the_next_note() {
+        let o = played_tie("xx");
+        assert_eq!(rises(&o[GATE]), [0], "one rise: a slide does not retrigger");
+        assert!(o[GATE][TICK - 1] > 0.5 && o[GATE][TICK + 1] > 0.5);
+        let mid = o[CV][TICK + 1920];
+        assert!(mid > 0.4 && mid < 0.6, "half way at 40 ms: {mid}");
+        assert_eq!(o[CV][TICK + 4000], 1.0, "NOTE advanced to 24: 1 V");
+    }
+
+    #[test]
+    fn played_tie_without_gate_holds_the_note() {
+        let o = played_tie("x.");
+        assert_eq!(rises(&o[GATE]), [0], "one rise: the hold");
+        assert!(o[GATE][TICK + 1] > 0.5, "held through the tie");
+        assert!(
+            o[CV].iter().all(|x| *x == 0.0),
+            "NOTE did not advance: the first note stays"
+        );
     }
 
     #[test]
