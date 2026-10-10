@@ -10,7 +10,7 @@ import {
   type Role,
 } from '@sreda/core';
 import { createMemo, For, Show, type JSX } from 'solid-js';
-import { track } from '../live';
+import { readoutBuffer, track } from '../live';
 import { fmtAtt, fmtRat, ROLE } from './glyphs';
 import { Jack } from './Jack';
 import { Knob } from './Knob';
@@ -51,6 +51,8 @@ export interface PanelActions {
   load?(): void;
   /** META-SEQ: a click on its display opens the editor drawer */
   openSeq?(): void;
+  /** META-SEQ: every frame, the readout buffer and the trace's offset (MUTATE's write-back) */
+  seqFrame?(buf: Float32Array, at: number): void;
 }
 
 /** What a sample display shows of the module's sample. */
@@ -343,6 +345,22 @@ export function Panel(props: PanelProps): JSX.Element {
             onOpen={() => props.act.openSeq?.()}
           />
         )}
+      </Show>
+      <Show when={props.spec.display?.kind === 'metaseq'}>
+        <span
+          hidden
+          ref={(el) =>
+            track(
+              el,
+              'tick',
+              () => props.readouts?.trace ?? undefined,
+              (at) => {
+                const buf = readoutBuffer();
+                if (buf) props.act.seqFrame?.(buf, at);
+              },
+            )
+          }
+        />
       </Show>
 
       <For each={props.spec.inputs}>

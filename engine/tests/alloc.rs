@@ -210,3 +210,35 @@ fn mute_solo_and_master_messages_allocate_nothing() {
     }
     assert_eq!(allocs() - before, 0);
 }
+
+#[test]
+fn metaseq_mutating_at_mut_1_allocates_nothing() {
+    // the all-modules patch, its META-SEQ clocked but not reset (so its lanes wrap), MUT at 1 and unmodulated
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/fixtures/plan-all-a.json"
+    );
+    let mut v: serde_json::Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let at = v["nodes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|n| n["type"] == "metaseq")
+        .unwrap();
+    let node = &mut v["nodes"][at];
+    for input in [1, 2, 5] {
+        node["inputs"][input]["sources"] = serde_json::json!([]);
+    }
+    node["knobs"][2] = serde_json::json!(1.0);
+    let trace = v["layout"]["nodes"][at]["trace"].as_u64().unwrap() as usize;
+    let json = serde_json::to_vec(&v).unwrap();
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(sreda_engine::plan::decode(&json).unwrap()).unwrap();
+    e.process();
+    let before = allocs();
+    for _ in 0..10_000 {
+        e.process();
+    }
+    assert_eq!(allocs() - before, 0);
+    assert!(e.readouts()[trace + 7] > 0.0, "the lanes mutated");
+}

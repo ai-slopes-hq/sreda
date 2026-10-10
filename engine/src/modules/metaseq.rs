@@ -215,6 +215,7 @@ const CLK: usize = 0;
 const RESET: usize = 1;
 const PAT: usize = 0;
 const TRNS: usize = 1;
+const MUT: usize = 2;
 const DENS: usize = 3;
 const SCALE: usize = PATTERNS * PATTERN_PARAMS;
 const ROOT: usize = SCALE + 1;
@@ -224,6 +225,10 @@ const OUT_ACC: usize = 2;
 const OUT_VEL: usize = 3;
 const OUT_EOC: usize = 4;
 const SLIDE_S: f64 = 0.08;
+/// VEL and CHNC move by up to this much when they mutate
+const DRIFT: f64 = 0.25;
+/// the generation wraps here, so the trace's f32 counts it exactly
+const GEN_WRAP: u32 = 1 << 24;
 /// trace: [0] pattern, [1..7] cursors, [7] mutation generation, [8..104] live steps
 const TR_CURSORS: usize = 1;
 const TR_GEN: usize = 7;
@@ -261,7 +266,7 @@ pub struct MetaSeq {
     slide_from: f64,
     target: f64,
     slide_pos: f64,
-    /// lane mutations so far (Task 7)
+    /// lane mutations so far (wrapping at GEN_WRAP): the readout writes the live steps back when it moves
     generation: u32,
     /// the playing pattern's steps as they sound, and the fixed values last seen (an edit wins)
     live: [[f32; STEPS]; LANES],
@@ -367,6 +372,77 @@ impl MetaSeq {
         }
     }
 
+    /// Lane `l` moves to its next step; on a wrap it mutates.
+    fn advance(&mut self, io: &Io, ctx: &mut Ctx, l: usize, i: usize) {
+        let len = self.len(io, l);
+        let wraps = self.cursor[l].is_some() && Self::next(self.cursor[l], len) == 0;
+        self.cursor[l] = Some(Self::next(self.cursor[l], len));
+        if wraps {
+            self.mutate(io, ctx, l, len, i);
+        }
+    }
+
+    /// MUTATE (spec §7b), on an unlocked lane's wrap: each step within LEN changes with odds MUT². GATE swaps with
+    /// another step (the density stays), NOTE takes another note already in the lane (or a scale degree up or down
+    /// when it holds one note), TIE and ACC toggle, VEL and CHNC move by up to ±DRIFT. Draws only when MUT > 0.
+    fn mutate(&mut self, io: &Io, ctx: &mut Ctx, l: usize, len: usize, i: usize) {
+        let m = (io.par[MUT][i] as f64).clamp(0.0, 1.0);
+        let odds = m * m;
+        if odds <= 0.0 || io.fixed[lane_at(self.pat, l) + STEPS + 2] >= 0.5 {
+            return;
+        }
+        let scale = io.fixed[SCALE].max(0.0) as usize;
+        let root = io.fixed[ROOT].round() as i32;
+        let mut changed = false;
+        for k in 0..len {
+            if ctx.rng.next_f64() >= odds {
+                continue;
+            }
+            let lane = &mut self.live[l];
+            let was = lane[k];
+            match l {
+                G => {
+                    if len > 1 {
+                        let j = (k + 1 + ctx.rng.next_u32() as usize % (len - 1)) % len;
+                        lane.swap(k, j);
+                    }
+                }
+                N => {
+                    let others = lane[..len].iter().filter(|x| **x != was).count();
+                    if others > 0 {
+                        let pick = ctx.rng.next_u32() as usize % others;
+                        if let Some(x) = lane[..len].iter().filter(|x| **x != was).nth(pick) {
+                            lane[k] = *x;
+                        }
+                    } else {
+                        let cur = was.round() as i32;
+                        let in_scale = |s: &i32| snap(*s, scale, root) == *s;
+                        let up = (cur + 1..=24).find(in_scale);
+                        let down = (0..cur).rev().find(in_scale);
+                        let pick = if ctx.rng.next_u32() & 1 == 0 {
+                            up.or(down)
+                        } else {
+                            down.or(up)
+                        };
+                        if let Some(s) = pick {
+                            lane[k] = s as f32;
+                        }
+                    }
+                }
+                T | A => lane[k] = if was >= 0.5 { 0.0 } else { 1.0 },
+                _ => {
+                    let d = (ctx.rng.next_f64() * 2.0 - 1.0) * DRIFT;
+                    lane[k] = (was as f64 + d).clamp(0.0, 1.0) as f32;
+                }
+            }
+            // (a GATE swap changes step k exactly when the two differ)
+            changed |= self.live[l][k] != was;
+        }
+        if changed {
+            self.generation = (self.generation + 1) % GEN_WRAP;
+        }
+    }
+
     fn value(&self, l: usize) -> f32 {
         self.live[l][self.cursor[l].unwrap_or(0)]
     }
@@ -399,7 +475,7 @@ impl MetaSeq {
             self.gate_until = self.now + hold;
             let slide = self.value(G) >= 0.5;
             if played && slide {
-                self.cursor[N] = Some(Self::next(self.cursor[N], self.len(io, N)));
+                self.advance(io, ctx, N, i);
             }
             if slide || !played {
                 let to = self.note_volts(io, i);
@@ -430,7 +506,7 @@ impl MetaSeq {
         }
         self.gate_until = self.now + hold;
         if played {
-            self.cursor[N] = Some(Self::next(self.cursor[N], self.len(io, N)));
+            self.advance(io, ctx, N, i);
         }
         self.target = self.note_volts(io, i);
         self.slide_pos = f64::INFINITY;
@@ -475,10 +551,13 @@ impl Dsp for MetaSeq {
             }
             let want = (io.par[PAT][i].round().max(0.0) as usize).min(PATTERNS - 1);
             if rise && !self.started {
-                // PAT is read at the first clock (after the start or RST)
+                // PAT is read at the first clock (after the start or RST); the same pattern keeps its live steps, so
+                // RST does not undo MUTATE
                 self.started = true;
-                self.pat = want;
-                self.load(io);
+                if want != self.pat {
+                    self.pat = want;
+                    self.load(io);
+                }
             }
             let played = self.played(io);
             let mut fires = [false; LANES];
@@ -520,7 +599,7 @@ impl Dsp for MetaSeq {
                 }
                 for (l, f) in fires.iter().enumerate() {
                     if *f {
-                        self.cursor[l] = Some(Self::next(self.cursor[l], self.len(io, l)));
+                        self.advance(io, ctx, l, i);
                     }
                 }
                 if fires[G] {
@@ -996,5 +1075,176 @@ mod tests {
         b.fixed[lane_at(2, N) + 1] = 19.0;
         b.run(&mut m, 1, |_, i, inp| inp[0][i] = 0.0);
         assert_eq!(m.trace().unwrap()[9], 19.0);
+    }
+
+    /// A pattern A with something in every lane, each lane 8 steps long (STEP mode, so every lane wraps every 8 clocks).
+    fn busy() -> Vec<f64> {
+        let mut f = with_gate(0, "x.xx..x.");
+        set_step_mode(&mut f, 0);
+        steps(
+            &mut f,
+            0,
+            N,
+            &[12.0, 14.0, 15.0, 19.0, 12.0, 7.0, 15.0, 14.0],
+        );
+        steps(&mut f, 0, T, &pads("...x...."));
+        steps(&mut f, 0, A, &pads("x.....x."));
+        steps(&mut f, 0, V, &[0.2, 0.9, 0.5, 0.7, 0.4, 0.6, 0.3, 0.8]);
+        steps(&mut f, 0, C, &[0.5, 0.6, 0.7, 0.8, 0.9, 0.4, 0.3, 0.2]);
+        for l in 0..LANES {
+            set_len(&mut f, 0, l, 8);
+        }
+        f[SCALE] = 0.0;
+        f
+    }
+    fn lock(f: &mut [f64], p: usize, l: usize) {
+        f[lane_at(p, l) + STEPS + 2] = 1.0;
+    }
+    /// The playing pattern's lane `l` as written in `f` (pattern A).
+    fn written(f: &[f64], l: usize) -> Vec<f32> {
+        (0..STEPS).map(|k| f[lane_at(0, l) + k] as f32).collect()
+    }
+    fn live(m: &MetaSeq, l: usize) -> Vec<f32> {
+        let t = m.trace().unwrap();
+        t[TR_LIVE + l * STEPS..TR_LIVE + (l + 1) * STEPS].to_vec()
+    }
+    fn generation(m: &MetaSeq) -> f32 {
+        m.trace().unwrap()[TR_GEN]
+    }
+    const MUT1: [f64; 4] = [0.0, 0.0, 1.0, 0.5];
+
+    #[test]
+    fn mut_zero_changes_nothing() {
+        let f = busy();
+        let (_, m) = play(PAR, &f, 40, |_, _, _| {});
+        for l in 0..LANES {
+            assert_eq!(live(&m, l), written(&f, l), "lane {l}");
+        }
+        assert_eq!(generation(&m), 0.0);
+    }
+
+    #[test]
+    fn mut_one_mutates_every_unlocked_lane() {
+        let f = busy();
+        // clock 8 wraps every lane once (clocks 0–7 played steps 1–8)
+        let (o, m) = play(MUT1, &f, 9, |_, _, _| {});
+        assert!(generation(&m) >= LANES as f32, "{}", generation(&m));
+        for l in 0..LANES {
+            let (now, was) = (live(&m, l), written(&f, l));
+            assert_ne!(now[..8], was[..8], "lane {l} mutated");
+            assert_eq!(now[8..], was[8..], "lane {l}: past LEN untouched");
+        }
+        let count = |v: &[f32]| v[..8].iter().filter(|x| **x >= 0.5).count();
+        assert_eq!(
+            count(&live(&m, G)),
+            count(&written(&f, G)),
+            "GATE swaps: the density stays"
+        );
+        let notes = written(&f, N);
+        assert!(
+            live(&m, N)[..8].iter().all(|x| notes[..8].contains(x)),
+            "NOTE takes values already in the lane: {:?}",
+            live(&m, N)
+        );
+        for l in [T, A] {
+            assert!(
+                live(&m, l).iter().all(|x| *x == 0.0 || *x == 1.0),
+                "lane {l}"
+            );
+        }
+        for l in [V, C] {
+            let (now, was) = (live(&m, l), written(&f, l));
+            for k in 0..8 {
+                assert!((0.0..=1.0).contains(&now[k]), "lane {l} step {k}");
+                assert!((now[k] - was[k]).abs() <= 0.25 + 1e-6, "lane {l} step {k}");
+            }
+        }
+        assert!(o[CV].iter().all(|x| x.is_finite()));
+        // the drift goes on: later wraps move again
+        let (_, later) = play(MUT1, &f, 40, |_, _, _| {});
+        assert!(generation(&later) >= 4.0 * LANES as f32);
+    }
+
+    #[test]
+    fn a_one_note_lane_moves_a_scale_degree() {
+        for (note, allowed) in [(12.0, [11.0, 12.0, 14.0]), (24.0, [23.0, 24.0, 24.0])] {
+            let mut f = busy();
+            steps(&mut f, 0, N, &[note; 8]);
+            f[SCALE] = 1.0; // MAJ from C
+            let (_, m) = play(MUT1, &f, 9, |_, _, _| {});
+            let now = live(&m, N);
+            assert!(now[..8].iter().any(|x| *x != note as f32), "{now:?}");
+            assert!(
+                now[..8].iter().all(|x| allowed.contains(x)),
+                "from {note}: {now:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_locked_lane_never_mutates() {
+        let mut f = busy();
+        lock(&mut f, 0, N);
+        lock(&mut f, 0, G);
+        let (_, m) = play(MUT1, &f, 40, |_, _, _| {});
+        assert_eq!(live(&m, N), written(&f, N));
+        assert_eq!(live(&m, G), written(&f, G));
+        assert_ne!(live(&m, V), written(&f, V), "VEL is unlocked");
+    }
+
+    #[test]
+    fn an_edit_during_mutation_wins() {
+        let f = busy();
+        let mut b = bench(MUT1, &f);
+        let mut m = MetaSeq::new(SR);
+        let blocks = (9 * TICK + 300).div_ceil(BLOCK);
+        b.run(&mut m, blocks, |blk, i, inp| {
+            inp[0][i] = clock(blk * BLOCK + i, usize::MAX)
+        });
+        assert_ne!(live(&m, V), written(&f, V), "mutated");
+        // the drawer writes VEL step 3 after the mutation
+        b.fixed[lane_at(0, V) + 2] = 0.05;
+        b.run(&mut m, 1, |_, i, inp| inp[0][i] = 0.0);
+        assert_eq!(live(&m, V)[2], 0.05, "the edit replaced the live value");
+    }
+
+    #[test]
+    fn rst_keeps_mutations() {
+        let f = busy();
+        let mut b = bench(MUT1, &f);
+        let mut m = MetaSeq::new(SR);
+        let first = (9 * TICK + 300).div_ceil(BLOCK);
+        b.run(&mut m, first, |blk, i, inp| {
+            inp[0][i] = clock(blk * BLOCK + i, usize::MAX)
+        });
+        let mutated: Vec<Vec<f32>> = (0..LANES).map(|l| live(&m, l)).collect();
+        assert_ne!(mutated[N], written(&f, N));
+        // MUT down, then RST and a clock: every lane at step 1, the mutated steps still sound
+        b.par[2] = [0.0; BLOCK];
+        b.run(&mut m, 4, |blk, i, inp| {
+            let n = blk * BLOCK + i;
+            inp[1][i] = if n < 48 { 1.0 } else { 0.0 };
+            inp[0][i] = if (200..248).contains(&n) { 1.0 } else { 0.0 };
+        });
+        assert_eq!(&m.trace().unwrap()[1..7], &[0.0; 6], "every lane at step 1");
+        for (l, was) in mutated.iter().enumerate() {
+            assert_eq!(&live(&m, l), was, "lane {l} kept its mutations");
+        }
+    }
+
+    #[test]
+    fn mutation_blockwise_equals_per_sample() {
+        let n = 60 * BLOCK;
+        let clk: Vec<f32> = (0..n)
+            .map(|i| if i % 300 < 48 { 1.0 } else { 0.0 })
+            .collect();
+        Bench::blockwise_equals_per_sample(
+            || Box::new(MetaSeq::new(48_000.0)),
+            &[clk, vec![], vec![]],
+            &[0.0, 0.0, 0.7, 0.5],
+            &busy(),
+            5,
+            60,
+        );
     }
 }
