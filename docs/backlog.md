@@ -22,6 +22,14 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   what stays with SLOPE (cycling envelope) so the two don't overlap. Same path as META-SEQ: brainstorm, spec, plan,
   migration of saved patches.
 
+- **Patch language + live REPL** (2026-10-10): presets stored descriptively, as text in a small patch markup
+  language (modules by name with real-unit values, cables as `osc.out -> lpg.in`, frames with their clock; no
+  coordinates, layout derived), and a console inside the app that evaluates it live, interpreter style: a line adds,
+  re-patches or turns a knob on the running patch through the usual edit / undo path. Round trip: the current patch
+  prints back as the same text. Seed: the factory builder (`packages/core/src/factory/build.ts`) already builds
+  patches by type with real units. Open: textual diff vs re-evaluating the whole file, names for module instances,
+  how META-SEQ steps read as text (e.g. `notes: c3 . eb3 g3`).
+
 - **Group macros** (2026-10-07): a group's header exposes chosen knobs of its members as macro knobs. Must not bring
   back the hidden-insides / inside-vs-outside split (edit vs play) that made Reaktor-style containers kill
   creativity. Groups themselves (frame + shared clock) are in the first build.
