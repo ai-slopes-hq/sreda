@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 31 (§6: more factory presets — drum, bass, lead and ambient groups and four more projects) · Status: approved
+Date: 2026-10-07 · Revision 32 (§2: a module's height is exactly n × 1U, so 2U and 3U line up with stacked 1U in STACK) · Status: approved
 
 ## Why
 
@@ -120,12 +120,14 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 
 - A module is a compact block: name on top, inputs on the left edge, outputs on the right edge, parameters on the
   face between them.
-- **Sizes are quantised:** width N × HP (HP = 56 px), height 1U, 2U or 3U (144, 272 and 400 px: the header, a 6 px
-  inset, the lanes, 10 px under the last lane). Each module's size is fixed in its spec (§7). Placement on the canvas
+- **Sizes are quantised:** width N × HP (HP = 56 px), height 1U, 2U or 3U, **exactly n × 144 px** (144, 288 and
+  432 px: two 1U stacked are as tall as one 2U, three as one 3U; revision 32 — they were 272 and 400, and STACK
+  showed a 16 / 32 px step beside every 2U / 3U module). The header, a 6 px inset, as many whole lanes as fit, at
+  least 10 px under the last lane (2U keeps 26 px). A document opened from before re-packs its STACK frames. Each module's size is fixed in its spec (§7). Placement on the canvas
   stays free (8 px grid, magnets); the sizes make STACK pack cleanly.
 - **Panel grammar — one layout for every module, small or large** (board *Panel system* in the prototype):
   1. Under a 32 px header (the name) and a 6 px inset, the panel is cut into **lanes of 32 px**: 1U = 3 lanes,
-     2U = 7, 3U = 11. Room to breathe is part of the grammar: knobs 56 × 40, jacks 11 px, 4 px inside the edges of a
+     2U = 7, 3U = 12 (as many as fit in n × 144). Room to breathe is part of the grammar: knobs 56 × 40, jacks 11 px, 4 px inside the edges of a
      display or a button.
   2. **Three columns, always:** the IN column (1 HP) on the left, the OUT column (1 HP) on the right, the control
      area (N − 2 HP) between them, the side columns a shade darker (#171715). Ports live only in the side columns
@@ -491,7 +493,7 @@ Size is `HP × U`.
 - Sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 5×1 (revision 27),
   STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 3×1, COMPARE 3×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2, S&H 2×1, QUANT 3×1,
   MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1 (24 modules).
-- Displays in lanes: STAGES' contour 8 (then LEN and ROOT, then GEN ▾ · SCALE ▾ · DICE), RHYTHM's pads 4 (then LEN,
+- Displays in lanes: STAGES' contour 9 (revision 32; then LEN and ROOT, then GEN ▾ · SCALE ▾ · DICE), RHYTHM's pads 4 (then LEN,
   HITS, ROT, DENS, then MODE · DICE), SCOPE 4 (then TIME, GA, GB, then MODE).
 - **STAGES panel = a contour.** A display shows the LEN stages as one line: a step's height is its note (named above
   it), a sloped joint is a slide, dots along the bottom are pulses, the current stage is amber. While ADV is

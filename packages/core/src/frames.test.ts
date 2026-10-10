@@ -210,7 +210,7 @@ function patch() {
   let doc = emptyDoc;
   const ids: string[] = [];
   types.forEach((t, i) => {
-    const a = addModule(doc, SPECS, t, 0, i * 400);
+    const a = addModule(doc, SPECS, t, 0, i * 500);
     doc = a.doc;
     ids.push(a.id);
   });
@@ -225,15 +225,17 @@ test('stack packs densely in reading order', () => {
   const d = setLayout(doc, SPECS, gid, 'stack');
   const g = rectOf(d, SPECS, gid);
   expect(g.w).toBe(1152);
-  expect(g.h).toBe(GHEAD + GPAD + 688 + GPAD);
+  expect(g.h).toBe(GHEAD + GPAD + 720 + GPAD);
   const r = rectsOf(d, ids, SPECS);
   for (let i = 0; i < r.length; i++)
     for (let j = i + 1; j < r.length; j++) expect(overlap(r[i]!, r[j]!)).toBe(false);
   const at = (i: number) => [r[i]!.x - g.x - GPAD, r[i]!.y - g.y - GHEAD - GPAD];
   expect(at(3)).toEqual([0, 144]);
-  expect(at(4)).toEqual([560, 272]);
-  expect(at(6)).toEqual([560, 416]);
-  expect(at(7)).toEqual([0, 544]);
+  expect(at(4)).toEqual([560, 288]);
+  expect(at(6)).toEqual([560, 432]);
+  expect(at(7)).toEqual([0, 576]);
+  // 1U, 2U and 3U line up: every top and bottom edge is on the 1U grid
+  for (let i = 0; i < r.length; i++) expect([at(i)[1]! % 144, (at(i)[1]! + r[i]!.h) % 144]).toEqual([0, 0]);
   expect(r.every((x) => (x.x - g.x) % 8 === 0 && (x.y - g.y - GHEAD) % 8 === 0)).toBe(true);
 });
 

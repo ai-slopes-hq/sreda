@@ -5,8 +5,10 @@ export const HEAD = 32,
   TOP = 38,
   LANE = 32,
   FOOT = 10,
-  HP = 56;
-export const LANES: Record<number, number> = { 1: 3, 2: 7, 3: 11 };
+  HP = 56,
+  U = 144;
+/** A panel is exactly n × 1U high (two 1U stacked line up with a 2U) and holds as many lanes as fit: 3, 7, 12. */
+export const lanesOf = (u: number): number => Math.floor((u * U - TOP - FOOT) / LANE);
 
 export interface PanelLayout {
   w: number;
@@ -37,9 +39,9 @@ function computeLayout(spec: ModuleSpec): PanelLayout {
   const knobs = visible.filter((p) => p.kind === 'knob');
   const modes = visible.filter((p) => p.kind !== 'knob');
   const C = spec.size[0] - 2;
-  const lanes = LANES[spec.size[1]] ?? 3;
+  const lanes = lanesOf(spec.size[1]);
   const w = spec.size[0] * HP;
-  const h = TOP + lanes * LANE + FOOT;
+  const h = spec.size[1] * U;
   const dl = spec.display?.lanes ?? 0;
   const jacks: PanelLayout['jacks'] = {};
   const cells: PanelLayout['cells'] = {};

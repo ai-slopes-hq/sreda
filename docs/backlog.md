@@ -4,6 +4,19 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 ## Next after the first build
 
+- **From the UI / UX review** (2026-10-10; heights n × 1U already done in spec revision 32):
+  - STACK leaves holes by width (3 / 4 / 5 / 6 / 10 HP side by side): choose the frame width from sums of widths, or
+    let a row's last module take the leftover.
+  - Panels half empty because 2U is chosen for the jack count (MIX, ATT, A×B+C, SPREAD, SWITCH); NOISE keeps an empty
+    IN column.
+  - The picker opened near the bottom of the window runs off screen.
+  - A frame header holds up to 8 controls (colour, STACK, SAVE, M, BPM, TAP, ✕, ▾), repeated on every nested frame.
+  - SAVE / NEW in three places (top bar, LIBRARY's SAVE AS / NEW, SAVE on every frame).
+  - Without the sidebar the patch shows only stubs; the sidebar covers the canvas instead of narrowing it; two tabs
+    look active at once (WIRES filled, SETTINGS outlined).
+  - The hint bar is truncated; WIRES truncates normals; an empty BETWEEN GROUPS shows `+ new wire`; LPG's `PING ×2`
+    runs into the next lane.
+
 - **Group macros** (2026-10-07): a group's header exposes chosen knobs of its members as macro knobs. Must not bring
   back the hidden-insides / inside-vs-outside split (edit vs play) that made Reaktor-style containers kill
   creativity. Groups themselves (frame + shared clock) are in the first build.

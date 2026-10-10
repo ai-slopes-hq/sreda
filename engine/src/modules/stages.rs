@@ -102,7 +102,7 @@ pub fn spec() -> ModuleSpec {
             internal: "stage timer",
         }],
         display: Some(Display {
-            lanes: 8,
+            lanes: 9,
             kind: "contour",
         }),
     }

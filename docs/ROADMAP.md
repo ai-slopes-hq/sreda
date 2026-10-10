@@ -86,6 +86,9 @@ of a creative tool; nothing of its UI is ported.
   noisy techno drums, fm bass, reese, pluck, chaotic bells, pad, drone, grain cloud, frozen space) and 4 projects
   (techno, ambient bells, dub, generative), built from shared voices in `factory/voices.ts`, each tested to sound.
   Also fixed: a hot reload in `pnpm dev` left the previous audio host playing under the new one.
+- **Spec revision 32** (2026-10-10, after a UI / UX review): a module is exactly n × 1U high (144 / 288 / 432 px;
+  2U and 3U were 272 / 400), so STACK rows line up; 3U has 12 lanes and STAGES' contour 9; documents re-pack their
+  STACK frames on open. The rest of the review is in `docs/backlog.md` ("From the UI / UX review").
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 
 ## The road (vertical slices: something to hear at every stage)

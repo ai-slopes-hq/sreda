@@ -236,6 +236,8 @@ export function validateDoc(json: unknown, specs: Specs): Doc | null {
   const depth = (id: string) => chainOf(result, id).length;
   for (const id of formerRoutes.sort((a, b) => depth(b) - depth(a)))
     result = packFrame(result, specs, id, true);
-  // a STACK around a shrunken one fits it again
-  return repackManaged(result, specs, formerRoutes);
+  // every STACK packs again: a saved pack may be stale (2U and 3U grew to 288 and 432 px in revision 32), and a STACK
+  // around a shrunken one fits it again
+  const stacks = result.groups.filter((g) => g.layout === 'stack').map((g) => g.id);
+  return repackManaged(result, specs, stacks);
 }

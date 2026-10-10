@@ -1,7 +1,7 @@
 // Frames (spec §5): geometry, membership by containment, and the edits that make, unmake and resize them.
 // Pure functions from a document to a new one, like ops.ts.
 import type { Cable, Doc, Group, Layout } from './doc';
-import { layoutPanel } from './panel';
+import { layoutPanel, U } from './panel';
 import { inputPorts, type Specs } from './spec';
 import { portLabel } from './names';
 
@@ -426,8 +426,6 @@ export function effectiveMuted(doc: Doc, gid: string): boolean {
 }
 
 const snapUp = (v: number): number => Math.ceil(v / 8) * 8;
-/** the height of 1U: a row holds what starts within half of it */
-const U = 144;
 
 export interface Item {
   id: string;

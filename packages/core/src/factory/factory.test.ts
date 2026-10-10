@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { validateDoc } from '../doc';
-import { packFrame } from '../frames';
+import { packFrame, rectOf } from '../frames';
 import { SPECS, toKnob, type KnobParam } from '../spec';
 import { FACTORY } from './index';
 
@@ -84,4 +84,21 @@ test('Pulse: a 2 Hz square pings a kick LPG and, at ×2, a noise LPG; MIX → OU
   expect(clock.params['freq']).toBeCloseTo(toKnob(knob('osc', 'freq'), 2), 6);
   const hats = doc.cables.filter((c) => c.from[0] === clock.id && c.to[1] === 'ping').map((c) => c.to[0]);
   expect(hats.map((id) => doc.modules.find((m) => m.id === id)!.ratios['ping'] ?? 1).sort()).toEqual([1, 2]);
+});
+
+test('no factory module overlaps another, and every one sits inside its frame', () => {
+  for (const e of FACTORY) {
+    const d = e.build(SPECS);
+    const r = d.modules.map((m) => ({ m, ...rectOf(d, SPECS, m.id) }));
+    for (let i = 0; i < r.length; i++)
+      for (let j = i + 1; j < r.length; j++) {
+        const [a, b] = [r[i]!, r[j]!];
+        const hit = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(hit, `${e.name}: ${a.m.type} over ${b.m.type}`).toBe(false);
+      }
+    for (const a of r) {
+      const g = a.m.parent && rectOf(d, SPECS, a.m.parent);
+      if (g) expect(a.y + a.h <= g.y + g.h && a.x + a.w <= g.x + g.w, `${e.name}: ${a.m.type}`).toBe(true);
+    }
+  }
 });

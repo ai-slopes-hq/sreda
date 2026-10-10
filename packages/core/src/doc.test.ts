@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 import { emptyDoc, starterDoc, validateDoc, type Doc, type Group } from './doc';
+import { GHEAD, GPAD, rectOf } from './frames';
 import { SPECS } from './spec';
 import { TEST_SPECS } from './testspecs';
 
@@ -273,4 +274,24 @@ test('a Plan 4 FOLD keeps its drive and opens as SINE at LEVEL 0 dB', () => {
   expect(p['sym']).toBe(0.25);
   expect(p['model']).toBe(0);
   expect(p['level']).toBe(0.5);
+});
+
+test('a STACK packed when 2U was 272 px re-packs on open, so nothing overlaps', () => {
+  const top = GHEAD + GPAD;
+  const d: Doc = {
+    version: 1,
+    modules: [
+      { id: 'm1', type: 'mix', x: GPAD, y: top, parent: 'g3', params: {}, atts: {}, ratios: {} },
+      { id: 'm2', type: 'osc', x: GPAD, y: top + 272, parent: 'g3', params: {}, atts: {}, ratios: {} },
+    ],
+    cables: [],
+    groups: [{ ...frame('g3'), x: 0, y: 0, w: 352, h: top + 272 + 144 + GPAD, layout: 'stack', ratio: 1 }],
+    master: 1,
+    nextId: 4,
+  };
+  const v = validateDoc(d, SPECS)!;
+  const [a, b] = ['m1', 'm2'].map((id) => rectOf(v, SPECS, id));
+  expect(b!.y).toBeGreaterThanOrEqual(a!.y + a!.h);
+  const g = rectOf(v, SPECS, 'g3');
+  expect(g.y + g.h).toBeGreaterThanOrEqual(b!.y + b!.h + GPAD);
 });

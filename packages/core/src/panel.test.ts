@@ -42,7 +42,7 @@ test('actions go right, glyph options take 1 HP, displays sit on top', () => {
     display: { lanes: 4, kind: 'scope' },
   });
   const l = layoutPanel(spec);
-  expect(l.h).toBe(272);
+  expect(l.h).toBe(288);
   expect(l.display).toEqual({ x: 60, y: 40, w: 216, h: 122 });
   expect(l.cells['x']).toEqual({ x: 56, y: 38 + 4 * 32, w: 56, mode: false });
   expect(l.cells['w']).toEqual({ x: 56, y: 38 + 6 * 32, w: 56, mode: true });
@@ -56,4 +56,14 @@ test('a module that does not fit says so', () => {
 
 test('every generated module fits its size', () => {
   for (const spec of Object.values(SPECS)) expect(layoutPanel(spec).fits, spec.type).toBe(true);
+});
+
+test('heights are exactly n × 1U, so stacked 1U modules line up with 2U and 3U', () => {
+  const at = (u: number) => layoutPanel(mod('t' + u, { size: [3, u] }));
+  expect([1, 2, 3].map((u) => [at(u).h, at(u).lanes])).toEqual([
+    [144, 3],
+    [288, 7],
+    [432, 12],
+  ]);
+  for (const s of Object.values(SPECS)) expect(layoutPanel(s).h % 144).toBe(0);
 });
