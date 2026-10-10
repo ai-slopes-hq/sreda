@@ -38,7 +38,11 @@ export function Sidebar(props: {
   }
   return (
     <Show when={st.sidebar.open}>
-      <aside class="sr-side" style={{ width: st.sidebar.width + 'px' }}>
+      <aside
+        class="sr-side"
+        // it ends above META-SEQ's editor drawer, which takes the window's full width
+        style={{ width: st.sidebar.width + 'px', bottom: st.seq.id ? st.seq.h + 'px' : '0' }}
+      >
         <div class="sr-grip" onPointerDown={gripDown} />
         <div class="sr-stabs">
           <button

@@ -63,6 +63,8 @@ export interface Session {
   missing: string[];
   /** bumps when a sample is loaded, refused or found missing (displays re-read the registry) */
   samplesVersion: number;
+  /** META-SEQ's editor drawer (spec §7b): the module it shows (null: closed) and its height */
+  seq: { id: string | null; h: number };
 }
 
 /** The sidebar (spec §5a): docked right, WIRES, MIX and SETTINGS tabs. */
@@ -142,6 +144,7 @@ export function createSession(
     candidate: null,
     missing: [],
     samplesVersion: 0,
+    seq: { id: null, h: 300 },
   });
   /** the document last opened or saved: anything else is unsaved */
   let saved: Doc = initial;
@@ -255,6 +258,8 @@ export function createSession(
     if (state.sel.some((id) => !shown(id))) setState('sel', state.sel.filter(shown));
     if (state.hover !== null && !shown(state.hover)) setState('hover', null);
     if (state.listen && !ids.has(state.listen.id)) setState('listen', null);
+    // the drawer shows a module that still exists
+    if (state.seq.id !== null && !doc.modules.some((m) => m.id === state.seq.id)) setState('seq', 'id', null);
   }
 
   /** an input's index in the plan (inputs, then mod jacks) */
@@ -513,6 +518,17 @@ export function createSession(
     setListen(l: { id: string; port: string } | null): void {
       setState('listen', l);
       sendListen();
+    },
+    /** open META-SEQ's editor drawer on a module (or switch it to another) */
+    openSeq(id: string): void {
+      setState('seq', 'id', id);
+    },
+    closeSeq(): void {
+      setState('seq', 'id', null);
+    },
+    /** the drawer's height (its top edge dragged) */
+    seqHeight(h: number): void {
+      setState('seq', 'h', h);
     },
     nodeOf,
     layout,

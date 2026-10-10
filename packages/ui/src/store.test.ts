@@ -317,3 +317,27 @@ test('the master fader is one undo step per stroke, posts a master message, and 
   s.redo();
   expect(s.current().master).toBe(0.3);
 });
+
+test('the drawer closes when its module goes', async () => {
+  const { addModule, deleteObjects, emptyDoc } = await import('@sreda/core');
+  const s = createSession(SPECS, emptyDoc);
+  expect(s.state.seq).toEqual({ id: null, h: 300 });
+  s.commit(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc);
+  s.openSeq('m1');
+  expect(s.state.seq.id).toBe('m1');
+  // deleted
+  s.commit(deleteObjects(s.current(), ['m1']));
+  expect(s.state.seq.id).toBeNull();
+  // ⌘Z brings it back; open it, then ⌘Z its creation
+  s.undo();
+  s.openSeq('m1');
+  expect(s.state.seq.id).toBe('m1');
+  s.undo();
+  expect(s.current().modules).toHaveLength(0);
+  expect(s.state.seq.id).toBeNull();
+  // closeSeq
+  s.redo();
+  s.openSeq('m1');
+  s.closeSeq();
+  expect(s.state.seq.id).toBeNull();
+});

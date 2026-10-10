@@ -50,6 +50,7 @@ import { handleKey } from './keys';
 import { Panel, type FieldKind, type SampleView } from './Panel';
 import { placeFor, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 import { Picker } from './Picker';
+import { Drawer } from '../seq/Drawer';
 import { panned } from './wheel';
 import './canvas.css';
 
@@ -363,8 +364,26 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     return magnet(box, others, 10 / st.view.z);
   }
 
+  const isSeq = (id: string) => st.doc.modules.some((m) => m.id === id && m.type === 'metaseq');
+  // the editor drawer opens, switches or changes height: the canvas shrinks above it and scrolls its module into view
+  createEffect(
+    on(
+      () => [st.seq.id, st.seq.h] as const,
+      ([id]) => {
+        if (!id) return;
+        requestAnimationFrame(() => {
+          if (st.seq.id !== id || !isSeq(id)) return;
+          const to = glideTo(st.view, rectOf(st.doc, specs, id), { x: 0, y: 0, w: W(), h: H() });
+          if (!to) return;
+          stopGlide();
+          stopGlide = animateView({ ...st.view }, to, 220, (v) => s.setState('view', v));
+        });
+      },
+    ),
+  );
+
   let root: HTMLDivElement | undefined;
-  /** the canvas's own size (it ends at the sidebar's edge) */
+  /** the canvas's own size (it ends at the sidebar's edge and above the editor drawer) */
   const W = () => root?.clientWidth || window.innerWidth;
   const H = () => root?.clientHeight || window.innerHeight;
 
@@ -407,6 +426,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   function moduleDown(id: string, e: PointerEvent): void {
     if (e.button !== 0 || space) return;
     e.stopPropagation();
+    // the editor drawer is open: a click on another META-SEQ switches it
+    if (st.seq.id !== null && st.seq.id !== id && isSeq(id)) s.openSeq(id);
     let sel = st.sel;
     if (e.shiftKey) sel = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
     else if (!sel.includes(id)) sel = [id];
@@ -769,6 +790,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         style={{
           // the canvas ends at the sidebar's edge
           right: st.sidebar.open ? st.sidebar.width + 'px' : '0',
+          // and above META-SEQ's editor drawer
+          bottom: st.seq.id ? st.seq.h + 'px' : '0',
           'background-size': `${16 * st.view.z}px ${16 * st.view.z}px`,
           'background-position': `${st.view.x}px ${st.view.y}px`,
         }}
@@ -783,6 +806,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         }}
         onDrop={dropFiles}
         onDblClick={(e) => {
+          const seqMod = (e.target as Element).closest('[data-type=metaseq]');
+          if (seqMod) {
+            s.openSeq(seqMod.getAttribute('data-module')!);
+            return;
+          }
           if ((e.target as Element).closest('[data-module],[data-ghead]')) return;
           setPicker({ screen: client(e), at: toCanvas(client(e)), from: null, tab: 'ALL' });
         }}
@@ -886,6 +914,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                     load: () => loadInto(m.id),
                     fixed: (param, value) => s.sendFixed(m.id, param, value),
                     diceInput: () => s.params(m.id, diced(m.id), undefined, false),
+                    openSeq: () => s.openSeq(m.id),
                   }}
                 />
               );
@@ -1022,6 +1051,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         fit={() => fit(false)}
         middle={() => toCanvas({ x: W() / 2, y: H() / 2 })}
       />
+      <Show when={st.seq.id} keyed>
+        {(id) => <Drawer session={s} specs={specs} id={id} />}
+      </Show>
     </>
   );
 }

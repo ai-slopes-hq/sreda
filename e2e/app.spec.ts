@@ -413,6 +413,43 @@ test('STAGES: drawing on the contour sets the notes; ⌘Z undoes the stroke in o
   await app.close();
 });
 
+test('a double-click on META-SEQ opens the drawer and the canvas shrinks above it', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(500, 300);
+  await page.keyboard.type('meta');
+  await page.keyboard.press('Enter');
+  const seq = page.locator('[data-type=metaseq]');
+  await expect(seq).toBeVisible();
+  const canvasH = () => page.locator('.sr-canvas').evaluate((el) => el.clientHeight);
+  const winH = await page.evaluate(() => window.innerHeight);
+  expect(await canvasH()).toBe(winH);
+  // a double-click on the module's face (below its name)
+  const box = (await seq.boundingBox())!;
+  await page.mouse.dblclick(box.x + 6, box.y + box.height - 6);
+  const drawer = page.locator('.sr-drawer');
+  await expect(drawer).toBeVisible();
+  const dh = await drawer.evaluate((el) => el.getBoundingClientRect().height);
+  expect(dh).toBe(300);
+  expect(await canvasH()).toBe(winH - dh);
+  await expect(drawer.locator('.sr-lane')).toHaveCount(6);
+  // the module stays in view above the drawer
+  await expect
+    .poll(async () => {
+      const b = (await seq.boundingBox())!;
+      return b.y + b.height <= winH - dh;
+    })
+    .toBe(true);
+  // tab B: the edited pattern
+  await drawer.locator('[data-pattern=B]').click();
+  expect((await fullDoc(page)).modules.find((m) => m.type === 'metaseq')!.params['edit']).toBe(1);
+  await expect(drawer.locator('[data-pattern=B]')).toHaveClass(/\bon\b/);
+  // Esc closes
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  expect(await canvasH()).toBe(winH);
+  await app.close();
+});
+
 test('SWITCH: the current input label is amber', async () => {
   const { app, page } = await launch();
   await page.mouse.dblclick(700, 600);
