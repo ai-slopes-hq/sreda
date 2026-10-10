@@ -93,7 +93,10 @@ of a creative tool; nothing of its UI is ported.
   user's choice: reworking the big modules RHYTHM and STAGES.
 - **Plan 14 (META-SEQ, spec §7b rev 33) in progress on the branch `plan-14-metaseq`**, subagent-driven; ledger in
   `.superpowers/sdd/2026-10-10-14-metaseq/progress.md`. Slice 1 done (Tasks 1–2: the engine module and its panel with
-  the overview display); **Checkpoint 1: the user listens** before Task 3.
+  the overview display), Checkpoint 1 passed. Slice 2 done (Tasks 3–4: the editor drawer under the canvas, opened by
+  a double-click on META-SEQ; lane drawing — NOTE snapped to SCALE / ROOT, GATE / TIE / ACC paint, VEL / CHNC bars,
+  LEN / RATE / lock, header SCALE / ROOT / GEN); **Checkpoint 2: the user draws and listens** before Task 5.
+- **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 
 ## The road (vertical slices: something to hear at every stage)
