@@ -354,3 +354,23 @@ test('a write-back without an undo step (MUTATE) keeps a stroke in the drawer on
   s.undo();
   expect(s.current()).toEqual(before);
 });
+
+test('the drawer closes when a replaced document makes its module something else, and with every opened project', () => {
+  const s = createSession(SPECS, emptyDoc);
+  s.commit(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc);
+  s.openSeq('m1');
+  // a project whose m1 is an OSC
+  s.openProject(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, { path: 'osc', factory: false });
+  expect(s.current().modules[0]).toMatchObject({ id: 'm1', type: 'osc' });
+  expect(s.state.seq.id).toBeNull();
+  // the same through a commit (a DICE patch, an undo): the id stays, the type changes
+  s.undo();
+  s.openSeq('m1');
+  s.commit(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc);
+  expect(s.state.seq.id).toBeNull();
+  // a project whose m1 is another META-SEQ: the drawer closes too
+  s.commit(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc);
+  s.openSeq('m1');
+  s.openProject(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc, { path: 'seq', factory: false });
+  expect(s.state.seq.id).toBeNull();
+});

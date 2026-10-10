@@ -51,7 +51,7 @@ import { Panel, type FieldKind, type SampleView } from './Panel';
 import { placeFor, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 import { Picker } from './Picker';
 import { Drawer } from '../seq/Drawer';
-import { MutationWatch } from '../seq/mutate';
+import { writeBack } from '../seq/mutate';
 import { panned } from './wheel';
 import './canvas.css';
 
@@ -881,13 +881,12 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
             {(m) => {
               const node = () => s.nodeOf(m.id);
               // META-SEQ's mutated steps reach the document once per GATE cycle, without an undo step
-              const mutation =
-                m.type === 'metaseq'
-                  ? new MutationWatch(
-                      () => s.current().modules.find((x) => x.id === m.id)?.params,
-                      (changes) => s.params(m.id, changes, undefined, false),
-                    )
-                  : undefined;
+              // (the id can change type when a document replaces this one: the watch follows the type)
+              const mutation = writeBack(
+                () => m.type,
+                () => s.current().modules.find((x) => x.id === m.id)?.params,
+                (changes) => s.params(m.id, changes, undefined, false),
+              );
               return (
                 <Panel
                   mod={m}
@@ -937,7 +936,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                       if (Object.keys(changes).length > 0) s.params(m.id, changes, undefined, false);
                     },
                     openSeq: () => s.openSeq(m.id),
-                    seqFrame: (buf, at) => mutation?.frame(buf, at, performance.now()),
+                    seqFrame: (buf, at) => mutation(buf, at, performance.now()),
                   }}
                 />
               );

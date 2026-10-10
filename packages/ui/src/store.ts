@@ -258,8 +258,9 @@ export function createSession(
     if (state.sel.some((id) => !shown(id))) setState('sel', state.sel.filter(shown));
     if (state.hover !== null && !shown(state.hover)) setState('hover', null);
     if (state.listen && !ids.has(state.listen.id)) setState('listen', null);
-    // the drawer shows a module that still exists
-    if (state.seq.id !== null && !doc.modules.some((m) => m.id === state.seq.id)) setState('seq', 'id', null);
+    // the drawer shows a META-SEQ that still exists (a replaced document can give its id to another type)
+    if (state.seq.id !== null && doc.modules.find((m) => m.id === state.seq.id)?.type !== 'metaseq')
+      setState('seq', 'id', null);
   }
 
   /** an input's index in the plan (inputs, then mod jacks) */
@@ -399,6 +400,7 @@ export function createSession(
       setState('project', project);
       // the sidebar opens at its fixed width with every opened project
       setState('sidebar', { width: SIDEBAR_WIDTH, picked: null });
+      setState('seq', 'id', null); // the drawer belonged to the previous project
       this.commit(doc);
       this.markSaved();
       host?.post({ t: 'fade', ms: 200 });

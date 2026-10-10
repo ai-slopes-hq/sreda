@@ -1,6 +1,7 @@
 // MUTATE's write-back (spec §7b): the engine mutates the playing pattern's live steps on its own; the readout brings
 // them into the document once per GATE cycle, as one batch without an undo step (as from the DICE input).
 import { laneLen, laneSteps, LANES, stepId } from '@sreda/core';
+import { createMemo } from 'solid-js';
 
 const NOTE_MAX = 24;
 /** the trace's offsets: playing pattern, the GATE lane's cursor, the mutation generation, the live steps */
@@ -92,4 +93,16 @@ export class MutationWatch {
     // our own write is not an edit
     this.seen = this.params();
   }
+}
+
+/** A panel's write-back, fed every frame from the readout. A panel keeps its module across a replaced document (the
+ * store reconciles modules by id), and the id may now be another type: the watch follows the type — a fresh one when
+ * the module becomes a META-SEQ, none while it is anything else. Call inside a reactive owner (a panel). */
+export function writeBack(
+  type: () => string,
+  params: () => Record<string, number> | undefined,
+  write: (changes: Record<string, number>) => void,
+): (buf: Float32Array, at: number, now: number) => void {
+  const watch = createMemo(() => (type() === 'metaseq' ? new MutationWatch(params, write) : undefined));
+  return (buf, at, now) => watch()?.frame(buf, at, now);
 }

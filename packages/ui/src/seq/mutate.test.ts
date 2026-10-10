@@ -1,6 +1,8 @@
 import { laneParam, laneSteps, LANES, stepId, writeLane } from '@sreda/core';
 import { expect, test } from 'vitest';
-import { MutationWatch, mutationChanges } from './mutate';
+import { createRoot } from 'solid-js';
+import { createStore } from 'solid-js/store';
+import { MutationWatch, mutationChanges, writeBack } from './mutate';
 
 /** pattern `p`'s lanes as the document holds them, in param units (what the trace reports when nothing mutated) */
 const lanes = (params: Record<string, number>, p: number) => LANES.map((l) => laneSteps(params, p, l));
@@ -111,4 +113,29 @@ test('a GATE lane of LEN 1 writes on every generation', () => {
   live[4]![0] = Math.fround(0.75);
   w.frame(trace(0, 0, 0, 1, live), 0, 1000);
   expect(writes).toEqual([{ [stepId(0, 'v', 1)]: Math.fround(0.75) }]);
+});
+
+test("the write-back follows the module's type: an id that becomes a META-SEQ in a replaced document writes back", () => {
+  // a panel keeps its store proxy across a replaced document (reconciled by id): m1 was an OSC, now a META-SEQ
+  const [mod, setMod] = createStore({ type: 'osc', params: {} as Record<string, number> });
+  const writes: Record<string, number>[] = [];
+  createRoot((dispose) => {
+    const frame = writeBack(
+      () => mod.type,
+      () => mod.params,
+      (c) => writes.push(c),
+    );
+    setMod({ type: 'metaseq', params: {} });
+    const live = lanes(mod.params, 0);
+    frame(trace(10, 0, 5, 0, live), 10, 0);
+    live[0]![0] = 14;
+    frame(trace(10, 0, 0, 2, live), 10, 1000);
+    expect(writes).toEqual([{ [stepId(0, 'n', 1)]: 14 / 24 }]);
+    // and none while it is something else
+    setMod({ type: 'osc' });
+    live[0]![1] = 15;
+    frame(trace(10, 0, 0, 3, live), 10, 2000);
+    expect(writes.length).toBe(1);
+    dispose();
+  });
 });
