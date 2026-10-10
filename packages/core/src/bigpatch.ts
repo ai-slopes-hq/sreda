@@ -6,7 +6,7 @@ import { randomise } from './ops';
 import type { Specs } from './spec';
 
 /**
- * 20 frames of 10 modules, each with its own clock: META-SEQ (where RHYTHM and STAGES stood) → QUANT → COMPLEX → FOLD →
+ * 20 frames of 10 modules, each with its own clock: META-SEQ → QUANT → COMPLEX → FOLD →
  * FILTER → LPG → MIX, an LFO (OSC) on the fold, a cycling SLOPE on the cutoff, a SCOPE on the voice; the MIXes chained
  * into the first frame's OUT, which takes the place of that frame's LFO. Knobs randomised with mulberry32(1).
  */

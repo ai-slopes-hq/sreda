@@ -17,11 +17,12 @@ export interface Builder {
 
 const snap = (v: number): number => Math.round(v / 8) * 8;
 
-// The factory writes its sequences as RHYTHM and STAGES content in their saved form (knob positions, option indices)
-// and turns them into META-SEQ params with the migration's own `seqParams`, so a preset sounds as its old document
-// opens.
+// Every factory sequence is a META-SEQ. Its content is written here in the old RHYTHM / STAGES saved form (knob
+// positions, option indices) — the input of the migration's `seqParams`, which turns a gate line and a melody line into
+// one META-SEQ's params — so a preset plays as its pre-META-SEQ document opens.
 
-/** RHYTHM in EUCLID: HITS spread over LEN, rotated by ROT */
+/** a gate line (seqParams' first input, the old RHYTHM's EUCLID form): HITS spread over LEN, rotated by ROT; on
+ * META-SEQ it becomes the GATE lane with GEN EUCLID */
 export const euclidRhythm = (length: number, hits: number, rot = 0): Record<string, number> => ({
   mode: 0,
   length: (length - 1) / 15,
@@ -29,7 +30,8 @@ export const euclidRhythm = (length: number, hits: number, rot = 0): Record<stri
   rot: rot / 15,
 });
 
-/** RHYTHM's GRID over 16 steps: pads 'x' on, '-' TIE, '.' off; accents 'A' */
+/** a gate line (seqParams' first input, the old RHYTHM's GRID form) over 16 steps: 'x' a hit, '-' a TIE, '.' off;
+ * accents 'A' — META-SEQ's GATE, TIE and ACC lanes */
 export function gridRhythm(gates: string, accents: string): Record<string, number> {
   const out: Record<string, number> = { mode: 1 };
   for (let i = 0; i < 16; i++) {
@@ -39,8 +41,10 @@ export function gridRhythm(gates: string, accents: string): Record<string, numbe
   return out;
 }
 
-/** STAGES: semitones 0…24 (12 = 0 V) on the steps, slides and silent pulses (○) on the given steps (1-based); LEN is
- * the line's length unless given; SCALE and GEN option indices, ROOT 0…11 */
+/** a melody line (seqParams' second input, the old STAGES form): semitones 0…24 (12 = 0 V) on the steps, slides and
+ * silent pulses (○) on the given steps (1-based); LEN is the line's length unless given; SCALE and GEN option indices,
+ * ROOT 0…11. On META-SEQ it becomes the NOTE lane; alone it also gives GATE (○ rests off) and TIE (its slides), with a gate
+ * line its slides go on TIE at that line's hits */
 export function melodyLine(
   semis: number[],
   o: { slides?: number[]; rests?: number[]; length?: number; scale?: number; root?: number; gen?: number } = {},

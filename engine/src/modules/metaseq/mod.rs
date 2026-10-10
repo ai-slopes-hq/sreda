@@ -1,4 +1,4 @@
-//! META-SEQ: one sequencer in place of RHYTHM and STAGES (spec §7b). Eight patterns (A–H), each six polymetric
+//! META-SEQ: the sequencer (spec §7b). Eight patterns (A–H), each six polymetric
 //! lanes — NOTE, GATE, TIE, ACC, VEL, CHNC — with their own LEN, RATE and lock; NOTE plays PLAYED or STEP.
 
 use std::sync::OnceLock;

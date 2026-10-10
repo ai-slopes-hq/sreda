@@ -181,7 +181,8 @@ export function diceLanes(
   const act = euclid(gl, hits, Math.floor(R() * gl)).map((x) => (x ? 1 : 0));
   const gate = writes('g') ? merged('g', act) : laneSteps(params, p, 'g');
 
-  // TIE: long notes (a rest after a hit holds it, odds as RHYTHM's DICE), slides of 303 / MOTIF (20 % of hits after a hit)
+  // TIE: long notes (a rest after a hit holds it, the odds rising with the hit count), slides of 303 / MOTIF (20 % of
+  // hits after a hit)
   const idx = Math.max(0, Math.min(15, Math.round((hits * 16) / Math.max(1, gl))));
   const t1 = 5 + (idx / 15) * 45;
   const t2 = 10 + Math.pow(idx / 15, 1.2) * 30;
