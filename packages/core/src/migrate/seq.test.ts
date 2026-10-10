@@ -79,9 +79,9 @@ test('the acid pair merges into one META-SEQ in the STAGES place, with its notes
   expect(steps(d, 'm3', 'n')[3]).toBe(12);
   expect(noteMode(seq.params, 0)).toBe(0);
   expect(laneLen(seq.params, 0, 'n')).toBe(4);
-  // pads: ● → GATE, — → TIE; STAGES' slide on step 3 → TIE there too
+  // pads: ● → GATE, — → TIE; STAGES' slide on stage 3 → TIE on RHYTHM's 3rd hit (step 5), where note 3 plays
   expect(on(steps(d, 'm3', 'g'))).toEqual([1, 4, 5, 8]);
-  expect(on(steps(d, 'm3', 't'))).toEqual([2, 3, 7]);
+  expect(on(steps(d, 'm3', 't'))).toEqual([2, 5, 7]);
   expect(on(steps(d, 'm3', 'a'))).toEqual([1, 5]);
   for (const l of ['g', 't', 'a'] as const) expect(laneLen(seq.params, 0, l)).toBe(8);
   // scale, root, gen kept
@@ -112,11 +112,43 @@ test('a_fan_out_is_not_merged: a RHYTHM GATE that also feeds something else conv
   expect(noteMode(stages.params, 0)).toBe(1);
   expect(on(steps(d, 'm3', 'g'))).toEqual(Array.from({ length: 16 }, (_, i) => i + 1));
   expect(laneLen(stages.params, 0, 'g')).toBe(4);
+  // its slide stays on its own step
+  expect(on(steps(d, 'm3', 't'))).toEqual([3]);
   expect(d.cables).toContainEqual({ from: ['m2', 'gate'], to: ['m3', 'clk'] });
   expect(d.cables).toContainEqual({ from: ['m2', 'gate'], to: ['m6', 'trig'] });
   // the RHYTHM alone: GATE and TIE from its pads; NOTE holds the default
   expect(on(steps(d, 'm2', 'g'))).toEqual([1, 4, 5, 8]);
   expect(new Set(steps(d, 'm2', 'n'))).toEqual(new Set([12]));
+});
+
+test('slides land on the played hits, wrapping when STAGES has more stages than RHYTHM has hits; none without hits', () => {
+  const doc = acid();
+  // 4 hits per RHYTHM cycle (steps 1, 4, 5, 8); slides on stages 2 and 7 → hits 2 and 3 (7 wraps to the 3rd)
+  doc.modules[2]!.params = { g2: 1, g7: 1, length: lenPos(8) };
+  let d = validateDoc(migrateSequencers(doc, []), SPECS)!;
+  expect(on(steps(d, 'm3', 't'))).toEqual([2, 4, 5, 7]);
+  // a RHYTHM with no hits: the slides have nowhere to go
+  const silent = acid();
+  silent.modules[1]!.params = { mode: 1, length: lenPos(8) };
+  silent.modules[1]!.params['g2'] = 2;
+  d = validateDoc(migrateSequencers(silent, []), SPECS)!;
+  expect(on(steps(d, 'm3', 'g'))).toEqual([]);
+  expect(on(steps(d, 'm3', 't'))).toEqual([2]);
+});
+
+test('a STAGES advanced by two RHYTHMs merges with neither: three META-SEQs, both cables on its CLK', () => {
+  const doc = acid();
+  doc.modules.push(mod('m8', 'rhythm', 2100, { mode: 1 }));
+  doc.cables.push({ from: ['m1', 'eoc'], to: ['m8', 'clk'] }, { from: ['m8', 'gate'], to: ['m3', 'adv'] });
+  doc.nextId = 9;
+  const d = validateDoc(migrateSequencers(doc, []), SPECS)!;
+  expect(d.modules.filter((m) => m.type === 'metaseq').map((m) => m.id)).toEqual(['m2', 'm3', 'm8']);
+  const clk = d.cables.filter((c) => c.to[0] === 'm3' && c.to[1] === 'clk');
+  expect(clk).toEqual([
+    { from: ['m2', 'gate'], to: ['m3', 'clk'] },
+    { from: ['m8', 'gate'], to: ['m3', 'clk'] },
+  ]);
+  expect(d.cables).toHaveLength(doc.cables.length);
 });
 
 test('a lone RHYTHM in EUCLID 16/5/0 writes its pattern out: GATE on steps 1, 5, 8, 11, 14', () => {
@@ -126,6 +158,12 @@ test('a lone RHYTHM in EUCLID 16/5/0 writes its pattern out: GATE on steps 1, 5,
   const d = validateDoc(migrateSequencers(doc, []), SPECS)!;
   expect(on(steps(d, 'm2', 'g'))).toEqual([1, 5, 8, 11, 14]);
   expect(on(steps(d, 'm2', 't'))).toEqual([]);
+  // its GEN is EUCLID; a GRID RHYTHM keeps the default
+  const gen = SPECS['metaseq']!.params.find((p) => p.id === 'gen')!;
+  expect(gen.kind === 'option' && gen.options[d.modules[0]!.params['gen']!]).toBe('EUCLID');
+  doc.modules[0]!.params['mode'] = 1;
+  const grid = validateDoc(migrateSequencers(doc, []), SPECS)!;
+  expect(grid.modules[0]!.params['gen']).toBe(0);
 });
 
 test('a free-running STAGES gets its frame clock; outside a frame a cycling SLOPE 300 px to its left', () => {

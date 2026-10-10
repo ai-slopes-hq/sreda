@@ -49,8 +49,22 @@ function stagesLanes(p: Raw): { len: number; n: number[]; t: number[]; g: number
   };
 }
 
-/** META-SEQ's params (pattern A) from a RHYTHM, a STAGES, or both. */
-function seqParams(r: Raw | null, s: Raw | null): Record<string, number> {
+/** GEN's EUCLID index, which a lone RHYTHM in EUCLID mode takes */
+const GEN_EUCLID = 7;
+
+/** Merged, NOTE is PLAYED: stage k sounds on RHYTHM's k-th hit, so its slide goes on that hit's step (stages past the
+ * hits of one RHYTHM cycle wrap over them; with no hits there is nowhere to slide). */
+function slidesOnHits(rl: { len: number; g: number[] }, sl: { len: number; t: number[] }): number[] {
+  const hits = STEPS.filter((k) => k < rl.len && rl.g[k] === 1);
+  const out = STEPS.map(() => 0);
+  if (hits.length === 0) return out;
+  for (let k = 0; k < sl.len; k++) if (sl.t[k] === 1) out[hits[k % hits.length]!] = 1;
+  return out;
+}
+
+/** META-SEQ's params (pattern A) from a RHYTHM, a STAGES, or both, in their saved form (knob positions, option
+ * indices). The factory builds its sequencers through this too. */
+export function seqParams(r: Raw | null, s: Raw | null): Record<string, number> {
   const out: Record<string, number> = {};
   const lane = (l: Lane, values: number[], len: number) => {
     Object.assign(out, writeLane(0, l, values));
@@ -60,8 +74,10 @@ function seqParams(r: Raw | null, s: Raw | null): Record<string, number> {
   const sl = s && stagesLanes(s);
   if (rl) {
     lane('g', rl.g, rl.len);
-    lane('t', sl ? rl.t.map((x, k) => Math.max(x, sl.t[k]!)) : rl.t, rl.len);
+    const slides = sl && slidesOnHits(rl, sl);
+    lane('t', slides ? rl.t.map((x, k) => Math.max(x, slides[k]!)) : rl.t, rl.len);
     lane('a', rl.a, rl.len);
+    if (!sl && r && option(r, 'mode') === 0) out['gen'] = GEN_EUCLID;
   } else if (sl) {
     lane('g', sl.g, sl.len);
     lane('t', sl.t, sl.len);
