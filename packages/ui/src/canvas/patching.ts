@@ -93,3 +93,14 @@ export function placeFor(
   const j = layoutPanel(specs[type]!).jacks[port.id]!;
   return { x: drop.x - j.x, y: drop.y - j.y, port: port.id };
 }
+
+/** Where a popup of `size` opened at `at` goes so it stays 8 px inside `bounds` (its top-left wins when it can't fit). */
+export function fitInside(
+  at: { x: number; y: number },
+  size: { w: number; h: number },
+  bounds: { w: number; h: number },
+): { x: number; y: number } {
+  const M = 8;
+  const fit = (v: number, s: number, b: number) => Math.max(M, Math.min(v, b - s - M));
+  return { x: fit(at.x, size.w, bounds.w), y: fit(at.y, size.h, bounds.h) };
+}

@@ -9,7 +9,7 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
     let a row's last module take the leftover.
   - Panels half empty because 2U is chosen for the jack count (MIX, ATT, A×B+C, SPREAD, SWITCH); NOISE keeps an empty
     IN column.
-  - The picker opened near the bottom of the window runs off screen.
+  - ~~The picker opened near the bottom of the window runs off screen~~ — done: it measures itself and stays inside.
   - A frame header holds up to 8 controls (colour, STACK, SAVE, M, BPM, TAP, ✕, ▾), repeated on every nested frame.
   - SAVE / NEW in three places (top bar, LIBRARY's SAVE AS / NEW, SAVE on every frame).
   - Without the sidebar the patch shows only stubs; the sidebar covers the canvas instead of narrowing it; two tabs

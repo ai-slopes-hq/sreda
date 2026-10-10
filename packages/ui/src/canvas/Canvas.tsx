@@ -969,8 +969,9 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           {(pk) => (
             <Picker
               specs={specs}
-              x={Math.min(pk.screen.x, W() - 300)}
-              y={Math.min(pk.screen.y, H() - 340)}
+              x={pk.screen.x}
+              y={pk.screen.y}
+              bounds={() => ({ w: W(), h: H() })}
               from={pk.from}
               library={library()}
               tab={pk.tab}

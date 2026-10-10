@@ -283,6 +283,17 @@ test('moving a module by its face is one undo step', async () => {
   await app.close();
 });
 
+test('the picker opened in the bottom right corner stays inside the window', async () => {
+  const { app, page } = await launch();
+  const v = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  await page.mouse.dblclick(v.w - 20, v.h - 60);
+  const box = (await page.locator('.sr-picker').boundingBox())!;
+  expect(box.x + box.width).toBeLessThanOrEqual(v.w);
+  expect(box.y + box.height).toBeLessThanOrEqual(v.h);
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  await app.close();
+});
+
 test('a module added while audio runs shows its output level', async () => {
   const { app, page } = await launch();
   await page.mouse.click(1300, 900); // start audio

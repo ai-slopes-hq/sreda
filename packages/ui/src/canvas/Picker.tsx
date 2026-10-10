@@ -1,12 +1,14 @@
 import type { Specs } from '@sreda/core';
 import { createEffect, createMemo, createSignal, For, onMount, type JSX } from 'solid-js';
-import { pickerItems, TABS, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
+import { fitInside, pickerItems, TABS, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 
 export interface PickerProps {
   specs: Specs;
   /** screen position */
   x: number;
   y: number;
+  /** the area it must stay inside (the canvas) */
+  bounds(): { w: number; h: number };
   /** a drag from a jack: only modules it can connect to (the same role first) and groups */
   from: End | null;
   /** the groups and projects on offer (factory and library) */
@@ -35,7 +37,17 @@ export function Picker(props: PickerProps): JSX.Element {
   const tabs = (): PickerTab[] => (props.replace ? ['MODULES'] : TABS);
   let input: HTMLInputElement | undefined;
   let list: HTMLDivElement | undefined;
+  let box: HTMLDivElement | undefined;
+  /** where it is: opened at the pointer, pushed back inside when its real size runs off the canvas */
+  const [at, setAt] = createSignal({ x: props.x, y: props.y });
+  const fit = () => box && setAt(fitInside(at(), { w: box.offsetWidth, h: box.offsetHeight }, props.bounds()));
   onMount(() => input?.focus());
+  createEffect(() => {
+    items();
+    tab();
+    // after the list has rendered: a longer list may need room; a shorter one leaves it where it is
+    queueMicrotask(fit);
+  });
   createEffect(() => {
     q();
     tab();
@@ -67,8 +79,9 @@ export function Picker(props: PickerProps): JSX.Element {
 
   return (
     <div
+      ref={(el) => (box = el)}
       class="sr-picker"
-      style={{ left: props.x + 'px', top: props.y + 'px' }}
+      style={{ left: at().x + 'px', top: at().y + 'px' }}
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >

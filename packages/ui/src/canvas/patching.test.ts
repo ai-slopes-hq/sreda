@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { TEST_SPECS as S } from '../../../core/src/testspecs';
-import { pickerItems, placeFor, TABS, type LibEntry, type PickerTab } from './patching';
+import { fitInside, pickerItems, placeFor, TABS, type LibEntry, type PickerTab } from './patching';
 
 const LIB: LibEntry[] = [
   { kind: 'project', path: 'FACTORY/acid', factory: true },
@@ -65,4 +65,13 @@ test('from a jack: modules and groups, never projects; REPLACE: modules only', (
     'drums/kit',
   ]);
   expect(types(pickerItems(S, '', null, o('ALL', true)))).toEqual(['fx', 'sink', 'src']);
+});
+
+test('a popup stays inside the window with an 8 px margin, wherever it opens', () => {
+  // fits: stays where it opened
+  expect(fitInside({ x: 100, y: 100 }, { w: 280, h: 360 }, { w: 1600, h: 1000 })).toEqual({ x: 100, y: 100 });
+  // opened near the bottom right: moves up and left until its far edges are 8 px inside
+  expect(fitInside({ x: 1500, y: 900 }, { w: 280, h: 360 }, { w: 1600, h: 1000 })).toEqual({ x: 1312, y: 632 });
+  // taller than the window: its top stays 8 px inside
+  expect(fitInside({ x: 0, y: 50 }, { w: 280, h: 900 }, { w: 1600, h: 600 })).toEqual({ x: 8, y: 8 });
 });
