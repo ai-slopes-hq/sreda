@@ -173,3 +173,18 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - `protocol/src/bench.test.ts` 5 s threshold is marginal under machine load (flaky).
 - **The prototype's Main board** keeps dormant contour / pads display code (no module uses those kinds now) and draws
   META-SEQ as a plain 2U panel with a stand-in Sim; the drawer is not prototyped.
+- **Drift made at a PAT switch** is not in the document until that pattern plays again (the trace carries only the
+  incoming pattern); save / stop loses the last switch's drift.
+- **A PAT switch on a ×N sub-step** leaves lanes misaligned (fires recomputed only on a rise; the old sub_left keeps
+  firing); `next_tie` reads the TIE lane's own cursor.
+- **A merged RHYTHM + STAGES ignores STAGES' ○ pulse rests** (no exact mapping in PLAYED).
+- **MUTATE's write-back marks the document unsaved** every GATE cycle while MUT > 0.
+- **META-SEQ drawer polish:** NOTE / ACC / VEL not dimmed past their own LEN; three paths rebuilt every rAF; 9 px
+  lengths text; `playing` in SeqView never resets on audio stop; Lane hard-codes scale / root defaults; duplicated
+  cells memo; the LEN marker overlaps the last cell by 6 px.
+- **META-SEQ tests to add:** `pat` as a 0…1 position; the field-reset double-click guard; e2e asserting the trace, not
+  just the lit tab; mod-jack drops and the autosave notice in migration; edit-wins tested only synchronously.
+- **MUTATE write-back edge cases:** wrap detection by cursor sampling can alias on fast short GATE lanes; a write-back
+  may write between wraps while an id is held, or overwrite a newer drift; redo after a write-back drops the drift.
+- **Migration:** cable dedup reaches beyond the remapped cables; the notice is cleared by the audio-start click; a
+  free-running STAGES' SLOPE runs at the default rate (STAGES t{k} dropped).

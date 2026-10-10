@@ -91,19 +91,15 @@ of a creative tool; nothing of its UI is ported.
   STACK frames on open. The rest of the review is in `docs/backlog.md` ("From the UI / UX review").
   The prototype's live boards (Main, Panels, SoundPack) follow it; the picker stays inside the window. Next by the
   user's choice: reworking the big modules RHYTHM and STAGES.
-- **Plan 14 (META-SEQ, spec §7b rev 33) in progress on the branch `plan-14-metaseq`**, subagent-driven; ledger in
-  `.superpowers/sdd/2026-10-10-14-metaseq/progress.md`. Slice 1 done (Tasks 1–2: the engine module and its panel with
-  the overview display), Checkpoint 1 passed. Slice 2 done (Tasks 3–4: the editor drawer under the canvas, opened by
-  a double-click on META-SEQ; lane drawing — NOTE snapped to SCALE / ROOT, GATE / TIE / ACC paint, VEL / CHNC bars,
-  LEN / RATE / lock, header SCALE / ROOT / GEN), Checkpoint 2 passed (lanes fixed to act as sliders). Slice 3 done (Task 5: patterns
-  A–H — the playing tab lit from the readout, COPY / PASTE as one undo step); **Checkpoint 3: the user listens** (a
-  second META-SEQ's CV into the first's PAT mod jack), Checkpoint 3 passed. Slice 4 done (Tasks 6–7: GEN with EUCLID,
-  DICE / per-lane ⚄ as one undo step; MUTATE — unlocked lanes drift on their wrap and on a PAT switch, each pattern
-  keeps its own drift, written back once per GATE cycle without an undo step; RST keeps drift);
-  Checkpoint 4 passed. Slice 5 done (Tasks 8–10: old RHYTHM / STAGES documents open as META-SEQ with a notice, factory
-  projects and groups and the DICE patches are built on META-SEQ, RHYTHM and STAGES are removed — their Rust modules,
-  the pads / contour displays, specs, fixtures and prototype boards); **Checkpoint 5: the user listens** (the factory
-  projects and an old saved project). After it: the whole-branch review, then Plan 14 done.
+- **Plan 14 (META-SEQ, spec §7b rev 33–34) done on the branch `plan-14-metaseq`, not merged**; ledger in
+  `.superpowers/sdd/2026-10-10-14-metaseq/progress.md`. META-SEQ replaces RHYTHM and STAGES: the engine module, the
+  overview panel, the editor drawer (double-click; lanes NOTE / GATE / TIE / ACC / VEL / CHNC with LEN / RATE / lock),
+  patterns A–H (COPY / PASTE, PAT), GEN / DICE / per-lane ⚄, MUTATE (drift written back once per GATE cycle without an
+  undo step), old RHYTHM / STAGES documents migrate on open with a notice, factory projects / groups and the DICE
+  patches are built on META-SEQ. The whole-branch review is done and its fixes
+  are in (the drawer and MUTATE survive a document replace; a pattern tab is no undo step). Deferred items are in
+  `docs/backlog.md` ("From Plan 14"). The live prototype artifact is not yet republished (auto mode refused it; it
+  awaits the user). **Next:** merge into `main` by the user's choice.
 - **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 

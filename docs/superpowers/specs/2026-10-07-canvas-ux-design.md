@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 33 (§7b: META-SEQ, one sequencer in place of RHYTHM and STAGES) · Status: approved
+Date: 2026-10-07 · Revision 34 (§7b: META-SEQ's migration, as built) · Status: approved
 
 ## Why
 
@@ -747,10 +747,14 @@ hidden params; R leaves them alone. The engine holds all eight patterns, so PAT 
 **Migration** (when a document is opened):
 
 - A RHYTHM whose GATE feeds a STAGES' ADV merges with it into one META-SEQ in the STAGES' place: STAGES' stages →
-  the NOTE lane (PLAYED), slides → TIE on those steps; RHYTHM's pads → GATE and TIE (OFF / ON / TIE), accents → ACC;
-  each module's LEN → its lanes' LEN; an EUCLID pattern is written out as steps. Cables move: CLK, RST, DICE from
-  RHYTHM; CV, GATE, ACC; EOC from RHYTHM.
-- A RHYTHM alone → META-SEQ with GATE, TIE and ACC; NOTE holds ROOT.
+  the NOTE lane (PLAYED); RHYTHM's pads → GATE and TIE (OFF / ON / TIE), accents → ACC; each module's LEN → its lanes'
+  LEN; an EUCLID pattern is written out as steps. Cables move: CLK, RST, DICE from RHYTHM; CV, GATE, ACC; EOC from
+  RHYTHM. Revision 34 (as built): stage k sounds on RHYTHM's k-th hit, so a slide on stage k lands on TIE at RHYTHM's
+  k-th gate hit (not on step k); the merged gates come from RHYTHM only — STAGES' ○ pulse rests are not carried.
+- A RHYTHM alone → META-SEQ with GATE, TIE and ACC; NOTE holds ROOT; a RHYTHM in EUCLID mode gets GEN EUCLID (revision
+  34).
+- A STAGES line with any note off its SCALE / ROOT opens with SCALE CHR: STAGES never quantised its notes, META-SEQ does
+  (revision 34).
 - A STAGES alone → META-SEQ with NOTE on STEP and GATE from its pulses. A free-running STAGES (ADV unpatched) gets a cable from
   its frame's CLK out, or outside a frame from a cycling SLOPE placed beside it; the opening notice says the timing may
   differ.
