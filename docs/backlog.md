@@ -17,6 +17,11 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   - The hint bar is truncated; WIRES truncates normals; an empty BETWEEN GROUPS shows `+ new wire`; LPG's `PING ×2`
     runs into the next lane.
 
+- **META-OSC** (2026-10-10, after META-SEQ): fold OSC and COMPLEX into one oscillator (COMPLEX's modulator becomes
+  optional) with a low range so it also serves as an LFO (shapes, rate in Hz or synced to the frame clock). Decide
+  what stays with SLOPE (cycling envelope) so the two don't overlap. Same path as META-SEQ: brainstorm, spec, plan,
+  migration of saved patches.
+
 - **Group macros** (2026-10-07): a group's header exposes chosen knobs of its members as macro knobs. Must not bring
   back the hidden-insides / inside-vs-outside split (edit vs play) that made Reaktor-style containers kill
   creativity. Groups themselves (frame + shared clock) are in the first build.
