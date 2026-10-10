@@ -54,6 +54,8 @@ export const WINDOW = 16;
 const LEN_MAX = 16;
 /** two presses on one VEL / CHNC cell this close (ms) are one gesture (a double-click) */
 const DOUBLE_MS = 400;
+/** the LEN end marker's width in px */
+const MARKER_W = 6;
 
 let strokes = 0;
 
@@ -110,7 +112,9 @@ export function Lane(props: LaneProps): JSX.Element {
       if (s.done.get(i) === v) continue;
       s.done.set(i, v);
       const id = stepId(p(), l(), i + 1);
-      if (props.params[id] !== v) changes[id] = v;
+      // a step already holding the value (stored or by default) is not written again
+      const now = l() === 'n' ? (steps()[i] ?? 0) / 24 : (steps()[i] ?? 0);
+      if (props.params[id] !== v && now !== v) changes[id] = v;
     }
     s.last = k;
     s.lastRaw = raw;
@@ -161,6 +165,8 @@ export function Lane(props: LaneProps): JSX.Element {
   // ── LEN: the end marker ──
   const sw = () => stepWidth(rate(), WINDOW, props.width);
   const end = () => sw() * len();
+  /** the marker's 6 px hit area starts just past the last bright cell; past the window it is pinned to the right edge */
+  const markerX = () => Math.min(end(), props.width - MARKER_W);
   let lenKey = '';
   function markerDown(e: PointerEvent): void {
     if (e.button !== 0) return;
@@ -184,27 +190,25 @@ export function Lane(props: LaneProps): JSX.Element {
     setLen(len() + (e.deltaY < 0 ? 1 : -1), { key: `wheel:${props.scope}:${lenId()}` });
   }
 
-  const optionCell = (id: string, value: number, w: number) => {
-    const param = option(id);
-    return (
-      <Show when={param}>
-        {(prm) => (
-          <span class="sr-lane-opt" style={{ width: w + 'px' }}>
-            <Option
-              param={prm()}
-              value={value}
-              x={0}
-              y={0}
-              w={w}
-              closeEpoch={0}
-              scope={props.scope}
-              set={(v, merge) => props.edit({ [id]: v }, merge)}
-            />
-          </span>
-        )}
-      </Show>
-    );
-  };
+  /** getters, so a params change updates the Option instead of rebuilding it (a stroke edits params every move) */
+  const optionCell = (id: () => string, value: () => number, w: number) => (
+    <Show when={option(id())}>
+      {(prm) => (
+        <span class="sr-lane-opt" style={{ width: w + 'px' }}>
+          <Option
+            param={prm()}
+            value={value()}
+            x={0}
+            y={0}
+            w={w}
+            closeEpoch={0}
+            scope={props.scope}
+            set={(v, merge) => props.edit({ [id()]: v }, merge)}
+          />
+        </span>
+      )}
+    </Show>
+  );
 
   const name = (v: number) => {
     const s = snap(v, scale(), root());
@@ -218,8 +222,14 @@ export function Lane(props: LaneProps): JSX.Element {
         <span class="sr-lane-field" data-field="len" title="LEN (wheel)" onWheel={lenWheel}>
           {len()}
         </span>
-        {optionCell(laneParam(p(), l(), 'rate'), rate(), 44)}
-        <Show when={l() === 'n'}>{optionCell(noteModeParam(p()), noteMode(props.params, p()), 60)}</Show>
+        {optionCell(() => laneParam(p(), l(), 'rate'), rate, 44)}
+        <Show when={l() === 'n'}>
+          {optionCell(
+            () => noteModeParam(p()),
+            () => noteMode(props.params, p()),
+            60,
+          )}
+        </Show>
         <button
           class="sr-lane-btn"
           classList={{ on: laneLocked(props.params, p(), l()) }}
@@ -285,13 +295,13 @@ export function Lane(props: LaneProps): JSX.Element {
               );
             }}
           </Index>
-          <Show when={end() <= props.width + 0.5}>
+          <Show when={props.width > MARKER_W}>
             <rect
               class="sr-len-marker"
               data-len-marker
-              x={end() - 3}
+              x={markerX()}
               y="0"
-              width="6"
+              width={MARKER_W}
               height="100%"
               onPointerDown={markerDown}
               onPointerMove={markerMove}

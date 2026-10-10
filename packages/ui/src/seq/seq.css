@@ -111,6 +111,7 @@
   /* an svg sizes itself (150 px tall) unless told */
   height: calc(100% - 6px);
   display: block;
+  touch-action: none;
 }
 .sr-step {
   fill: var(--raised);
@@ -164,9 +165,6 @@
 }
 .sr-drawer-root {
   cursor: ns-resize;
-}
-.sr-lane-svg {
-  touch-action: none;
 }
 .sr-note-name {
   fill: var(--muted);

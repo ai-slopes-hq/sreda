@@ -40,11 +40,8 @@ test('a drag across GATE cells 2–5 from an off cell turns all four on in one m
   fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: at(1), clientY: 50 });
   for (const k of [2, 3, 4]) fireEvent.pointerMove(svg, { pointerId: 1, clientX: at(k), clientY: 50 });
   fireEvent.pointerUp(svg, { pointerId: 1, clientX: at(4), clientY: 50 });
-  const w = all();
-  for (const k of [2, 3, 4, 5]) expect(w[stepId(0, 'g', k)] ?? 1).toBe(1);
-  expect(w[stepId(0, 'g', 2)]).toBe(1);
-  expect(w[stepId(0, 'g', 4)]).toBe(1);
-  expect(Object.keys(w)).not.toContain(stepId(0, 'g', 6));
+  // pattern A's GATE defaults to four on the floor: step 5 is already on, so it is not written
+  expect(all()).toEqual({ [stepId(0, 'g', 2)]: 1, [stepId(0, 'g', 3)]: 1, [stepId(0, 'g', 4)]: 1 });
   expect(calls.length).toBeGreaterThan(0);
   const keys = new Set(calls.map((c) => c.merge?.key));
   expect(keys.size).toBe(1);
@@ -62,8 +59,9 @@ test('a GATE click on an on cell turns it off; the next stroke has its own merge
   expect(calls[1]!.merge?.key).not.toBe(calls[0]!.merge?.key);
 });
 
-test('a NOTE drag writes semitones snapped to SCALE from ROOT (MIN from C: 13 → 12)', () => {
-  const { svg, calls } = lane('n');
+test('a NOTE press writes semitones snapped to SCALE from ROOT (MIN from C: 13 → 12)', () => {
+  // steps 4 and 6 hold 0 (the default 12 would not be written again)
+  const { svg, calls } = lane('n', { an4: 0, an6: 0 });
   // the pointer's height at 13 semitones: a note's bar is centred at (1 − v / 24) · 85 % + 10 %
   const y13 = ((1 - 13 / 24) * 0.85 + 0.1) * H;
   fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: at(3), clientY: y13 });
@@ -73,6 +71,20 @@ test('a NOTE drag writes semitones snapped to SCALE from ROOT (MIN from C: 13 �
   const y14 = ((1 - 14 / 24) * 0.85 + 0.1) * H;
   fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: at(5), clientY: y14 });
   expect(calls[1]!.changes).toEqual({ [stepId(0, 'n', 6)]: 14 / 24 });
+});
+
+test('a NOTE drag across three cells writes snapped notes under one merge key', () => {
+  const { svg, calls, all } = lane('n', { an2: 0, an3: 0, an4: 0 });
+  const y = (v: number) => ((1 - v / 24) * 0.85 + 0.1) * H;
+  fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: at(1), clientY: y(16) });
+  fireEvent.pointerMove(svg, { pointerId: 1, clientX: at(2), clientY: y(19) });
+  fireEvent.pointerMove(svg, { pointerId: 1, clientX: at(3), clientY: y(13) });
+  fireEvent.pointerUp(svg, { pointerId: 1 });
+  // MIN from C: 16 → 15 (E♭), 19 → 19 (G), 13 → 12 (C)
+  expect(all()).toEqual({ an2: 15 / 24, an3: 19 / 24, an4: 12 / 24 });
+  expect(calls.length).toBe(3);
+  expect(new Set(calls.map((c) => c.merge?.key)).size).toBe(1);
+  expect(calls.every((c) => c.merge?.stroke)).toBe(true);
 });
 
 test("the NOTE lane's names follow SCALE and ROOT", () => {
@@ -89,7 +101,8 @@ test("the NOTE lane's names follow SCALE and ROOT", () => {
 test('dragging the end marker past LEN sets LEN', () => {
   const { container, calls } = lane('g', { [laneParam(0, 'g', 'len')]: 3 / 15 });
   const marker = container.querySelector('[data-len-marker]') as SVGElement;
-  expect(marker.getAttribute('x')).toBe(String(40 - 3));
+  // just past the last bright cell, so a press on that cell's right edge still toggles it
+  expect(marker.getAttribute('x')).toBe('40');
   fireEvent.pointerDown(marker, { button: 0, pointerId: 1, clientX: 40, clientY: 50 });
   fireEvent.pointerMove(marker, { pointerId: 1, clientX: 62, clientY: 50 });
   fireEvent.pointerMove(marker, { pointerId: 1, clientX: 80, clientY: 50 });
@@ -100,6 +113,28 @@ test('dragging the end marker past LEN sets LEN', () => {
   expect(
     calls.some((c) => Object.keys(c.changes).some((k) => k.startsWith('ag') && !k.endsWith('len'))),
   ).toBe(false);
+});
+
+test("a LEN past the window pins the marker to the window's right edge, still draggable", () => {
+  // ÷2: a step is 20 px, 8 fit; LEN 16 ends at 320 px
+  const { container, calls } = lane('g', { [laneParam(0, 'g', 'rate')]: 2 });
+  const marker = container.querySelector('[data-len-marker]') as SVGElement;
+  expect(marker).not.toBeNull();
+  expect(marker.getAttribute('x')).toBe(String(W - 6));
+  fireEvent.pointerDown(marker, { button: 0, pointerId: 1, clientX: W - 3, clientY: 50 });
+  fireEvent.pointerMove(marker, { pointerId: 1, clientX: 60, clientY: 50 });
+  fireEvent.pointerUp(marker, { pointerId: 1, clientX: 60, clientY: 50 });
+  expect(calls.at(-1)!.changes).toEqual({ [laneParam(0, 'g', 'len')]: 2 / 15 });
+});
+
+test('the RATE option is not rebuilt while a stroke edits steps', () => {
+  const { container, svg } = lane('g');
+  const before = container.querySelector('[data-option=agrate] button');
+  fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: at(1), clientY: 50 });
+  fireEvent.pointerMove(svg, { pointerId: 1, clientX: at(2), clientY: 50 });
+  fireEvent.pointerUp(svg, { pointerId: 1 });
+  expect(before).not.toBeNull();
+  expect(container.querySelector('[data-option=agrate] button')).toBe(before);
 });
 
 test('the wheel over LEN steps it by one', () => {
