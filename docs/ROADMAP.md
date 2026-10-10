@@ -97,7 +97,10 @@ of a creative tool; nothing of its UI is ported.
   a double-click on META-SEQ; lane drawing — NOTE snapped to SCALE / ROOT, GATE / TIE / ACC paint, VEL / CHNC bars,
   LEN / RATE / lock, header SCALE / ROOT / GEN), Checkpoint 2 passed (lanes fixed to act as sliders). Slice 3 done (Task 5: patterns
   A–H — the playing tab lit from the readout, COPY / PASTE as one undo step); **Checkpoint 3: the user listens** (a
-  second META-SEQ's CV into the first's PAT mod jack) before Task 6.
+  second META-SEQ's CV into the first's PAT mod jack), Checkpoint 3 passed. Slice 4 done (Tasks 6–7: GEN with EUCLID,
+  DICE / per-lane ⚄ as one undo step; MUTATE — unlocked lanes drift on their wrap and on a PAT switch, each pattern
+  keeps its own drift, written back once per GATE cycle without an undo step; RST keeps drift);
+  **Checkpoint 4: the user listens** (DICE styles, ⚄ on ACC only, MUT at 0.3) before Task 8.
 - **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 
