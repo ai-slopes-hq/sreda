@@ -25,3 +25,32 @@ export function cells(len: number, rate: number, steps: number, width: number): 
   }
   return out;
 }
+
+/** The width of one lane step in px. */
+export function stepWidth(rate: number, steps: number, width: number): number {
+  return (width / steps) * (FACTOR[rate] ?? 1);
+}
+
+/** The index of the cell under `x` px, or −1. */
+export function cellAt(cs: Cell[], x: number): number {
+  for (let i = 0; i < cs.length; i++) {
+    const c = cs[i]!;
+    if (x >= c.x && x < c.x + c.w) return i;
+  }
+  return -1;
+}
+
+/** A NOTE's bar: 10 % high, its top at (1 − v / 24) · 85 % + 5 %. */
+export function noteBar(v: number): { y: number; h: number } {
+  return { y: (1 - Math.min(24, Math.max(0, v)) / 24) * 0.85 + 0.05, h: 0.1 };
+}
+
+/** The semitone (0…24, unsnapped) whose bar is centred at `fy` (0 top … 1 bottom of the lane). */
+export function noteAt(fy: number): number {
+  return Math.min(24, Math.max(0, Math.round(24 * (1 - (fy - 0.1) / 0.85))));
+}
+
+/** A VEL / CHNC bar's value at `fy`: 1 at the top, 0 at the bottom. */
+export function barAt(fy: number): number {
+  return Math.min(1, Math.max(0, 1 - fy));
+}

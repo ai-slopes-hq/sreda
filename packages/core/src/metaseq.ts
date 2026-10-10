@@ -1,5 +1,6 @@
 // META-SEQ's hidden params (spec §7b): the id scheme, and reading / writing a lane as plain step values.
 // The document stores knobs as positions 0…1 and options as indices; these helpers speak the param units.
+import { SCALES } from './generators';
 
 export const PATTERNS = 8;
 export const LANES = ['n', 'g', 't', 'a', 'v', 'c'] as const;
@@ -58,9 +59,47 @@ export function laneLocked(params: Record<string, number>, p: number, l: Lane): 
   return (params[laneParam(p, l, 'lock')] ?? 0) === 1;
 }
 
+/** NOTE's STEP / PLAYED param id: `{pattern letter}nmode`. */
+export function noteModeParam(p: number): string {
+  return 'abcdefgh'[p]! + 'nmode';
+}
+
 /** NOTE's mode: 0 PLAYED, 1 STEP. */
 export function noteMode(params: Record<string, number>, p: number): 0 | 1 {
-  return (params['abcdefgh'[p]! + 'nmode'] ?? 0) === 1 ? 1 : 0;
+  return (params[noteModeParam(p)] ?? 0) === 1 ? 1 : 0;
+}
+
+/** The nearest pitch to `semi` in scale `scale` (an index into SCALES) from `root`, all in semitones; the lower one
+ * on a tie. The engine's `snap` (engine/src/modules/metaseq.rs), ported exactly. */
+export function snap(semi: number, scale: number, root: number): number {
+  const degrees = SCALES[Math.min(Math.max(0, scale), SCALES.length - 1)]!;
+  const octave = Math.floor((semi - root) / 12);
+  let best = semi;
+  let bestDist = Infinity;
+  for (let o = octave - 1; o <= octave + 1; o++) {
+    for (const d of degrees) {
+      const c = root + 12 * o + d;
+      const dist = Math.abs(c - semi);
+      if (dist < bestDist || (dist === bestDist && c < best)) {
+        best = c;
+        bestDist = dist;
+      }
+    }
+  }
+  return best;
+}
+
+/** `snap`, kept within the NOTE lane's 0…24: past an end, the nearest scale pitch inside it. */
+export function snapInRange(semi: number, scale: number, root: number): number {
+  const s = snap(semi, scale, root);
+  if (s >= 0 && s <= NOTE_MAX) return s;
+  const inScale = (k: number) => snap(k, scale, root) === k;
+  if (s < 0) {
+    for (let k = 0; k <= NOTE_MAX; k++) if (inScale(k)) return k;
+  } else {
+    for (let k = NOTE_MAX; k >= 0; k--) if (inScale(k)) return k;
+  }
+  return Math.min(NOTE_MAX, Math.max(0, s));
 }
 
 /** The META-SEQ trace at `at`: playing pattern, six lane cursors (−1 before the first step), mutation generation, and the

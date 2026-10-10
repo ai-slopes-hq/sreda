@@ -467,6 +467,47 @@ test('a double-click on META-SEQ opens the drawer and the canvas shrinks above i
   await app.close();
 });
 
+test('a note drawn in the drawer is undone by ⌘Z', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(500, 300);
+  await page.keyboard.type('meta');
+  await page.keyboard.press('Enter');
+  const seq = page.locator('[data-type=metaseq]');
+  await expect(seq).toBeVisible();
+  const box = (await seq.boundingBox())!;
+  await page.mouse.dblclick(box.x + 6, box.y + box.height - 6);
+  const drawer = page.locator('.sr-drawer');
+  await expect(drawer).toBeVisible();
+  const notes = async () => {
+    const m = (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!;
+    return [1, 2, 3, 4].map((k) => m.params['an' + k]);
+  };
+  const before = await notes();
+  // a stroke across NOTE steps 1–4 near the top of the lane: high notes, one undo step
+  const svg = drawer.locator('[data-lane=n] .sr-lane-svg');
+  const g = (await svg.boundingBox())!;
+  const step = g.width / 16;
+  await drag(
+    page,
+    { x: g.x + step * 0.5, y: g.y + g.height * 0.15 },
+    { x: g.x + step * 3.5, y: g.y + g.height * 0.15 },
+  );
+  const after = await notes();
+  expect(after.every((v) => v !== undefined && v > 0.5)).toBe(true);
+  // a GATE click toggles step 2 on
+  const gate = (await drawer.locator('[data-lane=g] .sr-lane-svg').boundingBox())!;
+  await page.mouse.click(gate.x + step * 1.5, gate.y + gate.height / 2);
+  const gateOn = async () => (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params['ag2'];
+  expect(await gateOn()).toBe(1);
+  // ⌘Z undoes the click, then the whole stroke
+  await page.keyboard.press('Meta+z');
+  expect(await gateOn()).not.toBe(1);
+  expect(await notes()).toEqual(after);
+  await page.keyboard.press('Meta+z');
+  expect(await notes()).toEqual(before);
+  await app.close();
+});
+
 test('SWITCH: the current input label is amber', async () => {
   const { app, page } = await launch();
   await page.mouse.dblclick(700, 600);

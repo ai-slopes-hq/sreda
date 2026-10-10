@@ -1,25 +1,24 @@
 // META-SEQ's editor (spec §7b): a drawer docked under the canvas at the window's full width. The header (name,
 // pattern tabs, COPY / PASTE, SCALE, ROOT, GEN, DICE, MUTATE, ✕), then one row per lane on one step grid in clock time.
-// This is the shell: the tabs choose the edited pattern and ✕ closes; the rest is drawn but inert for now.
+// The tabs choose the edited pattern, SCALE / ROOT / GEN write, the lanes take their gestures (Lane.tsx), ✕ closes;
+// COPY / PASTE, DICE, MUTATE and ⚄ are drawn but inert for now.
 import {
   fromKnob,
   laneLen,
-  laneLocked,
-  laneParam,
   laneRate,
-  laneSteps,
   LANES,
   nameOf,
-  noteMode,
   type KnobParam,
-  type Lane,
+  type Merge,
   type OptionParam,
   type Specs,
 } from '@sreda/core';
-import { createEffect, createMemo, createSignal, For, Index, onCleanup, onMount, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from 'solid-js';
+import { Option } from '../canvas/Option';
 import { readoutBuffer, track } from '../live';
 import type { SessionApi } from '../store';
 import { cells } from './grid';
+import { Lane, NOTES, WINDOW } from './Lane';
 import './seq.css';
 
 export interface DrawerProps {
@@ -29,11 +28,11 @@ export interface DrawerProps {
   id: string;
 }
 
-const LANE_NAME: Record<Lane, string> = { n: 'NOTE', g: 'GATE', t: 'TIE', a: 'ACC', v: 'VEL', c: 'CHNC' };
-const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-/** clock steps the grid shows */
-const WINDOW = 16;
 const MIN_H = 160;
+/** px of vertical drag per semitone on ROOT */
+const ROOT_PX = 10;
+
+let rootStrokes = 0;
 
 export function Drawer(props: DrawerProps): JSX.Element {
   const s = props.session;
@@ -41,12 +40,9 @@ export function Drawer(props: DrawerProps): JSX.Element {
   const spec = () => props.specs['metaseq']!;
   const mod = () => st.doc.modules.find((m) => m.id === props.id);
   const params = (): Record<string, number> => mod()?.params ?? {};
-  const option = (id: string) => spec().params.find((p): p is OptionParam => p.kind === 'option' && p.id === id);
+  const option = (id: string) =>
+    spec().params.find((p): p is OptionParam => p.kind === 'option' && p.id === id);
   const knob = (id: string) => spec().params.find((p): p is KnobParam => p.kind === 'knob' && p.id === id);
-  const optionLabel = (id: string): string => {
-    const p = option(id);
-    return p ? (p.options[params()[id] ?? p.def] ?? '') : '';
-  };
   const knobValue = (id: string): number => {
     const p = knob(id);
     if (!p) return 0;
@@ -76,20 +72,54 @@ export function Drawer(props: DrawerProps): JSX.Element {
     }
   });
 
+  /** each lane's length and cells, for the cursors */
   const lanes = createMemo(() =>
     LANES.map((l) => {
-      const p = edited();
-      const len = laneLen(params(), p, l);
-      const rate = laneRate(params(), p, l);
-      return {
-        l,
-        len,
-        rate,
-        locked: laneLocked(params(), p, l),
-        steps: laneSteps(params(), p, l),
-        cells: cells(len, rate, WINDOW, gridW()),
-      };
+      const len = laneLen(params(), edited(), l);
+      return { len, cells: cells(len, laneRate(params(), edited(), l), WINDOW, gridW()) };
     }),
+  );
+  const edit = (changes: Record<string, number>, merge: Merge) => s.params(props.id, changes, merge);
+
+  // ── ROOT: vertical drag or the wheel, a semitone a step ──
+  const root = () => Math.round(knobValue('root'));
+  const setRoot = (r: number, merge: Merge) => {
+    const k = Math.min(11, Math.max(0, r));
+    if (k !== root()) edit({ root: k / 11 }, merge);
+  };
+  let rootDrag = { key: '', y: 0, r: 0 };
+  function rootDown(e: PointerEvent): void {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    rootDrag = { key: `root:${props.id}:${++rootStrokes}`, y: e.clientY, r: root() };
+  }
+  function rootMove(e: PointerEvent): void {
+    if (!rootDrag.key) return;
+    setRoot(rootDrag.r + Math.round((rootDrag.y - e.clientY) / ROOT_PX), { key: rootDrag.key, stroke: true });
+  }
+  function rootWheel(e: WheelEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    setRoot(root() + (e.deltaY < 0 ? 1 : -1), { key: `wheel:${props.id}:root` });
+  }
+  const headOption = (id: string, w: number) => (
+    <Show when={option(id)}>
+      {(prm) => (
+        <span class="sr-lane-opt" style={{ width: w + 'px' }}>
+          <Option
+            param={prm()}
+            value={params()[id] ?? prm().def}
+            x={0}
+            y={0}
+            w={w}
+            closeEpoch={0}
+            scope={props.id}
+            set={(v, merge) => edit({ [id]: v }, merge)}
+          />
+        </span>
+      )}
+    </Show>
   );
 
   // ── live: the playing pattern and each lane's cursor, written straight to the cursor elements ──
@@ -143,15 +173,6 @@ export function Drawer(props: DrawerProps): JSX.Element {
     window.addEventListener('pointerup', up);
   }
 
-  const cellValue = (l: Lane, v: number): { y: string; h: string } => {
-    if (l === 'n') {
-      const y = 1 - Math.min(24, Math.max(0, v)) / 24;
-      return { y: `${(y * 85 + 5).toFixed(1)}%`, h: '10%' };
-    }
-    const k = Math.min(1, Math.max(0, v));
-    return { y: `${((1 - k) * 100).toFixed(1)}%`, h: `${(k * 100).toFixed(1)}%` };
-  };
-
   return (
     <section class="sr-drawer" data-seq={props.id} style={{ height: st.seq.h + 'px' }}>
       <div class="sr-drawer-grip" onPointerDown={gripDown} />
@@ -173,15 +194,22 @@ export function Drawer(props: DrawerProps): JSX.Element {
         </div>
         <button class="sr-gbtn">COPY</button>
         <button class="sr-gbtn">PASTE</button>
-        <span class="sr-drawer-field">
-          SCALE <b>{optionLabel('scale')} ▾</b>
+        <span class="sr-drawer-field">SCALE</span>
+        {headOption('scale', 64)}
+        <span
+          class="sr-drawer-field sr-drawer-root"
+          data-field="root"
+          title="ROOT (drag or wheel)"
+          onPointerDown={rootDown}
+          onPointerMove={rootMove}
+          onPointerUp={() => (rootDrag.key = '')}
+          onPointerCancel={() => (rootDrag.key = '')}
+          onWheel={rootWheel}
+        >
+          ROOT <b>{NOTES[root() % 12]}</b>
         </span>
-        <span class="sr-drawer-field">
-          ROOT <b>{NOTES[Math.round(knobValue('root')) % 12]}</b>
-        </span>
-        <span class="sr-drawer-field">
-          GEN <b>{optionLabel('gen')} ▾</b>
-        </span>
+        <span class="sr-drawer-field">GEN</span>
+        {headOption('gen', 72)}
         <button class="sr-gbtn">DICE</button>
         <span class="sr-drawer-field">
           MUTATE <b>{Math.round(knobValue('mut') * 100)}%</b>
@@ -191,66 +219,22 @@ export function Drawer(props: DrawerProps): JSX.Element {
         </button>
       </header>
       <div class="sr-drawer-body">
-        <Index each={lanes()}>
-          {(lane, li) => (
-            <div class="sr-lane" data-lane={lane().l}>
-              <div class="sr-lane-head">
-                <span class="sr-lane-name">{LANE_NAME[lane().l]}</span>
-                <span class="sr-lane-field" title="LEN">
-                  {lane().len}
-                </span>
-                <span class="sr-lane-field" title="RATE">
-                  {option(laneParam(edited(), lane().l, 'rate'))?.options[lane().rate] ?? ''}
-                </span>
-                <Show when={lane().l === 'n'}>
-                  <span class="sr-lane-field">{noteMode(params(), edited()) ? 'STEP' : 'PLAYED'}</span>
-                </Show>
-                <span class="sr-lane-btn" classList={{ on: lane().locked }} title="lock">
-                  🔒
-                </span>
-                <span class="sr-lane-btn" title="DICE this lane">
-                  ⚄
-                </span>
-              </div>
-              <div class="sr-lane-grid" ref={(el) => li === 0 && (gridEl = el)}>
-                <svg width={gridW()} class={`sr-lane-svg lane-${lane().l}`}>
-                  <For each={lane().cells}>
-                    {(c) => {
-                      const v = () => cellValue(lane().l, lane().steps[c.step] ?? 0);
-                      return (
-                        <g classList={{ ghost: c.ghost }}>
-                          <rect class="sr-step" x={c.x + 1} y="0" width={Math.max(1, c.w - 2)} height="100%" />
-                          <Show
-                            when={lane().l === 'n' || lane().l === 'v' || lane().l === 'c'}
-                            fallback={
-                              <Show when={(lane().steps[c.step] ?? 0) >= 0.5}>
-                                <rect class="sr-step-on" x={c.x + 3} y="20%" width={Math.max(1, c.w - 6)} height="60%" />
-                              </Show>
-                            }
-                          >
-                            <rect class="sr-step-val" x={c.x + 3} y={v().y} width={Math.max(1, c.w - 6)} height={v().h} />
-                          </Show>
-                        </g>
-                      );
-                    }}
-                  </For>
-                  <rect
-                    class="sr-lane-cur"
-                    visibility="hidden"
-                    x="0"
-                    y="0"
-                    width="1"
-                    height="100%"
-                    ref={(el) => (cursors[li] = el)}
-                  />
-                  <Show when={li === 0}>
-                    <g ref={(el) => track(el, 'tick', traceAt, frame)} />
-                  </Show>
-                </svg>
-              </div>
-            </div>
+        <For each={LANES}>
+          {(l, li) => (
+            <Lane
+              lane={l}
+              pattern={edited()}
+              params={params()}
+              width={gridW()}
+              spec={spec()}
+              scope={props.id}
+              edit={edit}
+              cursor={(el) => (cursors[li()] = el)}
+              grid={(el) => li() === 0 && (gridEl = el)}
+            />
           )}
-        </Index>
+        </For>
+        <span hidden ref={(el) => track(el, 'tick', traceAt, frame)} />
       </div>
     </section>
   );

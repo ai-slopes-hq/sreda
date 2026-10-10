@@ -78,7 +78,7 @@
 }
 .sr-lane-head {
   flex: none;
-  width: 220px;
+  width: 250px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -106,7 +106,10 @@
 }
 .sr-lane-svg {
   position: absolute;
-  inset: 3px 0;
+  left: 0;
+  top: 3px;
+  /* an svg sizes itself (150 px tall) unless told */
+  height: calc(100% - 6px);
   display: block;
 }
 .sr-step {
@@ -133,4 +136,48 @@
   fill: none;
   stroke: var(--accent);
   stroke-width: 1.5;
+}
+.sr-lane-head .sr-lane-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+/* an option list (RATE, STEP / PLAYED, SCALE, GEN) in the drawer: the canvas's mode-strip button in a flow box */
+.sr-lane-opt {
+  position: relative;
+  flex: none;
+  height: 32px;
+}
+.sr-lane-opt .sr-cell {
+  left: 0;
+  top: 0;
+}
+.sr-drawer .sr-menu {
+  z-index: 30;
+}
+/* the lower lanes open their lists upwards, inside the drawer */
+.sr-lane.up .sr-menu {
+  top: auto;
+  bottom: 28px;
+}
+.sr-drawer-root {
+  cursor: ns-resize;
+}
+.sr-lane-svg {
+  touch-action: none;
+}
+.sr-note-name {
+  fill: var(--muted);
+  font-size: 8px;
+  pointer-events: none;
+}
+.sr-len-marker {
+  fill: var(--accent);
+  fill-opacity: 0.5;
+  cursor: ew-resize;
+}
+.sr-len-marker:hover {
+  fill-opacity: 0.9;
 }
