@@ -915,7 +915,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                         replace: m.id,
                       }),
                     action: (param) => {
-                      if (param === 'dice') s.params(m.id, diced(m.id), undefined);
+                      if (param !== 'dice') return;
+                      const changes = diced(m.id);
+                      // every lane locked: no empty undo step
+                      if (Object.keys(changes).length > 0) s.params(m.id, changes, undefined);
                     },
                     editParams: (changes, merge) => s.params(m.id, changes, merge),
                     load: () => loadInto(m.id),

@@ -176,6 +176,8 @@ export function diceLanes(
     const dens = Math.min(1, Math.max(0, params['dens'] ?? 0.5));
     hits = Math.round(((4 + 12 * dens) * gl) / 16);
   }
+  // a short lane (LEN 1–2) still gets a hit
+  hits = Math.min(gl, Math.max(1, hits));
   const act = euclid(gl, hits, Math.floor(R() * gl)).map((x) => (x ? 1 : 0));
   const gate = writes('g') ? merged('g', act) : laneSteps(params, p, 'g');
 

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { addModule, emptyDoc, laneSteps, SPECS, stepId } from '@sreda/core';
+import { addModule, emptyDoc, laneLocked, laneParam, LANES, laneSteps, SPECS, stepId } from '@sreda/core';
 import { fireEvent, render } from '@solidjs/testing-library';
 import { expect, test } from 'vitest';
 import type { AudioHost } from '../audio/host';
@@ -48,4 +48,16 @@ test('COPY then PASTE into B is one undo step; PASTE is disabled until a copy', 
   expect(params()[stepId(1, 'g', 1)]).toBe(1);
   s.undo();
   expect(s.current()).toEqual(before);
+});
+
+test('DICE with every lane locked writes nothing and adds no undo step', () => {
+  const { s, q, params } = setup();
+  const locks: Record<string, number> = {};
+  for (const l of LANES) locks[laneParam(0, l, 'lock')] = 1;
+  s.params('m1', locks, undefined);
+  const before = params();
+  fireEvent.click(q('[data-act=dice]'));
+  expect(params()).toEqual(before);
+  s.undo();
+  expect(laneLocked(params(), 0, 'n')).toBe(false);
 });

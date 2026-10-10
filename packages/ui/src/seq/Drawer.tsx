@@ -93,11 +93,17 @@ export function Drawer(props: DrawerProps): JSX.Element {
   };
   const edit = (changes: Record<string, number>, merge: Merge) => s.params(props.id, changes, merge);
   /** DICE (all unlocked lanes of the edited pattern) or ⚄ (`only`): one undo step */
-  const dice = (only?: LaneId) =>
-    edit(
-      diceChanges(s.current(), props.specs, props.id, mulberry32((Math.random() * 2 ** 32) >>> 0), only),
-      undefined,
+  const dice = (only?: LaneId) => {
+    const changes = diceChanges(
+      s.current(),
+      props.specs,
+      props.id,
+      mulberry32((Math.random() * 2 ** 32) >>> 0),
+      only,
     );
+    // every lane locked (or nothing new drawn): no empty undo step
+    if (Object.keys(changes).length > 0) edit(changes, undefined);
+  };
 
   // ── ROOT: vertical drag or the wheel, a semitone a step ──
   const root = () => Math.round(knobValue('root'));

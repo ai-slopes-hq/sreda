@@ -240,3 +240,14 @@ test('DICE is seed-stable', () => {
     diceLanes({}, 0, '303', 1, 3, mulberry32(2)),
   );
 });
+
+test('DICE on a GATE lane of LEN 1 or 2 still writes a hit, at any DENS', () => {
+  for (const len of [1, 2])
+    for (const dens of [0, 0.5])
+      for (let seed = 1; seed <= 10; seed++) {
+        const params = { [laneParam(0, 'g', 'len')]: (len - 1) / 15, dens };
+        const out = diceLanes(params, 0, '303', 2, 0, mulberry32(seed));
+        const gate = laneSteps({ ...params, ...out }, 0, 'g').slice(0, len);
+        expect(gate.includes(1), `LEN ${len} DENS ${dens} seed ${seed}`).toBe(true);
+      }
+});
