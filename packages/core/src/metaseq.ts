@@ -13,7 +13,10 @@ export function stepId(p: number, l: Lane, k: number): string {
   return 'abcdefgh'[p]! + l + k;
 }
 
-const laneId = (p: number, l: Lane, what: string): string => 'abcdefgh'[p]! + l + what;
+/** A lane setting's param id: `{pattern letter}{lane}{len | rate | lock}`, e.g. `anlen`, `hcrate`. */
+export function laneParam(p: number, l: Lane, what: 'len' | 'rate' | 'lock'): string {
+  return 'abcdefgh'[p]! + l + what;
+}
 
 function stepDefault(p: number, l: Lane, k: number): number {
   if (l === 'n') return 12;
@@ -42,17 +45,17 @@ export function writeLane(p: number, l: Lane, values: number[]): Record<string, 
 }
 
 export function laneLen(params: Record<string, number>, p: number, l: Lane): number {
-  const raw = params[laneId(p, l, 'len')];
+  const raw = params[laneParam(p, l, 'len')];
   return raw === undefined ? LEN_MAX : 1 + Math.round(Math.min(1, Math.max(0, raw)) * (LEN_MAX - 1));
 }
 
 /** The RATE option index: ÷4 ÷3 ÷2 ×1 ×2 ×3 ×4 (3 = ×1). */
 export function laneRate(params: Record<string, number>, p: number, l: Lane): number {
-  return params[laneId(p, l, 'rate')] ?? 3;
+  return params[laneParam(p, l, 'rate')] ?? 3;
 }
 
 export function laneLocked(params: Record<string, number>, p: number, l: Lane): boolean {
-  return (params[laneId(p, l, 'lock')] ?? 0) === 1;
+  return (params[laneParam(p, l, 'lock')] ?? 0) === 1;
 }
 
 /** NOTE's mode: 0 PLAYED, 1 STEP. */

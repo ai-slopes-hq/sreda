@@ -423,6 +423,10 @@ test('a double-click on META-SEQ opens the drawer and the canvas shrinks above i
   const canvasH = () => page.locator('.sr-canvas').evaluate((el) => el.clientHeight);
   const winH = await page.evaluate(() => window.innerHeight);
   expect(await canvasH()).toBe(winH);
+  // a double-click on a knob resets it and does not open the drawer
+  await seq.locator('[data-knob=mut] .sr-knob').dblclick();
+  await page.waitForTimeout(100);
+  await expect(page.locator('.sr-drawer')).toHaveCount(0);
   // a double-click on the module's face (below its name)
   const box = (await seq.boundingBox())!;
   await page.mouse.dblclick(box.x + 6, box.y + box.height - 6);
@@ -443,6 +447,19 @@ test('a double-click on META-SEQ opens the drawer and the canvas shrinks above i
   await drawer.locator('[data-pattern=B]').click();
   expect((await fullDoc(page)).modules.find((m) => m.type === 'metaseq')!.params['edit']).toBe(1);
   await expect(drawer.locator('[data-pattern=B]')).toHaveClass(/\bon\b/);
+  // another META-SEQ: dragging it keeps the drawer on the first; a click switches
+  const first = await drawer.getAttribute('data-seq');
+  await page.mouse.dblclick(1200, 150);
+  await page.keyboard.type('meta');
+  await page.keyboard.press('Enter');
+  await expect(seq).toHaveCount(2);
+  const other = seq.nth(1);
+  const ob = (await other.boundingBox())!;
+  await drag(page, { x: ob.x + 6, y: ob.y + ob.height - 6 }, { x: ob.x + 66, y: ob.y + ob.height - 6 });
+  await expect(drawer).toHaveAttribute('data-seq', first!);
+  const ob2 = (await other.boundingBox())!;
+  await page.mouse.click(ob2.x + 6, ob2.y + ob2.height - 6);
+  await expect(drawer).toHaveAttribute('data-seq', (await other.getAttribute('data-module'))!);
   // Esc closes
   await page.keyboard.press('Escape');
   await expect(drawer).toHaveCount(0);

@@ -5,6 +5,7 @@ import {
   fromKnob,
   laneLen,
   laneLocked,
+  laneParam,
   laneRate,
   laneSteps,
   LANES,
@@ -199,7 +200,7 @@ export function Drawer(props: DrawerProps): JSX.Element {
                   {lane().len}
                 </span>
                 <span class="sr-lane-field" title="RATE">
-                  {option(`${'abcdefgh'[edited()]}${lane().l}rate`)?.options[lane().rate] ?? ''}
+                  {option(laneParam(edited(), lane().l, 'rate'))?.options[lane().rate] ?? ''}
                 </span>
                 <Show when={lane().l === 'n'}>
                   <span class="sr-lane-field">{noteMode(params(), edited()) ? 'STEP' : 'PLAYED'}</span>

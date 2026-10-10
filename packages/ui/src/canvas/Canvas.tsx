@@ -76,6 +76,8 @@ type Drag =
       /** the move so far, magnets included */
       dx: number;
       dy: number;
+      /** a META-SEQ the drawer switches to if the press ends without moving */
+      seq?: string | undefined;
     }
   | { kind: 'resize'; id: string; edge: Edge; at: Pt; base: Doc; r0: Rect; moved: boolean }
   | { kind: 'box'; at: Pt; add: string[] }
@@ -369,14 +371,17 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   createEffect(
     on(
       () => [st.seq.id, st.seq.h] as const,
-      ([id]) => {
+      ([id], prev) => {
         if (!id) return;
+        // opened or switched: glide; the top edge dragged: follow at once
+        const glide = !prev || prev[0] !== id;
         requestAnimationFrame(() => {
           if (st.seq.id !== id || !isSeq(id)) return;
           const to = glideTo(st.view, rectOf(st.doc, specs, id), { x: 0, y: 0, w: W(), h: H() });
           if (!to) return;
           stopGlide();
-          stopGlide = animateView({ ...st.view }, to, 220, (v) => s.setState('view', v));
+          if (glide) stopGlide = animateView({ ...st.view }, to, 220, (v) => s.setState('view', v));
+          else s.setState('view', to);
         });
       },
     ),
@@ -426,8 +431,6 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   function moduleDown(id: string, e: PointerEvent): void {
     if (e.button !== 0 || space) return;
     e.stopPropagation();
-    // the editor drawer is open: a click on another META-SEQ switches it
-    if (st.seq.id !== null && st.seq.id !== id && isSeq(id)) s.openSeq(id);
     let sel = st.sel;
     if (e.shiftKey) sel = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
     else if (!sel.includes(id)) sel = [id];
@@ -441,6 +444,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
       insert: null,
       dx: 0,
       dy: 0,
+      // the editor drawer is open: a click (no drag, no Shift) on another META-SEQ switches it
+      seq: st.seq.id !== null && st.seq.id !== id && !e.shiftKey && isSeq(id) ? id : undefined,
     });
   }
 
@@ -584,7 +589,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           });
         const doc = d.insert ? insertIntoCable(moved, specs, d.ids[0]!, d.insert) : moved;
         s.commit(settle(d.base, doc, specs, [...parents(d.base), ...parents(moved)]));
-      }
+      } else if (d.seq && st.seq.id !== null) s.openSeq(d.seq);
     } else if (d.kind === 'resize') {
       if (d.moved) {
         s.commit(resizeSettled(d, p));
@@ -806,7 +811,10 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         }}
         onDrop={dropFiles}
         onDblClick={(e) => {
-          const seqMod = (e.target as Element).closest('[data-type=metaseq]');
+          const target = e.target as Element;
+          // a double-click on a control (a knob reset, a field reset, a jack, a button, a list) is that control's own
+          if (target.closest('.sr-cell, .sr-jack, .sr-plabel, .sr-field, .sr-action, .sr-menu, button, input')) return;
+          const seqMod = target.closest('[data-type=metaseq]');
           if (seqMod) {
             s.openSeq(seqMod.getAttribute('data-module')!);
             return;

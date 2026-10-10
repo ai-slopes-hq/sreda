@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { laneLen, laneLocked, laneRate, laneSteps, LANES, noteMode, PATTERNS, seqTrace, stepId, writeLane } from './metaseq';
+import { laneLen, laneParam, laneLocked, laneRate, laneSteps, LANES, noteMode, PATTERNS, seqTrace, stepId, writeLane } from './metaseq';
 
 test('step ids: pattern letter, lane, 1-based step', () => {
   expect(PATTERNS).toBe(8);
@@ -54,4 +54,10 @@ test('seqTrace decodes pattern, cursors, generation and the live steps at an off
   expect(r.gen).toBe(11);
   expect(r.live).toHaveLength(6);
   expect(r.live[2]![3]).toBe(203);
+});
+
+test('laneParam names a lane setting', () => {
+  expect(laneParam(0, 'n', 'len')).toBe('anlen');
+  expect(laneParam(7, 'c', 'rate')).toBe('hcrate');
+  expect(laneParam(2, 'g', 'lock')).toBe('cglock');
 });
