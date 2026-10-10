@@ -61,3 +61,18 @@ test('DICE with every lane locked writes nothing and adds no undo step', () => {
   s.undo();
   expect(laneLocked(params(), 0, 'n')).toBe(false);
 });
+
+test('a pattern tab is not an undo step and leaves a saved project saved; EDIT is in the document', () => {
+  const { s, q, params } = setup();
+  s.markSaved();
+  const note = params()['an1'];
+  s.params('m1', { an1: 14 / 24 }, undefined);
+  s.markSaved();
+  fireEvent.click(q('[data-pattern=C]'));
+  expect(params()['edit']).toBe(2);
+  expect(q('[data-pattern=C]').classList.contains('on')).toBe(true);
+  expect(s.state.dirty).toBe(false);
+  // ⌘Z undoes the NOTE edit, not the tab
+  s.undo();
+  expect(params()['an1']).toBe(note);
+});

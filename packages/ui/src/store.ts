@@ -526,6 +526,13 @@ export function createSession(
     openSeq(id: string): void {
       setState('seq', 'id', id);
     },
+    /** the drawer's pattern tab: META-SEQ's EDIT, in the document (the DICE input reads it) but a view choice — not an
+     * undo step, and a saved project stays saved */
+    seqTab(id: string, pattern: number): void {
+      const clean = !state.dirty;
+      this.params(id, { edit: pattern }, undefined, false);
+      if (clean) this.markSaved();
+    },
     closeSeq(): void {
       setState('seq', 'id', null);
     },

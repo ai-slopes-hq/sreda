@@ -209,7 +209,7 @@ export function Drawer(props: DrawerProps): JSX.Element {
                 class="sr-gbtn sr-drawer-tab"
                 classList={{ on: edited() === i(), play: playingPattern() === i() }}
                 data-pattern={t}
-                onClick={() => s.params(props.id, { edit: i() }, undefined)}
+                onClick={() => s.seqTab(props.id, i())}
               >
                 {t}
               </button>
