@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 import {
+  copyPattern,
   laneLen,
   laneParam,
   laneLocked,
@@ -9,6 +10,7 @@ import {
   noteMode,
   noteModeParam,
   PATTERNS,
+  pastePattern,
   seqTrace,
   snap,
   snapInRange,
@@ -98,4 +100,41 @@ test('snapInRange keeps a drawn note within 0…24 and in the scale', () => {
 test("noteModeParam names a pattern's STEP / PLAYED param", () => {
   expect(noteModeParam(0)).toBe('anmode');
   expect(noteMode({ cnmode: 1 }, 2)).toBe(1);
+});
+
+test('pastePattern(copyPattern(p, 0), 3) sets every d… id to the a… values', () => {
+  const p: Record<string, number> = {
+    an3: 0.5,
+    ag2: 1,
+    at4: 1,
+    av7: 0.25,
+    anlen: 0.4,
+    agrate: 5,
+    aclock: 0,
+    atlock: 1,
+    anmode: 1,
+  };
+  const out = pastePattern(copyPattern(p, 0), 3);
+  expect(Object.keys(out).length).toBe(6 * 19 + 1);
+  const merged = { ...p, ...out };
+  for (const l of LANES) {
+    expect(laneSteps(merged, 3, l)).toEqual(laneSteps(p, 0, l));
+    expect(laneLen(merged, 3, l)).toBe(laneLen(p, 0, l));
+    expect(laneRate(merged, 3, l)).toBe(laneRate(p, 0, l));
+    expect(laneLocked(merged, 3, l)).toBe(laneLocked(p, 0, l));
+  }
+  expect(noteMode(merged, 3)).toBe(1);
+  expect(out['dn3']).toBe(0.5);
+  expect(out['dtlock']).toBe(1);
+  expect(out['dg1']).toBe(1); // pattern A's default gate on step 1, captured explicitly
+});
+
+test('pasting a default pattern over a drawn one resets it', () => {
+  const drawn: Record<string, number> = { bn1: 0.9, bg3: 1, bnlen: 0.1, bnmode: 1 };
+  const reset = pastePattern(copyPattern({}, 1), 1);
+  const merged = { ...drawn, ...reset };
+  expect(laneSteps(merged, 1, 'n')[0]).toBe(12);
+  expect(laneSteps(merged, 1, 'g')[2]).toBe(0);
+  expect(laneLen(merged, 1, 'n')).toBe(16);
+  expect(noteMode(merged, 1)).toBe(0);
 });

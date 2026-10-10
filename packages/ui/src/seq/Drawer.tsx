@@ -1,13 +1,15 @@
 // META-SEQ's editor (spec §7b): a drawer docked under the canvas at the window's full width. The header (name,
 // pattern tabs, COPY / PASTE, SCALE, ROOT, GEN, DICE, MUTATE, ✕), then one row per lane on one step grid in clock time.
 // The tabs choose the edited pattern, SCALE / ROOT / GEN write, the lanes take their gestures (Lane.tsx), ✕ closes;
-// COPY / PASTE, DICE, MUTATE and ⚄ are drawn but inert for now.
+// COPY / PASTE copy the edited pattern into a clip and write it back as one undo step; DICE, MUTATE and ⚄ are drawn but inert.
 import {
+  copyPattern,
   fromKnob,
   laneLen,
   laneRate,
   LANES,
   nameOf,
+  pastePattern,
   type KnobParam,
   type Merge,
   type OptionParam,
@@ -79,6 +81,12 @@ export function Drawer(props: DrawerProps): JSX.Element {
       return { len, cells: cells(len, laneRate(params(), edited(), l), WINDOW, gridW()) };
     }),
   );
+  // ── COPY / PASTE: the clip lives here, not in the system clipboard ──
+  const [clip, setClip] = createSignal<Record<string, number> | undefined>(undefined);
+  const paste = () => {
+    const c = clip();
+    if (c) s.params(props.id, pastePattern(c, edited()), undefined);
+  };
   const edit = (changes: Record<string, number>, merge: Merge) => s.params(props.id, changes, merge);
 
   // ── ROOT: vertical drag or the wheel, a semitone a step ──
@@ -192,8 +200,12 @@ export function Drawer(props: DrawerProps): JSX.Element {
             )}
           </For>
         </div>
-        <button class="sr-gbtn">COPY</button>
-        <button class="sr-gbtn">PASTE</button>
+        <button class="sr-gbtn" data-act="copy" onClick={() => setClip(copyPattern(params(), edited()))}>
+          COPY
+        </button>
+        <button class="sr-gbtn" data-act="paste" disabled={clip() === undefined} onClick={paste}>
+          PASTE
+        </button>
         <span class="sr-drawer-field">SCALE</span>
         {headOption('scale', 64)}
         <span

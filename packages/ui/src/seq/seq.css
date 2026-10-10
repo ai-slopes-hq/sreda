@@ -182,3 +182,7 @@
 .sr-len-marker:hover {
   fill-opacity: 0.9;
 }
+.sr-drawer-head .sr-gbtn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

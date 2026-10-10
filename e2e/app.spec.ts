@@ -540,6 +540,58 @@ test('drawer lanes are sliders: a vertical drag in one cell, the LEN marker and 
   await app.close();
 });
 
+test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(500, 300);
+  await page.keyboard.type('meta');
+  await page.keyboard.press('Enter');
+  const seq = page.locator('[data-type=metaseq]');
+  await expect(seq).toBeVisible();
+  // a frame with its own clock, into CLK
+  await seq.locator('.sr-head').click();
+  await page.keyboard.press('g');
+  const frame = (await fullDoc(page)).groups[0]!.id;
+  await page.locator(`[data-frame=${frame}]`).getByText('+ CLOCK').click();
+  await drag(
+    page,
+    await center(page, page.locator(`[data-frame=${frame}] [data-jack=clkOut]`)),
+    await center(page, jack(page, 'metaseq', 'clk')),
+  );
+  const box = (await seq.boundingBox())!;
+  await page.mouse.dblclick(box.x + 6, box.y + box.height - 6);
+  const drawer = page.locator('.sr-drawer');
+  await expect(drawer).toBeVisible();
+  await page.mouse.click(1300, 900); // start audio
+  const param = async (id: string) => (await fullDoc(page)).modules.find((x) => x.type === 'metaseq')!.params[id];
+  await expect(drawer.locator('[data-act=paste]')).toBeDisabled();
+  // A: a note on step 3, then COPY
+  const n = (await drawer.locator('[data-lane=n] .sr-lane-svg').boundingBox())!;
+  const step = n.width / 16;
+  await drag(page, { x: n.x + step * 2.5, y: n.y + n.height * 0.9 }, { x: n.x + step * 2.5, y: n.y + n.height * 0.1 });
+  const a3 = await param('an3');
+  expect(a3).toBeGreaterThan(0.75);
+  await drawer.locator('[data-act=copy]').click();
+  // B: PASTE is one undo step
+  await drawer.locator('[data-pattern=B]').click();
+  expect(await param('bn3')).toBe(0.5);
+  expect(await param('bg1')).toBe(0);
+  await drawer.locator('[data-act=paste]').click();
+  expect(await param('bn3')).toBe(a3);
+  expect(await param('bg1')).toBe(1);
+  await page.keyboard.press('Meta+z');
+  expect(await param('bn3')).toBe(0.5);
+  expect(await param('bg1')).toBe(0);
+  await page.keyboard.press('Meta+Shift+z');
+  expect(await param('bn3')).toBe(a3);
+  // PAT → B (a short drag up on the knob): the playing tab follows once the GATE lane wraps
+  await expect(drawer.locator('[data-pattern=A]')).toHaveClass(/\bplay\b/, { timeout: 5000 });
+  const k = (await seq.locator('[data-knob=pat] .sr-knob').boundingBox())!;
+  await drag(page, { x: k.x + k.width / 2, y: k.y + k.height / 2 }, { x: k.x + k.width / 2, y: k.y + k.height / 2 - 40 });
+  await expect.poll(async () => Math.round((await param('pat'))! * 7)).toBe(1);
+  await expect(drawer.locator('[data-pattern=B]')).toHaveClass(/\bplay\b/, { timeout: 8000 });
+  await app.close();
+});
+
 test('SWITCH: the current input label is amber', async () => {
   const { app, page } = await launch();
   await page.mouse.dblclick(700, 600);

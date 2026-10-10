@@ -117,3 +117,30 @@ export function seqTrace(
     ),
   };
 }
+
+/** A pattern as a clip, keyed by lane rather than by pattern letter: `{lane}{step}`, `{lane}len`, `{lane}rate`,
+ * `{lane}lock` and `nmode`, in the document's units. Values absent from `params` take the spec defaults, so copying a
+ * default pattern and pasting it over a drawn one resets it. */
+export function copyPattern(params: Record<string, number>, from: number): Record<string, number> {
+  const clip: Record<string, number> = {};
+  for (const l of LANES) {
+    const steps = writeLane(from, l, laneSteps(params, from, l));
+    for (let k = 1; k <= 16; k++) clip[l + k] = steps[stepId(from, l, k)]!;
+    clip[l + 'len'] = params[laneParam(from, l, 'len')] ?? 1;
+    clip[l + 'rate'] = laneRate(params, from, l);
+    clip[l + 'lock'] = laneLocked(params, from, l) ? 1 : 0;
+  }
+  clip['nmode'] = noteMode(params, from);
+  return clip;
+}
+
+/** The document changes that write a clip into pattern `to`. */
+export function pastePattern(clip: Record<string, number>, to: number): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const l of LANES) {
+    for (let k = 1; k <= 16; k++) out[stepId(to, l, k)] = clip[l + k]!;
+    for (const w of ['len', 'rate', 'lock'] as const) out[laneParam(to, l, w)] = clip[l + w]!;
+  }
+  out[noteModeParam(to)] = clip['nmode']!;
+  return out;
+}
