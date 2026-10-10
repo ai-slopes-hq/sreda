@@ -675,10 +675,11 @@ RHYTHM and STAGES (§7) leave the picker and the engine; §7 keeps them only as 
 
 | | ports |
 |---|---|
-| in | **CLK** (trigger; unpatched: the frame's clock, as RHYTHM's; its ×N / ÷N ratio stays) · **RST** (trigger: every lane goes to its step 1 on the next clock) · **PAT** (mod; with the PAT knob, 0…1 → patterns A…H) · **DICE** (trigger) · **MUT** (mod; with the MUT knob) |
+| in | **CLK** (trigger with its ×N / ÷N ratio; unpatched it is a problem `no clock`, as RHYTHM's was) · **RST** (trigger: every lane goes to its step 1 on the next clock) · **DICE** (trigger); PAT, TRNS, MUT and DENS are modulated through their knobs' mod jacks |
 | out | **CV** (pitch: the note plus TRNS) · **GATE** (trigger) · **ACC** (trigger, with the hit) · **VEL** (mod 0…1, held until the next hit) · **EOC** (trigger, when the GATE lane wraps) |
 
-- Panel: a 4-lane overview display, then the knobs PAT, TRNS (±24 semitones along the scale), MUT, DENS, then the
+- Panel: a 4-lane overview display, then the knobs PAT (A…H), TRNS (±24 semitones, the result snapped to SCALE from
+  ROOT), MUT, DENS, then the
   mode strip GEN ▾ · DICE. The display is read-only: the playing pattern's NOTE contour, the GATE steps with the
   current one ringed amber, thin ACC and VEL strips, the lane lengths. A click on the display or a double-click on the
   module opens the editor.
@@ -728,10 +729,12 @@ on another META-SEQ, closed by Esc or ✕.
   without one.
 - **⚄ on a lane** writes that lane alone, in the same style and consistent with the others (ACC only on hits, TIE
   only after a hit, NOTE in the scale).
-- **MUTATE** (MUT knob + CV, 0…1): when an unlocked lane wraps, each of its steps changes with odds MUT² to the value
-  ⚄ would give it. The engine draws from a bank of 8 variants per lane the UI generates beforehand (refreshed when
-  GEN, SCALE, ROOT or the pattern changes), so nothing runs a generator or allocates on the audio thread. Mutated
-  steps sound at once and reach the document through the readout once per GATE cycle as one batch, without an undo step (as from the
+- **MUTATE** (MUT knob + CV, 0…1; Turing-machine drift, revised while planning: the engine mutates by fixed rules
+  rather than from a bank of generated variants, which needed new plumbing for no audible gain): when an unlocked lane
+  wraps, each of its steps within LEN changes with odds MUT²: GATE swaps with another step of the lane (the density
+  stays), NOTE takes another note already in the lane (or the next scale degree up or down when it holds one note),
+  TIE and ACC toggle, VEL and CHNC move by up to ±0.25. Nothing allocates on the audio thread. Mutated steps sound at
+  once and reach the document through the readout once per GATE cycle as one batch, without an undo step (as from the
   DICE input).
 
 **Storage.** Every lane step and lane setting is a hidden param of the module (8 patterns × 6 lanes × 16 steps plus
@@ -746,8 +749,8 @@ hidden params; R leaves them alone. The engine holds all eight patterns, so PAT 
   each module's LEN → its lanes' LEN; an EUCLID pattern is written out as steps. Cables move: CLK, RST, DICE from
   RHYTHM; CV, GATE, ACC; EOC from RHYTHM.
 - A RHYTHM alone → META-SEQ with GATE, TIE and ACC; NOTE holds ROOT.
-- A STAGES alone → META-SEQ with NOTE on STEP and GATE from its pulses. A free-running STAGES (ADV unpatched) takes
-  the frame's clock, or outside a frame a cycling SLOPE placed beside it; the opening notice says the timing may
+- A STAGES alone → META-SEQ with NOTE on STEP and GATE from its pulses. A free-running STAGES (ADV unpatched) gets a cable from
+  its frame's CLK out, or outside a frame from a cycling SLOPE placed beside it; the opening notice says the timing may
   differ.
 - A 6×2 META-SEQ fits where either stood; STACK frames re-pack on open (revision 32).
 - Factory projects and groups and the DICE patch generator are rebuilt on META-SEQ; each is still tested to sound.
