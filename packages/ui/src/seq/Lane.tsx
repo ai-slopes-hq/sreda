@@ -56,6 +56,8 @@ const LEN_MAX = 16;
 const DOUBLE_MS = 400;
 /** the LEN end marker's width in px */
 const MARKER_W = 6;
+/** px of vertical drag per step on the LEN field */
+const LEN_PX = 8;
 
 let strokes = 0;
 
@@ -106,7 +108,8 @@ export function Lane(props: LaneProps): JSX.Element {
     const changes: Record<string, number> = {};
     const from = s.last < 0 ? k : s.last;
     const dir = k >= from ? 1 : -1;
-    for (let i = s.last < 0 ? k : from + dir; dir > 0 ? i <= k : i >= k; i += dir) {
+    // a move inside the last cell rewrites it (a slider: the value follows the pointer until release)
+    for (let i = s.last < 0 || k === s.last ? k : from + dir; dir > 0 ? i <= k : i >= k; i += dir) {
       const t = k === from ? 1 : (i - from) / (k - from);
       const v = toggles() ? s.value : stored(s.lastRaw + (raw - s.lastRaw) * t);
       if (s.done.get(i) === v) continue;
@@ -184,6 +187,18 @@ export function Lane(props: LaneProps): JSX.Element {
     markerMove(e);
     lenKey = '';
   }
+  /** the LEN field: a vertical drag like a knob, a step per LEN_PX */
+  let lenDrag = { key: '', y: 0, n: 0 };
+  function fieldDown(e: PointerEvent): void {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    lenDrag = { key: `len:${props.scope}:${lenId()}:${++strokes}`, y: e.clientY, n: len() };
+  }
+  function fieldMove(e: PointerEvent): void {
+    if (!lenDrag.key) return;
+    setLen(lenDrag.n + Math.round((lenDrag.y - e.clientY) / LEN_PX), { key: lenDrag.key, stroke: true });
+  }
   function lenWheel(e: WheelEvent): void {
     e.preventDefault();
     e.stopPropagation();
@@ -219,7 +234,13 @@ export function Lane(props: LaneProps): JSX.Element {
     <div class="sr-lane" classList={{ up: LANES.indexOf(l()) >= 3 }} data-lane={l()}>
       <div class="sr-lane-head">
         <span class="sr-lane-name">{LANE_NAME[l()]}</span>
-        <span class="sr-lane-field" data-field="len" title="LEN (wheel)" onWheel={lenWheel}>
+        <span class="sr-lane-field" data-field="len" title="LEN (drag or wheel)"
+          onPointerDown={fieldDown}
+          onPointerMove={fieldMove}
+          onPointerUp={() => (lenDrag.key = '')}
+          onPointerCancel={() => (lenDrag.key = '')}
+          onWheel={lenWheel}
+        >
           {len()}
         </span>
         {optionCell(() => laneParam(p(), l(), 'rate'), rate, 44)}
