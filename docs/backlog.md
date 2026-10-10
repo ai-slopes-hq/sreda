@@ -100,13 +100,9 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **SHIFT's queue** assumes ascending due times; AMT modulated down can queue an earlier event behind a later one.
 - **SHP's curve glyph** shows the base value, not the modulated one (§4 says modulation included).
 - **A×B+C's c2** shows the dashed normal ring and title while out1 is patched (the normal is not live then).
-- **EUCLID pads** show the unmodulated LEN / HITS / ROT; touching a pad freezes that, not what plays.
-- **Contour joints** (±5 px over the full height) take ~35 % of the display at LEN 16; fast strokes skip stages
-  (no interpolation between moves).
 - **DICE input latency:** a rAF + message round-trip; with DICE ← EOC the first step of the new cycle still plays the
   old pattern; it pauses while the window is hidden.
-- **STAGES ADDR** has no hysteresis at stage boundaries; **RHYTHM** drops the accent on a TIE after a rest; dead
-  `ids` in att.rs.
+- Dead `ids` in att.rs. (The RHYTHM / STAGES items that stood here went with the modules in Plan 14.)
 
 ## From the Plan 3 review (deferred, 2026-10-08)
 
@@ -169,3 +165,11 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Library.tsx duplicates the picker's 120 ms audition timer:** the two should share one helper.
 - **LOAD with an unreadable or non-audio file** returns silently (no notice); two quick clicks on a sample display
   can open two dialogs (no in-flight guard).
+
+## From Plan 14
+
+- **META-SEQ inside a feedback loop is slow:** `sync()` and `write_trace()` run on every one-sample call; ~0.14 ms
+  compile per META-SEQ.
+- `protocol/src/bench.test.ts` 5 s threshold is marginal under machine load (flaky).
+- **The prototype's Main board** keeps dormant contour / pads display code (no module uses those kinds now) and draws
+  META-SEQ as a plain 2U panel with a stand-in Sim; the drawer is not prototyped.

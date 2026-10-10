@@ -15,8 +15,6 @@ import { fmtAtt, fmtRat, ROLE } from './glyphs';
 import { Jack } from './Jack';
 import { Knob } from './Knob';
 import { Option } from './Option';
-import { Contour } from './displays/Contour';
-import { Pads } from './displays/Pads';
 import { Room } from './displays/Room';
 import { Grains } from './displays/Grains';
 import { Wave } from './displays/Wave';
@@ -208,37 +206,6 @@ export function Panel(props: PanelProps): JSX.Element {
             {(g) => <path class="ghost-normal" d={g.d} style={{ stroke: ROLE[g.role] }} />}
           </For>
         </svg>
-      </Show>
-      <Show when={props.spec.display?.kind === 'contour' && L().display}>
-        {(d) => (
-          <Contour
-            x={d().x}
-            y={d().y}
-            w={d().w}
-            h={d().h}
-            spec={props.spec}
-            params={props.mod.params}
-            advPatched={props.cabledIn('adv')}
-            state={props.readouts?.state}
-            edit={(c, merge) => props.act.editParams?.(c, merge)}
-          />
-        )}
-      </Show>
-      <Show when={props.spec.display?.kind === 'pads' && L().display}>
-        {(d) => (
-          <Pads
-            x={d().x}
-            y={d().y}
-            w={d().w}
-            h={d().h}
-            params={props.mod.params}
-            len={Math.round(knobValue('length'))}
-            hits={Math.round(knobValue('hits'))}
-            rot={Math.round(knobValue('rot'))}
-            state={props.readouts?.state}
-            edit={(c) => props.act.editParams?.(c)}
-          />
-        )}
       </Show>
       <For each={actions()}>
         {(p) => {

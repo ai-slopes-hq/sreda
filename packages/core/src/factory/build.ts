@@ -39,9 +39,9 @@ export function gridRhythm(gates: string, accents: string): Record<string, numbe
   return out;
 }
 
-/** STAGES: semitones 0…24 (12 = 0 V) on the stages, slides and silent pulses (○) on the given stages (1-based); LEN is
+/** STAGES: semitones 0…24 (12 = 0 V) on the steps, slides and silent pulses (○) on the given steps (1-based); LEN is
  * the line's length unless given; SCALE and GEN option indices, ROOT 0…11 */
-export function stagesLine(
+export function melodyLine(
   semis: number[],
   o: { slides?: number[]; rests?: number[]; length?: number; scale?: number; root?: number; gen?: number } = {},
 ): Record<string, number> {

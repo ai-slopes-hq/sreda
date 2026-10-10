@@ -2,7 +2,7 @@
 // out and which jacks want the clock (with a ratio), so a group is a voice in a frame with its own clock and a project
 // is several voices, a mix and effects under one clock frame.
 import { seqParams } from '../migrate/seq';
-import { euclidRhythm, stagesLine, type Builder } from './build';
+import { euclidRhythm, melodyLine, type Builder } from './build';
 
 export interface Voice {
   ids: string[];
@@ -131,7 +131,7 @@ function sequence(
   hits: number,
   slides: number[] = [],
 ): string {
-  return S.seq(x, y, seqParams(euclidRhythm(16, hits), stagesLine(semis, { scale, slides })));
+  return S.seq(x, y, seqParams(euclidRhythm(16, hits), melodyLine(semis, { scale, slides })));
 }
 
 export function fmBass(S: Builder, x: number, y: number): Voice {
@@ -200,7 +200,7 @@ export function chaoticBells(S: Builder, x: number, y: number): Voice {
 }
 
 export function pad(S: Builder, x: number, y: number): Voice {
-  const sq = S.seq(x, y, seqParams(null, stagesLine([0, 3, 7, 5], { scale: 2, slides: [2, 4] })));
+  const sq = S.seq(x, y, seqParams(null, melodyLine([0, 3, 7, 5], { scale: 2, slides: [2, 4] })));
   const a = S.add('osc', x, y + 400, { freq: 110, wave: WAVE.SAW });
   const b = S.add('osc', x, y + 560, { freq: 110.7, wave: WAVE.TRI });
   const mx = S.add('mix', x + 300, y + 400, { la: 0.5, lb: 0.6 });

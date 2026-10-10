@@ -28,9 +28,7 @@ step('sidebar resize', () => { c.drag = { kind: 'sgrip' }; c.move(ev({ clientX: 
 step('NEW (empty)', () => { c.newSeed(); });
 step('undo', () => { c.undo(); c.undo(); });
 step('open project ACID', () => { c.openPicker('PROJECTS'); const v = c.renderVals(); v.searchItems.find(i => /ACID/.test(i.label)).pick(); });
-step('STAGES draw notes', () => { const m = mod('stages'); const L = 0; c.dispDown(ev({ clientX: 520, clientY: 260 }), m.id); c.move(ev({ clientX: 560, clientY: 240 })); c.up(ev({})); });
-step('RHYTHM pad click', () => { const m = mod('rhythm'); c.dispDown(ev({ clientX: 120, clientY: 200 }), m.id); });
-step('DICE stages', () => { const m = mod('stages'); c.act(m.id, 'dice'); });
+step('DICE META-SEQ', () => { const m = mod('metaseq'); c.act(m.id, 'dice'); });
 step('replace module', () => { const m = mod('filter'); c.setState({ search: { sx: 0, sy: 0, cx: 0, cy: 0, from: null, replace: m.id, q: '', idx: 0 } }); c.renderVals().searchItems.find(i => i.label === 'FOLD').pick(); });
 step('randomize + fit', () => { c.randomize(doc().mods[0].id); c.fit(false); });
 step('delete selection', () => { c.setState({ sel: [doc().mods[0].id] }); c.deleteSel(); });

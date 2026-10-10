@@ -47,8 +47,8 @@ test('a wire belongs to the innermost frame holding both ends; else it runs betw
   });
 });
 
-test('problems: an empty processor input, a RHYTHM without a clock, sound that reaches no OUT; loops and mutes as info', () => {
-  const { doc: d0, ids } = patch('osc', 'filter', 'rhythm', 'slope', 'mix', 'filter');
+test('problems: an empty processor input, a META-SEQ without a clock, sound that reaches no OUT; loops and mutes as info', () => {
+  const { doc: d0, ids } = patch('osc', 'filter', 'metaseq', 'slope', 'mix', 'filter');
   let doc = connect(d0, SPECS, [ids[0]!, 'out'], [ids[1]!, 'in']);
   doc = connect(doc, SPECS, [ids[4]!, 'out'], [ids[4]!, 'a']); // MIX into itself
   const framed = frameSelection(doc, SPECS, [ids[3]!]);
@@ -58,11 +58,11 @@ test('problems: an empty processor input, a RHYTHM without a clock, sound that r
     'OSC — sound does not reach any OUT',
     'FILTER 1 — sound does not reach any OUT',
     'MIX — sound does not reach any OUT',
-    'RHYTHM › CLK — no clock',
+    'META-SEQ › CLK — no clock',
     'FILTER 2 › IN — empty input',
   ]);
   expect(p.filter((x) => x.info).map((x) => x.text)).toEqual(['loop: MIX → MIX', 'muted: GROUP 1']);
-  expect(p.find((x) => x.text.startsWith('RHYTHM'))!.id).toBe(ids[2]);
+  expect(p.find((x) => x.text.startsWith('META-SEQ'))!.id).toBe(ids[2]);
   // SLOPE's IN is optional: no problem
   expect(p.some((x) => x.text.startsWith('SLOPE'))).toBe(false);
 });

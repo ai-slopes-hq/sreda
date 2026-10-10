@@ -40,18 +40,18 @@ test('a crashed engine shows a notice', () => {
 
 test('param edits go as knob / fixed messages; one an own-normal condition reads sends a plan', async () => {
   const { addModule, emptyDoc } = await import('@sreda/core');
-  let doc = addModule(emptyDoc, SPECS, 'stages', 0, 0).doc;
+  let doc = addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc;
   doc = addModule(doc, SPECS, 'slope', 0, 400).doc;
   const s = createSession(SPECS, doc);
   const { sent, asHost } = fakeHost();
   s.attach(asHost);
   sent.length = 0;
-  // v3 is a hidden knob of STAGES (−1…1): a fixed message in real units at its index among the fixed values
-  s.params('m1', { v3: 0.75 }, undefined);
-  expect(sent).toEqual([{ t: 'fixed', node: 0, index: 2, value: 0.5 }]);
+  // ROOT is a hidden knob of META-SEQ (0…11, whole steps): a fixed message in real units at its index among the fixed values (8 patterns, SCALE, then ROOT)
+  s.params('m1', { root: 0.5 }, undefined);
+  expect(sent).toEqual([{ t: 'fixed', node: 0, index: 921, value: 6 }]);
   sent.length = 0;
-  s.params('m1', { length: 0.5 }, undefined);
-  expect(sent).toEqual([{ t: 'knob', node: 0, index: 0, value: 0.5 }]);
+  s.params('m1', { trns: 0.75 }, undefined);
+  expect(sent).toEqual([{ t: 'knob', node: 0, index: 1, value: 0.75 }]);
   sent.length = 0;
   // SLOPE's CYCLE decides its own normal: the plan changes
   s.params('m2', { cycle: 1 }, undefined);

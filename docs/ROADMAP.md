@@ -100,7 +100,10 @@ of a creative tool; nothing of its UI is ported.
   second META-SEQ's CV into the first's PAT mod jack), Checkpoint 3 passed. Slice 4 done (Tasks 6–7: GEN with EUCLID,
   DICE / per-lane ⚄ as one undo step; MUTATE — unlocked lanes drift on their wrap and on a PAT switch, each pattern
   keeps its own drift, written back once per GATE cycle without an undo step; RST keeps drift);
-  **Checkpoint 4: the user listens** (DICE styles, ⚄ on ACC only, MUT at 0.3) before Task 8.
+  Checkpoint 4 passed. Slice 5 done (Tasks 8–10: old RHYTHM / STAGES documents open as META-SEQ with a notice, factory
+  projects and groups and the DICE patches are built on META-SEQ, RHYTHM and STAGES are removed — their Rust modules,
+  the pads / contour displays, specs, fixtures and prototype boards); **Checkpoint 5: the user listens** (the factory
+  projects and an old saved project). After it: the whole-branch review, then Plan 14 done.
 - **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 

@@ -86,7 +86,7 @@ export function wireProblems(doc: Doc, specs: Specs, missing?: (path: string) =>
         text: `${nameOf(doc, specs, m.id)} — MISSING · ${m.sample.split('/').pop()}`,
         info: false,
       });
-    if ((m.type === 'rhythm' || m.type === 'metaseq') && !patched('clk'))
+    if ((m.type === 'metaseq') && !patched('clk'))
       res.push({ id: m.id, text: `${portLabel(doc, specs, m.id, 'clk')} — no clock`, info: false });
   }
   // information: feedback loops (strongly connected modules) and muted frames

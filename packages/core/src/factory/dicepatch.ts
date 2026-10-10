@@ -5,7 +5,7 @@ import type { Doc } from '../doc';
 import { genNotes, mulberry32, SCALES, type Algo } from '../generators';
 import type { Specs } from '../spec';
 import { seqParams } from '../migrate/seq';
-import { build, euclidRhythm, stagesLine, type Builder } from './build';
+import { build, euclidRhythm, melodyLine, type Builder } from './build';
 
 export type DiceKind = 'rhythmic' | 'ambient';
 
@@ -39,7 +39,7 @@ function line(R: Rand, slides: number): Record<string, number> {
   const semis = genNotes(ALGOS[algo]!, 16, SCALES[scale]!, root, R);
   const glide: number[] = [];
   for (let k = 0; k < slides; k++) glide.push(1 + Math.floor(R() * 16));
-  return stagesLine(semis, { gen: algo, scale, root, length: pick(R, [8, 16, 16]), slides: [...new Set(glide)] });
+  return melodyLine(semis, { gen: algo, scale, root, length: pick(R, [8, 16, 16]), slides: [...new Set(glide)] });
 }
 
 function rhythmic(S: Builder, R: Rand): void {

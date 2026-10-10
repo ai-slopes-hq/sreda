@@ -72,7 +72,7 @@ pub trait Dsp {
     fn process(&mut self, io: &mut Io, ctx: &mut Ctx, from: usize, to: usize);
     /// Back to the initial state (after a non-finite output).
     fn reset(&mut self);
-    /// A current index for the UI (STAGES, RHYTHM, SWITCH, SPREAD).
+    /// A current index for the UI (META-SEQ, SWITCH, SPREAD).
     fn state(&self) -> f32 {
         0.0
     }

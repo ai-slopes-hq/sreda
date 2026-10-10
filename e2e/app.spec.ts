@@ -373,46 +373,6 @@ test('SLOPE: with CYCLE on its EOC → TRIG normal shows as a ghost cable and na
   await app.close();
 });
 
-test('RHYTHM: DICE changes the pads and ⌘Z restores them', async () => {
-  const { app, page } = await launch();
-  await page.mouse.dblclick(700, 650);
-  await page.keyboard.type('rhythm');
-  await page.keyboard.press('Enter');
-  const rhythm = page.locator('[data-type=rhythm]');
-  await expect(rhythm.locator('.sr-pad')).toHaveCount(16);
-  const pads = async () => (await fullDoc(page)).modules.find((m) => m.type === 'rhythm')!.params;
-  const before = JSON.stringify(await pads());
-  await rhythm.locator('[data-action=dice]').click();
-  expect(JSON.stringify(await pads())).not.toBe(before);
-  expect((await pads())['mode']).toBe(1);
-  await page.keyboard.press('Meta+z');
-  expect(JSON.stringify(await pads())).toBe(before);
-  await app.close();
-});
-
-test('STAGES: drawing on the contour sets the notes; ⌘Z undoes the stroke in one step', async () => {
-  const { app, page } = await launch();
-  await page.mouse.dblclick(500, 450);
-  await page.keyboard.type('stages');
-  await page.keyboard.press('Enter');
-  const disp = page.locator('[data-type=stages] .sr-contour');
-  await expect(disp).toBeVisible();
-  const v = async () => {
-    const m = (await fullDoc(page)).modules.find((x) => x.type === 'stages')!;
-    return [1, 2, 3].map((k) => m.params['v' + k]);
-  };
-  const before = await v();
-  const box = (await disp.boundingBox())!;
-  const step = box.width / 16;
-  await drag(page, { x: box.x + step * 0.5, y: box.y + 40 }, { x: box.x + step * 2.5, y: box.y + 40 });
-  const after = await v();
-  expect(after).not.toEqual(before);
-  expect(after[0]).toBe(after[2]);
-  await page.keyboard.press('Meta+z');
-  expect(await v()).toEqual(before);
-  await app.close();
-});
-
 test('a double-click on META-SEQ opens the drawer and the canvas shrinks above it', async () => {
   const { app, page } = await launch();
   await page.mouse.dblclick(500, 300);

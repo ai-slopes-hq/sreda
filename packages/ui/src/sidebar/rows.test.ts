@@ -9,7 +9,7 @@ function patch(): { doc: Doc; ids: string[] } {
     ['osc', 0],
     ['out', 400],
     ['slope', 0],
-    ['stages', 1200],
+    ['metaseq', 1200],
   ] as const) {
     const a = addModule(doc, SPECS, t, x, t === 'slope' ? 300 : 0);
     doc = a.doc;
@@ -36,7 +36,6 @@ test('sections: one per frame, UNGROUPED, BETWEEN GROUPS, PROBLEMS; rows name bo
   expect(g.rows[0]!.kind === 'wire' && g.rows[0]!.value).toBeNull(); // audio: no value
   // normals, dimmed, in their module's section
   expect(s[1]!.rows.map((r) => r.text)).toContain('SLOPE › TRIG  ← EOC (normal)');
-  expect(s[1]!.rows.map((r) => r.text)).toContain('STAGES › ADV  ← STAGE TIMER (normal)');
 });
 
 test('the filter matches module and port names; SELECTION keeps the wires touching the selection', () => {

@@ -46,9 +46,6 @@ const MODULES: &[Entry] = &[
     ("reverb", reverb::spec, |sr| {
         Box::new(reverb::Reverb::new(sr))
     }),
-    ("rhythm", rhythm::spec, |sr| {
-        Box::new(rhythm::Rhythm::new(sr))
-    }),
     ("sampler", sampler::spec, |sr| {
         Box::new(sampler::Sampler::new(sr))
     }),
@@ -58,9 +55,6 @@ const MODULES: &[Entry] = &[
     ("snh", snh::spec, |_| Box::new(snh::Snh::default())),
     ("spread", switch::spread_spec, |sr| {
         Box::new(switch::Switch::new(sr, true))
-    }),
-    ("stages", stages::spec, |sr| {
-        Box::new(stages::Stages::new(sr))
     }),
     ("switch", switch::switch_spec, |sr| {
         Box::new(switch::Switch::new(sr, false))

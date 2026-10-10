@@ -206,7 +206,7 @@ test('STACK packs densely with no gaps, 16 px inside, and sets the mode', () => 
 
 /** the user's patch: eight modules in this reading order in a free frame */
 function patch() {
-  const types = ['osc', 'osc', 'rhythm', 'stages', 'complex', 'lpg', 'att', 'delay'];
+  const types = ['osc', 'osc', 'grains', 'sampler', 'complex', 'lpg', 'att', 'delay'];
   let doc = emptyDoc;
   const ids: string[] = [];
   types.forEach((t, i) => {
@@ -224,16 +224,16 @@ test('stack packs densely in reading order', () => {
   const { doc, ids, gid } = patch();
   const d = setLayout(doc, SPECS, gid, 'stack');
   const g = rectOf(d, SPECS, gid);
-  expect(g.w).toBe(1152);
+  expect(g.w).toBe(928);
   expect(g.h).toBe(GHEAD + GPAD + 720 + GPAD);
   const r = rectsOf(d, ids, SPECS);
   for (let i = 0; i < r.length; i++)
     for (let j = i + 1; j < r.length; j++) expect(overlap(r[i]!, r[j]!)).toBe(false);
   const at = (i: number) => [r[i]!.x - g.x - GPAD, r[i]!.y - g.y - GHEAD - GPAD];
-  expect(at(3)).toEqual([0, 144]);
-  expect(at(4)).toEqual([560, 288]);
-  expect(at(6)).toEqual([560, 432]);
-  expect(at(7)).toEqual([0, 576]);
+  expect(at(3)).toEqual([0, 432]);
+  expect(at(4)).toEqual([560, 0]);
+  expect(at(6)).toEqual([560, 288]);
+  expect(at(7)).toEqual([448, 576]);
   // 1U, 2U and 3U line up: every top and bottom edge is on the 1U grid
   for (let i = 0; i < r.length; i++) expect([at(i)[1]! % 144, (at(i)[1]! + r[i]!.h) % 144]).toEqual([0, 0]);
   expect(r.every((x) => (x.x - g.x) % 8 === 0 && (x.y - g.y - GHEAD) % 8 === 0)).toBe(true);
@@ -267,7 +267,7 @@ test('a resize of a stack frame re-packs to the new width', () => {
   const narrow = resizeFrame(d, SPECS, gid, { ...r, w: 100 });
   expect(rectOf(narrow, SPECS, gid).w).toBe(widest + 2 * GPAD);
   const sw = rectOf(setLayout(doc, SPECS, gid, 'stack'), SPECS, gid);
-  expect(sw.w).toBe(1152);
+  expect(sw.w).toBe(928);
   // a free frame resized keeps its children where they were
   const free = resizeFrame(doc, SPECS, gid, { ...rectOf(doc, SPECS, gid), w: 1700 });
   expect(free.modules.map((m) => [m.x, m.y])).toEqual(doc.modules.map((m) => [m.x, m.y]));
@@ -310,12 +310,12 @@ test('packing is a fixed point', () => {
     for (let i = 0; i < n; i++) {
       if (rnd() < 0.2) {
         const inner = Array.from({ length: 1 + Math.floor(rnd() * 3) }, () =>
-          add(pick(['osc', 'lpg', 'stages'])),
+          add(pick(['osc', 'lpg', 'metaseq'])),
         );
         const f = frameSelection(doc, SPECS, inner);
         doc = setLayout(f.doc, SPECS, f.id, 'stack');
         loose.push(f.id);
-      } else loose.push(add(pick(['osc', 'lpg', 'stages', 'rhythm'])));
+      } else loose.push(add(pick(['osc', 'lpg', 'metaseq', 'delay'])));
     }
     const g = frameSelection(doc, SPECS, loose);
     const free = setLayout(g.doc, SPECS, g.id, 'free');

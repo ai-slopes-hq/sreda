@@ -4,8 +4,14 @@
     {
       "id": "m1",
       "type": "osc",
-      "knobs": [0.5737361772421502, 0.5000000000000001, 0],
-      "fixed": [2],
+      "knobs": [
+        0.5737361772421502,
+        0.5000000000000001,
+        0
+      ],
+      "fixed": [
+        2
+      ],
       "inputs": [
         {
           "sources": [],
@@ -56,13 +62,20 @@
           "ratio": 1
         }
       ],
-      "connectedOut": [true]
+      "connectedOut": [
+        true
+      ]
     },
     {
       "id": "m2",
       "type": "out",
-      "knobs": [0.7],
-      "fixed": [0, 0],
+      "knobs": [
+        0.7
+      ],
+      "fixed": [
+        0,
+        0
+      ],
       "inputs": [
         {
           "sources": [
@@ -97,7 +110,9 @@
   ],
   "steps": [
     {
-      "loop": [0]
+      "loop": [
+        0
+      ]
     },
     {
       "node": 1

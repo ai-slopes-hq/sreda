@@ -164,25 +164,6 @@ function panel(def, x, y, scale) {
     for (var i = 0; i <= 80; i++) { var xx = i / 80 * dw; a += (i ? 'L' : 'M') + xx.toFixed(1) + ' ' + (dh / 2 - Math.sin(i / 80 * 6 * Math.PI) * dh * 0.32).toFixed(1); b += (i ? 'L' : 'M') + xx.toFixed(1) + ' ' + (dh * 0.85 - ((i % 27) / 27) * dh * 0.55).toFixed(1); }
     r.dA = a; r.dB = b;
   }
-  if (def.display && def.display.kind === 'pads') {
-    var G = 'x.x-..x.x.xx-.x.', A = '...........A..A.', pw = (dw - 7 * 4) / 8, ph = (dh - 16) / 2;
-    for (var s = 0; s < 16; s++) {
-      var px = (s % 8) * (pw + 4), py = Math.floor(s / 8) * (ph + 14);
-      if (G[s] === '.') r.dOff += rect(px + 0.5, py + 0.5, pw - 1, ph - 1); else r.dOn += rect(px - (G[s] === '-' ? 4 : 0), py, pw + (G[s] === '-' ? 4 : 0), ph);
-      r.dAcc += A[s] === 'A' ? rect(px, py + ph + 4, pw, 5) : '';
-      if (s === 5) r.dRing = rect(px - 1, py - 1, pw + 2, ph + 2);
-    }
-  }
-  if (def.display && def.display.kind === 'contour') {
-    var N = [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], SL = [3, 6, 11, 14], sw = dw / 16, mid = dh / 2 - 4, amp = dh / 2 - 26, line = '';
-    N.forEach(function (st, i) {
-      var y2 = mid - ((st - 12) / 12) * amp, x0 = i * sw;
-      line += i ? (SL.indexOf(i + 1) >= 0 ? ' L' + (x0 + sw / 2).toFixed(1) + ' ' + y2.toFixed(1) : ' L' + x0.toFixed(1) + ' ' + y2.toFixed(1)) : 'M0 ' + y2.toFixed(1);
-      line += ' L' + (x0 + sw).toFixed(1) + ' ' + y2.toFixed(1);
-      r.dDot += circ(x0 + sw / 2, dh - 10, 2.6);
-    });
-    r.dLine = line; r.dFill = line + ' L' + dw + ' ' + dh + ' L0 ' + dh + ' Z'; r.dCur = rect(5 * sw, 0, sw, dh);
-  }
   // the grid: lanes and HP columns, and the three column borders
   var grid = '';
   for (var l = 0; l <= lanes; l++) grid += 'M0 ' + laneTop(l) + ' H' + w + ' ';
@@ -201,13 +182,11 @@ var DEFS = {
   osc: { name: 'OSC', size: [5, 1], ins: [['PTCH', 'pitch', '', 1], ['FM', 'audio'], ['SYNC', 'trigger']], outs: [['OUT', 'audio']], knobs: [['FREQ', 0.45], ['PW', 0.5], ['FM', 0]], modes: [{ glyph: 'saw', hp: 1 }] },
   complex: { name: 'COMPLEX', size: [6, 1], ins: [['PTCH', 'pitch'], ['FM', 'audio']], outs: [['OUT', 'audio'], ['MOD', 'audio']], knobs: [['FREQ', 0.4], ['RAT', 0.5], ['IDX', 0.2], ['TMB', 0]], modes: [{ glyph: 'sin', hp: 1 }] },
   scope: { name: 'SCOPE', size: [6, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['TRIG', 'trigger']], outs: [['THR A', 'audio'], ['THR B', 'audio']], display: { kind: 'scope', lanes: 4 }, knobs: [['TIME', 0.5], ['GA', 0.5], ['GB', 0.5]], modes: [{ t: 'A·B', hp: 1 }] },
-  rhythm: { name: 'RHYTHM', size: [10, 2], ins: [['CLK', 'trigger', '×4', 1], ['RST', 'trigger'], ['DICE', 'trigger']], outs: [['GATE', 'trigger'], ['ACC', 'trigger'], ['EOC', 'trigger']], display: { kind: 'pads', lanes: 4 },
-    knobs: [['LEN', 1], ['HITS', 0.47], ['ROT', 0], ['DENS', 0.47]], modes: [{ t: 'GRID', hp: 1 }, { t: 'DICE', hp: 1, right: true }] },
+  metaseq: { name: 'META-SEQ', size: [6, 2], ins: [['CLK', 'trigger', '×4', 1], ['RST', 'trigger'], ['DICE', 'trigger']], outs: [['CV', 'pitch'], ['GATE', 'trigger'], ['ACC', 'trigger'], ['VEL', 'mod'], ['EOC', 'trigger']],
+    knobs: [['PAT', 0], ['TRNS', 0.5], ['MUT', 0], ['DENS', 0.5]], modes: [{ t: '303 ▾', hp: 2 }, { glyph: 'scale', hp: 1 }, { t: 'DICE', hp: 1, right: true }] },
   mix: { name: 'MIX', size: [4, 2], ins: [['A', 'audio', '', 1], ['B', 'audio', '', 1], ['C', 'audio'], ['D', 'audio']], outs: [['OUT', 'audio']], knobs: [['A', 0.8], ['B', 0.8], ['C', 0.8], ['D', 0.8]] },
   att: { name: 'ATT', size: [6, 2], ins: [['IN1', 'audio'], ['IN2', 'audio'], ['IN3', 'audio'], ['IN4', 'audio']], outs: [['OUT1', 'mod'], ['OUT2', 'mod'], ['OUT3', 'mod'], ['OUT4', 'mod']],
-    knobs: [['ATT1', 1], ['ATT2', 0.5], ['ATT3', 0.75], ['ATT4', 0.25], ['OFS1', 0.5], ['OFS2', 0.5], ['OFS3', 0.5], ['OFS4', 0.5]] },
-  stages: { name: 'STAGES', size: [10, 3], ins: [['ADV', 'trigger', '1', 1], ['RST', 'trigger'], ['ADDR', 'mod'], ['DICE', 'trigger']], outs: [['CV', 'mod'], ['PLS', 'trigger'], ['EOC', 'trigger']], display: { kind: 'contour', lanes: 9 },
-    knobs: [['LEN', 1], ['ROOT', 0]], modes: [{ t: '303 ▾', hp: 2 }, { glyph: 'scale', hp: 1 }, { t: 'DICE', hp: 1, right: true }] }
+    knobs: [['ATT1', 1], ['ATT2', 0.5], ['ATT3', 0.75], ['ATT4', 0.25], ['OFS1', 0.5], ['OFS2', 0.5], ['OFS3', 0.5], ['OFS4', 0.5]] }
 };
 
 class Component extends DCLogic {
@@ -218,13 +197,11 @@ class Component extends DCLogic {
     // badge spots are given in the old units (HP 48, lanes 28 under 26) and mapped onto the new ones
     function B(n, x, y) { var ny = y < 24 ? y * 32 / 24 : 38 + (y - 26) * 32 / 28; return { n: '' + n, style: 'left:' + (ax + x * 7 / 6 * S) + 'px;top:' + (ay + ny * S) + 'px;' }; }
     var badges = [B(8, 150, 12), B(2, 24, 210), B(2, 264, 210), B(3, 34, 54), B(6, 150, 44), B(4, 150, 108), B(5, 80, 196), B(5, 222, 196), B(1, 290, 150)];
-    var y1 = 640, y2 = 840, y3 = 1170, gap = 32, x = 40, rowTitles = [];
+    var y1 = 640, y2 = 840, gap = 32, x = 40, rowTitles = [];
     rowTitles.push({ text: '1U — один ряд ручек и полоса режимов', style: 'left:40px;top:' + (y1 - 28) + 'px;' });
     ['noise', 'filter', 'lpg', 'slope', 'osc', 'complex'].forEach(function (k) { var d = DEFS[k]; mods.push(panel(d, x, y1)); x += d.size[0] * HP + gap; });
     rowTitles.push({ text: '2U — экран или два ряда ручек, та же полоса режимов внизу', style: 'left:40px;top:' + (y2 - 28) + 'px;' });
-    x = 40; ['scope', 'rhythm', 'mix', 'att'].forEach(function (k) { var d = DEFS[k]; mods.push(panel(d, x, y2)); x += d.size[0] * HP + gap; });
-    rowTitles.push({ text: '3U — большой экран, тот же ряд ручек, та же полоса режимов', style: 'left:40px;top:' + (y3 - 28) + 'px;' });
-    mods.push(panel(DEFS.stages, 40, y3));
+    x = 40; ['scope', 'metaseq', 'mix', 'att'].forEach(function (k) { var d = DEFS[k]; mods.push(panel(d, x, y2)); x += d.size[0] * HP + gap; });
     return { mods: mods, badges: badges, rowTitles: rowTitles };
   }
 }

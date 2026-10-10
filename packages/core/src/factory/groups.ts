@@ -1,6 +1,6 @@
 // The factory groups (spec §6): each one top frame with everything inside it.
 import { seqParams } from '../migrate/seq';
-import { gridRhythm, stagesLine, type Builder } from './build';
+import { gridRhythm, melodyLine, type Builder } from './build';
 import {
   chaoticBells,
   clap,
@@ -51,7 +51,7 @@ export const GROUPS: { name: string; build(b: Builder): [string, string] }[] = [
         64,
         seqParams(
           gridRhythm('x.x-..x.x.xx-.x.', '...........A..A.'),
-          stagesLine([0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], { scale: 2, slides: [3, 6, 11, 14] }),
+          melodyLine([0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], { scale: 2, slides: [3, 6, 11, 14] }),
         ),
       );
       const os = S.add('osc', 0, 448, { freq: 110, wave: 2 });

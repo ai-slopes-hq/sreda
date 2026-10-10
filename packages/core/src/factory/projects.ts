@@ -1,6 +1,6 @@
 // The factory projects (spec §6), built only from the first modules.
 import { seqParams } from '../migrate/seq';
-import { gridRhythm, stagesLine, type Builder } from './build';
+import { gridRhythm, melodyLine, type Builder } from './build';
 import {
   chaoticBells,
   clap,
@@ -113,7 +113,7 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
     name: 'self-clocked',
     build(S) {
       const sl = S.add('slope', 0, 0, { rise: 0.005, fall: 0.35, cycle: 1 });
-      const sq = S.seq(0, 176, seqParams(null, stagesLine([12, 15, 19, 12, 22, 17, 15, 10], { rests: [3, 6] })));
+      const sq = S.seq(0, 176, seqParams(null, melodyLine([12, 15, 19, 12, 22, 17, 15, 10], { rests: [3, 6] })));
       const q = S.add('quant', 528, 176, { scale: 1 });
       const os = S.add('osc', 768, 176, { freq: 110, wave: 2 });
       const lp = S.add('lpg', 1104, 176, { decay: 0.25 });
@@ -133,10 +133,10 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
     // driving its own voice
     name: 'polymeter',
     build(S) {
-      const sa = S.seq(0, 96, seqParams(null, stagesLine([12, 16, 14, 19, 17])));
+      const sa = S.seq(0, 96, seqParams(null, melodyLine([12, 16, 14, 19, 17])));
       const oa = S.add('osc', 528, 96, { freq: 110, wave: 2 });
       const la = S.add('lpg', 864, 96, { decay: 0.2 });
-      const sb = S.seq(0, 544, seqParams(null, stagesLine([6, 8, 6, 10, 6, 7, 9])));
+      const sb = S.seq(0, 544, seqParams(null, melodyLine([6, 8, 6, 10, 6, 7, 9])));
       const ob = S.add('osc', 528, 544, { freq: 110, wave: 0 });
       const lb = S.add('lpg', 864, 544, { decay: 0.12 });
       const mx = S.add('mix', 1216, 352);
@@ -185,7 +185,7 @@ export const PROJECTS: { name: string; build(b: Builder): void }[] = [
         96,
         seqParams(
           gridRhythm('x.x-..x.x.xx-.x.', '...........A..A.'),
-          stagesLine([0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], {
+          melodyLine([0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], {
             gen: 0,
             scale: 2,
             slides: [3, 6, 11, 14],

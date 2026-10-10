@@ -4,8 +4,14 @@
     {
       "id": "m1",
       "type": "osc",
-      "knobs": [0.5737361772421502, 0.5000000000000001, 0],
-      "fixed": [0],
+      "knobs": [
+        0.5737361772421502,
+        0.5000000000000001,
+        0
+      ],
+      "fixed": [
+        0
+      ],
       "inputs": [
         {
           "sources": [],
@@ -56,13 +62,20 @@
           "ratio": 1
         }
       ],
-      "connectedOut": [true]
+      "connectedOut": [
+        true
+      ]
     },
     {
       "id": "m2",
       "type": "out",
-      "knobs": [0.7],
-      "fixed": [0, 0],
+      "knobs": [
+        0.7
+      ],
+      "fixed": [
+        0,
+        0
+      ],
       "inputs": [
         {
           "sources": [
@@ -105,8 +118,13 @@
     {
       "id": "m3",
       "type": "out",
-      "knobs": [0.7],
-      "fixed": [0, 0],
+      "knobs": [
+        0.7
+      ],
+      "fixed": [
+        0,
+        0
+      ],
       "inputs": [
         {
           "sources": [
@@ -144,7 +162,10 @@
       "id": "g4",
       "type": "clock",
       "knobs": [],
-      "fixed": [1, 140],
+      "fixed": [
+        1,
+        140
+      ],
       "inputs": [
         {
           "sources": [],
@@ -154,13 +175,18 @@
           "ratio": 1
         }
       ],
-      "connectedOut": [false]
+      "connectedOut": [
+        false
+      ]
     },
     {
       "id": "g5",
       "type": "clock",
       "knobs": [],
-      "fixed": [0, 120],
+      "fixed": [
+        0,
+        120
+      ],
       "inputs": [
         {
           "sources": [],
@@ -174,7 +200,9 @@
           "ratio": -2
         }
       ],
-      "connectedOut": [true]
+      "connectedOut": [
+        true
+      ]
     }
   ],
   "steps": [
@@ -204,7 +232,9 @@
           "port": 0
         }
       ],
-      "outs": [2]
+      "outs": [
+        2
+      ]
     },
     {
       "id": "g5",

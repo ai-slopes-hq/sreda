@@ -357,7 +357,7 @@ body{margin:0;background:#121210}
 </div>
 </div>
 </sc-if>
-<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · W SIDEBAR · ⌘S SAVE · DRAW MELODIES ON STAGES · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · G FRAME / UNFRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
+<div class="sr-hint" style="{{hintStyle}}">DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · W SIDEBAR · ⌘S SAVE · DOUBLE-CLICK META-SEQ TO EDIT · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · G FRAME / UNFRAME · DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO · SILENT PROTOTYPE</div>
 <div class="sr-zoom" style="{{zoomStyle}}" onPointerDown="{{stop}}">
 <button onClick="{{zoomOut}}" aria-label="Zoom out">−</button>
 <span>{{zoomText}}</span>
@@ -415,21 +415,11 @@ var SPECS = {
     ins: [P('in', 'audio')], outs: [P('lp', 'audio'), P('bp', 'audio'), P('hp', 'audio')],
     params: [K('cutoff', 'CUT', 20, 20000, 1000, { exp: 1, unit: 'hz', rr: [100, 8000], md: 0.25 }), K('res', 'RES', 0, 1, 0.2)] },
   fold: { label: 'FOLD', desc: 'wavefolder', cols: 2, ins: [P('in', 'audio')], outs: [P('out', 'audio')], params: [K('fold', 'FOLD', 0, 1, 0.3), K('sym', 'SYM', -1, 1, 0)] },
-  stages: { label: 'STAGES', desc: '16 stages drawn as a contour: note, time, pulse, slide · generative', display: { lanes: 9, kind: 'contour' },
-    ins: [P('adv', 'trigger'), P('reset', 'trigger', 'RST'), P('addr', 'mod'), P('dice', 'trigger')], outs: [P('cv', 'mod'), P('pulse', 'trigger', 'PLS'), P('eoc', 'trigger')],
-    params: range(16, function (i) { return hide(K('v' + i, '' + i, -1, 1, 0)); })
-      .concat(range(16, function (i) { return hide(K('t' + i, 'T' + i, 0.01, 4, 0.25, { exp: 1, unit: 's' })); }))
-      .concat(range(16, function (i) { return hide(O('p' + i, '', ['●', '○'])); }))
-      .concat(range(16, function (i) { return hide(O('g' + i, '', ['STEP', 'SLIDE'])); }))
-      .concat([K('length', 'LEN', 1, 16, 16, { step: 1 }), O('gen', 'GEN', ['303', 'MOTIF', 'WALK', 'TURING', 'ARP', 'PHRASE', 'PEDAL']),
-        Object.assign(O('scale', 'SCALE', ['CHR', 'MAJ', 'MIN', 'DOR', 'PHR', 'PMIN', 'PMAJ', 'WHL'], 2), { glyph: 'scale' }), K('root', 'ROOT', 0, 11, 0, { step: 1, unit: 'note' }), A('dice', 'DICE')]),
-    normals: [{ input: 'adv', internal: 'stage timer' }] },
-  rhythm: { label: 'RHYTHM', desc: '16 pads: euclid or grid, accents · generative', display: { lanes: 4, kind: 'pads' },
-    ins: [P('clk', 'trigger'), P('reset', 'trigger', 'RST'), P('dice', 'trigger')], outs: [P('gate', 'trigger'), P('acc', 'trigger'), P('eoc', 'trigger')],
-    params: range(16, function (i) { return hide(O('g' + i, '' + i, ['○', '●', '—'])); })
-      .concat(range(16, function (i) { return hide(O('a' + i, '', ['·', 'A'])); }))
-      .concat([K('length', 'LEN', 1, 16, 16, { step: 1 }), K('hits', 'HITS', 0, 16, 5, { step: 1 }), K('rot', 'ROT', 0, 15, 0, { step: 1 }),
-        K('dens', 'DENS', 1, 16, 8, { step: 1 }), O('mode', 'MODE', ['EUCLID', 'GRID']), A('dice', 'DICE')]) },
+  metaseq: { label: 'META-SEQ', desc: 'six polymetric lanes, eight patterns: note, gate, tie, accent, velocity, chance · generative', cols: 4,
+    ins: [P('clk', 'trigger'), P('reset', 'trigger', 'RST'), P('dice', 'trigger')], outs: [P('cv', 'pitch'), P('gate', 'trigger'), P('acc', 'trigger'), P('vel', 'mod'), P('eoc', 'trigger')],
+    params: [hide(K('root', 'ROOT', 0, 11, 0, { step: 1, unit: 'note' })), K('pat', 'PAT', 0, 7, 0, { step: 1 }), K('trns', 'TRNS', -24, 24, 0, { step: 1 }), K('mut', 'MUT', 0, 1, 0), K('dens', 'DENS', 0, 1, 0.5),
+      O('gen', 'GEN', ['303', 'MOTIF', 'WALK', 'TURING', 'ARP', 'PHRASE', 'PEDAL', 'EUCLID']),
+      Object.assign(O('scale', 'SCALE', ['CHR', 'MAJ', 'MIN', 'DOR', 'PHR', 'PMIN', 'PMAJ', 'WHL'], 2), { glyph: 'scale' }), A('dice', 'DICE')] },
   chance: { label: 'CHANCE', desc: 'bernoulli: each trigger to A or B', cols: 1,
     ins: [P('trig', 'trigger')], outs: [P('a', 'trigger'), P('b', 'trigger')], params: [K('p', 'P', 0, 1, 0.5)] },
   shift: { label: 'SHIFT', desc: 'delay triggers by part of the period · swing', cols: 2,
@@ -468,7 +458,7 @@ var SPECS = {
     normals: [{ input: 'r', internal: 'L' }] }
 };
 
-var SIZES = { osc: [5, 1], complex: [6, 1], noise: [3, 1], uncertainty: [4, 1], slope: [5, 1], lpg: [4, 1], filter: [4, 1], fold: [4, 1], stages: [10, 3], compare: [3, 1], snh: [2, 1], quant: [3, 1], mix: [4, 2], att: [6, 2], abc: [5, 2], delay: [5, 1], scope: [6, 2], out: [3, 1], rhythm: [10, 2], chance: [3, 1], shift: [3, 1], follow: [6, 1], 'switch': [4, 2], spread: [4, 2] };
+var SIZES = { osc: [5, 1], complex: [6, 1], noise: [3, 1], uncertainty: [4, 1], slope: [5, 1], lpg: [4, 1], filter: [4, 1], fold: [4, 1], metaseq: [6, 2], compare: [3, 1], snh: [2, 1], quant: [3, 1], mix: [4, 2], att: [6, 2], abc: [5, 2], delay: [5, 1], scope: [6, 2], out: [3, 1], chance: [3, 1], shift: [3, 1], follow: [6, 1], 'switch': [4, 2], spread: [4, 2] };
 Object.keys(SIZES).forEach(function (t) { SPECS[t].size = SIZES[t]; });
 
 function fromK(p, k) { k = clamp(k, 0, 1); var v = p.exp ? p.min * Math.pow(p.max / p.min, k) : p.min + (p.max - p.min) * k; if (p.step) v = Math.round(v / p.step) * p.step; return v; }
@@ -704,19 +694,19 @@ var SEEDS = [
   } },
   { name: 'self-clocked', build: function (S) {
     var sl = S.add('slope', 0, 0, { rise: 0.005, fall: 0.35, cycle: 1 });
-    var st = S.add('stages', 0, 176, { length: 8, v1: 0, v2: 0.25, v3: 0.58, v4: 0, v5: 0.83, v6: 0.42, v7: 0.25, v8: -0.17, p3: 1, p6: 1 });
+    var st = S.add('metaseq', 0, 176, {});
     var q = S.add('quant', 528, 176, { scale: 1 });
     var os = S.add('osc', 768, 176, { freq: 110, wave: 2 });
     var lp = S.add('lpg', 1104, 176, { decay: 0.25 });
     var o = S.add('out', 1392, 176, {});
-    S.w(sl, 'eoc', st, 'adv'); S.w(st, 'cv', q, 'in'); S.w(q, 'out', os, 'pitch'); S.w(st, 'pulse', lp, 'ping');
+    S.w(sl, 'eoc', st, 'clk'); S.w(st, 'cv', q, 'in'); S.w(q, 'out', os, 'pitch'); S.w(st, 'gate', lp, 'ping');
     S.w(os, 'out', lp, 'in'); S.w(lp, 'out', o, 'l'); S.w(st, 'cv', sl, '@fall'); S.att(sl, '@fall', 0.3);
   } },
   { name: 'polymeter', build: function (S) {
-    var sa = S.add('stages', 0, 96, { length: 5, v1: 0, v2: 0.33, v3: 0.17, v4: 0.58, v5: 0.42 });
+    var sa = S.add('metaseq', 0, 96, {});
     var oa = S.add('osc', 528, 96, { freq: 110, wave: 2 });
     var la = S.add('lpg', 864, 96, { decay: 0.2 });
-    var sb = S.add('stages', 0, 544, { length: 7, v1: -0.5, v2: -0.33, v3: -0.5, v4: -0.17, v5: -0.5, v6: -0.42, v7: -0.25 });
+    var sb = S.add('metaseq', 0, 544, {});
     var ob = S.add('osc', 528, 544, { freq: 110, wave: 0 });
     var lb = S.add('lpg', 864, 544, { decay: 0.12 });
     var mx = S.add('mix', 1216, 352, {});
@@ -724,15 +714,13 @@ var SEEDS = [
     var ga = S.frame([sa, oa, la], 'VOICE A', { ratio: -3, tint: 1 });
     var gb = S.frame([sb, ob, lb], 'VOICE B', { ratio: 2, tint: 5 });
     S.frame([ga, gb], 'POLY', { bpm: 120 });
-    S.w(ga, 'clkOut', sa, 'adv'); S.w(gb, 'clkOut', sb, 'adv');
-    S.w(sa, 'cv', oa, 'pitch'); S.w(sa, 'pulse', la, 'ping'); S.w(oa, 'out', la, 'in');
-    S.w(sb, 'cv', ob, 'pitch'); S.w(sb, 'pulse', lb, 'ping'); S.w(ob, 'out', lb, 'in');
+    S.w(ga, 'clkOut', sa, 'clk'); S.w(gb, 'clkOut', sb, 'clk');
+    S.w(sa, 'cv', oa, 'pitch'); S.w(sa, 'gate', la, 'ping'); S.w(oa, 'out', la, 'in');
+    S.w(sb, 'cv', ob, 'pitch'); S.w(sb, 'gate', lb, 'ping'); S.w(ob, 'out', lb, 'in');
     S.w(la, 'out', mx, 'a'); S.w(lb, 'out', mx, 'b'); S.w(mx, 'out', o, 'l');
   } },
   { name: 'acid', build: function (S) {
-    var rh = S.add('rhythm', 0, 96, { mode: 1, hits: 7 });
-    S.grid(rh, 'x.x-..x.x.xx-.x.', '...........A..A.');
-    var st = S.add('stages', 528, 96, S.notes({ gen: 0, scale: 2 }, [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], [3, 6, 11, 14]));
+    var rh = S.add('metaseq', 0, 96, {});
     var os = S.add('osc', 0, 480, { freq: 110, wave: 2 });
     var fl = S.add('filter', 336, 480, { cutoff: 260, res: 0.82 });
     var va = S.add('lpg', 576, 480, { level: 0, mode: 0 });
@@ -741,10 +729,10 @@ var SEEDS = [
     var ef = S.add('slope', 0, 640, { rise: 0.002, fall: 0.25 });
     var ea = S.add('slope', 336, 640, { rise: 0.002, fall: 0.2 });
     var ec = S.add('slope', 672, 640, { rise: 0.002, fall: 0.12 });
-    var g = S.frame([rh, st, os, fl, va, dl, o, ef, ea, ec], 'ACID', { bpm: 128, tint: 2 });
+    var g = S.frame([rh, os, fl, va, dl, o, ef, ea, ec], 'ACID', { bpm: 128, tint: 2 });
     S.w(g, 'clkOut', rh, 'clk'); S.rat(rh, 'clk', 4);
-    S.w(rh, 'gate', st, 'adv'); S.w(rh, 'gate', ef, 'trig'); S.w(rh, 'gate', ea, 'trig'); S.w(rh, 'acc', ec, 'trig');
-    S.w(st, 'cv', os, 'pitch'); S.w(os, 'out', fl, 'in'); S.w(fl, 'lp', va, 'in'); S.w(va, 'out', dl, 'in'); S.w(dl, 'out', o, 'l');
+    S.w(rh, 'gate', ef, 'trig'); S.w(rh, 'gate', ea, 'trig'); S.w(rh, 'acc', ec, 'trig');
+    S.w(rh, 'cv', os, 'pitch'); S.w(os, 'out', fl, 'in'); S.w(fl, 'lp', va, 'in'); S.w(va, 'out', dl, 'in'); S.w(dl, 'out', o, 'l');
     S.w(ef, 'out', fl, '@cutoff'); S.att(fl, '@cutoff', 0.35); S.w(ec, 'out', fl, '@cutoff');
     S.w(ea, 'out', va, '@level');
   } },
@@ -761,14 +749,13 @@ var SEEDS = [
 // Factory groups, built with the same helpers as the seeds; each is one frame with everything inside it.
 var FACTORY_GROUPS = [
   { name: '303 voice', build: function (S) {
-    var rh = S.add('rhythm', 0, 64, { mode: 1 }); S.grid(rh, 'x.x-..x.x.xx-.x.', '...........A..A.');
-    var st = S.add('stages', 528, 64, S.notes({ scale: 2 }, [0, 0, 12, 3, 7, 0, 10, 5, 0, 12, 3, 3, 7, 10, 0, 15], [3, 6, 11, 14]));
+    var rh = S.add('metaseq', 0, 64, {});
     var os = S.add('osc', 0, 448, { freq: 110, wave: 2 }), fl = S.add('filter', 336, 448, { cutoff: 260, res: 0.82 }), va = S.add('lpg', 576, 448, { level: 0, mode: 0 });
     var ef = S.add('slope', 0, 608, { rise: 0.002, fall: 0.25 }), ea = S.add('slope', 336, 608, { rise: 0.002, fall: 0.2 }), ec = S.add('slope', 672, 608, { rise: 0.002, fall: 0.12 });
-    var g = S.frame([rh, st, os, fl, va, ef, ea, ec], '303 VOICE', { bpm: 128, tint: 2 });
+    var g = S.frame([rh, os, fl, va, ef, ea, ec], '303 VOICE', { bpm: 128, tint: 2 });
     S.w(g, 'clkOut', rh, 'clk'); S.rat(rh, 'clk', 4);
-    S.w(rh, 'gate', st, 'adv'); S.w(rh, 'gate', ef, 'trig'); S.w(rh, 'gate', ea, 'trig'); S.w(rh, 'acc', ec, 'trig');
-    S.w(st, 'cv', os, 'pitch'); S.w(os, 'out', fl, 'in'); S.w(fl, 'lp', va, 'in');
+    S.w(rh, 'gate', ef, 'trig'); S.w(rh, 'gate', ea, 'trig'); S.w(rh, 'acc', ec, 'trig');
+    S.w(rh, 'cv', os, 'pitch'); S.w(os, 'out', fl, 'in'); S.w(fl, 'lp', va, 'in');
     S.w(ef, 'out', fl, '@cutoff'); S.att(fl, '@cutoff', 0.35); S.w(ec, 'out', fl, '@cutoff'); S.w(ea, 'out', va, '@level');
   } },
   { name: 'complex vco', build: function (S) {
@@ -797,8 +784,6 @@ function buildWith(build, base) {
     w: function (a, ap, b, bp) { doc.cables.push({ f: [a, ap], t: [b, bp] }); },
     att: function (id, port, v) { findMod(doc, id).att[port] = v; },
     rat: function (id, port, r) { findMod(doc, id).rat[port] = r; },
-    notes: function (vals, semis, slides) { semis.forEach(function (s2, i) { vals['v' + (i + 1)] = (s2 - 12) / 12; }); slides.forEach(function (k) { vals['g' + k] = 1; }); return vals; },
-    grid: function (id, gates, accents) { var m = findMod(doc, id); for (var i = 1; i <= 16; i++) { m.p['g' + i] = gates[i - 1] === 'x' ? 1 : gates[i - 1] === '-' ? 2 : 0; m.p['a' + i] = accents[i - 1] === 'A' ? 1 : 0; } },
     frame: function (ids, name, o) {
       var id = 'g' + (n++), r = fitFrame(doc, ids);
       doc.groups.push({ id: id, name: name, x: r.x, y: r.y, w: r.w, h: r.h, parent: null, ratio: o.ratio || 1, tint: o.tint || 0, layout: 'route', muted: false, clock: { on: !!o.bpm, bpm: o.bpm || 120 } });
@@ -829,7 +814,7 @@ function mergeInto(doc, src, dx, dy) {
   src.cables.forEach(function (c) { if (map[c.f[0]] && map[c.t[0]]) doc.cables.push({ f: [map[c.f[0]], c.f[1]], t: [map[c.t[0]], c.t[1]] }); });
   return map;
 }
-var LIB_KEY = 'sreda2-proto-lib-v3';
+var LIB_KEY = 'sreda2-proto-lib-v4';
 function loadLib() { try { var l = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); return Array.isArray(l) ? l.filter(function (e) { return e && e.path && validDoc(e.doc); }) : []; } catch (err) { return []; } }
 function saveLib(lib) { try { localStorage.setItem(LIB_KEY, JSON.stringify(lib)); } catch (err) { /* storage unavailable */ } }
 function fullLib(user) {
@@ -906,26 +891,8 @@ function genNotes(algo, n, mask, root, R) {
   }
   return line;
 }
-// DICE: STAGES gets a line in its scale (and slides for 303 / MOTIF); RHYTHM gets 303-style gates and accents.
-function diceModule(m, R) {
-  var s = SPECS[m.type];
-  if (m.type === 'stages') {
-    var algo = s.params.find(function (p) { return p.id === 'gen'; }).opts[m.p.gen];
-    var line = genNotes(algo, 16, SCALES[m.p.scale], Math.round(fromK(param('stages', 'root'), m.p.root)), R);
-    for (var i = 1; i <= 16; i++) {
-      m.p['v' + i] = toK(param('stages', 'v' + i), (line[i - 1] - 12) / 12);
-      m.p['g' + i] = (algo === '303' || algo === 'MOTIF' ? R() < 0.2 : algo !== 'ARP' && R() < 0.15) ? 1 : 0;
-      m.p['p' + i] = 0;
-    }
-  } else if (m.type === 'rhythm') {
-    var dens = Math.round(fromK(param('rhythm', 'dens'), m.p.dens)), act = euclid(16, dens, Math.floor(R() * 16));
-    var idx = Math.max(0, Math.min(15, dens)), t1 = 5 + idx / 15 * 45, t2 = 10 + Math.pow(idx / 15, 1.2) * 30;
-    for (var k = 1; k <= 16; k++) { m.p['g' + k] = act[k - 1] ? 1 : 0; m.p['a' + k] = act[k - 1] && R() < 0.3 ? 1 : 0; }
-    // a long note (old SREDA "tie"): the note holds into the rest after it
-    for (var k2 = 1; k2 < 16; k2++) if (act[k2 - 1] && !act[k2] && (R() * 100 < t1 ? 1 : 0) + (R() * 100 < t2 ? 1 : 0) === 2) m.p['g' + (k2 + 1)] = 2;
-    m.p.mode = 1;
-  }
-}
+// DICE: the prototype draws no lanes, so META-SEQ's DICE has nothing to write (the app's DICE writes the edited pattern).
+function diceModule(m, R) {}
 
 // A frame-rate stand-in for the engine: enough to drive the readouts, nothing audible.
 function Sim() { this.dice = {}; this.glevel = {}; this.st = {}; this.out = {}; this.prev = {}; this.flash = {}; this.peak = {}; this.kmod = {}; this.cur = {}; this.master = {}; this.scope = {}; this.ins = {}; }
@@ -1026,44 +993,22 @@ Sim.prototype.step = function (doc, dt, now) {
       }
       case 'filter': { var fc = clamp(Math.log(Pv.cutoff / 20) / Math.log(1000), 0.05, 1), ai3 = A('in'), vi = V('in'); set('lp', vi, ai3 * fc); set('bp', vi, ai3 * (0.4 + Pv.res * 0.4)); set('hp', vi, ai3 * clamp(1.2 - fc, 0.2, 1)); break; }
       case 'fold': set('out', Math.sin(V('in') * (1 + Pv.fold * 4) + Pv.sym), A('in')); break;
-      case 'stages': {
-        var len = Math.round(Pv.length), adv = false, pulse = 0, seoc = 0;
-        if (T('reset')) { st.si = -1; }
-        if (cabs('adv')) adv = T('adv');
-        else { st.tl -= dt; if (st.tl <= 0) adv = true; }
-        if (T('dice')) self.dice[id] = 1;
-        if (adv) {
-          st.from = st.cv;
-          st.si = (st.si + 1) % len; if (st.si === 0) seoc = 1;
-          st.tl = Pv['t' + (st.si + 1)]; st.t0 = now;
-          if (m.p['p' + (st.si + 1)] === 0) pulse = 1;
-        }
-        if (cabs('addr')) { var ai = clamp(Math.floor(clamp(V('addr'), 0, 0.999) * len), 0, len - 1); if (ai !== st.si) { st.si = ai; st.tl = Pv['t' + (ai + 1)]; st.t0 = now; if (m.p['p' + (ai + 1)] === 0) pulse = 1; } }
-        if (st.si >= len) st.si = 0;
-        var si = Math.max(0, st.si), tv = Pv['v' + (si + 1)];
-        if (m.p['g' + (si + 1)] === 1) { var fr = clamp((now - st.t0) / 0.08, 0, 1); tv = st.from + (tv - st.from) * fr; }
-        st.cv = tv; self.cur[id] = si;
-        set('cv', tv); set('pulse', pulse); set('eoc', seoc); break;
-      }
-      case 'rhythm': {
-        var rl = Math.round(Pv.length), racc = 0, reoc = 0;
+      case 'metaseq': {
+        // a stand-in: a 16-step cycle, a gate on every clock, an accent every 4th step, a rising CV; nothing like the real lanes
+        var ml = 16, macc = 0, meoc = 0;
         if (T('reset')) st.si = -1;
         if (T('dice')) self.dice[id] = 1;
         if (T('clk')) {
           if (st.last) st.iv = now - st.last;
-          st.last = now; st.si = (st.si + 1) % rl;
-          if (st.si === 0 && st.started) reoc = 1;
+          st.last = now; st.si = (st.si + 1) % ml;
+          if (st.si === 0 && st.started) meoc = 1;
           st.started = true;
-          var eu = Pv.mode === 0 ? euclid(rl, Math.round(Pv.hits), Math.round(Pv.rot)) : null;
-          var stateAt = function (k) { return eu ? (eu[k] ? 1 : 0) : m.p['g' + (k + 1)]; };
-          var now1 = stateAt(st.si), nxt = stateAt((st.si + 1) % rl), held = now < st.gu;
-          // TIE continues a sounding step: the gate just stays high (no new rise); after a rest it plays like ON
-          if (now1 === 1 || (now1 === 2 && !held)) { if (m.p['a' + (st.si + 1)] === 1) racc = 1; }
-          if (now1 === 1 || now1 === 2) st.gu = now + (nxt === 2 ? st.iv * 1.05 : st.iv / 2);
+          if (st.si % 4 === 0) macc = 1;
+          st.gu = now + (st.iv || 0.25) / 2;
+          st.cv = ((st.si * 5) % 12 - 6) / 12;
         }
-        if (st.si >= rl) st.si = 0;
         self.cur[id] = Math.max(0, st.si);
-        set('gate', now < st.gu ? 1 : 0); set('acc', racc); set('eoc', reoc); break;
+        set('cv', st.cv || 0); set('gate', now < st.gu ? 1 : 0); set('acc', macc); set('vel', 0.7); set('eoc', meoc); break;
       }
       case 'chance': { var ca = 0, cb = 0; if (T('trig')) { if (Math.random() < Pv.p) ca = 1; else cb = 1; } set('a', ca); set('b', cb); break; }
       case 'shift': {
@@ -1449,7 +1394,7 @@ function relayoutRoutes(doc, gids) {
   gids.forEach(function (gid) { var g = findGrp(doc, gid); if (g && g.layout === 'route') doc = layoutRows(doc, gid); });
   return doc;
 }
-var SAVE_KEY = 'sreda2-proto-v12';
+var SAVE_KEY = 'sreda2-proto-v13';
 function validDoc(d) {
   if (!d || !Array.isArray(d.mods) || !Array.isArray(d.cables) || !Array.isArray(d.groups) || typeof d.next !== 'number') return false;
   var ids = {};
@@ -1501,7 +1446,7 @@ function wireProblems(doc) {
       if (doc.cables.some(function (c) { return c.t[0] === m.id && c.t[1] === p.id; }) || normalFor(m, p.id, {})) return;
       res.push({ id: m.id, text: portLabel(doc, m.id, p.id) + ' — empty input' });
     });
-    if (m.type === 'rhythm' && !doc.cables.some(function (c) { return c.t[0] === m.id && c.t[1] === 'clk'; })) res.push({ id: m.id, text: portLabel(doc, m.id, 'clk') + ' — no clock' });
+    if (m.type === 'metaseq' && !doc.cables.some(function (c) { return c.t[0] === m.id && c.t[1] === 'clk'; })) res.push({ id: m.id, text: portLabel(doc, m.id, 'clk') + ' — no clock' });
   });
   // information, not errors: feedback loops and muted frames
   var info = [], adj = {};
