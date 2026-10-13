@@ -163,6 +163,15 @@ test('fixtures for the engine', () => {
     [ids('noise')[0]!, 'white'],
     [filter, 'in'],
   );
+  // a square OSC gating all four A4 tracks, a saw OSC as pitch
+  let a4doc = addModule(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'osc', 0, 200).doc;
+  a4doc = setParam(setParam(a4doc, SPECS, 'm1', 'wave', 3), SPECS, 'm2', 'wave', 2);
+  const a4 = addModule(a4doc, SPECS, 'a4', 400, 0);
+  a4doc = a4.doc;
+  for (const t of ['t1', 't2', 't3', 't4']) {
+    a4doc = connect(a4doc, SPECS, ['m1', 'out'], [a4.id, `${t}_gate`]);
+    a4doc = connect(a4doc, SPECS, ['m2', 'out'], [a4.id, `${t}_pitch`]);
+  }
   const plans = {
     starter: compile(starter, SPECS, 1),
     'all-a': compile(all, SPECS, 5),
@@ -172,6 +181,7 @@ test('fixtures for the engine', () => {
     'scope-b': compile(rerouted, SPECS, 4),
     frames: compile(nestedFrames(), SPECS, 7),
     '200': compile(bigPatch(SPECS), SPECS, 8),
+    a4: compile(a4doc, SPECS, 9),
   };
   expect(plans['self-fm'].steps).toEqual([{ loop: [0] }, { node: 1 }]);
   if (process.env['UPDATE_FIXTURES']) {

@@ -1,5 +1,168 @@
 [
   {
+    "type": "a4",
+    "label": "A4",
+    "desc": "Analog Four MKII over USB MIDI",
+    "size": [
+      8,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "t1_pitch",
+        "label": "P1",
+        "role": "pitch"
+      },
+      {
+        "id": "t1_gate",
+        "label": "G1",
+        "role": "trigger",
+        "held": true
+      },
+      {
+        "id": "t1_vel",
+        "label": "V1",
+        "role": "mod"
+      },
+      {
+        "id": "t2_pitch",
+        "label": "P2",
+        "role": "pitch"
+      },
+      {
+        "id": "t2_gate",
+        "label": "G2",
+        "role": "trigger",
+        "held": true
+      },
+      {
+        "id": "t2_vel",
+        "label": "V2",
+        "role": "mod"
+      },
+      {
+        "id": "t3_pitch",
+        "label": "P3",
+        "role": "pitch"
+      },
+      {
+        "id": "t3_gate",
+        "label": "G3",
+        "role": "trigger",
+        "held": true
+      },
+      {
+        "id": "t3_vel",
+        "label": "V3",
+        "role": "mod"
+      },
+      {
+        "id": "t4_pitch",
+        "label": "P4",
+        "role": "pitch"
+      },
+      {
+        "id": "t4_gate",
+        "label": "G4",
+        "role": "trigger",
+        "held": true
+      },
+      {
+        "id": "t4_vel",
+        "label": "V4",
+        "role": "mod"
+      },
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
+      },
+      {
+        "id": "run",
+        "label": "RUN",
+        "role": "trigger",
+        "held": true
+      },
+      {
+        "id": "rst",
+        "label": "RST",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "t1_note",
+        "label": "NOTE 1",
+        "min": 0.0,
+        "max": 127.0,
+        "def": 48.0,
+        "taper": "lin",
+        "step": 1.0,
+        "unit": "note"
+      },
+      {
+        "kind": "knob",
+        "id": "t2_note",
+        "label": "NOTE 2",
+        "min": 0.0,
+        "max": 127.0,
+        "def": 48.0,
+        "taper": "lin",
+        "step": 1.0,
+        "unit": "note"
+      },
+      {
+        "kind": "knob",
+        "id": "t3_note",
+        "label": "NOTE 3",
+        "min": 0.0,
+        "max": 127.0,
+        "def": 48.0,
+        "taper": "lin",
+        "step": 1.0,
+        "unit": "note"
+      },
+      {
+        "kind": "knob",
+        "id": "t4_note",
+        "label": "NOTE 4",
+        "min": 0.0,
+        "max": 127.0,
+        "def": 48.0,
+        "taper": "lin",
+        "step": 1.0,
+        "unit": "note"
+      },
+      {
+        "kind": "knob",
+        "id": "offset",
+        "label": "OFS",
+        "min": -50.0,
+        "max": 50.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0
+      },
+      {
+        "kind": "option",
+        "id": "clock",
+        "label": "CLK",
+        "options": [
+          "OFF",
+          "ON"
+        ],
+        "def": 0
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 2,
+      "kind": "device"
+    }
+  },
+  {
     "type": "abc",
     "label": "A×B+C",
     "desc": "multiply and add, 2 channels",

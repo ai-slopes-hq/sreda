@@ -10,6 +10,7 @@ type Entry = (&'static str, fn() -> ModuleSpec, Make);
 
 /// Every module, in type-id order.
 const MODULES: &[Entry] = &[
+    ("a4", a4::spec, |sr| Box::new(a4::A4::new(sr))),
     ("abc", abc::spec, |_| Box::new(abc::Abc)),
     ("att", att::spec, |_| Box::new(att::Att)),
     ("chance", chance::spec, |sr| {

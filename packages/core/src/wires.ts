@@ -70,7 +70,8 @@ export function wireProblems(doc: Doc, specs: Specs, missing?: (path: string) =>
       }
   }
   for (const m of doc.modules) {
-    if (m.type === 'out' || m.type === 'scope' || reach.has(m.id) || !cabled(m.id)) continue;
+    if (m.type === 'out' || m.type === 'scope' || m.type === 'a4' || reach.has(m.id) || !cabled(m.id))
+      continue;
     if (!specs[m.type]!.outputs.some((p) => p.role === 'audio')) continue;
     res.push({ id: m.id, text: `${nameOf(doc, specs, m.id)} — sound does not reach any OUT`, info: false });
   }

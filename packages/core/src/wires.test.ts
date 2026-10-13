@@ -83,3 +83,9 @@ test('problems: a META-SEQ without a clock lists META-SEQ › CLK — no clock',
   expect(p.map((x) => x.text)).toContain('META-SEQ › CLK — no clock');
   expect(p.find((x) => x.text.startsWith('META-SEQ'))!.id).toBe(ids[0]);
 });
+
+test('an A4 is not flagged as leading nowhere', () => {
+  const { doc: d0, ids } = patch('osc', 'a4');
+  const doc = connect(d0, SPECS, [ids[0]!, 'out'], [ids[1]!, 't1_gate']);
+  expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[1]);
+});

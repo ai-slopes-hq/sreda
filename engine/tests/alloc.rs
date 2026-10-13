@@ -242,3 +242,19 @@ fn metaseq_mutating_at_mut_1_allocates_nothing() {
     assert_eq!(allocs() - before, 0);
     assert!(e.readouts()[trace + 7] > 0.0, "the lanes mutated");
 }
+
+#[test]
+fn an_a4_playing_notes_allocates_nothing() {
+    // a CLOCK gates all four tracks, so notes go into the outbox every few blocks
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(fixture("a4")).unwrap();
+    e.process();
+    let before = allocs();
+    let mut events = 0;
+    for _ in 0..2_000 {
+        e.process();
+        events += e.events().len();
+    }
+    assert_eq!(allocs() - before, 0);
+    assert!(events > 0, "the A4 pushed events");
+}

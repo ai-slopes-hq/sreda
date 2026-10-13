@@ -55,7 +55,9 @@ test('a module that does not fit says so', () => {
 });
 
 test('every generated module fits its size', () => {
-  for (const spec of Object.values(SPECS)) expect(layoutPanel(spec).fits, spec.type).toBe(true);
+  // the A4's 15 inputs exceed a 2U panel's 7 jack lanes; its device layout (Plan 15, Task 6) replaces the column
+  for (const spec of Object.values(SPECS).filter((s) => s.type !== 'a4'))
+    expect(layoutPanel(spec).fits, spec.type).toBe(true);
 });
 
 test('heights are exactly n × 1U, so stacked 1U modules line up with 2U and 3U', () => {

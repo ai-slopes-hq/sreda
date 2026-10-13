@@ -1,0 +1,367 @@
+{
+  "seq": 9,
+  "nodes": [
+    {
+      "id": "m1",
+      "type": "osc",
+      "knobs": [
+        0.5737361772421502,
+        0.5000000000000001,
+        0
+      ],
+      "fixed": [
+        3
+      ],
+      "inputs": [
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "sum",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "trigger",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 0.25,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        }
+      ],
+      "connectedOut": [
+        true
+      ]
+    },
+    {
+      "id": "m2",
+      "type": "osc",
+      "knobs": [
+        0.5737361772421502,
+        0.5000000000000001,
+        0
+      ],
+      "fixed": [
+        2
+      ],
+      "inputs": [
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "sum",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "trigger",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 0.25,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        }
+      ],
+      "connectedOut": [
+        true
+      ]
+    },
+    {
+      "id": "m3",
+      "type": "a4",
+      "knobs": [
+        0.3779527559055118,
+        0.3779527559055118,
+        0.3779527559055118,
+        0.3779527559055118,
+        0.5
+      ],
+      "fixed": [
+        0
+      ],
+      "inputs": [
+        {
+          "sources": [
+            {
+              "node": 1,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "held",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 1,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "held",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 1,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "held",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 1,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [
+            {
+              "node": 0,
+              "port": 0,
+              "late": false
+            }
+          ],
+          "normal": null,
+          "kind": "held",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "trigger",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "held",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "trigger",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        },
+        {
+          "sources": [],
+          "normal": null,
+          "kind": "cv",
+          "att": 1,
+          "ratio": 1
+        }
+      ],
+      "connectedOut": []
+    }
+  ],
+  "steps": [
+    {
+      "node": 0
+    },
+    {
+      "node": 1
+    },
+    {
+      "node": 2
+    }
+  ],
+  "frames": [],
+  "layout": {
+    "size": 27,
+    "nodes": [
+      {
+        "knobs": 2,
+        "trigs": 5,
+        "outs": 6,
+        "state": 7,
+        "trace": null
+      },
+      {
+        "knobs": 8,
+        "trigs": 11,
+        "outs": 12,
+        "state": 13,
+        "trace": null
+      },
+      {
+        "knobs": 14,
+        "trigs": 19,
+        "outs": 26,
+        "state": 26,
+        "trace": null
+      }
+    ],
+    "frames": 27
+  }
+}

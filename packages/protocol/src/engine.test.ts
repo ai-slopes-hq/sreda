@@ -4,6 +4,7 @@ import {
   addModule,
   connect,
   frameSelection,
+  setParam,
   SPECS,
   starterDoc,
   toKnob,
@@ -135,4 +136,27 @@ test('events() is an empty view of the outbox when no module pushes; nothing is 
   expect(ev).toBeInstanceOf(Uint32Array);
   expect(ev.length).toBe(0);
   expect(e.eventsDropped()).toBe(0);
+});
+
+test('events() reports A4 notes', () => {
+  // a square OSC (110 Hz) is the gate
+  let doc = setParam(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'm1', 'wave', 3);
+  const a4 = addModule(doc, SPECS, 'a4', 400, 0);
+  doc = connect(a4.doc, SPECS, ['m1', 'out'], [a4.id, 't1_gate']);
+  const plan = compile(doc, SPECS, 1);
+  const node = plan.nodes.findIndex((n) => n.type === 'a4');
+  const e = loadEngine(wasm, 48_000, 1);
+  expect(e.apply(plan)).toBe(0);
+  const seen: number[][] = [];
+  // the outbox is cleared every block, so collect after each one
+  for (let b = 0; b < 400; b++) {
+    e.process();
+    const ev = e.events();
+    for (let i = 0; i < ev.length; i += 2)
+      seen.push([ev[i]! >>> 16, ev[i + 1]! & 0xff, (ev[i + 1]! >> 8) & 0xff, ev[i + 1]! >>> 16]);
+  }
+  const on = seen.findIndex((x) => x[1] === 0x90);
+  expect(on).toBeGreaterThanOrEqual(0);
+  expect(seen[on]).toEqual([node, 0x90, 48, 100]);
+  expect(seen.slice(on).some((x) => x[0] === node && x[1] === 0x80 && x[2] === 48)).toBe(true);
 });
