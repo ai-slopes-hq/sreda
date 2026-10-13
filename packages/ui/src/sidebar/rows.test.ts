@@ -1,4 +1,13 @@
-import { addModule, connect, emptyDoc, frameSelection, setCollapsed, setParam, SPECS, type Doc } from '@sreda/core';
+import {
+  addModule,
+  connect,
+  emptyDoc,
+  frameSelection,
+  setCollapsed,
+  setParam,
+  SPECS,
+  type Doc,
+} from '@sreda/core';
 import { expect, test } from 'vitest';
 import { wireSections } from './rows';
 
@@ -38,6 +47,23 @@ test('sections: one per frame, UNGROUPED, BETWEEN GROUPS, PROBLEMS; rows name bo
   expect(s[1]!.rows.map((r) => r.text)).toContain('SLOPE › TRIG  ← EOC (normal)');
 });
 
+test('a cable into a held input has no ratio value', () => {
+  const specs = {
+    ...SPECS,
+    osc: {
+      ...SPECS['osc']!,
+      inputs: SPECS['osc']!.inputs.map((p) => (p.id === 'sync' ? { ...p, held: true } : p)),
+    },
+  };
+  let doc = addModule(emptyDoc, specs, 'osc', 0, 0).doc;
+  doc = addModule(doc, specs, 'slope', 0, 300).doc;
+  doc = connect(doc, specs, ['m2', 'out'], ['m1', 'sync']);
+  const row = wireSections(doc, specs, all).flatMap((x) => x.rows)[0]!;
+  expect(row.kind === 'wire' && row.value).toBeNull();
+  const plain = wireSections(doc, SPECS, all).flatMap((x) => x.rows)[0]!;
+  expect(plain.kind === 'wire' && plain.value).toEqual({ kind: 'ratio', v: 1, def: 1 });
+});
+
 test('the filter matches module and port names; SELECTION keeps the wires touching the selection', () => {
   const { doc, ids } = patch();
   const filtered = wireSections(doc, SPECS, { ...all, q: 'ptch' });
@@ -60,5 +86,7 @@ test('a wire hidden inside a collapsed frame is listed dimmed, marked (collapsed
   expect(row.kind === 'wire' && row.collapsed).toBe(g);
   expect(row.text).toBe('OSC › OUT  →  OUT › L  (collapsed)');
   // a wire that leaves the frame is not hidden
-  expect(shut.flatMap((x) => x.rows).filter((r) => r.kind === 'wire' && r.collapsed === null)).toHaveLength(1);
+  expect(shut.flatMap((x) => x.rows).filter((r) => r.kind === 'wire' && r.collapsed === null)).toHaveLength(
+    1,
+  );
 });

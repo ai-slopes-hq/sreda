@@ -67,7 +67,10 @@ function valueOf(doc: Doc, specs: Specs, [id, port]: [string, string]): WireRow[
   if (g) return { kind: 'ratio', v: g.ratio, def: 1 };
   const m = doc.modules.find((x) => x.id === id)!;
   const role = roleIn(doc, specs, id, port);
-  if (role === 'trigger') return { kind: 'ratio', v: m.ratios[port] ?? 1, def: 1 };
+  if (role === 'trigger') {
+    if (inputPorts(specs[m.type]!).find((p) => p.id === port)?.held) return null; // held inputs have no ratio
+    return { kind: 'ratio', v: m.ratios[port] ?? 1, def: 1 };
+  }
   if (role === 'audio') return null;
   const knob = specs[m.type]!.params.find((p) => '@' + p.id === port);
   const def = knob?.kind === 'knob' ? (knob.modDepth ?? 1) : 1;
