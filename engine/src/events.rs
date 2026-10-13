@@ -1,5 +1,8 @@
 //! The engine's outbox: MIDI events a DSP pushes during a block, for the world outside the engine.
 
+/// `set_node` value of a slot that left the plan: its events are dropped, uncounted.
+pub(crate) const NO_NODE: usize = usize::MAX;
+
 /// Events one block can hold; more are dropped and counted.
 const CAPACITY: usize = 1024;
 
@@ -31,6 +34,10 @@ impl EventBox {
 
     /// Append an event at `offset` samples into the block, or drop it when the box is full.
     pub fn push(&mut self, offset: usize, bytes: [u8; 3]) {
+        if self.node == NO_NODE {
+            return;
+        }
+        debug_assert!(self.node <= 0xFFFF && offset <= 0xFFFF);
         if self.len == CAPACITY {
             self.dropped = self.dropped.wrapping_add(1);
             return;

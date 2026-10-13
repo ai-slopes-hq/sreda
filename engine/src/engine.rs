@@ -81,6 +81,8 @@ struct Slot {
     /// samples of fade-out left once removed from the plan; 0 while in the plan
     fade_left: u32,
     dead: bool,
+    /// index in the current plan (what the outside world calls the node); NO_NODE while retiring
+    plan_idx: usize,
 }
 
 enum StepRt {
@@ -569,6 +571,7 @@ impl Engine {
                         master_peak: 0.0,
                         fade_left: 0,
                         dead: false,
+                        plan_idx: crate::events::NO_NODE,
                     };
                     match self.pool.iter().position(|s| s.is_none()) {
                         Some(free) => {
@@ -834,6 +837,12 @@ impl Engine {
         self.frames_at = plan.layout.frames;
         // buffers moved: the UI re-sends listen after a new plan
         self.listen = None;
+        for s in self.pool.iter_mut().flatten() {
+            s.plan_idx = crate::events::NO_NODE;
+        }
+        for (i, &p) in order.iter().enumerate() {
+            self.pool[p].as_mut().unwrap().plan_idx = i;
+        }
         self.order = order;
         self.readouts = vec![0.0; plan.layout.size.max(2)];
         self.seq = plan.seq;
@@ -904,7 +913,7 @@ impl Engine {
         if slot.dead {
             return;
         }
-        self.ctx.events.set_node(p);
+        self.ctx.events.set_node(slot.plan_idx);
         let saved = self.ctx.master;
         self.ctx.master = [[0.0; BLOCK]; 2];
         for i in 0..BLOCK {
@@ -1061,7 +1070,7 @@ impl Engine {
             match st {
                 StepRt::Node(p) => {
                     let slot = self.pool[*p].as_mut().unwrap();
-                    self.ctx.events.set_node(*p);
+                    self.ctx.events.set_node(slot.plan_idx);
                     #[cfg(test)]
                     let reference = self.per_sample;
                     #[cfg(not(test))]
@@ -1099,7 +1108,7 @@ impl Engine {
                     for i in 0..BLOCK {
                         for p in members {
                             let slot = self.pool[*p].as_mut().unwrap();
-                            self.ctx.events.set_node(*p);
+                            self.ctx.events.set_node(slot.plan_idx);
                             prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
                             run(slot, &mut self.outs, &mut self.ctx, i, i + 1);
                         }
@@ -2241,6 +2250,65 @@ mod tests {
             }
         }
         assert!(seen >= 3 && empty > seen);
+        assert_eq!(e.events_dropped(), 0);
+    }
+
+    #[test]
+    fn events_carry_the_plan_index_not_the_pool_slot() {
+        let mut e = Engine::new(SR, 1);
+        let emit = || {
+            node(
+                "m",
+                "emit",
+                &[],
+                &[],
+                vec![input(vec![src(0, false)], Kind::Trigger)],
+            )
+        };
+        let clock = || node("c", "clock", &[], &[1.0, 300.0], vec![none(Kind::Trigger)]);
+        e.apply(plan(1, vec![clock(), emit()], chain(2))).unwrap();
+        run(&mut e, 2);
+        // a node inserted before both: plan indices shift, pool slots stay
+        let mut m = emit();
+        m.inputs[0].sources[0].node = 1;
+        let p = plan(
+            2,
+            vec![
+                node("d", "dc", &[dcv(0.0)], &[], vec![none(Kind::Cv)]),
+                clock(),
+                m,
+            ],
+            chain(3),
+        );
+        e.apply(p).unwrap();
+        let mut got = Vec::new();
+        for _ in 0..(SR as usize / 4 / BLOCK) {
+            e.process();
+            got.extend(e.events().chunks(2).map(|w| w[0] >> 16));
+        }
+        assert!(!got.is_empty() && got.iter().all(|&n| n == 2), "{got:?}");
+    }
+
+    #[test]
+    fn a_retiring_emitter_pushes_nothing() {
+        let mut e = Engine::new(SR, 1);
+        let dc = || node("d", "dc", &[dcv(0.0)], &[], vec![none(Kind::Cv)]);
+        let emit = node(
+            "m",
+            "emit",
+            &[],
+            &[],
+            vec![input(vec![src(0, false)], Kind::Trigger)],
+        );
+        e.apply(plan(1, vec![dc(), emit], chain(2))).unwrap();
+        run(&mut e, 2);
+        // the new plan raises dc (it glides up: a rise the retiring emitter still sees)
+        let up = node("d", "dc", &[dcv(10.0)], &[], vec![none(Kind::Cv)]);
+        e.apply(plan(2, vec![up], chain(1))).unwrap();
+        for _ in 0..8 {
+            e.process();
+            assert!(e.events().is_empty());
+        }
         assert_eq!(e.events_dropped(), 0);
     }
 
