@@ -124,9 +124,6 @@
       "type": "a4",
       "knobs": [
         0.3779527559055118,
-        0.3779527559055118,
-        0.3779527559055118,
-        0.3779527559055118,
         0.5
       ],
       "fixed": [
@@ -156,147 +153,6 @@
           ],
           "normal": null,
           "kind": "held",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [
-            {
-              "node": 1,
-              "port": 0,
-              "late": false
-            }
-          ],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [
-            {
-              "node": 0,
-              "port": 0,
-              "late": false
-            }
-          ],
-          "normal": null,
-          "kind": "held",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [
-            {
-              "node": 1,
-              "port": 0,
-              "late": false
-            }
-          ],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [
-            {
-              "node": 0,
-              "port": 0,
-              "late": false
-            }
-          ],
-          "normal": null,
-          "kind": "held",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [
-            {
-              "node": 1,
-              "port": 0,
-              "late": false
-            }
-          ],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [
-            {
-              "node": 0,
-              "port": 0,
-              "late": false
-            }
-          ],
-          "normal": null,
-          "kind": "held",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "trigger",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "held",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "trigger",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "cv",
-          "att": 1,
-          "ratio": 1
-        },
-        {
-          "sources": [],
-          "normal": null,
-          "kind": "cv",
           "att": 1,
           "ratio": 1
         },
@@ -338,7 +194,7 @@
   ],
   "frames": [],
   "layout": {
-    "size": 27,
+    "size": 18,
     "nodes": [
       {
         "knobs": 2,
@@ -356,12 +212,12 @@
       },
       {
         "knobs": 14,
-        "trigs": 19,
-        "outs": 26,
-        "state": 26,
+        "trigs": 16,
+        "outs": 17,
+        "state": 17,
         "trace": null
       }
     ],
-    "frames": 27
+    "frames": 18
   }
 }

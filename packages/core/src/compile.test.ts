@@ -163,15 +163,12 @@ test('fixtures for the engine', () => {
     [ids('noise')[0]!, 'white'],
     [filter, 'in'],
   );
-  // a square OSC gating all four A4 tracks, a saw OSC as pitch
+  // a square OSC gating an A4, a saw OSC as its pitch
   let a4doc = addModule(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'osc', 0, 200).doc;
   a4doc = setParam(setParam(a4doc, SPECS, 'm1', 'wave', 3), SPECS, 'm2', 'wave', 2);
   const a4 = addModule(a4doc, SPECS, 'a4', 400, 0);
-  a4doc = a4.doc;
-  for (const t of ['t1', 't2', 't3', 't4']) {
-    a4doc = connect(a4doc, SPECS, ['m1', 'out'], [a4.id, `${t}_gate`]);
-    a4doc = connect(a4doc, SPECS, ['m2', 'out'], [a4.id, `${t}_pitch`]);
-  }
+  a4doc = connect(a4.doc, SPECS, ['m1', 'out'], [a4.id, 'gate']);
+  a4doc = connect(a4doc, SPECS, ['m2', 'out'], [a4.id, 'pitch']);
   const plans = {
     starter: compile(starter, SPECS, 1),
     'all-a': compile(all, SPECS, 5),

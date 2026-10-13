@@ -142,7 +142,7 @@ test('events() reports A4 notes', () => {
   // a square OSC (110 Hz) is the gate
   let doc = setParam(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'm1', 'wave', 3);
   const a4 = addModule(doc, SPECS, 'a4', 400, 0);
-  doc = connect(a4.doc, SPECS, ['m1', 'out'], [a4.id, 't1_gate']);
+  doc = connect(a4.doc, SPECS, ['m1', 'out'], [a4.id, 'gate']);
   const plan = compile(doc, SPECS, 1);
   const node = plan.nodes.findIndex((n) => n.type === 'a4');
   const e = loadEngine(wasm, 48_000, 1);

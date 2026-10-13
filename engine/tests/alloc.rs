@@ -245,7 +245,7 @@ fn metaseq_mutating_at_mut_1_allocates_nothing() {
 
 #[test]
 fn an_a4_playing_notes_allocates_nothing() {
-    // a CLOCK gates all four tracks, so notes go into the outbox every few blocks
+    // a square OSC gates the A4, so notes go into the outbox every few blocks
     let mut e = Engine::new(48_000.0, 1);
     e.apply(fixture("a4")).unwrap();
     e.process();
