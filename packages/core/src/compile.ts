@@ -94,7 +94,7 @@ export function compile(doc: Doc, specs: Specs, seq: number, sampleId?: (path: s
       return {
         sources,
         normal,
-        kind: port.role === 'trigger' ? 'trigger' : port.role === 'audio' ? 'sum' : 'cv',
+        kind: port.held ? 'held' : port.role === 'trigger' ? 'trigger' : port.role === 'audio' ? 'sum' : 'cv',
         att: m.atts[port.id] ?? defAtt,
         ratio: m.ratios[port.id] ?? 1,
       };
@@ -166,7 +166,11 @@ export function compile(doc: Doc, specs: Specs, seq: number, sampleId?: (path: s
     off += spec.outputs.length;
     const state = off++;
     let trace: number | null = null;
-    if (spec.display?.kind === 'scope' || spec.display?.kind === 'grains' || spec.display?.kind === 'metaseq') {
+    if (
+      spec.display?.kind === 'scope' ||
+      spec.display?.kind === 'grains' ||
+      spec.display?.kind === 'metaseq'
+    ) {
       trace = off;
       off += TRACE_LEN;
     }

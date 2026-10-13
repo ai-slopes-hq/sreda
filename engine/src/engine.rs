@@ -1168,7 +1168,10 @@ impl Engine {
             }
             let mut t = 0;
             for input in &s.inputs[..s.n_in] {
-                if let Some(tr) = &input.trig {
+                if input.kind == Kind::Held {
+                    // a held input keeps its slot (it stays 0), so later trigger inputs keep theirs
+                    t += 1;
+                } else if let Some(tr) = &input.trig {
                     self.readouts[l.trigs + t] = (tr.count() & 0xFF_FFFF) as f32;
                     t += 1;
                 }
@@ -2132,6 +2135,93 @@ mod tests {
         );
         run(&mut e, 4);
         assert_eq!(e.readouts()[trig_at], 1.0);
+    }
+
+    #[test]
+    fn a_held_input_passes_its_level() {
+        let mut e = Engine::new(SR, 1);
+        let p = plan(
+            1,
+            vec![
+                node("d", "dc", &[dcv(1.0)], &[], vec![none(Kind::Cv)]),
+                node(
+                    "h",
+                    "held",
+                    &[],
+                    &[],
+                    vec![input(vec![src(0, false)], Kind::Held)],
+                ),
+            ],
+            chain(2),
+        );
+        e.apply(p).unwrap();
+        run(&mut e, 1);
+        // 10 ms of gate: every sample is the source's, not a 1 ms pulse
+        let gate = e.output(0, 0).to_vec();
+        assert_eq!(e.output(1, 0), &gate[..]);
+        assert!(gate.iter().all(|x| *x > 0.99));
+        run(&mut e, 4);
+        assert_eq!(e.output(1, 0), e.output(0, 0));
+    }
+
+    #[test]
+    fn held_input_sums_its_sources() {
+        let mut e = Engine::new(SR, 1);
+        let p = plan(
+            1,
+            vec![
+                node("a", "dc", &[dcv(0.25)], &[], vec![none(Kind::Cv)]),
+                node("b", "dc", &[dcv(0.5)], &[], vec![none(Kind::Cv)]),
+                node(
+                    "h",
+                    "held",
+                    &[],
+                    &[],
+                    vec![input(vec![src(0, false), src(1, false)], Kind::Held)],
+                ),
+            ],
+            chain(3),
+        );
+        e.apply(p).unwrap();
+        run(&mut e, 2);
+        assert!((e.output(2, 0)[10] - 0.75).abs() < 1e-6);
+    }
+
+    #[test]
+    fn held_inputs_keep_later_trigger_readout_slots() {
+        let mut e = Engine::new(SR, 1);
+        let p = plan(
+            1,
+            vec![
+                node("c", "clock", &[], &[1.0, 300.0], vec![none(Kind::Trigger)]),
+                node(
+                    "h",
+                    "held2",
+                    &[],
+                    &[],
+                    vec![
+                        input(vec![], Kind::Held),
+                        input(vec![src(0, false)], Kind::Trigger),
+                    ],
+                ),
+            ],
+            chain(2),
+        );
+        let trigs = p.layout.nodes[1].trigs;
+        e.apply(p).unwrap();
+        let mut clock = Vec::new();
+        for _ in 0..(SR as usize * 7 / 10 / BLOCK + 2) {
+            e.process();
+            clock.extend_from_slice(e.output(0, 0));
+        }
+        // the first pulse starts on sample 0
+        let rises = usize::from(clock[0] > 0.5)
+            + (1..clock.len())
+                .filter(|&i| clock[i] > 0.5 && clock[i - 1] <= 0.5)
+                .count();
+        assert!(rises >= 3);
+        assert_eq!(e.readouts()[trigs + 1], rises as f32);
+        assert_eq!(e.readouts()[trigs], 0.0);
     }
 
     #[test]

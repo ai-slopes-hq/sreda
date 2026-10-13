@@ -37,6 +37,20 @@ test('a chain runs in signal order, not document order', () => {
   expect(compile(doc, S, 1).steps).toEqual([{ node: 2 }, { node: 1 }, { node: 0 }]);
 });
 
+test("compile gives a held port kind 'held'", () => {
+  const specs: Specs = {
+    ...S,
+    held: {
+      ...S['fx']!,
+      type: 'held',
+      inputs: S['fx']!.inputs.map((p) => (p.id === 'clk' ? { ...p, held: true } : p)),
+    },
+  };
+  const { doc, ids } = build(specs, ['held']);
+  const node = compile(setRatio(doc, ids[0]!, 'clk', 4), specs, 1).nodes[0]!;
+  expect(node.inputs.map((i) => i.kind)).toEqual(['sum', 'cv', 'held', 'cv']);
+});
+
 test('A → B → A is one loop with one late edge', () => {
   const { doc: d0, ids } = build(S, ['fx', 'fx']);
   let doc = connect(d0, S, [ids[0]!, 'out'], [ids[1]!, 'in']);

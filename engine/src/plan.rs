@@ -19,6 +19,8 @@ pub enum Kind {
     Sum,
     Cv,
     Trigger,
+    /// a trigger-role input that keeps its level: summed like an audio input, no pulses, no ratio
+    Held,
 }
 
 #[derive(Deserialize, Debug, Clone, Copy, PartialEq, Eq)]

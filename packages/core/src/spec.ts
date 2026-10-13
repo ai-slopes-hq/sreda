@@ -6,6 +6,8 @@ export interface Port {
   id: string;
   label: string;
   role: Role;
+  /** a trigger input that keeps its level (no pulses, no ratio) */
+  held?: boolean;
 }
 export interface KnobParam {
   kind: 'knob';

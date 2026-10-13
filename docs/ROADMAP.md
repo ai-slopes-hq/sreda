@@ -14,6 +14,7 @@ of a creative tool; nothing of its UI is ported.
 |---|---|
 | The design (approved, revision 18) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
 | Plans 1–3 (done) | `docs/superpowers/plans/2026-10-07-1-foundation.md`, `…-2-modules.md`, `2026-10-08-3-organisation.md` |
+| Plan 15 (A4 module) and its spec | `docs/superpowers/plans/2026-10-13-15-a4.md`, `docs/superpowers/specs/2026-10-13-a4-module-design.md` |
 | Ideas for later | `docs/backlog.md` |
 | The clickable prototype and its headless checks | `docs/prototype/` (see its README; live artifact linked there) |
 | Repo rules for Claude | `CLAUDE.md` |
@@ -147,3 +148,4 @@ it when writing Plan 2.
   pads with OFF / ON / TIE.
 - Sound pack: one SAMPLER (ONE / LOOP / SLICE; slices equal or by hits; breaks follow the clock by re-triggering
   slices) + a separate GRAINS (FILE / LIVE + FREEZE); REVERB has an Elektron-style room display.
+- **Plan 15** (A4 module) started on branch `plan-15-a4`; Task 1 done: held trigger inputs (`Port.held`, plan kind `held`).

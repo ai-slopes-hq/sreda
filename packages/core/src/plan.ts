@@ -10,7 +10,7 @@ export interface InputPlan {
   sources: Source[];
   /** a node's output (own: one sample late; a parent frame's clock: `late` false, it has run already) */
   normal: { node: number; port: number; late?: boolean } | { value: number } | 'internal' | null;
-  kind: 'sum' | 'cv' | 'trigger';
+  kind: 'sum' | 'cv' | 'trigger' | 'held';
   att: number;
   ratio: number;
 }

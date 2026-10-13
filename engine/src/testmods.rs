@@ -41,6 +41,17 @@ pub fn spec(type_: &str) -> Option<ModuleSpec> {
         "cvthru" => m("cvthru", vec![port("cv", "CV", Role::Mod)], vec![]),
         // out = the prepared trigger input
         "trig" => m("trig", vec![port("clk", "CLK", Role::Trigger)], vec![]),
+        // out = the prepared held input
+        "held" => m("held", vec![port("g", "G", Role::Trigger).held()], vec![]),
+        // inputs: a held one, then a trigger (to check the trigger readout slots)
+        "held2" => m(
+            "held2",
+            vec![
+                port("g", "G", Role::Trigger).held(),
+                port("t", "T", Role::Trigger),
+            ],
+            vec![],
+        ),
         // out = NaN
         "boom" => m("boom", vec![], vec![]),
         // state() = 3, trace() = 0, 1, 2, …
@@ -107,7 +118,7 @@ pub fn create(type_: &str) -> Option<Box<dyn Dsp>> {
     Some(match type_ {
         "dc" => Box::new(Dc),
         "gain" => Box::new(Gain),
-        "cvthru" | "trig" => Box::new(Thru),
+        "cvthru" | "trig" | "held" | "held2" => Box::new(Thru),
         "boom" => Box::new(Boom),
         "stater" => Box::new(Stater(
             (0..crate::dsp::TRACE_LEN).map(|i| i as f32).collect(),

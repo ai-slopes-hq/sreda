@@ -47,6 +47,27 @@ test('an input value shows when it is not the default', () => {
   expect(container.querySelector('[data-field=pitch]')?.textContent).toBe('');
 });
 
+test('a held port has no ratio field', () => {
+  const spec = {
+    ...SPECS['osc']!,
+    inputs: SPECS['osc']!.inputs.map((p) => (p.id === 'sync' ? { ...p, held: true } : p)),
+  };
+  const osc = { ...starterDoc(SPECS).modules[0]!, ratios: { sync: 2 } };
+  const { container } = render(() => (
+    <Panel
+      mod={osc}
+      spec={spec}
+      name="OSC"
+      loud={true}
+      cabledIn={() => false}
+      cabledOut={() => true}
+      act={noop}
+    />
+  ));
+  expect(container.querySelector('[data-field=sync]')).toBeNull();
+  expect(container.querySelector('[data-field=pitch]')).not.toBeNull();
+});
+
 test("FILTER's MODEL is drawn as a response glyph at its CUT and RES", () => {
   const { container } = render(() => (
     <Panel

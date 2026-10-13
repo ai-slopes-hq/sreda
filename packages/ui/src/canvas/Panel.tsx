@@ -334,7 +334,7 @@ export function Panel(props: PanelProps): JSX.Element {
         {(port) => {
           const j = () => L().jacks[port.id]!;
           const field: FieldKind | null =
-            port.role === 'trigger' ? 'ratio' : port.role === 'audio' ? null : 'att';
+            port.role === 'trigger' ? (port.held ? null : 'ratio') : port.role === 'audio' ? null : 'att';
           const value = () =>
             field === 'ratio' ? (props.mod.ratios[port.id] ?? 1) : (props.mod.atts[port.id] ?? 1);
           const text = () => (field === 'ratio' ? fmtRat(value()) : fmtAtt(value()));

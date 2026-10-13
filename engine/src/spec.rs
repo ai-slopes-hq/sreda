@@ -17,10 +17,25 @@ pub struct Port {
     pub id: &'static str,
     pub label: &'static str,
     pub role: Role,
+    /// a trigger input that keeps its level instead of becoming 1 ms pulses, so a DSP can see how long a gate lasts
+    #[serde(skip_serializing_if = "is_false")]
+    pub held: bool,
 }
 
 pub const fn port(id: &'static str, label: &'static str, role: Role) -> Port {
-    Port { id, label, role }
+    Port {
+        id,
+        label,
+        role,
+        held: false,
+    }
+}
+
+impl Port {
+    pub const fn held(mut self) -> Self {
+        self.held = true;
+        self
+    }
 }
 
 #[derive(Serialize, Clone, Copy, PartialEq, Eq, Debug)]
