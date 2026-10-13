@@ -1,6 +1,6 @@
 # SREDA 2 — the A4 module (Analog Four MKII over USB MIDI)
 
-Date: 2026-10-13 · Revision 3 (two modules: A4 and A4 CLK, found during Plan 15 Task 3) · Status: approved
+Date: 2026-10-13 · Revision 4 (two modules: A4 and A4 CLK; MIDI permission as built) · Status: approved
 
 ## Why
 
@@ -103,8 +103,9 @@ messages are one byte.
 
 ## 5. The MIDI side (renderer main thread, `packages/ui/src/midi/`)
 
-**Access.** Electron main's permission handlers allow `midi` and refuse `midiSysex`. The app cannot send SysEx, so
-it cannot overwrite the A4's memory. `MidiDevices` (`devices.ts`) calls `navigator.requestMIDIAccess()` once, the
+**Access.** The renderer asks for MIDI with `requestMIDIAccess({ sysex: false })`. Such an access throws on any
+SysEx message, and the app never builds one, so it cannot overwrite the A4's memory. Electron (44) routes every MIDI
+request through the permission handler as `midiSysex`, so the handler must grant it; refusing it disables MIDI. `MidiDevices` (`devices.ts`) calls `navigator.requestMIDIAccess()` once, the
 first time a plan contains an A4 node, and never touches MIDI before that.
 
 **Device status.** The output port is the first whose name contains `Analog Four`. `onstatechange` re-scans on every
