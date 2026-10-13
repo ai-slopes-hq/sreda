@@ -1,9 +1,10 @@
 // The AudioWorklet glue: owns the WASM engine, forwards messages, copies each block to the output.
 // process() runs on the audio thread: no allocation, no closures, no array literals (CLAUDE.md).
-import { loadEngine, type FromEngine, type ToEngine, type WasmEngine } from '@sreda/protocol';
+import { loadEngine, RingWriter, type FromEngine, type ToEngine, type WasmEngine } from '@sreda/protocol';
 
 // The worklet scope's globals (not in TypeScript's DOM lib).
 declare const sampleRate: number;
+declare const currentFrame: number;
 declare function registerProcessor(
   name: string,
   ctor: new (options: { processorOptions: Options }) => object,
@@ -16,16 +17,20 @@ interface Options {
   module: WebAssembly.Module;
   /** the UI reads this once per frame */
   readouts: SharedArrayBuffer;
+  /** the event ring the UI drains: engine events stamped with their absolute frame */
+  events: SharedArrayBuffer;
 }
 
 class SredaProcessor extends AudioWorkletProcessor {
   private readonly engine: WasmEngine;
   private readonly shared: Float32Array;
+  private readonly ring: RingWriter;
 
   constructor(options: { processorOptions: Options }) {
     super();
     this.engine = loadEngine(options.processorOptions.module, sampleRate, (Math.random() * 2 ** 32) >>> 0);
     this.shared = new Float32Array(options.processorOptions.readouts);
+    this.ring = new RingWriter(options.processorOptions.events);
     this.port.onmessage = (e: MessageEvent<ToEngine>) => this.receive(e.data);
   }
 
@@ -80,6 +85,15 @@ class SredaProcessor extends AudioWorkletProcessor {
     out[1]?.set(block.r);
     const r = this.engine.readouts();
     if (r.length <= this.shared.length) this.shared.set(r);
+    const ev = this.engine.events();
+    if (ev.length > 0) {
+      const seq16 = (r[0] as number) & 0xffff;
+      for (let i = 0; i + 1 < ev.length; i += 2) {
+        const head = ev[i] as number;
+        const seqNode = ((seq16 << 16) | (head >>> 16)) >>> 0;
+        this.ring.write(currentFrame + (head & 0xffff), seqNode, ev[i + 1] as number);
+      }
+    }
     return true;
   }
 }
