@@ -80,7 +80,14 @@ function valueOf(doc: Doc, specs: Specs, [id, port]: [string, string]): WireRow[
 export function wireSections(
   doc: Doc,
   specs: Specs,
-  o: { q: string; selOnly: boolean; sel: readonly string[]; missing?: readonly string[] },
+  o: {
+    q: string;
+    selOnly: boolean;
+    sel: readonly string[];
+    missing?: readonly string[];
+    /** the MIDI device's status (A4 modules are listed while it is not connected) */
+    midi?: 'connected' | 'missing' | 'unavailable';
+  },
 ): Section[] {
   const q = o.q.trim().toLowerCase();
   const sel = new Set(withDescendants(doc, o.sel));
@@ -148,7 +155,7 @@ export function wireSections(
   visit(null, 0);
   section('ungrouped', 'UNGROUPED', 0);
   section('between', 'BETWEEN GROUPS', 0);
-  const problems = wireProblems(doc, specs, (p) => o.missing?.includes(p) ?? false)
+  const problems = wireProblems(doc, specs, (p) => o.missing?.includes(p) ?? false, o.midi)
     .filter((p) => !q || p.text.toLowerCase().includes(q))
     .map((p): ProblemRow => ({ kind: 'problem', problem: p, text: p.text }));
   out.push({

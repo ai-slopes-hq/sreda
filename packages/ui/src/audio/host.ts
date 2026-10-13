@@ -13,6 +13,8 @@ export class AudioHost {
   onMessage: ((msg: FromEngine) => void) | null = null;
   /** the worklet died (a trap in the engine) */
   onError: ((message: string) => void) | null = null;
+  /** called first in `close()`: the session lets go of what depends on this host (MIDI notes, timers) */
+  onClose: (() => void) | null = null;
 
   private constructor(
     private readonly context: AudioContext,
@@ -47,6 +49,8 @@ export class AudioHost {
 
   /** stops the sound for good (a hot reload starts another session) */
   close(): void {
+    this.onClose?.();
+    this.onClose = null;
     this.node.port.onmessage = null;
     this.node.disconnect();
     void this.context.close();
@@ -54,6 +58,11 @@ export class AudioHost {
 
   get sampleRate(): number {
     return this.context.sampleRate;
+  }
+
+  /** the context's output clock: which audio time leaves the speakers at which performance time */
+  outputTimestamp(): AudioTimestamp {
+    return this.context.getOutputTimestamp();
   }
 
   post(msg: ToEngine): void {

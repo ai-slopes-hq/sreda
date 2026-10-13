@@ -34,7 +34,23 @@ import { scheduleSave } from './autosave';
 import { setLayoutSeq, setSource } from './live';
 import type { LibEntry } from './canvas/patching';
 import { createSampleRegistry } from './samples';
+import { MidiDevices } from './midi/devices';
+import { NoteLedger } from './midi/ledger';
+import { MidiPump } from './midi/pump';
 import type { SkinName } from './skins';
+
+/** module types that talk MIDI */
+const MIDI_TYPES = new Set(['a4', 'a4clk']);
+/** how many sent plans stay known to the pump (events carry only the low 16 bits of the plan's seq) */
+const KNOWN_PLANS = 8;
+interface KnownPlan {
+  /** the module id of each plan node (a frame's clock node: the frame's id) */
+  ids: string[];
+  /** the ids of its A4 / A4 CLK nodes */
+  midi: string[];
+  /** where each node's visible knobs start in the readout buffer */
+  knobs: number[];
+}
 
 export interface Session {
   doc: Doc;
@@ -176,6 +192,45 @@ export function createSession(
   // reactive: panels re-register their live readouts when a new plan moves the offsets
   const [layout, setLayout] = createSignal(plan.layout);
 
+  // MIDI (Plan 15): one device handle per session, asked for MIDI access only once a plan has an A4 node
+  const devices = new MidiDevices(
+    () => navigator.requestMIDIAccess({ sysex: false }),
+    typeof window === 'undefined' ? undefined : window.sreda?.a4Port,
+  );
+  const ledger = new NoteLedger((bytes) => void devices.send(bytes, 0));
+  /** the last sent plans by `seq & 0xFFFF`, for the pump to name the node an event came from */
+  const known = new Map<number, KnownPlan>();
+  let pump: MidiPump | null = null;
+  const knownPlan = (p: Plan): KnownPlan => ({
+    ids: p.nodes.map((n) => n.id),
+    midi: p.nodes.filter((n) => MIDI_TYPES.has(n.type)).map((n) => n.id),
+    knobs: p.layout.nodes.map((n) => n.knobs),
+  });
+  /** an A4 whose frame is muted stops at once (its note-off goes out; the pump drops its note-ons) */
+  function releaseMuted(d: Doc): void {
+    for (const m of d.modules)
+      if (MIDI_TYPES.has(m.type) && m.parent && effectiveMuted(d, m.parent)) ledger.release(m.id);
+  }
+  function resolve(seq16: number, node: number) {
+    const k = known.get(seq16);
+    const id = k?.ids[node];
+    if (!k || !id) return null;
+    const m = state.doc.modules.find((x) => x.id === id);
+    // a module deleted since: nothing new from it (its note-offs still pass)
+    const muted = !m || (!!m.parent && effectiveMuted(state.doc, m.parent));
+    let offsetMs = 0;
+    if (m?.type === 'a4') {
+      // OFFSET is visible knob 1: the engine's reading when it plays that plan, else the document's value
+      const buf = host?.readouts;
+      const pos =
+        buf && ((buf[0] ?? 0) & 0xffff) === seq16
+          ? (buf[(k.knobs[node] ?? 0) + 1] ?? 0.5)
+          : (m.params['offset'] ?? 0.5);
+      offsetMs = -50 + 100 * pos;
+    }
+    return { id, offsetMs, muted };
+  }
+
   /** a module's plan node, or a frame's clock node */
   const nodeOf = (id: string): number | null => {
     const i = state.doc.modules.findIndex((m) => m.id === id);
@@ -233,6 +288,9 @@ export function createSession(
     sentKey = key;
     setLayoutSeq(seq);
     setLayout(plan.layout);
+    known.set(seq & 0xffff, knownPlan(plan));
+    if (known.size > KNOWN_PLANS) known.delete(known.keys().next().value!);
+    if (plan.nodes.some((n) => MIDI_TYPES.has(n.type))) devices.start();
     host.post({ t: 'plan', seq, bytes: encodePlan(plan) });
     sendListen(); // a new plan clears listening in the engine
   }
@@ -271,9 +329,47 @@ export function createSession(
     return input < 0 ? null : { node, input };
   }
 
+  /** the pump lives with the host; closing it (or unloading the window) switches every sounding note off */
+  function startMidi(h: AudioHost): void {
+    pump = new MidiPump({
+      ring: h.events,
+      sampleRate: h.sampleRate,
+      stamp: () => h.outputTimestamp(),
+      resolve,
+      devices,
+      ledger,
+      now: () => performance.now(),
+    });
+    pump.start();
+    const unload = (): void => ledger.releaseAll(true);
+    window.addEventListener('beforeunload', unload);
+    // dev builds: a once-a-second line while the pump's late count or the ring's dropped count changes
+    let report: ReturnType<typeof setInterval> | null = null;
+    if (import.meta.env.DEV) {
+      let seen = '';
+      report = setInterval(() => {
+        const line = `late ${pump?.late() ?? 0}, dropped ${h.events.dropped()}`;
+        if (line !== seen) {
+          if (seen !== '' || line !== 'late 0, dropped 0') console.info(`[midi] ${line}`);
+          seen = line;
+        }
+      }, 1000);
+    }
+    h.onClose = () => {
+      pump?.stop();
+      pump = null;
+      if (report !== null) clearInterval(report);
+      window.removeEventListener('beforeunload', unload);
+      ledger.releaseAll(true);
+      devices.dispose();
+    };
+  }
+
   return {
     state,
     setState,
+    /** the Analog Four's MIDI port (A4 and A4 CLK displays, WIRES) */
+    midi: devices,
     /** the sample registry (SAMPLER, GRAINS, the SAMPLES picker) */
     samples,
     /** after the first click: the engine starts playing the current document */
@@ -282,11 +378,20 @@ export function createSession(
       h.onMessage = (msg) => {
         if (msg.code !== 0)
           setState('notice', `THE ENGINE REFUSED THE PATCH (${msg.code}) — THE PREVIOUS ONE KEEPS PLAYING`);
+        else {
+          // the plan is playing: A4 modules that are not in it have left (deleted, or another project opened)
+          const k = known.get(msg.seq & 0xffff);
+          if (k) {
+            ledger.keepOnly(new Set(k.midi));
+            releaseMuted(state.doc);
+          }
+        }
       };
       h.onError = () => setState('notice', 'THE AUDIO ENGINE STOPPED — RESTART THE APP');
       setSource(h.readouts);
       setState('audio', true);
       samples.attach((msg) => h.post(msg), h.sampleRate);
+      startMidi(h);
       send(true);
       sendMaster(history.current.master);
       h.post({ t: 'fade', ms: 200 }); // the patch fades in
@@ -387,6 +492,7 @@ export function createSession(
         message({ t: 'fixed', node, index: 1, value: patch.clock.bpm });
       }
       if (patch.ratio !== undefined) message({ t: 'ratio', node, input: 0, value: patch.ratio });
+      if (patch.muted !== undefined) releaseMuted(doc);
       if (patch.muted !== undefined)
         // a frame inside a muted frame is muted too: tell the engine about every frame whose state changed
         doc.groups.forEach((g, frame) => {

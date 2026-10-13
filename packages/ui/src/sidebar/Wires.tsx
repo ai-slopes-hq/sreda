@@ -27,6 +27,7 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
       selOnly: st.sidebar.selOnly,
       sel: st.sel,
       missing: st.missing,
+      midi: s.midi.status(),
     }),
   );
 

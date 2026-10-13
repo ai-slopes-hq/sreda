@@ -89,3 +89,11 @@ test('an A4 is not flagged as leading nowhere', () => {
   const doc = connect(d0, SPECS, [ids[0]!, 'out'], [ids[1]!, 'gate']);
   expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[1]);
 });
+
+test('an A4 is listed as NOT CONNECTED or NO MIDI while the device is not connected', () => {
+  const { doc } = patch('a4');
+  expect(wireProblems(doc, SPECS).map((p) => p.text)).toEqual([]);
+  expect(wireProblems(doc, SPECS, undefined, 'connected').map((p) => p.text)).toEqual([]);
+  expect(wireProblems(doc, SPECS, undefined, 'missing').map((p) => p.text)).toEqual(['A4 — NOT CONNECTED']);
+  expect(wireProblems(doc, SPECS, undefined, 'unavailable').map((p) => p.text)).toEqual(['A4 — NO MIDI']);
+});

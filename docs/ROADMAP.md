@@ -149,3 +149,6 @@ it when writing Plan 2.
 - Sound pack: one SAMPLER (ONE / LOOP / SLICE; slices equal or by hits; breaks follow the clock by re-triggering
   slices) + a separate GRAINS (FILE / LIVE + FREEZE); REVERB has an Elektron-style room display.
 - **Plan 15** (A4 module) started on branch `plan-15-a4`; Task 1 done: held trigger inputs (`Port.held`, plan kind `held`).
+  Slice 1 done (Tasks 1–6: held inputs, the `a4` module, the engine event ring, `MidiDevices` / `MidiPump` / `NoteLedger`,
+  the Electron MIDI permission, the `device` display, WIRES NOT CONNECTED rows): **waiting for the listening Checkpoints 1–2**
+  with the A4 attached (spec §8.1, §8.2) before slice 2 (`a4clk`).

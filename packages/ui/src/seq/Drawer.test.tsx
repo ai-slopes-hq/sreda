@@ -25,6 +25,8 @@ test('the lit tab follows the trace: pattern 2 plays, the edit stays on A', () =
     onMessage: null,
     onError: null,
     sampleRate: 48000,
+    events: { read: () => 0, dropped: () => 0 },
+    outputTimestamp: () => ({ contextTime: 0, performanceTime: 0 }),
   } as unknown as AudioHost);
   const at = s.layout().nodes[0]!.trace!;
   readouts[0] = 1; // the first plan sent

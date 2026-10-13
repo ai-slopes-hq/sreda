@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { addModule, emptyDoc, frameSelection, hiddenIn, SPECS, starterDoc, type Plan } from '@sreda/core';
 import type { FromEngine, ToEngine } from '@sreda/protocol';
-import { expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
+import { FakeAccess } from './midi/fakes';
 import type { AudioHost } from './audio/host';
 import { createSession } from './store';
 
@@ -16,6 +17,10 @@ function fakeHost() {
     onMessage: null as ((m: FromEngine) => void) | null,
     onError: null as ((message: string) => void) | null,
     post: (m: ToEngine) => sent.push(m),
+    events: { read: () => 0, dropped: () => 0 },
+    sampleRate: 48000,
+    outputTimestamp: () => ({ contextTime: 0, performanceTime: performance.now() }),
+    onClose: null as (() => void) | null,
   };
   return { host, sent, asHost: host as unknown as AudioHost };
 }
@@ -373,4 +378,73 @@ test('the drawer closes when a replaced document makes its module something else
   s.openSeq('m1');
   s.openProject(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc, { path: 'seq', factory: false });
   expect(s.state.seq.id).toBeNull();
+});
+
+/** A session with a fake Web MIDI and a host whose event ring replays what the test queues. */
+function midiSession(doc: ReturnType<typeof starterDoc>) {
+  const access = new FakeAccess();
+  const request = vi.fn(() => Promise.resolve(access.asAccess()));
+  vi.stubGlobal('navigator', { requestMIDIAccess: request });
+  const s = createSession(SPECS, doc);
+  const f = fakeHost();
+  const queue: [number, number, number, number][] = [];
+  (f.host as { events: unknown }).events = {
+    read: (visit: (frame: number, seq16: number, node: number, midi: number) => void) => {
+      for (const e of queue.splice(0)) visit(...e);
+      return 0;
+    },
+    dropped: () => 0,
+  };
+  return { s, access, request, queue, ...f };
+}
+const NOTE_ON = 0x90 | (60 << 8) | (100 << 16);
+const settle = () => new Promise((r) => setTimeout(r, 30));
+afterEach(() => vi.unstubAllGlobals());
+
+test('MIDI is requested only once a sent plan has an A4', async () => {
+  const { s, request, asHost } = midiSession(starterDoc(SPECS));
+  s.attach(asHost);
+  expect(request).not.toHaveBeenCalled();
+  const { addModule } = await import('@sreda/core');
+  s.edit((d) => addModule(d, SPECS, 'a4', 0, 400).doc);
+  expect(request).toHaveBeenCalledTimes(1);
+  (asHost as unknown as { onClose?: () => void }).onClose?.();
+  s.midi.dispose();
+});
+
+test('an A4 note reaches the port; deleting the module (an applied plan without it) sends its note-off', async () => {
+  const { addModule } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const { s, access, queue, host, asHost } = midiSession(added.doc);
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  const node = added.doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, 1, node, NOTE_ON]);
+  await settle();
+  expect(out.sent.map((e) => e.bytes)).toContainEqual([0x90, 60, 100]);
+  s.edit((d) => ({ ...d, modules: d.modules.filter((m) => m.id !== added.id) }));
+  host.onMessage?.({ t: 'applied', seq: 2, code: 0 });
+  expect(out.sent.map((e) => e.bytes)).toContainEqual([0x80, 60, 0]);
+  host.onClose?.();
+});
+
+test('muting the frame of an A4 releases its note; the pump drops its note-ons while muted', async () => {
+  const { addModule, frameSelection } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const framed = frameSelection(added.doc, SPECS, [added.id]);
+  const { s, access, queue, host, asHost } = midiSession(framed.doc);
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  const node = framed.doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, 1, node, NOTE_ON]);
+  await settle();
+  s.frame(framed.id, { muted: true }, undefined);
+  expect(out.sent.map((e) => e.bytes)).toContainEqual([0x80, 60, 0]);
+  const before = out.sent.length;
+  queue.push([0, 1, node, NOTE_ON]);
+  await settle();
+  expect(out.sent.length).toBe(before);
+  host.onClose?.();
 });

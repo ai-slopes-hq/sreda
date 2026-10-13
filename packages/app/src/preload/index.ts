@@ -4,6 +4,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 type Kind = 'group' | 'project';
 
 contextBridge.exposeInMainWorld('sreda', {
+  /** e2e: replaces the A4's MIDI port-name match ('__none__' finds nothing) */
+  a4Port: process.env['SREDA_A4_PORT'],
   first: (): Promise<'starter' | null> => ipcRenderer.invoke('sreda:first'),
   /** File › Import Samples… was chosen in the application menu; returns the unsubscribe */
   onImportSamples: (cb: () => void): (() => void) => {

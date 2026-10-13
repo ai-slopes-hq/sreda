@@ -56,7 +56,13 @@ const NEEDS_INPUT: Record<string, string> = {
 
 /** What WIRES lists under PROBLEMS (spec §5a). */
 /** `missing`: a sample path the library could not read (spec §7a). */
-export function wireProblems(doc: Doc, specs: Specs, missing?: (path: string) => boolean): Problem[] {
+export function wireProblems(
+  doc: Doc,
+  specs: Specs,
+  missing?: (path: string) => boolean,
+  /** the MIDI device's status: an A4 / A4 CLK module is listed while it is not `connected` */
+  midi?: 'connected' | 'missing' | 'unavailable',
+): Problem[] {
   const res: Problem[] = [];
   const cabled = (id: string) => doc.cables.some((c) => c.from[0] === id || c.to[0] === id);
   // sound that reaches no OUT: walk back from every OUT along the cables
@@ -85,6 +91,12 @@ export function wireProblems(doc: Doc, specs: Specs, missing?: (path: string) =>
       res.push({
         id: m.id,
         text: `${nameOf(doc, specs, m.id)} — MISSING · ${m.sample.split('/').pop()}`,
+        info: false,
+      });
+    if ((m.type === 'a4' || m.type === 'a4clk') && midi && midi !== 'connected')
+      res.push({
+        id: m.id,
+        text: `${nameOf(doc, specs, m.id)} — ${midi === 'missing' ? 'NOT CONNECTED' : 'NO MIDI'}`,
         info: false,
       });
     if (m.type === 'metaseq' && !patched('clk'))

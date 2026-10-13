@@ -19,6 +19,8 @@ const NOT_OPENED = 'not an opened project file';
 
 /** The main process's services (packages/app/src/preload). */
 export interface SredaBridge {
+  /** e2e runs override the A4's MIDI port-name match */
+  a4Port?: string | undefined;
   /** e2e runs ask for the starter patch on a first launch instead of the factory project Pulse */
   first(): Promise<'starter' | null>;
   /** File › Import Samples… was chosen in the application menu; returns the unsubscribe */

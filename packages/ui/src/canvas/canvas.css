@@ -1386,3 +1386,46 @@ button.sr-sname:hover {
   font-size: 9px;
   letter-spacing: 0.04em;
 }
+
+/* A4 / A4 CLK (spec §6): the label, a status dot and a lamp that lights while the note sounds */
+.sr-device {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+.sr-device.missing {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.sr-dev-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot);
+}
+.sr-dev-dot.up {
+  background: var(--accent);
+}
+.sr-dev-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sr-lamp {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--raised);
+}
+.sr-device.missing .sr-lamp {
+  visibility: hidden;
+}
+.sr-lamp[data-cur='1'] {
+  background: var(--accent);
+  border-color: var(--accent);
+}

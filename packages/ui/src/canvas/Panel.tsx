@@ -21,6 +21,8 @@ import { Wave } from './displays/Wave';
 import type { Cursor } from './displays/gesture';
 import { Scope } from './displays/Scope';
 import { SeqView } from './displays/SeqView';
+import { Device } from './displays/Device';
+import type { MidiStatus } from '../midi/devices';
 
 export type FieldKind = 'att' | 'ratio';
 
@@ -86,6 +88,8 @@ export interface PanelProps {
   candidate?: string | null;
   /** SAMPLER / GRAINS: the module's sample (undefined: none chosen) */
   sample?: SampleView | undefined;
+  /** A4 / A4 CLK: whether the Analog Four is reachable over MIDI */
+  device?: MidiStatus;
 }
 
 /** A module drawn by the panel grammar from its spec: jacks in the side columns, knobs, the mode strip. */
@@ -298,6 +302,26 @@ export function Panel(props: PanelProps): JSX.Element {
             trace={props.readouts?.trace ?? undefined}
           />
         )}
+      </Show>
+      <Show when={props.spec.display?.kind === 'device' && L().display}>
+        {(d) => {
+          const track = () => props.spec.params.find((p): p is OptionParam => p.id === 'track');
+          const label = () =>
+            props.spec.type === 'a4'
+              ? `A4 · ${track()?.options[props.mod.params['track'] ?? 0] ?? 'T1'}`
+              : 'A4 CLK';
+          return (
+            <Device
+              x={d().x}
+              y={d().y}
+              w={d().w}
+              h={d().h}
+              label={label()}
+              status={props.device ?? 'missing'}
+              state={props.readouts?.state}
+            />
+          );
+        }}
       </Show>
       <Show when={props.spec.display?.kind === 'metaseq' && L().display}>
         {(d) => (

@@ -903,6 +903,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                   candidate={st.candidate?.id === m.id ? st.candidate.port : null}
                   dim={dimmed(m.id)}
                   sample={sampleView(m.sample)}
+                  device={s.midi.status()}
                   act={{
                     knob: (param, k, merge) => s.knob(m.id, param, k, merge),
                     option: (param, v, merge) => s.params(m.id, { [param]: v }, merge),

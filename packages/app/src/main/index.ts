@@ -14,6 +14,7 @@ import {
   writeEntry,
   type Kind,
 } from './library';
+import { allowPermission } from './permissions';
 import { mergeSettings, readSettings, readSkin, writeSkin } from './settings';
 
 // Every response carries COOP / COEP so the renderer is cross-origin isolated (SharedArrayBuffer).
@@ -225,6 +226,11 @@ void app.whenReady().then(() => {
       if (!present.has(name.toLowerCase())) headers[name] = [value];
     callback({ responseHeaders: headers });
   });
+  // Web MIDI (no SysEx) for the A4 module; everything else as before
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) =>
+    callback(allowPermission(permission)),
+  );
+  session.defaultSession.setPermissionCheckHandler((_wc, permission) => allowPermission(permission));
   serveRenderer();
   serveLibrary();
   buildMenu();
