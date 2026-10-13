@@ -60,8 +60,8 @@ export function wireProblems(
   doc: Doc,
   specs: Specs,
   missing?: (path: string) => boolean,
-  /** the MIDI device's status: an A4 / A4 CLK module is listed while it is not `connected` */
-  midi?: 'connected' | 'missing' | 'unavailable',
+  /** the MIDI device's status: an A4 / A4 CLK module is listed while it is `missing` or `unavailable` */
+  midi?: 'idle' | 'connected' | 'missing' | 'unavailable',
 ): Problem[] {
   const res: Problem[] = [];
   const cabled = (id: string) => doc.cables.some((c) => c.from[0] === id || c.to[0] === id);
@@ -77,7 +77,7 @@ export function wireProblems(
       }
   }
   for (const m of doc.modules) {
-    if (m.type === 'out' || m.type === 'scope' || m.type === 'a4' || reach.has(m.id) || !cabled(m.id))
+    if (m.type === 'out' || m.type === 'scope' || reach.has(m.id) || !cabled(m.id))
       continue;
     if (!specs[m.type]!.outputs.some((p) => p.role === 'audio')) continue;
     res.push({ id: m.id, text: `${nameOf(doc, specs, m.id)} — sound does not reach any OUT`, info: false });
@@ -94,7 +94,7 @@ export function wireProblems(
         text: `${nameOf(doc, specs, m.id)} — MISSING · ${m.sample.split('/').pop()}`,
         info: false,
       });
-    if ((m.type === 'a4' || m.type === 'a4clk') && midi && midi !== 'connected')
+    if ((m.type === 'a4' || m.type === 'a4clk') && midi && midi !== 'connected' && midi !== 'idle')
       res.push({
         id: m.id,
         text: `${nameOf(doc, specs, m.id)} — ${midi === 'missing' ? 'NOT CONNECTED' : 'NO MIDI'}`,

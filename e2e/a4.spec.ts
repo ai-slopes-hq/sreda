@@ -36,7 +36,7 @@ test('a project with an A4 opens and plays with no A4', async () => {
   await page.waitForFunction(() =>
     (window as unknown as { __sreda: { midiResolved(): boolean } }).__sreda.midiResolved(),
   );
-  // MIDI access itself works in Electron (the permission handler), so the caption is NOT CONNECTED, not NO MIDI
+  // MIDI access itself works in Electron, so the caption is NOT CONNECTED, not NO MIDI
   await expect(panel.locator('.sr-device')).toContainText('NOT CONNECTED');
   await expect(panel.locator('.sr-device.missing')).toHaveCount(1);
   await expect(page.locator('.sr-line.notice')).toHaveCount(0);

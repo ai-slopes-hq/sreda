@@ -317,7 +317,7 @@ export function Panel(props: PanelProps): JSX.Element {
               w={d().w}
               h={d().h}
               label={label()}
-              status={props.device ?? 'missing'}
+              status={props.device ?? 'idle'}
               state={props.readouts?.state}
             />
           );

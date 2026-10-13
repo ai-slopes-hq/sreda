@@ -13,6 +13,14 @@ test('shows NOT CONNECTED when missing', () => {
   expect(r.container.querySelector('.sr-device.missing')).not.toBeNull();
 });
 
+test('before MIDI is requested (idle) the label shows as usual: not dimmed, not NOT CONNECTED', () => {
+  const r = render(() => <Device {...base} status="idle" state={undefined} />);
+  expect(r.container.textContent).toContain('A4 · T2');
+  expect(r.container.textContent).not.toContain('NOT CONNECTED');
+  expect(r.container.textContent).not.toContain('NO MIDI');
+  expect(r.container.querySelector('.sr-device.missing')).toBeNull();
+});
+
 test('shows NO MIDI when unavailable', () => {
   const r = render(() => <Device {...base} status="unavailable" state={undefined} />);
   expect(r.container.textContent).toContain('NO MIDI');

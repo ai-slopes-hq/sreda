@@ -1,11 +1,12 @@
 // Web MIDI access for the Analog Four: finds the output port by name, tracks plug/unplug, never throws out.
 import { createSignal } from 'solid-js';
 
-export type MidiStatus = 'connected' | 'missing' | 'unavailable';
+/** `idle`: MIDI is not requested yet (no A4 in a sent plan), so nothing is known about the device */
+export type MidiStatus = 'idle' | 'connected' | 'missing' | 'unavailable';
 
 /** Requests MIDI lazily (no SysEx) and keeps the first output port whose name contains `portName`. */
 export class MidiDevices {
-  private readonly state = createSignal<MidiStatus>('missing');
+  private readonly state = createSignal<MidiStatus>('idle');
   private started = false;
   private access: MIDIAccess | null = null;
   private port: MIDIOutput | null = null;

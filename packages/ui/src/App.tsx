@@ -15,7 +15,7 @@ declare global {
     __sreda?: {
       doc(): unknown;
       readout(i: number): number;
-      /** Web MIDI access was granted or refused (null: MIDI not asked for yet) */
+      /** Web MIDI access was granted or refused (false: not asked for yet, or no answer yet) */
       midiResolved(): boolean;
       big?(): void;
       analysis: { worker: number; fallback: number };

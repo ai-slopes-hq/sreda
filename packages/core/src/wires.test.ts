@@ -100,6 +100,8 @@ test('an A4 is listed as NOT CONNECTED or NO MIDI while the device is not connec
   const { doc } = patch('a4');
   expect(wireProblems(doc, SPECS).map((p) => p.text)).toEqual([]);
   expect(wireProblems(doc, SPECS, undefined, 'connected').map((p) => p.text)).toEqual([]);
+  // MIDI not requested yet: nothing to report
+  expect(wireProblems(doc, SPECS, undefined, 'idle').map((p) => p.text)).toEqual([]);
   expect(wireProblems(doc, SPECS, undefined, 'missing').map((p) => p.text)).toEqual(['A4 — NOT CONNECTED']);
   expect(wireProblems(doc, SPECS, undefined, 'unavailable').map((p) => p.text)).toEqual(['A4 — NO MIDI']);
 });

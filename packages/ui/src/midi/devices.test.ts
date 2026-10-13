@@ -9,7 +9,7 @@ test('finds the port by name', async () => {
   access.plug('IAC Driver');
   const out = access.plug('Elektron Analog Four MKII');
   const d = new MidiDevices(() => Promise.resolve(access.asAccess()));
-  expect(d.status()).toBe('missing');
+  expect(d.status()).toBe('idle'); // MIDI is not requested yet
   d.start();
   await flush();
   expect(d.status()).toBe('connected');

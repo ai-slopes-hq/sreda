@@ -18,15 +18,17 @@ export function Device(props: {
   state: number | undefined;
 }): JSX.Element {
   const up = () => props.status === 'connected';
+  // idle: MIDI is not requested yet, so there is nothing to complain about
+  const down = () => props.status === 'missing' || props.status === 'unavailable';
   return (
     <div
       class="sr-disp sr-device"
-      classList={{ missing: !up() }}
+      classList={{ missing: down() }}
       style={{ left: props.x + 'px', top: props.y + 'px', width: props.w + 'px', height: props.h + 'px' }}
     >
       <span class="sr-dev-dot" classList={{ up: up() }} />
       <span class="sr-dev-label">
-        {up() ? props.label : `${props.label} · ${props.status === 'missing' ? 'NOT CONNECTED' : 'NO MIDI'}`}
+        {!down() ? props.label : `${props.label} · ${props.status === 'missing' ? 'NOT CONNECTED' : 'NO MIDI'}`}
       </span>
       <span class="sr-lamp" ref={(el) => track(el, 'step', () => props.state)} />
     </div>

@@ -14,7 +14,6 @@ import {
   writeEntry,
   type Kind,
 } from './library';
-import { allowPermission } from './permissions';
 import { mergeSettings, readSettings, readSkin, writeSkin } from './settings';
 
 // Every response carries COOP / COEP so the renderer is cross-origin isolated (SharedArrayBuffer).
@@ -226,11 +225,10 @@ void app.whenReady().then(() => {
       if (!present.has(name.toLowerCase())) headers[name] = [value];
     callback({ responseHeaders: headers });
   });
-  // Web MIDI (no SysEx) for the A4 module; everything else as before
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) =>
-    callback(allowPermission(permission)),
-  );
-  session.defaultSession.setPermissionCheckHandler((_wc, permission) => allowPermission(permission));
+  // No permission handlers on purpose: Electron allows everything by default, and Web MIDI must stay allowed. It
+  // routes every requestMIDIAccess() as `midiSysex`, even with `{ sysex: false }`, so refusing that would refuse
+  // MIDI altogether. SysEx stays blocked by the renderer's `requestMIDIAccess({ sysex: false })`: Chromium throws
+  // on any SysEx message at `MIDIOutput.send`.
   serveRenderer();
   serveLibrary();
   buildMenu();

@@ -86,7 +86,7 @@ export function wireSections(
     sel: readonly string[];
     missing?: readonly string[];
     /** the MIDI device's status (A4 modules are listed while it is not connected) */
-    midi?: 'connected' | 'missing' | 'unavailable';
+    midi?: 'idle' | 'connected' | 'missing' | 'unavailable';
   },
 ): Section[] {
   const q = o.q.trim().toLowerCase();

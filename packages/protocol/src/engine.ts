@@ -31,7 +31,7 @@ export interface WasmEngine {
   process(): { l: Float32Array; r: Float32Array };
   readouts(): Float32Array;
   /**
-   * The engine's event outbox as ONE fixed-capacity view (EVENT_WORDS u32), the same object on every call until
+   * The engine's event outbox as ONE fixed-capacity view (`engine_events_capacity` u32 words), the same object on every call until
    * WASM memory moves. This block's events are the first `eventsLen()` words, two per event:
    * `node << 16 | offset`, then the bytes little-endian. Words past `eventsLen()` are stale. Valid until the next call
    * to `process()`.
@@ -42,9 +42,6 @@ export interface WasmEngine {
   /** events dropped for want of room, since the engine was made */
   eventsDropped(): number;
 }
-
-/** the outbox capacity in u32 words: 1024 events of two words (EventBox::CAPACITY in the engine) */
-export const EVENT_WORDS = 2048;
 
 interface Exports {
   memory: WebAssembly.Memory;
@@ -67,6 +64,7 @@ interface Exports {
   engine_readouts(e: number): number;
   engine_readouts_len(e: number): number;
   engine_events(e: number): number;
+  engine_events_capacity(): number;
   engine_events_len(e: number): number;
   engine_events_dropped(e: number): number;
 }
@@ -187,7 +185,7 @@ class Engine implements WasmEngine {
       // the first call, or WASM memory grew: re-make the one view
       this.evKey = buffer;
       this.evPtr = ptr;
-      this.evs = new Uint32Array(buffer, ptr, EVENT_WORDS);
+      this.evs = new Uint32Array(buffer, ptr, this.x.engine_events_capacity());
     }
     return this.evs;
   }

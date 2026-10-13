@@ -162,6 +162,13 @@ pub unsafe extern "C" fn engine_events(e: *mut Engine) -> *const u32 {
     unsafe { (*e).events().as_ptr() }
 }
 
+/// The capacity of the outbox in u32 words: `engine_events` is a view of this many words, of which the first
+/// `engine_events_len` are this block's.
+#[no_mangle]
+pub extern "C" fn engine_events_capacity() -> u32 {
+    (crate::events::EventBox::CAPACITY * 2) as u32
+}
+
 /// The length of `engine_events` in u32 words.
 ///
 /// # Safety

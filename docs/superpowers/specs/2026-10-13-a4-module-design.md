@@ -106,12 +106,16 @@ messages are one byte.
 
 **Access.** The renderer asks for MIDI with `requestMIDIAccess({ sysex: false })`. Such an access throws on any
 SysEx message, and the app never builds one, so it cannot overwrite the A4's memory. Electron (44) routes every MIDI
-request through the permission handler as `midiSysex`, so the handler must grant it; refusing it disables MIDI. `MidiDevices` (`devices.ts`) calls `navigator.requestMIDIAccess()` once, the
-first time a plan contains an A4 node, and never touches MIDI before that.
+request through the permission check as `midiSysex`, so it must stay allowed; refusing it disables MIDI. The app has
+no permission handlers: Electron's default allows it, and SysEx stays blocked by `sysex: false`. `MidiDevices`
+(`devices.ts`) calls `navigator.requestMIDIAccess()` once, the first time a plan contains an A4 node, and never
+touches MIDI before that.
 
 **Device status.** The output port is the first whose name contains `Analog Four`. `onstatechange` re-scans on every
 plug and unplug. The status is one of:
 
+- `idle`: MIDI is not requested yet (no plan with an A4 has been sent). The panel shows its label as usual and
+  WIRES lists nothing;
 - `connected`;
 - `missing`: no such port;
 - `unavailable`: Web MIDI rejected or absent. It is shown like `missing`, with a different caption.
@@ -133,12 +137,20 @@ sends note-offs for all of them, plus Stop if that node's clock runs, when:
 
 - the node leaves the plan (deleted, or another project opened);
 - the node's frame is muted. While muted, the pump drops that node's note-ons and clock. The node→frame map comes
-  from the plan;
+  from the plan. An A4 CLK that becomes audible again (unmuted, or back in an applied plan after an undone delete)
+  while its state readout says it runs gets a Start, sent through the ledger path and recorded in it, because its
+  DSP never saw the Stop;
 - the audio host stops or closes (hot reload), or the window unloads;
 - the port disappears. Nothing is sent then, the ledger just clears. On reconnect, notes resume with the next GATE
   rise and held notes are not re-sent.
 
-On close and unload it also sends All Notes Off (CC 123) on channels 1–4. Two A4 nodes in one project are allowed.
+On close and unload it also sends All Notes Off (CC 123) on channels 1–4. Every release message goes out twice
+there: once at once (time 0) and once after the last scheduled message, so it leaves whether or not the queued
+messages survive the window. A node's events never get an earlier time than its previous one (OFS turned down
+mid-note must not put a note-off before its note-on), and the recovery All Notes Off after a failed send follows the
+same `max(now, last + 1)` rule. The pump keeps the last plan the engine applied with code 0 known, however many
+rejected plans follow. A note-off is by (channel, note): two A4s on one track can cut each other's note (won't fix:
+MIDI cannot tell them apart, and an A4 track is monophonic). Two A4 nodes in one project are allowed.
 Both play the same device, and the ledger keeps them apart.
 
 ## 6. The panel
@@ -147,6 +159,7 @@ New display kind `device`, a `Panel.tsx` branch and `displays/Device.tsx`:
 
 - **connected:** the label (`A4 · T2`, `A4 CLK`) with a status dot and one light: lit while the note sounds
   (`a4`) or while running (`a4clk`). The DSP's `state()` is 1 or 0.
+- **idle** (MIDI not requested yet): the label as for connected, with the dot unlit.
 - **missing / unavailable:** a dimmed `A4 · NOT CONNECTED` (or `NO MIDI`), styled like a missing sample.
 - WIRES lists a disconnected A4 next to missing samples. Having no outputs, the A4 counts as a sink like OUT
   and SCOPE, so WIRES does not flag it as leading nowhere.
