@@ -1,6 +1,7 @@
 //! A4 CLK: MIDI Timing Clock, Start and Stop for an Elektron Analog Four MKII. CLK beats become 24 ticks per beat
 //! spread over the last measured period; RUN is Start / Stop, RST is Stop then Start. Everything goes into the
 //! engine's event outbox as one-byte real-time messages (no channel). The notes live in the A4 module.
+//! The clock keeps ticking while stopped: RUN only sends Start and Stop, and the A4 ignores ticks until it starts.
 
 use crate::dsp::{Ctx, Dsp, Io};
 use crate::inputs::EdgeDetector;
@@ -89,6 +90,11 @@ impl Dsp for A4Clk {
             // transport: RUN
             if patched {
                 let g = io.inp[RUN][i];
+                // RUN patched while the A4 runs (as after RST) and low counts as a fall
+                if !self.run_patched && self.running && g < 0.25 {
+                    self.running = false;
+                    ctx.events.push(i, [STOP, 0, 0]);
+                }
                 if self.run_high && g < 0.25 {
                     self.run_high = false;
                     self.running = false;
@@ -198,6 +204,14 @@ mod tests {
         move |s, inp| {
             inp[CLK][s % BLOCK] =
                 f32::from(u8::from(rises.iter().any(|&r| (r..r + 48).contains(&s))));
+        }
+    }
+
+    /// like `pulses`, `w` samples wide
+    fn pulses_w(rises: &[usize], w: usize) -> impl Fn(usize, &mut [[f32; BLOCK]]) + '_ {
+        move |s, inp| {
+            inp[CLK][s % BLOCK] =
+                f32::from(u8::from(rises.iter().any(|&r| (r..r + w).contains(&s))));
         }
     }
 
@@ -318,6 +332,46 @@ mod tests {
             inp[RST][s % BLOCK] = f32::from(u8::from((300..340).contains(&(s + 256))));
         });
         assert_eq!(e, [(0, START), (44, STOP), (44, START)]);
+    }
+
+    #[test]
+    fn patching_run_low_while_running_stops() {
+        let mut b = bench();
+        b.connected_in[RUN] = false;
+        let mut c = A4Clk::new(SR);
+        // RST with RUN unpatched starts the A4
+        let e = go(&mut b, &mut c, 1, |s, inp| {
+            inp[RST][s] = f32::from(u8::from(s == 5))
+        });
+        assert_eq!(e, [(5, STOP), (5, START)]);
+        assert_eq!(c.state(), 1.0);
+        b.connected_in[RUN] = true;
+        let e = go(&mut b, &mut c, 2, |_, _| {});
+        assert_eq!(e, [(0, STOP)]);
+        assert_eq!(c.state(), 0.0);
+    }
+
+    #[test]
+    fn the_clock_keeps_ticking_after_run_falls() {
+        let mut b = bench();
+        let rises = [100, 24_100, 48_100, 72_100];
+        let e = go(&mut b, &mut A4Clk::new(SR), 700, |s, inp| {
+            inp[RUN][s % BLOCK] = f32::from(u8::from(s < 200));
+            pulses(&rises)(s, inp);
+        });
+        assert!(e.contains(&(200, STOP)));
+        let after = ticks(&e).into_iter().filter(|&t| t > 200).count();
+        assert!(after >= 24 * 2, "{after} ticks after the stop");
+    }
+
+    #[test]
+    fn an_audio_rate_clk_sends_at_most_24_ticks_per_beat() {
+        // a beat every 10 samples: P < 24, so several ticks share a sample
+        let rises: Vec<usize> = (0..50).map(|k| 10 * k).collect();
+        let mut b = bench();
+        let t = ticks(&go(&mut b, &mut A4Clk::new(SR), 4, pulses_w(&rises, 5)));
+        assert!(t.len() <= 24 * rises.len(), "{} ticks", t.len());
+        assert!(t.len() > rises.len());
     }
 
     #[test]

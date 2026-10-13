@@ -84,16 +84,16 @@ test('problems: a META-SEQ without a clock lists META-SEQ › CLK — no clock',
   expect(p.find((x) => x.text.startsWith('META-SEQ'))!.id).toBe(ids[0]);
 });
 
-test('an A4 is not flagged as leading nowhere', () => {
+test('an OSC cabled only into an A4 is not flagged as leading nowhere', () => {
   const { doc: d0, ids } = patch('osc', 'a4');
   const doc = connect(d0, SPECS, [ids[0]!, 'out'], [ids[1]!, 'gate']);
-  expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[1]);
+  expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[0]);
 });
 
-test('an A4 CLK is not flagged as leading nowhere', () => {
+test('an OSC cabled only into an A4 CLK is not flagged as leading nowhere', () => {
   const { doc: d0, ids } = patch('osc', 'a4clk');
   const doc = connect(d0, SPECS, [ids[0]!, 'out'], [ids[1]!, 'clk']);
-  expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[1]);
+  expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[0]);
 });
 
 test('an A4 is listed as NOT CONNECTED or NO MIDI while the device is not connected', () => {

@@ -65,8 +65,9 @@ export function wireProblems(
 ): Problem[] {
   const res: Problem[] = [];
   const cabled = (id: string) => doc.cables.some((c) => c.from[0] === id || c.to[0] === id);
-  // sound that reaches no OUT: walk back from every OUT along the cables
-  const reach = new Set(doc.modules.filter((m) => m.type === 'out').map((m) => m.id));
+  // sound that reaches no OUT: walk back from every OUT (and A4 / A4 CLK, hardware sinks) along the cables
+  const sinks = ['out', 'a4', 'a4clk'];
+  const reach = new Set(doc.modules.filter((m) => sinks.includes(m.type)).map((m) => m.id));
   for (let changed = true; changed;) {
     changed = false;
     for (const c of doc.cables)
