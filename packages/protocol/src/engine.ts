@@ -30,11 +30,21 @@ export interface WasmEngine {
   /** Views into WASM memory, valid until the next call. */
   process(): { l: Float32Array; r: Float32Array };
   readouts(): Float32Array;
-  /** this block's MIDI events, two words each: `node << 16 | offset`, then the bytes little-endian */
+  /**
+   * The engine's event outbox as ONE fixed-capacity view (EVENT_WORDS u32), the same object on every call until
+   * WASM memory moves. This block's events are the first `eventsLen()` words, two per event:
+   * `node << 16 | offset`, then the bytes little-endian. Words past `eventsLen()` are stale. Valid until the next call
+   * to `process()`.
+   */
   events(): Uint32Array;
+  /** how many u32 words of `events()` this block filled (two per event) */
+  eventsLen(): number;
   /** events dropped for want of room, since the engine was made */
   eventsDropped(): number;
 }
+
+/** the outbox capacity in u32 words: 1024 events of two words (EventBox::CAPACITY in the engine) */
+export const EVENT_WORDS = 2048;
 
 interface Exports {
   memory: WebAssembly.Memory;
@@ -172,14 +182,18 @@ class Engine implements WasmEngine {
 
   events(): Uint32Array {
     const ptr = this.x.engine_events(this.e);
-    const len = this.x.engine_events_len(this.e);
     const buffer = this.x.memory.buffer;
-    if (buffer !== this.evKey || ptr !== this.evPtr || len !== this.evs.length) {
+    if (buffer !== this.evKey || ptr !== this.evPtr) {
+      // the first call, or WASM memory grew: re-make the one view
       this.evKey = buffer;
       this.evPtr = ptr;
-      this.evs = new Uint32Array(buffer, ptr, len);
+      this.evs = new Uint32Array(buffer, ptr, EVENT_WORDS);
     }
     return this.evs;
+  }
+
+  eventsLen(): number {
+    return this.x.engine_events_len(this.e);
   }
 
   eventsDropped(): number {

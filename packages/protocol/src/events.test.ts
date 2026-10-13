@@ -36,4 +36,29 @@ describe('event ring', () => {
     expect(r.read(() => {})).toBe(RING_RECORDS);
     expect(r.dropped()).toBe(1);
   });
+
+  it('head and tail near 2^31 wrap as int32', () => {
+    const sab = new SharedArrayBuffer(ringBytes());
+    const h = new Int32Array(sab, 0, 4);
+    h[0] = h[1] = 2 ** 31 - 3;
+    const w = new RingWriter(sab);
+    const r = new EventRing(sab);
+    for (let i = 0; i < 10; i++) w.write(i, 0, i);
+    const seen: number[] = [];
+    expect(r.read((_f, _s, _n, midi) => seen.push(midi))).toBe(10);
+    expect(seen).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(r.dropped()).toBe(0);
+  });
+
+  it('the writer resumes after the reader frees slots following a drop', () => {
+    const { w, r } = make();
+    for (let i = 0; i < RING_RECORDS + 3; i++) w.write(i, 0, i);
+    expect(r.dropped()).toBe(3);
+    expect(r.read(() => {})).toBe(RING_RECORDS);
+    w.write(1, 0, 99);
+    const seen: number[] = [];
+    expect(r.read((_f, _s, _n, midi) => seen.push(midi))).toBe(1);
+    expect(seen).toEqual([99]);
+    expect(r.dropped()).toBe(3);
+  });
 });

@@ -85,10 +85,11 @@ class SredaProcessor extends AudioWorkletProcessor {
     out[1]?.set(block.r);
     const r = this.engine.readouts();
     if (r.length <= this.shared.length) this.shared.set(r);
-    const ev = this.engine.events();
-    if (ev.length > 0) {
+    const n = this.engine.eventsLen();
+    if (n > 0) {
+      const ev = this.engine.events();
       const seq16 = (r[0] as number) & 0xffff;
-      for (let i = 0; i + 1 < ev.length; i += 2) {
+      for (let i = 0; i + 1 < n; i += 2) {
         const head = ev[i] as number;
         const seqNode = ((seq16 << 16) | (head >>> 16)) >>> 0;
         this.ring.write(currentFrame + (head & 0xffff), seqNode, ev[i + 1] as number);
