@@ -15,6 +15,8 @@ declare global {
     __sreda?: {
       doc(): unknown;
       readout(i: number): number;
+      /** Web MIDI access was granted or refused (null: MIDI not asked for yet) */
+      midiResolved(): boolean;
       big?(): void;
       analysis: { worker: number; fallback: number };
     };
@@ -37,6 +39,7 @@ export function App(): JSX.Element {
     window.__sreda = {
       doc: () => structuredClone(unwrap(s.state.doc)),
       readout: (i) => s.readout(i),
+      midiResolved: () => s.midi.resolved(),
       analysis: analysisCounts,
     };
     // dev builds: `__sreda.big()` in the console opens the 200-module patch (the smoothness check)

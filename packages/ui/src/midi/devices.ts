@@ -12,6 +12,8 @@ export class MidiDevices {
   private timer: ReturnType<typeof setInterval> | null = null;
   /** the last loss was a send that threw, not an unplug */
   private threw = false;
+  private disposed = false;
+  private resolved = false;
 
   constructor(
     private readonly request: () => Promise<MIDIAccess>,
@@ -20,23 +22,34 @@ export class MidiDevices {
 
   /** Idempotent: requests MIDI access once. */
   start(): void {
-    if (this.started) return;
+    if (this.started || this.disposed) return;
     this.started = true;
     let p: Promise<MIDIAccess>;
     try {
       p = this.request();
     } catch {
+      this.resolved = true;
       this.state[1]('unavailable');
       return;
     }
     p.then(
       (access) => {
+        if (this.disposed) return;
         this.access = access;
+        this.resolved = true;
         access.onstatechange = () => this.scan();
         this.scan();
       },
-      () => this.state[1]('unavailable'),
+      () => {
+        this.resolved = true;
+        this.state[1]('unavailable');
+      },
     );
+  }
+
+  /** MIDI access was granted or refused (the status says which); false until then. For e2e. */
+  isResolved(): boolean {
+    return this.resolved;
   }
 
   /** Solid accessor. */
@@ -62,16 +75,27 @@ export class MidiDevices {
   }
 
   /** Stops the re-scan timer. */
-  dispose(): void {
+  private stopTimer(): void {
     if (this.timer !== null) clearInterval(this.timer);
     this.timer = null;
   }
 
+  /** Lets go of everything (a hot reload ends the session): no timer, no listener, no port; later calls do nothing. */
+  dispose(): void {
+    this.disposed = true;
+    this.stopTimer();
+    if (this.access) this.access.onstatechange = null;
+    this.access = null;
+    this.port = null;
+  }
+
   private poll(): void {
-    if (this.timer === null && this.access) this.timer = setInterval(() => this.scan(), 1000);
+    if (!this.disposed && this.timer === null && this.access)
+      this.timer = setInterval(() => this.scan(), 1000);
   }
 
   private scan(): void {
+    if (this.disposed) return;
     this.port = null;
     try {
       for (const out of this.access?.outputs.values() ?? []) {
@@ -88,7 +112,7 @@ export class MidiDevices {
       this.poll();
       return;
     }
-    this.dispose();
+    this.stopTimer();
     if (this.threw) {
       this.threw = false;
       try {

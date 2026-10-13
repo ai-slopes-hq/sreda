@@ -409,7 +409,7 @@ test('MIDI is requested only once a sent plan has an A4', async () => {
   s.edit((d) => addModule(d, SPECS, 'a4', 0, 400).doc);
   expect(request).toHaveBeenCalledTimes(1);
   (asHost as unknown as { onClose?: () => void }).onClose?.();
-  s.midi.dispose();
+  s.midi.devices.dispose();
 });
 
 test('an A4 note reaches the port; deleting the module (an applied plan without it) sends its note-off', async () => {
@@ -446,5 +446,38 @@ test('muting the frame of an A4 releases its note; the pump drops its note-ons w
   queue.push([0, 1, node, NOTE_ON]);
   await settle();
   expect(out.sent.length).toBe(before);
+  host.onClose?.();
+});
+
+test('muting a frame by undo or redo releases its A4 note at once', async () => {
+  const { addModule, frameSelection } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const framed = frameSelection(added.doc, SPECS, [added.id]);
+  const { s, access, queue, host, asHost } = midiSession(framed.doc);
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  s.frame(framed.id, { muted: true }, undefined);
+  s.undo(); // unmuted again
+  const node = framed.doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, 1, node, NOTE_ON]);
+  await settle();
+  expect(out.sent.map((e) => e.bytes)).toContainEqual([0x90, 60, 100]);
+  const before = out.sent.length;
+  s.redo(); // muted by redo
+  expect(out.sent.slice(before).map((e) => e.bytes)).toContainEqual([0x80, 60, 0]);
+  host.onClose?.();
+});
+
+test('an event from a non-MIDI node of the plan is dropped', async () => {
+  const { addModule } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const { s, access, queue, host, asHost } = midiSession(added.doc);
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  queue.push([0, 1, 0, NOTE_ON]); // node 0 is the OSC
+  await settle();
+  expect(out.sent).toEqual([]);
   host.onClose?.();
 });

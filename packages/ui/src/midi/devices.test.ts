@@ -48,7 +48,12 @@ test('a throwing send turns missing and recovers with All Notes Off', async () =
     out.throwOnSend = false;
     vi.advanceTimersByTime(1000);
     expect(d.status()).toBe('connected');
-    expect(out.sent.map((e) => e.bytes)).toEqual([[0xb0, 123, 0], [0xb1, 123, 0], [0xb2, 123, 0], [0xb3, 123, 0]]);
+    expect(out.sent.map((e) => e.bytes)).toEqual([
+      [0xb0, 123, 0],
+      [0xb1, 123, 0],
+      [0xb2, 123, 0],
+      [0xb3, 123, 0],
+    ]);
     expect(d.send([0x90, 60, 1], 5)).toBe(true);
     d.dispose();
   } finally {
@@ -84,4 +89,25 @@ test('start requests MIDI once', async () => {
   await flush();
   d.start();
   expect(request).toHaveBeenCalledTimes(1);
+});
+
+test('after dispose a state change does nothing and no timer runs', async () => {
+  vi.useFakeTimers();
+  try {
+    const access = new FakeAccess();
+    const d = new MidiDevices(() => Promise.resolve(access.asAccess()));
+    d.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(d.status()).toBe('missing'); // no port: a re-scan timer runs
+    expect(vi.getTimerCount()).toBe(1);
+    d.dispose();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(access.onstatechange).toBeNull();
+    access.plug('Analog Four'); // nobody listens
+    access.unplug('Analog Four');
+    expect(d.status()).toBe('missing');
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {
+    vi.useRealTimers();
+  }
 });

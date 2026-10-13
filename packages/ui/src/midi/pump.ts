@@ -31,7 +31,12 @@ export class MidiPump {
   tick(): void {
     const o = this.o;
     this.checkPort();
-    const stamp = o.stamp();
+    let stamp: AudioTimestamp;
+    try {
+      stamp = o.stamp();
+    } catch {
+      return; // the clock is not readable now: skip this tick, the events stay in the ring
+    }
     const ctx = stamp.contextTime ?? 0;
     const perf = stamp.performanceTime ?? 0;
     o.ring.read((frame, seq16, node, midi) => {

@@ -8,7 +8,9 @@ import { MidiPump, type NodeInfo } from './pump';
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const word = (b0: number, b1 = 0, b2 = 0) => b0 | (b1 << 8) | (b2 << 16);
 
-async function setup(opts: { plug?: boolean; now?: number; resolve?: (seq: number, node: number) => NodeInfo | null } = {}) {
+async function setup(
+  opts: { plug?: boolean; now?: number; resolve?: (seq: number, node: number) => NodeInfo | null } = {},
+) {
   const sab = new SharedArrayBuffer(ringBytes());
   const writer = new RingWriter(sab);
   const access = new FakeAccess();
@@ -35,7 +37,18 @@ async function setup(opts: { plug?: boolean; now?: number; resolve?: (seq: numbe
     ledger,
     now: () => now,
   });
-  return { writer, access, out, devices, ledger, pump, info, sentToLedger, ledgerOut, setNow: (n: number) => (now = n) };
+  return {
+    writer,
+    access,
+    out,
+    devices,
+    ledger,
+    pump,
+    info,
+    sentToLedger,
+    ledgerOut,
+    setNow: (n: number) => (now = n),
+  };
 }
 
 test('maps a frame to the speaker time', async () => {
@@ -60,7 +73,11 @@ test('late events keep their order', async () => {
   s.writer.write(48100, 0, word(0x80, 60, 0));
   s.writer.write(48200, 0, word(0x90, 62, 100));
   s.pump.tick();
-  expect(s.out!.sent.map((e) => [e.bytes[1], e.time])).toEqual([[60, 9000], [60, 9000], [62, 9000]]);
+  expect(s.out!.sent.map((e) => [e.bytes[1], e.time])).toEqual([
+    [60, 9000],
+    [60, 9000],
+    [62, 9000],
+  ]);
   expect(s.pump.late()).toBe(3);
 });
 
@@ -84,7 +101,14 @@ test('drops note-ons of a muted node but lets note-offs through', async () => {
 });
 
 test('events from the previous plan map through their seq', async () => {
-  const s = await setup({ resolve: (seq) => (seq === 1 ? { id: 'old', offsetMs: 0, muted: false } : seq === 2 ? { id: 'new', offsetMs: 0, muted: false } : null) });
+  const s = await setup({
+    resolve: (seq) =>
+      seq === 1
+        ? { id: 'old', offsetMs: 0, muted: false }
+        : seq === 2
+          ? { id: 'new', offsetMs: 0, muted: false }
+          : null,
+  });
   s.writer.write(48000, (1 << 16) | 3, word(0x90, 60, 100));
   s.writer.write(48000, (2 << 16) | 3, word(0x90, 61, 100));
   s.writer.write(48000, (9 << 16) | 3, word(0x90, 62, 100));
@@ -107,5 +131,21 @@ test('a throwing send turns missing and keeps draining', async () => {
   // the port went away: the ledger forgot note 60 and sends nothing on release
   s.ledger.releaseAll(false);
   expect(s.ledgerOut).toEqual([]);
+  s.devices.dispose();
+});
+
+test('an unreadable output clock skips the tick and keeps the events', async () => {
+  const s = await setup();
+  let ok = false;
+  s.pump['o'].stamp = () => {
+    if (!ok) throw new Error('no clock');
+    return { contextTime: 1, performanceTime: 5000 };
+  };
+  s.writer.write(48000, 0, word(0x90, 60, 100));
+  expect(() => s.pump.tick()).not.toThrow();
+  expect(s.sentToLedger).toHaveLength(0);
+  ok = true;
+  s.pump.tick();
+  expect(s.sentToLedger).toHaveLength(1);
   s.devices.dispose();
 });

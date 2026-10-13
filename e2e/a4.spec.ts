@@ -28,8 +28,14 @@ test('a project with an A4 opens and plays with no A4', async () => {
   await expect(panel).toBeVisible();
   await page.mouse.click(1300, 880); // start audio
   const master = () =>
-    page.evaluate(() => (window as unknown as { __sreda: { readout(i: number): number } }).__sreda.readout(1));
+    page.evaluate(() =>
+      (window as unknown as { __sreda: { readout(i: number): number } }).__sreda.readout(1),
+    );
   await expect.poll(master, { timeout: 3000 }).toBeGreaterThan(0.05);
+  // the caption means something only once Web MIDI access has resolved
+  await page.waitForFunction(() =>
+    (window as unknown as { __sreda: { midiResolved(): boolean } }).__sreda.midiResolved(),
+  );
   // MIDI access itself works in Electron (the permission handler), so the caption is NOT CONNECTED, not NO MIDI
   await expect(panel.locator('.sr-device')).toContainText('NOT CONNECTED');
   await expect(panel.locator('.sr-device.missing')).toHaveCount(1);
