@@ -30,6 +30,10 @@ export interface WasmEngine {
   /** Views into WASM memory, valid until the next call. */
   process(): { l: Float32Array; r: Float32Array };
   readouts(): Float32Array;
+  /** this block's MIDI events, two words each: `node << 16 | offset`, then the bytes little-endian */
+  events(): Uint32Array;
+  /** events dropped for want of room, since the engine was made */
+  eventsDropped(): number;
 }
 
 interface Exports {
@@ -52,6 +56,9 @@ interface Exports {
   engine_process(e: number): number;
   engine_readouts(e: number): number;
   engine_readouts_len(e: number): number;
+  engine_events(e: number): number;
+  engine_events_len(e: number): number;
+  engine_events_dropped(e: number): number;
 }
 
 class Engine implements WasmEngine {
@@ -61,6 +68,9 @@ class Engine implements WasmEngine {
   private reads = new Float32Array(0);
   private readKey: ArrayBuffer | null = null;
   private readPtr = 0;
+  private evs = new Uint32Array(0);
+  private evKey: ArrayBuffer | null = null;
+  private evPtr = 0;
 
   constructor(
     private readonly x: Exports,
@@ -158,6 +168,22 @@ class Engine implements WasmEngine {
       this.reads = new Float32Array(buffer, ptr, len);
     }
     return this.reads;
+  }
+
+  events(): Uint32Array {
+    const ptr = this.x.engine_events(this.e);
+    const len = this.x.engine_events_len(this.e);
+    const buffer = this.x.memory.buffer;
+    if (buffer !== this.evKey || ptr !== this.evPtr || len !== this.evs.length) {
+      this.evKey = buffer;
+      this.evPtr = ptr;
+      this.evs = new Uint32Array(buffer, ptr, len);
+    }
+    return this.evs;
+  }
+
+  eventsDropped(): number {
+    return this.x.engine_events_dropped(this.e);
   }
 }
 

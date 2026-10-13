@@ -126,3 +126,13 @@ test('master(0) silences the starter patch', () => {
   play(e, 100); // the glide, then the DC blocker's tail
   expect(play(e, 20).reduce((a, x) => Math.max(a, Math.abs(x)), 0)).toBeLessThan(1e-3);
 });
+
+test('events() is an empty view of the outbox when no module pushes; nothing is dropped', () => {
+  const e = loadEngine(wasm, 48_000, 1);
+  e.apply(compile(starterDoc(SPECS), SPECS, 1));
+  play(e, 4);
+  const ev = e.events();
+  expect(ev).toBeInstanceOf(Uint32Array);
+  expect(ev.length).toBe(0);
+  expect(e.eventsDropped()).toBe(0);
+});

@@ -52,6 +52,8 @@ pub fn spec(type_: &str) -> Option<ModuleSpec> {
             ],
             vec![],
         ),
+        // pushes note-on 60 / 100 at each prepared pulse's first sample
+        "emit" => m("emit", vec![port("clk", "CLK", Role::Trigger)], vec![]),
         // out = NaN
         "boom" => m("boom", vec![], vec![]),
         // state() = 3, trace() = 0, 1, 2, …
@@ -92,6 +94,22 @@ impl Dsp for Thru {
     fn reset(&mut self) {}
 }
 
+struct Emit(f32);
+impl Dsp for Emit {
+    fn process(&mut self, io: &mut Io, ctx: &mut Ctx, from: usize, to: usize) {
+        for i in from..to {
+            let x = io.inp[0][i];
+            if x > 0.5 && self.0 <= 0.5 {
+                ctx.events.push(i, [0x90, 60, 100]);
+            }
+            self.0 = x;
+        }
+    }
+    fn reset(&mut self) {
+        self.0 = 0.0;
+    }
+}
+
 struct Boom;
 impl Dsp for Boom {
     fn process(&mut self, io: &mut Io, _ctx: &mut Ctx, from: usize, to: usize) {
@@ -119,6 +137,7 @@ pub fn create(type_: &str) -> Option<Box<dyn Dsp>> {
         "dc" => Box::new(Dc),
         "gain" => Box::new(Gain),
         "cvthru" | "trig" | "held" | "held2" => Box::new(Thru),
+        "emit" => Box::new(Emit(0.0)),
         "boom" => Box::new(Boom),
         "stater" => Box::new(Stater(
             (0..crate::dsp::TRACE_LEN).map(|i| i as f32).collect(),

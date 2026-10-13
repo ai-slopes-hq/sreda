@@ -153,6 +153,33 @@ pub unsafe extern "C" fn engine_process(e: *mut Engine) -> *const f32 {
     }
 }
 
+/// This block's events as u32 words (two per event, see `EventBox`), valid until the next `engine_process`.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_events(e: *mut Engine) -> *const u32 {
+    unsafe { (*e).events().as_ptr() }
+}
+
+/// The length of `engine_events` in u32 words.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_events_len(e: *mut Engine) -> u32 {
+    unsafe { (*e).events().len() as u32 }
+}
+
+/// Events dropped for want of room, since the engine was made.
+///
+/// # Safety
+/// `e` comes from `engine_new`.
+#[no_mangle]
+pub unsafe extern "C" fn engine_events_dropped(e: *mut Engine) -> u32 {
+    unsafe { (*e).events_dropped() }
+}
+
 /// # Safety
 /// `e` comes from `engine_new`.
 #[no_mangle]

@@ -2,6 +2,7 @@
 
 pub mod dsp;
 pub mod engine;
+pub mod events;
 pub mod inputs;
 pub mod master;
 pub mod modules;

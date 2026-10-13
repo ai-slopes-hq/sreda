@@ -904,6 +904,7 @@ impl Engine {
         if slot.dead {
             return;
         }
+        self.ctx.events.set_node(p);
         let saved = self.ctx.master;
         self.ctx.master = [[0.0; BLOCK]; 2];
         for i in 0..BLOCK {
@@ -1034,6 +1035,7 @@ impl Engine {
 
     pub fn process(&mut self) -> (&[f32; BLOCK], &[f32; BLOCK]) {
         self.ctx.master = [[0.0; BLOCK]; 2];
+        self.ctx.events.clear();
         // a soloed OUT in the plan silences the others
         self.ctx.solo_any = self.pool.iter().flatten().any(|s| {
             s.writes_master && s.layout.is_some() && s.fixed.get(1).is_some_and(|&v| v >= 0.5)
@@ -1059,6 +1061,7 @@ impl Engine {
             match st {
                 StepRt::Node(p) => {
                     let slot = self.pool[*p].as_mut().unwrap();
+                    self.ctx.events.set_node(*p);
                     #[cfg(test)]
                     let reference = self.per_sample;
                     #[cfg(not(test))]
@@ -1096,6 +1099,7 @@ impl Engine {
                     for i in 0..BLOCK {
                         for p in members {
                             let slot = self.pool[*p].as_mut().unwrap();
+                            self.ctx.events.set_node(*p);
                             prepare(slot, &self.outs, &self.gain_buf, i, fade_len);
                             run(slot, &mut self.outs, &mut self.ctx, i, i + 1);
                         }
@@ -1191,6 +1195,15 @@ impl Engine {
 
     pub fn readouts(&self) -> &[f32] {
         &self.readouts
+    }
+
+    /// This block's MIDI events (see `EventBox`), valid until the next `process`.
+    pub fn events(&self) -> &[u32] {
+        self.ctx.events.words()
+    }
+
+    pub fn events_dropped(&self) -> u32 {
+        self.ctx.events.dropped()
     }
 
     /// A node's output buffer from the last block (plan index, output index).
@@ -2185,6 +2198,50 @@ mod tests {
         e.apply(p).unwrap();
         run(&mut e, 2);
         assert!((e.output(2, 0)[10] - 0.75).abs() < 1e-6);
+    }
+
+    #[test]
+    fn events_carry_the_node_and_the_pulse_offset_and_clear_each_block() {
+        let mut e = Engine::new(SR, 1);
+        let p = plan(
+            1,
+            vec![
+                node("c", "clock", &[], &[1.0, 300.0], vec![none(Kind::Trigger)]),
+                node(
+                    "m",
+                    "emit",
+                    &[],
+                    &[],
+                    vec![input(vec![src(0, false)], Kind::Trigger)],
+                ),
+            ],
+            chain(2),
+        );
+        e.apply(p).unwrap();
+        let (mut seen, mut empty) = (0, 0);
+        let mut prev = 0.0;
+        for _ in 0..(SR as usize * 7 / 10 / BLOCK + 2) {
+            e.process();
+            let clock = *e.output(0, 0);
+            let rise = (0..BLOCK)
+                .find(|&i| clock[i] > 0.5 && (if i == 0 { prev } else { clock[i - 1] }) <= 0.5);
+            prev = clock[BLOCK - 1];
+            match rise {
+                Some(i) => {
+                    seen += 1;
+                    assert_eq!(
+                        e.events(),
+                        &[1 << 16 | i as u32, 0x90 | 60 << 8 | 100 << 16]
+                    );
+                }
+                None => {
+                    empty += 1;
+                    assert!(e.events().is_empty());
+                }
+            }
+        }
+        assert!(seen >= 3 && empty > seen);
+        assert_eq!(e.events_dropped(), 0);
     }
 
     #[test]

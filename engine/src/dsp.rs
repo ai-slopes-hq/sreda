@@ -40,6 +40,8 @@ pub struct Ctx {
     pub solo_any: bool,
     /// decoded samples by id (SAMPLER, GRAINS)
     pub samples: crate::samples::SamplePool,
+    /// MIDI events for the world outside; the engine clears it each block and sets the current node
+    pub events: crate::events::EventBox,
 }
 
 impl Ctx {
@@ -50,6 +52,7 @@ impl Ctx {
             master: [[0.0; BLOCK]; 2],
             solo_any: false,
             samples: crate::samples::SamplePool::default(),
+            events: crate::events::EventBox::new(),
         }
     }
 }
