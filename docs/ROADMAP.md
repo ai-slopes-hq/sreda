@@ -152,3 +152,4 @@ it when writing Plan 2.
   Slice 1 done (Tasks 1–6: held inputs, the `a4` module, the engine event ring, `MidiDevices` / `MidiPump` / `NoteLedger`,
   the Electron MIDI permission, the `device` display, WIRES NOT CONNECTED rows): **waiting for the listening Checkpoints 1–2**
   with the A4 attached (spec §8.1, §8.2) before slice 2 (`a4clk`).
+  Task 7 done (`a4clk`: MIDI clock, Start, Stop, RST): **waiting for Checkpoint 3** (listening, spec §8.3).

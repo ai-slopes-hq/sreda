@@ -169,6 +169,12 @@ test('fixtures for the engine', () => {
   const a4 = addModule(a4doc, SPECS, 'a4', 400, 0);
   a4doc = connect(a4.doc, SPECS, ['m1', 'out'], [a4.id, 'gate']);
   a4doc = connect(a4doc, SPECS, ['m2', 'out'], [a4.id, 'pitch']);
+  // a square OSC as the beat and a second one as RUN into an A4 CLK
+  let clkdoc = addModule(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'osc', 0, 200).doc;
+  clkdoc = setParam(setParam(clkdoc, SPECS, 'm1', 'wave', 3), SPECS, 'm2', 'wave', 3);
+  const a4clk = addModule(clkdoc, SPECS, 'a4clk', 400, 0);
+  clkdoc = connect(a4clk.doc, SPECS, ['m1', 'out'], [a4clk.id, 'clk']);
+  clkdoc = connect(clkdoc, SPECS, ['m2', 'out'], [a4clk.id, 'run']);
   const plans = {
     starter: compile(starter, SPECS, 1),
     'all-a': compile(all, SPECS, 5),
@@ -179,6 +185,7 @@ test('fixtures for the engine', () => {
     frames: compile(nestedFrames(), SPECS, 7),
     '200': compile(bigPatch(SPECS), SPECS, 8),
     a4: compile(a4doc, SPECS, 9),
+    a4clk: compile(clkdoc, SPECS, 10),
   };
   expect(plans['self-fm'].steps).toEqual([{ loop: [0] }, { node: 1 }]);
   if (process.env['UPDATE_FIXTURES']) {

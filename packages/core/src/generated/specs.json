@@ -68,6 +68,51 @@
     }
   },
   {
+    "type": "a4clk",
+    "label": "A4 CLK",
+    "desc": "Analog Four MKII clock and transport over USB MIDI",
+    "size": [
+      4,
+      2
+    ],
+    "inputs": [
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
+      },
+      {
+        "id": "run",
+        "label": "RUN",
+        "role": "trigger",
+        "held": true
+      },
+      {
+        "id": "rst",
+        "label": "RST",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "offset",
+        "label": "OFS",
+        "min": -50.0,
+        "max": 50.0,
+        "def": 0.0,
+        "taper": "lin",
+        "step": 1.0
+      }
+    ],
+    "normals": [],
+    "display": {
+      "lanes": 2,
+      "kind": "device"
+    }
+  },
+  {
     "type": "abc",
     "label": "A×B+C",
     "desc": "multiply and add, 2 channels",

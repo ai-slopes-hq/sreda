@@ -165,3 +165,28 @@ test('events() reports A4 notes', () => {
   expect(seen[on]).toEqual([node, 0x90, 48, 100]);
   expect(seen.slice(on).some((x) => x[0] === node && x[1] === 0x80 && x[2] === 48)).toBe(true);
 });
+
+test('events() reports A4 CLK ticks and transport', () => {
+  // two square OSCs (110 Hz): the first is the beat, the second is RUN
+  let doc = setParam(addModule(emptyDoc, SPECS, 'osc', 0, 0).doc, SPECS, 'm1', 'wave', 3);
+  doc = setParam(addModule(doc, SPECS, 'osc', 0, 200).doc, SPECS, 'm2', 'wave', 3);
+  const clk = addModule(doc, SPECS, 'a4clk', 400, 0);
+  doc = connect(clk.doc, SPECS, ['m1', 'out'], [clk.id, 'clk']);
+  doc = connect(doc, SPECS, ['m2', 'out'], [clk.id, 'run']);
+  const plan = compile(doc, SPECS, 1);
+  const node = plan.nodes.findIndex((n) => n.type === 'a4clk');
+  const e = loadEngine(wasm, 48_000, 1);
+  expect(e.apply(plan)).toBe(0);
+  const seen: number[][] = [];
+  for (let b = 0; b < 400; b++) {
+    e.process();
+    const ev = e.events();
+    for (let i = 0; i < e.eventsLen(); i += 2) seen.push([ev[i]! >>> 16, ev[i + 1]! & 0xff, ev[i + 1]! >>> 8]);
+  }
+  const of = (status: number) => seen.filter((x) => x[1] === status);
+  expect(of(0xfa).length).toBeGreaterThan(0);
+  expect(of(0xfc).length).toBeGreaterThan(0);
+  expect(of(0xf8).length).toBeGreaterThan(24);
+  // one-byte messages: the other two bytes are 0, and they come from the A4 CLK node
+  expect(seen.filter((x) => x[0] !== node || x[2] !== 0)).toEqual([]);
+});

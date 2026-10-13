@@ -76,8 +76,8 @@ export function wireProblems(
       }
   }
   for (const m of doc.modules) {
-    if (m.type === 'out' || m.type === 'scope' || m.type === 'a4' || reach.has(m.id) || !cabled(m.id))
-      continue;
+    const sink = m.type === 'out' || m.type === 'scope' || m.type === 'a4' || m.type === 'a4clk';
+    if (sink || reach.has(m.id) || !cabled(m.id)) continue;
     if (!specs[m.type]!.outputs.some((p) => p.role === 'audio')) continue;
     res.push({ id: m.id, text: `${nameOf(doc, specs, m.id)} — sound does not reach any OUT`, info: false });
   }

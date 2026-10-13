@@ -267,3 +267,29 @@ fn an_a4_playing_notes_allocates_nothing() {
         "notes started and ended: {on} on, {off} off"
     );
 }
+
+#[test]
+fn an_a4_clk_sending_clock_and_transport_allocates_nothing() {
+    // square OSCs drive CLK and RUN, so ticks, Starts and Stops go into the outbox
+    let mut e = Engine::new(48_000.0, 1);
+    e.apply(fixture("a4clk")).unwrap();
+    e.process();
+    let before = allocs();
+    let (mut ticks, mut start, mut stop) = (0, 0, 0);
+    for _ in 0..2_000 {
+        e.process();
+        for w in e.events().chunks(2) {
+            match w[1] as u8 {
+                0xF8 => ticks += 1,
+                0xFA => start += 1,
+                0xFC => stop += 1,
+                _ => {}
+            }
+        }
+    }
+    assert_eq!(allocs() - before, 0);
+    assert!(
+        ticks > 0 && start > 0 && stop > 0,
+        "{ticks} ticks, {start} starts, {stop} stops"
+    );
+}

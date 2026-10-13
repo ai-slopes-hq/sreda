@@ -90,6 +90,12 @@ test('an A4 is not flagged as leading nowhere', () => {
   expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[1]);
 });
 
+test('an A4 CLK is not flagged as leading nowhere', () => {
+  const { doc: d0, ids } = patch('osc', 'a4clk');
+  const doc = connect(d0, SPECS, [ids[0]!, 'out'], [ids[1]!, 'clk']);
+  expect(wireProblems(doc, SPECS).map((p) => p.id)).not.toContain(ids[1]);
+});
+
 test('an A4 is listed as NOT CONNECTED or NO MIDI while the device is not connected', () => {
   const { doc } = patch('a4');
   expect(wireProblems(doc, SPECS).map((p) => p.text)).toEqual([]);
