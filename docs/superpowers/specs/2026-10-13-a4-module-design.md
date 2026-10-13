@@ -69,9 +69,10 @@ above 0.5 and re-arm below 0.25 used everywhere else.
 - **CLK:** each rise is one beat. The DSP measures the beat period and sends 24 Timing Clock (0xF8) ticks per beat,
   spread evenly over the last measured period. Tick 0 goes out on the rise itself. If the next rise comes early,
   the ticks still owed go out at once, so 24 ticks per beat always hold. If it comes late, ticks stop at 23 and
-  wait for the rise. The tempo follows within one beat. Nothing goes out before the second rise, since there is no
-  period yet. A gap longer than 2 s resets the measurement.
-- **RST** rise → Stop then Start in the same sample. The A4 restarts its pattern from the top.
+  wait for the rise. The tempo follows within one beat. Before the second rise there is no period yet, so only
+  tick 0 goes out. A gap longer than 2 s resets the measurement.
+- **RST** rise → Stop then Start in the same sample. The A4 restarts its pattern from the top. With RUN patched
+  and low (stopped), RST does nothing.
 - RUN unpatched while running → Stop.
 
 **Events.** The DSP pushes `{offset in block, 3 MIDI bytes}` into `ctx.events` (§3). Unused bytes are 0. Real-time
@@ -159,7 +160,7 @@ New display kind `device`, a `Panel.tsx` branch and `displays/Device.tsx`:
   - retrigger on a sounding track;
   - VEL unpatched → 100;
   - unpatching GATE mid-note → note-off;
-  - 24 ticks per beat at a steady tempo, through a tempo change both ways, and nothing before the second rise;
+  - 24 ticks per beat at a steady tempo, through a tempo change both ways, and only tick 0 before the second rise;
   - RUN start/stop, RST stop+start, RUN unpatched while running → stop;
 - held inputs: the level passes through unpulsed, the maximum over sources, and `blockwise_equals_per_sample`;
 - `EventBox`: overflow drops and counts, push order is kept, the box clears per block;

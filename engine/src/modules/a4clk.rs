@@ -110,7 +110,9 @@ impl Dsp for A4Clk {
                 self.run = EdgeDetector::default();
             }
             self.run_patched = patched;
-            if self.rst.rise(io.inp[RST][i]) {
+            // while RUN is patched and low the A4 is stopped: the next RUN rise starts it from the top
+            let stopped = patched && !self.run_high;
+            if self.rst.rise(io.inp[RST][i]) && !stopped {
                 self.running = true;
                 ctx.events.push(i, [STOP, 0, 0]);
                 ctx.events.push(i, [START, 0, 0]);
@@ -261,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn nothing_before_the_second_rise() {
+    fn only_tick_0_before_the_second_rise() {
         // the first rise sends tick 0 only; the ticks 1..23 need a period
         let mut b = bench();
         let t = ticks(&go(&mut b, &mut A4Clk::new(SR), 200, pulses(&[1000])));
@@ -292,11 +294,30 @@ mod tests {
 
     #[test]
     fn rst_is_stop_then_start() {
+        // RUN unpatched (with RUN high it is the same)
         let mut b = bench();
+        b.connected_in[RUN] = false;
         let e = go(&mut b, &mut A4Clk::new(SR), 2, |s, inp| {
             inp[RST][s % BLOCK] = f32::from(u8::from((20..68).contains(&s)));
         });
         assert_eq!(e, [(20, STOP), (20, START)]);
+    }
+
+    #[test]
+    fn rst_while_stopped_does_nothing() {
+        let mut b = bench();
+        let mut c = A4Clk::new(SR);
+        let e = go(&mut b, &mut c, 2, |s, inp| {
+            inp[RST][s % BLOCK] = f32::from(u8::from((20..68).contains(&s)));
+        });
+        assert_eq!(e, []);
+        assert_eq!(c.state(), 0.0);
+        // while RUN is high it restarts
+        let e = go(&mut b, &mut c, 2, |s, inp| {
+            inp[RUN][s % BLOCK] = 1.0;
+            inp[RST][s % BLOCK] = f32::from(u8::from((300..340).contains(&(s + 256))));
+        });
+        assert_eq!(e, [(0, START), (44, STOP), (44, START)]);
     }
 
     #[test]
