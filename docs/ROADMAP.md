@@ -148,8 +148,10 @@ it when writing Plan 2.
   pads with OFF / ON / TIE.
 - Sound pack: one SAMPLER (ONE / LOOP / SLICE; slices equal or by hits; breaks follow the clock by re-triggering
   slices) + a separate GRAINS (FILE / LIVE + FREEZE); REVERB has an Elektron-style room display.
-- **Plan 15** (A4 module) started on branch `plan-15-a4`; Task 1 done: held trigger inputs (`Port.held`, plan kind `held`).
-  Slice 1 done (Tasks 1–6: held inputs, the `a4` module, the engine event ring, `MidiDevices` / `MidiPump` / `NoteLedger`,
-  the Electron MIDI permission, the `device` display, WIRES NOT CONNECTED rows): **waiting for the listening Checkpoints 1–2**
-  with the A4 attached (spec §8.1, §8.2) before slice 2 (`a4clk`).
-  Task 7 done (`a4clk`: MIDI clock, Start, Stop, RST): **waiting for Checkpoint 3** (listening, spec §8.3).
+- **Plan 15 done on branch `plan-15-a4`** (2026-10-13): the Elektron Analog Four over USB MIDI, as two modules
+  (spec revision 4): **A4** (one track: PITCH / GATE / VEL, NOTE, OFS, TRK T1–T4) and **A4 CLK** (CLK / RUN / RST →
+  MIDI clock 24 PPQ, Start, Stop). Held trigger inputs (`Port.held`), the engine's event outbox and `events()` export,
+  a SharedArrayBuffer event ring from the worklet, `MidiDevices` / `MidiPump` / `NoteLedger` / the MIDI session (Web
+  MIDI, sends timestamped to the speaker time, hot-plug, no stuck notes on delete / mute / close), the `device`
+  display and WIRES rows. Listening Checkpoints 1–3 passed on the A4 (a stuck-note bug found at Checkpoint 1 is
+  fixed). Final review (`/code-review`) fixes are in; deferred items are in `docs/backlog.md` ("From Plan 15").

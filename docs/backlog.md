@@ -188,3 +188,20 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
   may write between wraps while an id is held, or overwrite a newer drift; redo after a write-back drops the drift.
 - **Migration:** cable dedup reaches beyond the remapped cables; the notice is cleared by the audio-start click; a
   free-running STAGES' SLOPE runs at the default rate (STAGES t{k} dropped).
+
+## From Plan 15
+
+- **A4 CC / NRPN parameter control** — the next step on the same event path; the tables are in the `elektron`
+  repo's `maps/a4mk2.toml`.
+- **Drift fallback** (spec §8.2: a fixed lookahead with SREDA's audio delayed the same) — not needed at the
+  checkpoints; keep if notes drift on a heavier machine.
+- **The pump's per-node clamp ignores session / ledger sends:** after an unmute, the injected Start can land after the
+  A4 CLK's first ticks when A4 and A4 CLK OFS differ (sequencer phase lag until the next Start); a mute's note-off
+  can cut a note re-triggered by a quick unmute. Fix: let `sendAfterScheduled` sends raise the node's `lastSent`.
+- **Small MIDI-session edges:** a possible double Start within ms on an unmute during a RUN rise; the 60 ms Start
+  re-check timer is not cleared on close; the pump's `lastSent` and the session's `silenced` sets never shrink
+  (bounded per host); a ledger release by (channel, note) can cut the same note of another A4 sharing the track
+  (won't fix: MIDI can't tell them apart).
+- **A4 tests to add:** a TRK change mid-note; unpatch / repatch PITCH; the note rounds NOTE + 12·PITCH as a whole
+  (spec: NOTE + round(12·PITCH); differs at exact negative half-semitones).
+- `MidiDevices` is unusable after `dispose()` (one host per session today); `checkPort` runs only while the pump ticks.
