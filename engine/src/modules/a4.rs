@@ -79,12 +79,22 @@ impl Dsp for A4 {
                 if let Some((c, n)) = self.sounding.take() {
                     ctx.events.push(i, [0x80 | c, n, 0]);
                 }
-                let semis = (12.0 * io.inp[PITCH][i]).round() as i32;
-                let n = (io.par[NOTE][i].round() as i32 + semis).clamp(0, 127) as u8;
-                let v = if io.connected_in[VEL] {
-                    (127.0 * io.inp[VEL][i]).round().clamp(1.0, 127.0) as u8
+                // in floats, so an infinite PITCH clamps instead of overflowing; NaN counts as 0
+                let pitch = io.inp[PITCH][i];
+                let semis = if pitch.is_nan() {
+                    0.0
                 } else {
+                    12.0 * f64::from(pitch)
+                };
+                let n = (io.par[NOTE][i] + semis as f32).round().clamp(0.0, 127.0) as u8;
+                let vel = io.inp[VEL][i];
+                // NaN → 1: a note-on with velocity 0 would be a note-off
+                let v = if !io.connected_in[VEL] {
                     DEFAULT_VEL
+                } else if vel.is_nan() {
+                    1
+                } else {
+                    (127.0 * vel).round().clamp(1.0, 127.0) as u8
                 };
                 ctx.events.push(i, [0x90 | ch, n, v]);
                 self.sounding = Some((ch, n));
@@ -213,6 +223,27 @@ mod tests {
                 inp[PITCH][s] = pitch;
             });
             assert_eq!(events(&b)[0].1, [0x90, want, 100]);
+        }
+    }
+
+    #[test]
+    fn non_finite_pitch_and_vel_stay_in_range() {
+        for (pitch, want) in [(f32::INFINITY, 127), (f32::NEG_INFINITY, 0), (f32::NAN, 48)] {
+            let mut b = bench(0.0);
+            go(&mut b, &mut A4::new(48e3), 1, |s, inp| {
+                inp[GATE][s] = if (10..20).contains(&s) { 1.0 } else { 0.0 };
+                inp[PITCH][s] = pitch;
+            });
+            assert_eq!(events(&b)[0].1, [0x90, want, 100], "PITCH {pitch}");
+        }
+        for (vel, want) in [(f32::NAN, 1), (f32::INFINITY, 127), (f32::NEG_INFINITY, 1)] {
+            let mut b = bench(0.0);
+            b.connected_in[VEL] = true;
+            go(&mut b, &mut A4::new(48e3), 1, |s, inp| {
+                inp[GATE][s] = if (10..20).contains(&s) { 1.0 } else { 0.0 };
+                inp[VEL][s] = vel;
+            });
+            assert_eq!(events(&b)[0].1, [0x90, 48, want], "VEL {vel}");
         }
     }
 

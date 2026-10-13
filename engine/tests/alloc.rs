@@ -250,11 +250,20 @@ fn an_a4_playing_notes_allocates_nothing() {
     e.apply(fixture("a4")).unwrap();
     e.process();
     let before = allocs();
-    let mut events = 0;
+    let (mut on, mut off) = (0, 0);
     for _ in 0..2_000 {
         e.process();
-        events += e.events().len();
+        for w in e.events().chunks(2) {
+            match w[1] as u8 & 0xF0 {
+                0x90 => on += 1,
+                0x80 => off += 1,
+                _ => {}
+            }
+        }
     }
     assert_eq!(allocs() - before, 0);
-    assert!(events > 0, "the A4 pushed events");
+    assert!(
+        on > 0 && off > 0,
+        "notes started and ended: {on} on, {off} off"
+    );
 }
