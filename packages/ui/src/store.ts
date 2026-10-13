@@ -178,7 +178,7 @@ export function createSession(
   const [layout, setLayout] = createSignal(plan.layout);
 
   // MIDI (Plan 15): asked for access only once a sent plan has an A4 node
-  const midi = createMidiSession(() => state.doc);
+  const midi = createMidiSession(() => state.doc, specs);
 
   /** a module's plan node, or a frame's clock node */
   const nodeOf = (id: string): number | null => {

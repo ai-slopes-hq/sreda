@@ -504,7 +504,93 @@ test('a release never overtakes a note-on the OS still holds: its timestamp foll
   expect(off.time!).toBeGreaterThan(on.time!);
   // All Notes Off on close follows the same rule
   host.onClose?.();
+  // ... and goes out twice on close: once at once (time 0), once after what is scheduled
   const panic = out.sent.filter((e) => e.bytes[1] === 123);
-  expect(panic.length).toBe(4);
-  for (const p of panic) expect(p.time!).toBeGreaterThan(on.time!);
+  expect(panic.length).toBe(8);
+  expect(panic.filter((p) => p.time === 0).length).toBe(4);
+  const later = panic.filter((p) => p.time !== 0);
+  expect(later.length).toBe(4);
+  for (const p of later) expect(p.time!).toBeGreaterThan(on.time!);
+});
+
+test('close sends a sounding note-off both at once and scheduled', async () => {
+  const { addModule } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const { s, access, queue, host, asHost } = midiSession(added.doc);
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  const node = added.doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, 1, node, NOTE_ON]);
+  await settle();
+  host.onClose?.();
+  const offs = out.sent.filter((e) => e.bytes[0] === 0x80);
+  expect(offs.map((e) => e.time === 0)).toEqual([true, false]);
+});
+
+test('A4 CLK: mute sends Stop, unmute sends Start again while the clock still runs', async () => {
+  const { addModule, frameSelection } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4clk', 0, 400);
+  const framed = frameSelection(added.doc, SPECS, [added.id]);
+  const { s, access, queue, host, sent, asHost } = midiSession(framed.doc);
+  const out = access.plug('Analog Four MKII');
+  host.readouts = new Float32Array(4096);
+  s.attach(asHost);
+  await settle();
+  const seq = sent.filter((m) => m.t === 'plan').at(-1)!.seq;
+  const node = framed.doc.modules.findIndex((m) => m.id === added.id);
+  host.readouts[0] = seq & 0xffff; // the engine plays that plan,
+  host.readouts[s.layout().nodes[node]!.state] = 1; // and the clock runs
+  queue.push([0, seq & 0xffff, node, 0xfa]);
+  await settle();
+  const bytes = () => out.sent.map((e) => e.bytes[0]);
+  expect(bytes()).toEqual([0xfa]);
+  s.frame(framed.id, { muted: true }, undefined);
+  expect(bytes()).toEqual([0xfa, 0xfc]);
+  s.frame(framed.id, { muted: false }, undefined);
+  expect(bytes()).toEqual([0xfa, 0xfc, 0xfa]);
+  // nothing runs: unmuting starts nothing
+  s.frame(framed.id, { muted: true }, undefined);
+  host.readouts[s.layout().nodes[node]!.state] = 0;
+  s.frame(framed.id, { muted: false }, undefined);
+  expect(bytes()).toEqual([0xfa, 0xfc, 0xfa, 0xfc]);
+  host.onClose?.();
+});
+
+test('the plan the engine plays stays known through many rejected plans', async () => {
+  const { addModule } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const { s, access, queue, host, sent, asHost } = midiSession(added.doc);
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  const seqA = sent.filter((m) => m.t === 'plan').at(-1)!.seq;
+  host.onMessage?.({ t: 'applied', seq: seqA, code: 0 });
+  for (let i = 0; i < 9; i++) {
+    s.edit((d) => addModule(d, SPECS, 'osc', 0, 800 + i * 10).doc);
+    host.onMessage?.({ t: 'applied', seq: seqA + i + 1, code: 2 });
+  }
+  const node = added.doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, seqA & 0xffff, node, NOTE_ON]);
+  await settle();
+  expect(out.sent.map((e) => e.bytes)).toContainEqual([0x90, 60, 100]);
+  host.onClose?.();
+});
+
+test('A4 CLK: its OFS shifts what it sends', async () => {
+  const { addModule, setParam } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4clk', 0, 400);
+  const doc = setParam(added.doc, SPECS, added.id, 'offset', 0.8); // -50 + 80 = +30 ms
+  const { s, access, queue, host, asHost } = midiSession(doc);
+  const base = performance.now() + 200;
+  (host as { outputTimestamp: unknown }).outputTimestamp = () => ({ contextTime: 0, performanceTime: base });
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  const node = doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, 1, node, 0xf8]);
+  await settle();
+  expect(out.sent[0]!.bytes).toEqual([0xf8]);
+  expect(out.sent[0]!.time).toBeCloseTo(base + 30, 5);
+  host.onClose?.();
 });

@@ -9,6 +9,8 @@ export class NoteLedger {
 
   constructor(private readonly send: (bytes: number[]) => void) {}
 
+  // A note-off goes out by (channel, note), so two A4s sharing a track can cut each other's note. Won't fix: MIDI
+  // cannot tell them apart on one channel, and an A4 track is monophonic.
   /** Records a message the pump sent for node `id`. */
   sent(id: string, bytes: number[]): void {
     const b0 = bytes[0] as number;
@@ -26,6 +28,11 @@ export class NoteLedger {
         if (set.size === 0) this.notes.delete(id);
       }
     }
+  }
+
+  /** Whether a Start was sent for the node and no Stop since. */
+  clockRunning(id: string): boolean {
+    return this.clocks.has(id);
   }
 
   /** Note-offs for the node's sounding notes, and Stop if its clock runs. */
