@@ -9,6 +9,9 @@ export class MidiDevices {
   private started = false;
   private access: MIDIAccess | null = null;
   private port: MIDIOutput | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
+  /** the last loss was a send that threw, not an unplug */
+  private threw = false;
 
   constructor(
     private readonly request: () => Promise<MIDIAccess>,
@@ -49,17 +52,30 @@ export class MidiDevices {
       port.send(bytes, time);
       return true;
     } catch {
-      // a stale port: drop it until the next state change re-lists the devices
-      this.scan(port);
+      // possibly transient: go missing, then poll until the port answers again; notes may hang, so clear them then
+      this.port = null;
+      this.threw = true;
+      this.state[1]('missing');
+      this.poll();
       return false;
     }
   }
 
-  private scan(skip?: MIDIOutput): void {
+  /** Stops the re-scan timer. */
+  dispose(): void {
+    if (this.timer !== null) clearInterval(this.timer);
+    this.timer = null;
+  }
+
+  private poll(): void {
+    if (this.timer === null && this.access) this.timer = setInterval(() => this.scan(), 1000);
+  }
+
+  private scan(): void {
     this.port = null;
     try {
       for (const out of this.access?.outputs.values() ?? []) {
-        if (out !== skip && (out.name ?? '').includes(this.portName)) {
+        if (out.state !== 'disconnected' && (out.name ?? '').includes(this.portName)) {
           this.port = out;
           break;
         }
@@ -68,5 +84,18 @@ export class MidiDevices {
       // treated as no port
     }
     this.state[1](this.port ? 'connected' : 'missing');
+    if (!this.port) {
+      this.poll();
+      return;
+    }
+    this.dispose();
+    if (this.threw) {
+      this.threw = false;
+      try {
+        for (let ch = 0; ch < 4; ch++) this.port.send([0xb0 | ch, 123, 0]);
+      } catch {
+        // the next send will notice
+      }
+    }
   }
 }

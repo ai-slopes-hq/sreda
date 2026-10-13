@@ -30,20 +30,41 @@ test('goes missing on unplug and back on replug', async () => {
   access.plug('Analog Four');
   expect(d.status()).toBe('connected');
   expect(d.send([0xf8], 0)).toBe(true);
+  d.dispose();
 });
 
-test('a throwing send turns missing and re-scans', async () => {
+test('a throwing send turns missing and recovers with All Notes Off', async () => {
+  vi.useFakeTimers();
+  try {
+    const access = new FakeAccess();
+    const out = access.plug('Analog Four');
+    const d = new MidiDevices(() => Promise.resolve(access.asAccess()));
+    d.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(d.status()).toBe('connected');
+    out.throwOnSend = true;
+    expect(d.send([0x90, 60, 1], 0)).toBe(false);
+    expect(d.status()).toBe('missing');
+    out.throwOnSend = false;
+    vi.advanceTimersByTime(1000);
+    expect(d.status()).toBe('connected');
+    expect(out.sent.map((e) => e.bytes)).toEqual([[0xb0, 123, 0], [0xb1, 123, 0], [0xb2, 123, 0], [0xb3, 123, 0]]);
+    expect(d.send([0x90, 60, 1], 5)).toBe(true);
+    d.dispose();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('a disconnected port is ignored', async () => {
   const access = new FakeAccess();
   const out = access.plug('Analog Four');
+  out.state = 'disconnected';
   const d = new MidiDevices(() => Promise.resolve(access.asAccess()));
   d.start();
   await flush();
-  out.throwOnSend = true;
-  expect(d.send([0x90, 60, 1], 0)).toBe(false);
-  // the stale port is still listed, so the re-scan would find it; a later send must not throw out of send()
-  expect(() => d.send([0x90, 60, 1], 0)).not.toThrow();
-  access.unplug('Analog Four');
   expect(d.status()).toBe('missing');
+  d.dispose();
 });
 
 test('a rejected request is unavailable', async () => {

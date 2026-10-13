@@ -107,4 +107,5 @@ test('a throwing send turns missing and keeps draining', async () => {
   // the port went away: the ledger forgot note 60 and sends nothing on release
   s.ledger.releaseAll(false);
   expect(s.ledgerOut).toEqual([]);
+  s.devices.dispose();
 });

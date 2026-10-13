@@ -2,6 +2,7 @@
 export class FakeOutput {
   readonly sent: { bytes: number[]; time: number | undefined }[] = [];
   throwOnSend = false;
+  state = 'connected';
   constructor(readonly name: string) {}
   send(bytes: number[], time?: number): void {
     if (this.throwOnSend) throw new Error('port gone');

@@ -35,24 +35,34 @@ export class MidiPump {
     const ctx = stamp.contextTime ?? 0;
     const perf = stamp.performanceTime ?? 0;
     o.ring.read((frame, seq16, node, midi) => {
-      const info = o.resolve(seq16, node);
-      if (!info) return;
-      const b0 = midi & 0xff;
-      const bytes = b0 >= 0xf8 ? [b0] : [b0, (midi >> 8) & 0xff, (midi >> 16) & 0xff];
-      if (info.muted && (b0 >= 0xf8 || (b0 >= 0x90 && b0 < 0xa0 && (bytes[2] as number) > 0))) return;
-      let time = perf + (frame / o.sampleRate - ctx) * 1000 + info.offsetMs;
-      const now = o.now();
-      let late = false;
-      if (time < now) {
-        time = now;
-        late = true;
-      }
-      if (o.devices.send(bytes, time)) {
-        if (late) this.lateCount++;
-        o.ledger.sent(info.id, bytes);
+      try {
+        this.handle(frame, seq16, node, midi, perf, ctx);
+      } catch {
+        // one bad event must not abort the drain
       }
     });
     this.checkPort();
+  }
+
+  private handle(frame: number, seq16: number, node: number, midi: number, perf: number, ctx: number): void {
+    const o = this.o;
+    const info = o.resolve(seq16, node);
+    if (!info) return;
+    // only notes (3 bytes) and real-time messages (1 byte) are expected
+    const b0 = midi & 0xff;
+    const bytes = b0 >= 0xf8 ? [b0] : [b0, (midi >> 8) & 0xff, (midi >> 16) & 0xff];
+    if (info.muted && (b0 >= 0xf8 || (b0 >= 0x90 && b0 < 0xa0 && (bytes[2] as number) > 0))) return;
+    let time = perf + (frame / o.sampleRate - ctx) * 1000 + info.offsetMs;
+    const now = o.now();
+    let late = false;
+    if (time < now) {
+      time = now;
+      late = true;
+    }
+    if (o.devices.send(bytes, time)) {
+      if (late) this.lateCount++;
+      o.ledger.sent(info.id, bytes);
+    }
   }
 
   start(): void {
