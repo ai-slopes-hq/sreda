@@ -24,6 +24,8 @@ export class MidiPump {
   private timer: ReturnType<typeof setInterval> | null = null;
   private lateCount = 0;
   private wasConnected = false;
+  /** the last time sent per node: OFS read per event may move down, but a node's events keep their order */
+  private readonly lastSent = new Map<string, number>();
 
   constructor(private readonly o: Options) {}
 
@@ -64,7 +66,10 @@ export class MidiPump {
       time = now;
       late = true;
     }
+    const prev = this.lastSent.get(info.id);
+    if (prev !== undefined && time < prev) time = prev;
     if (o.devices.send(bytes, time)) {
+      this.lastSent.set(info.id, time);
       if (late) this.lateCount++;
       o.ledger.sent(info.id, bytes);
     }

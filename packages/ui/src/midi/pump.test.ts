@@ -149,3 +149,16 @@ test('an unreadable output clock skips the tick and keeps the events', async () 
   expect(s.sentToLedger).toHaveLength(1);
   s.devices.dispose();
 });
+
+test('OFS turned down mid-note: the note-off never overtakes its note-on', async () => {
+  const s = await setup();
+  s.info.offsetMs = 50;
+  s.writer.write(48480, 0, word(0x90, 60, 100));
+  s.pump.tick();
+  s.info.offsetMs = 0;
+  s.writer.write(48480, 0, word(0x80, 60, 0));
+  s.pump.tick();
+  const [on, off] = s.out!.sent;
+  expect(on!.time).toBe(5060);
+  expect(off!.time!).toBeGreaterThanOrEqual(on!.time!);
+});

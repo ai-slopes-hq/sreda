@@ -16,6 +16,8 @@ export class MidiDevices {
   private resolved = false;
   /** the latest timestamp handed to the port: the OS holds messages until then */
   private lastTime = 0;
+  /** the port `lastTime` belongs to */
+  private lastPort: MIDIOutput | null = null;
 
   constructor(
     private readonly request: () => Promise<MIDIAccess>,
@@ -124,10 +126,15 @@ export class MidiDevices {
       return;
     }
     this.stopTimer();
+    // another port object has another queue: what was scheduled on the old one does not hold this one up
+    if (this.lastPort !== this.port) this.lastTime = 0;
+    this.lastPort = this.port;
     if (this.threw) {
       this.threw = false;
       try {
-        for (let ch = 0; ch < 4; ch++) this.port.send([0xb0 | ch, 123, 0]);
+        // after whatever the OS still holds, or the All Notes Off could be overtaken by a queued note-on
+        const time = Math.max(performance.now(), this.lastTime + 1);
+        for (let ch = 0; ch < 4; ch++) this.port.send([0xb0 | ch, 123, 0], time);
       } catch {
         // the next send will notice
       }

@@ -33,6 +33,33 @@ test('goes missing on unplug and back on replug', async () => {
   d.dispose();
 });
 
+test('the recovery All Notes Off follows what is still scheduled, and a new port starts afresh', async () => {
+  vi.useFakeTimers();
+  try {
+    const access = new FakeAccess();
+    const out = access.plug('Analog Four');
+    const d = new MidiDevices(() => Promise.resolve(access.asAccess()));
+    d.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(d.send([0x90, 60, 1], 1e9)).toBe(true); // a note-on the OS still holds
+    out.throwOnSend = true;
+    expect(d.send([0x80, 60, 0], 0)).toBe(false);
+    out.throwOnSend = false;
+    vi.advanceTimersByTime(1000);
+    const cc = out.sent.filter((e) => e.bytes[1] === 123);
+    expect(cc.length).toBe(4);
+    for (const e of cc) expect(e.time!).toBeGreaterThan(1e9);
+    // another port object (a replug): the old queue is gone with the old port
+    access.unplug('Analog Four');
+    const again = access.plug('Analog Four');
+    d.sendAfterScheduled([0xf8]);
+    expect(again.sent[0]!.time!).toBeLessThan(1e9);
+    d.dispose();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 test('a throwing send turns missing and recovers with All Notes Off', async () => {
   vi.useFakeTimers();
   try {
