@@ -481,3 +481,30 @@ test('an event from a non-MIDI node of the plan is dropped', async () => {
   expect(out.sent).toEqual([]);
   host.onClose?.();
 });
+
+test('a release never overtakes a note-on the OS still holds: its timestamp follows the last scheduled one', async () => {
+  const { addModule } = await import('@sreda/core');
+  const added = addModule(starterDoc(SPECS), SPECS, 'a4', 0, 400);
+  const { s, access, queue, host, asHost } = midiSession(added.doc);
+  // the speaker is 40 ms ahead: the pump schedules the note-on that far in the future
+  (host as { outputTimestamp: unknown }).outputTimestamp = () => ({
+    contextTime: 0,
+    performanceTime: performance.now() + 40,
+  });
+  const out = access.plug('Analog Four MKII');
+  s.attach(asHost);
+  await settle();
+  const node = added.doc.modules.findIndex((m) => m.id === added.id);
+  queue.push([0, 1, node, NOTE_ON]);
+  await settle();
+  s.edit((d) => ({ ...d, modules: d.modules.filter((m) => m.id !== added.id) }));
+  host.onMessage?.({ t: 'applied', seq: 2, code: 0 });
+  const on = out.sent.find((e) => e.bytes[0] === 0x90)!;
+  const off = out.sent.find((e) => e.bytes[0] === 0x80)!;
+  expect(off.time!).toBeGreaterThan(on.time!);
+  // All Notes Off on close follows the same rule
+  host.onClose?.();
+  const panic = out.sent.filter((e) => e.bytes[1] === 123);
+  expect(panic.length).toBe(4);
+  for (const p of panic) expect(p.time!).toBeGreaterThan(on.time!);
+});

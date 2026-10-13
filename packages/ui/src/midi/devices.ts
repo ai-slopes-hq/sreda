@@ -14,6 +14,8 @@ export class MidiDevices {
   private threw = false;
   private disposed = false;
   private resolved = false;
+  /** the latest timestamp handed to the port: the OS holds messages until then */
+  private lastTime = 0;
 
   constructor(
     private readonly request: () => Promise<MIDIAccess>,
@@ -63,6 +65,7 @@ export class MidiDevices {
     if (!port) return false;
     try {
       port.send(bytes, time);
+      if (time > this.lastTime) this.lastTime = time;
       return true;
     } catch {
       // possibly transient: go missing, then poll until the port answers again; notes may hang, so clear them then
@@ -72,6 +75,14 @@ export class MidiDevices {
       this.poll();
       return false;
     }
+  }
+
+  /**
+   * Sends as soon as possible but never ahead of what is already scheduled: a note-off must not overtake a note-on the
+   * OS still holds (the pump schedules a few tens of ms ahead), or the note hangs.
+   */
+  sendAfterScheduled(bytes: number[]): boolean {
+    return this.send(bytes, Math.max(performance.now(), this.lastTime + 1));
   }
 
   /** Stops the re-scan timer. */

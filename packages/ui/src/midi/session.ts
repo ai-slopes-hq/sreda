@@ -24,7 +24,7 @@ export function createMidiSession(getDoc: () => Doc) {
     () => navigator.requestMIDIAccess({ sysex: false }),
     typeof window === 'undefined' ? undefined : window.sreda?.a4Port,
   );
-  const ledger = new NoteLedger((bytes) => void devices.send(bytes, 0));
+  const ledger = new NoteLedger((bytes) => void devices.sendAfterScheduled(bytes));
   /** the last sent plans by `seq & 0xFFFF`, for the pump to name the node an event came from */
   const known = new Map<number, KnownPlan>();
   let host: AudioHost | null = null;
