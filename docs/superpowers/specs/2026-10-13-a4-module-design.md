@@ -1,6 +1,6 @@
 # SREDA 2 — the A4 module (Analog Four MKII over USB MIDI)
 
-Date: 2026-10-13 · Revision 1 · Status: approved in chat, spec under review
+Date: 2026-10-13 · Revision 2 (details found while planning) · Status: approved
 
 ## Why
 
@@ -42,9 +42,10 @@ collide with other devices. The UI never shows channel numbers.
 
 **Held trigger inputs.** The engine normally turns every trigger input into 1 ms pulses (`inputs.rs`), so a DSP
 never sees how long a gate lasts. `Port` gets a `held` flag, set with `port(..).held()`. A held input is still a
-trigger cable: same role, colour and patching rules. The engine passes its level straight through, as the maximum
-of its sources, with no `TriggerInput`, no ratio and no trigger count readout. The ratio control is hidden on held
-inputs, and `specs.json` carries the flag. GATE and RUN are held. CLK and RST stay ordinary triggers and keep their
+trigger cable: same role, colour and patching rules. The plan marks it with input kind `held`, and the engine passes
+its level straight through, summed over its sources like an audio input, with no `TriggerInput` and no ratio. It
+keeps its trigger-count readout slot, which stays 0, so the later trigger inputs keep their slots. The ratio control
+is hidden on held inputs, and `specs.json` carries the flag. GATE and RUN are held. CLK and RST stay ordinary triggers and keep their
 ratio (CLK ×2 doubles the A4's tempo).
 
 ## 2. The DSP
@@ -91,7 +92,8 @@ messages are one byte.
 
 - `AudioHost.start()` creates a second SharedArrayBuffer, `events`, beside `readouts`, and exposes it as
   `host.events`. It holds a header (`head`, `tail`, `dropped`, as Int32 with `Atomics`) and a ring of 4096 records
-  of four u32s: `frameLo, frameHi, node, midi`.
+  of four u32s: `frameLo, frameHi, seq16 << 16 | node, midi`. `seq16` is the low 16 bits of the playing plan's seq
+  (readout 0), so the main thread maps a node index through the plan that produced it, even across a new plan.
 - In `process()`, after `engine.process()`, the worklet copies each event into the ring. The record's frame is the
   block's `currentFrame` plus the event's offset. It's one writer and one reader: the worklet advances `head`, the
   main thread advances `tail`. A full ring drops the event and increments `dropped`. The loop follows the audio
@@ -141,10 +143,11 @@ Both play the same device, and the ledger keeps them apart.
 
 New display kind `device`, a `Panel.tsx` branch and `displays/Device.tsx`:
 
-- **connected:** `A4` with a status dot, and a short blink per track on each note-on. The blinks come from the
-  node's state readout.
+- **connected:** `A4` with a status dot and four track lights, each lit while its track's note sounds. The
+  DSP's `state()` is the sounding tracks as a bit mask, 0–15.
 - **missing / unavailable:** a dimmed `A4 · NOT CONNECTED` (or `NO MIDI`), styled like a missing sample.
-- WIRES lists a disconnected A4 next to missing samples.
+- WIRES lists a disconnected A4 next to missing samples. Having no outputs, the A4 counts as a sink like OUT
+  and SCOPE, so WIRES does not flag it as leading nowhere.
 
 ## 7. Tests
 
