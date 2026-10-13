@@ -1,6 +1,6 @@
 # SREDA 2 — the A4 module (Analog Four MKII over USB MIDI)
 
-Date: 2026-10-13 · Revision 2 (details found while planning) · Status: approved
+Date: 2026-10-13 · Revision 3 (two modules: A4 and A4 CLK, found during Plan 15 Task 3) · Status: approved
 
 ## Why
 
@@ -26,19 +26,19 @@ USB MIDI is the only way to send notes to the A4 over USB. Overbridge carries au
 control, has no public API, and cannot play notes. Channels 1–4 are local to the A4's own USB port, so they don't
 collide with other devices. The UI never shows channel numbers.
 
-## 1. The module spec (Rust)
+## 1. The module specs (Rust)
 
-`engine/src/modules/a4.rs`: spec, DSP and tests in one file, registered with one line in `MODULES`.
+The A4 is two small modules, in SREDA's atomic spirit. One module with 15 inputs would break the panel grammar
+(one jack per lane, at most 12 lanes at 3U). Both are sinks with no outputs, size (4, 2), display `device` (§6).
 
-| | |
-|---|---|
-| type / label | `a4` / `A4` · desc "Elektron Analog Four MKII over USB MIDI" |
-| size | (8, 2) |
-| inputs | per track `t1`…`t4`: `tN_pitch` PITCH (pitch), `tN_gate` GATE (trigger, held), `tN_vel` VEL (mod); then `clk` CLK (trigger), `run` RUN (trigger, held), `rst` RST (trigger) |
-| outputs | none, like OUT |
-| knobs | `t1_note`…`t4_note` NOTE, MIDI note 0–127, step 1, default 48 (C3 in Elektron's naming); `offset` OFFSET −50…+50 ms, default 0 |
-| choice | `clock` CLOCK: OFF / ON, default OFF |
-| display | `device` (§6) |
+| | `a4` — `A4`, one track | `a4clk` — `A4 CLK`, clock and transport |
+|---|---|---|
+| file | `engine/src/modules/a4.rs` | `engine/src/modules/a4clk.rs` |
+| inputs | `pitch` PITCH (pitch), `gate` GATE (trigger, held), `vel` VEL (mod) | `clk` CLK (trigger), `run` RUN (trigger, held), `rst` RST (trigger) |
+| knobs | `note` NOTE, MIDI note 0–127, step 1, default 48 (C3 in Elektron's naming); `offset` OFS −50…+50 ms | `offset` OFS −50…+50 ms |
+| option | `track` TRK: T1–T4 → channel 1–4 | — |
+
+Four tracks take four `A4` modules. Several may share a track; each tracks its own note.
 
 **Held trigger inputs.** The engine normally turns every trigger input into 1 ms pulses (`inputs.rs`), so a DSP
 never sees how long a gate lasts. `Port` gets a `held` flag, set with `port(..).held()`. A held input is still a
@@ -53,7 +53,7 @@ ratio (CLK ×2 doubles the A4's tempo).
 Everything is sample-accurate and nothing allocates. Each held input has its own `EdgeDetector`, with the rise
 above 0.5 and re-arm below 0.25 used everywhere else.
 
-**Notes, per track (channel N for track TN):**
+**Notes (`a4`; channel N for track TN):**
 
 - **GATE rise:** note = clamp(NOTE + round(12 · PITCH), 0, 127), read at the rise (sample-and-hold). Velocity is
   clamp(round(127 · VEL), 1, 127), or 100 if VEL is unpatched. If the track already sounds a note, its note-off
@@ -62,7 +62,7 @@ above 0.5 and re-arm below 0.25 used everywhere else.
 - A 1 ms trigger patched into GATE plays a 1 ms note. The A4's envelope gives it its length.
 - **GATE unpatched while a note sounds:** a note-off. `connected_in` turning false counts as a fall.
 
-**Clock, when CLOCK is ON:**
+**Clock (`a4clk`):**
 
 - **RUN** rise → MIDI Start (0xFA), fall → Stop (0xFC). With RUN unpatched, the clock runs as soon as CLK beats and
   never sends Start or Stop.
@@ -72,7 +72,7 @@ above 0.5 and re-arm below 0.25 used everywhere else.
   wait for the rise. The tempo follows within one beat. Nothing goes out before the second rise, since there is no
   period yet. A gap longer than 2 s resets the measurement.
 - **RST** rise → Stop then Start in the same sample. The A4 restarts its pattern from the top.
-- CLOCK switched OFF while running → Stop.
+- RUN unpatched while running → Stop.
 
 **Events.** The DSP pushes `{offset in block, 3 MIDI bytes}` into `ctx.events` (§3). Unused bytes are 0. Real-time
 messages are one byte.
@@ -143,8 +143,8 @@ Both play the same device, and the ledger keeps them apart.
 
 New display kind `device`, a `Panel.tsx` branch and `displays/Device.tsx`:
 
-- **connected:** `A4` with a status dot and four track lights, each lit while its track's note sounds. The
-  DSP's `state()` is the sounding tracks as a bit mask, 0–15.
+- **connected:** the label (`A4 · T2`, `A4 CLK`) with a status dot and one light: lit while the note sounds
+  (`a4`) or while running (`a4clk`). The DSP's `state()` is 1 or 0.
 - **missing / unavailable:** a dimmed `A4 · NOT CONNECTED` (or `NO MIDI`), styled like a missing sample.
 - WIRES lists a disconnected A4 next to missing samples. Having no outputs, the A4 counts as a sink like OUT
   and SCOPE, so WIRES does not flag it as leading nowhere.
@@ -159,7 +159,7 @@ New display kind `device`, a `Panel.tsx` branch and `displays/Device.tsx`:
   - VEL unpatched → 100;
   - unpatching GATE mid-note → note-off;
   - 24 ticks per beat at a steady tempo, through a tempo change both ways, and nothing before the second rise;
-  - RUN start/stop, RST stop+start, CLOCK OFF while running → stop;
+  - RUN start/stop, RST stop+start, RUN unpatched while running → stop;
 - held inputs: the level passes through unpulsed, the maximum over sources, and `blockwise_equals_per_sample`;
 - `EventBox`: overflow drops and counts, push order is kept, the box clears per block;
 - `alloc.rs`: a plan with an A4 playing notes and clock allocates nothing.
