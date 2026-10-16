@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 35 (§1b: the visual style after the redesign) · Status: approved
+Date: 2026-10-07 · Revision 36 (§6: DICE in eleven styles) · Status: approved
 
 ## Why
 
@@ -491,16 +491,41 @@ mixed 4 % toward `text`), `label` and `shadow`; three existing values change:
   frame selected), **NEW** (clears the canvas; an undo step) and **DICE** (a random
   playable patch, below; revision 30: beside NEW, not in its place). With the listen bar these are the only chrome.
 - **DICE** replaces the canvas with a new random patch (one undo step, fit in view, the speakers fade in) and the
-  project becomes unnamed. Each throw picks one of two kinds at random:
-  - **rhythmic** — a frame with its own clock (90–150 BPM); RHYTHM (euclid or grid) and / or STAGES (a generated line in
-    a scale) drive 1–3 voices: drums (an OSC sine kick and NOISE hats through pinged LPGs), a bass or a lead (OSC or
-    COMPLEX → FILTER with a random model → LPG, SLOPE envelopes on the cutoff), sometimes a FOLD or DRIVE;
-  - **ambient** — a slow frame clock (40–80 BPM) or cycling SLOPEs; drones and slow lines (COMPLEX / OSC → FILTER
-    or FOLD), long envelopes and slides, UNCERTAINTY and slow SLOPEs on the timbre, long DELAY and a big REVERB
-    (HALL or PLATE), sometimes GRAINS on LIVE fed by the voices.
-  - Voices sit in named STACK frames (`DRUMS`, `BASS`, `LEAD`, `DRONE`, `PAD`…) inside the clock frame; everything mixes
-    into one OUT. Values are chosen inside safe ranges: every throw sounds (no PROBLEMS, a level between −40 and
-    −3 dBFS on the master over its first seconds) and never clips hard.
+  project becomes unnamed. Revision 36: each throw picks one of **eleven styles** at random (equal odds) and builds a
+  patch in that style from a shared library of **parts**, then adds **0–3 twists**. The style names the outer frame
+  (`ACID`, `WEST COAST`) and the notice reads `Dice: acid`. The same seed gives the same patch.
+  - **A style** sets the character: a BPM range, the scales and root, which roles play (each with a chance), the parts
+    a role may use (weighted), the effect chains it may end in, and its twist pool. Bass and lines share the style's
+    scale and root.
+
+    | Style | BPM | Roles (parts a role may use) | Effects |
+    |---|---|---|---|
+    | techno | 125–138 | drums (kick on the beat, hats, clap or rim), bass (pulse, reese or FM), sometimes a stab | DELAY → REVERB (room) |
+    | acid | 120–140 | acid line (DIODE / LADDER, high RES, slides and accents, cutoff envelope, often DRIVE), sparse drums | DELAY or none |
+    | dub | 110–125 | sub bass, rare stabs, sparse drums | long DELAY (TAPE / SPRING, high feedback) → REVERB |
+    | electro | 115–130 | broken kick / snare, FM bass, tonal toms, zaps | DELAY (DIGI) |
+    | IDM / glitch | 90–170 | perc on ÷3 / ×3 lanes, CHANCE, SHIFT, S&H on pitch and cutoff, short blips | short DELAY (DIGI) → REVERB |
+    | minimal polymeter | 118–126 | 3–4 short perc voices on lane lengths 5 / 7 / 9 / 16, a sub pulse | REVERB (room) |
+    | Berlin school | 90–120 | an ARP / MOTIF sequence through a swept filter, a pad, sometimes a bass | DELAY (3/16) → REVERB (hall) |
+    | west coast | 70–110 | COMPLEX + FOLD + LPG bongos, random voltages (UNCERTAINTY, S&H), SWITCH / SPREAD between voices | REVERB (plate) |
+    | industrial | 100–140 | noise and metal hits (COMB, FOLD, DRIVE to the edge), a distorted pulse | DRIVE → REVERB (room) |
+    | drone | 40–70 | 1–2 drones (COMPLEX / FOLD, slow cycling SLOPEs), sometimes GRAINS | DELAY → REVERB (hall) |
+    | ambient bells | 40–80 | bells or a pad (FM / sine / COMB), CHANCE-thinned, a drone sometimes | long DELAY → REVERB (plate / hall) |
+
+  - **Parts**, by role, each with its own randomness: drums — kick (sine with a pitch envelope, FM click, noise thump),
+    hats (white noise through an LPG, FOLD metal, COMB pings), snare / clap (band-passed noise, clap bursts), perc
+    (pinged LPG bongos on OSC or COMPLEX, a self-oscillating FILTER ping, FM toms); bass — pulse (saw / square →
+    filter), reese (two detuned saws), FM (COMPLEX), sub (sine), acid; lines — pluck, arp, bells, stab, pad,
+    west-coast melody; textures — drone, noise wash, grain cloud, chaotic bells, S&H blips.
+  - **Twists** (sound design over any style): FM from one voice's oscillator into another's; S&H on a voice's pitch
+    or cutoff; SWITCH / SPREAD routing a gate or a voice between two destinations; DELAY feedback raised and filtered;
+    GRAINS on LIVE fed by a voice, back into the mix; polymeter (other LEN / RATE on some lanes); a DRIVE or FOLD
+    inserted after a voice; CHANCE thinning a gate.
+  - Voices sit in named STACK frames (`DRUMS`, `BASS`, `ACID`, `BELLS`…) inside the clock frame; they mix (two MIXes
+    in a row past four voices) into the style's effects and one OUT. Every part's output stays in a known range and
+    the mix sets levels by role. Values are chosen inside safe ranges: every throw sounds (no PROBLEMS, a level between
+    −40 and −3 dBFS on the master over its first seconds) and never clips hard. Tests throw 500 seeds (valid, no
+    PROBLEMS, every style, part and twist comes up) and render four throws per style.
 - **Library = a folder on disk.** The first save or open asks for a library folder once (a folder dialog; the
   main process keeps its path in the app's settings and reads and writes it with Node `fs`, §8). Inside it:
   `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
