@@ -243,6 +243,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     return {
       w: b.w,
       h: b.h,
+      modules: b.modules,
       jacks: b.jacks.map((j) => ({
         ...j,
         role: roleOf(j.id, j.port, j.dir),

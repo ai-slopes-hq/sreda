@@ -158,8 +158,8 @@ test('a frame has CLK IN (an input) and CLK OUT (an output)', () => {
   expect(d.cables).toEqual([{ from: [g.id, 'clkOut'], to: [ids[0], 'clk'] }]);
   expect(() => connect(g.doc, S, [g.id, 'clkIn'], [ids[1]!, 'clk'])).toThrow(RuleError);
   const r = rectOf(g.doc, S, g.id);
-  expect(jackAt(g.doc, S, g.id, 'clkIn')).toEqual({ x: r.x, y: r.y + 14 });
-  expect(jackAt(g.doc, S, g.id, 'clkOut')).toEqual({ x: r.x + 12, y: r.y + 36 });
+  expect(jackAt(g.doc, S, g.id, 'clkIn')).toEqual({ x: r.x, y: r.y + GHEAD / 2 });
+  expect(jackAt(g.doc, S, g.id, 'clkOut')).toEqual({ x: r.x + 12, y: r.y + GHEAD + 8 });
 });
 
 test('a frame inside a muted frame is muted', () => {
@@ -504,7 +504,7 @@ test('a collapsed frame lists its crossing ports', () => {
   ]);
   const outs = b.jacks.filter((j) => j.dir === 'out');
   expect(outs.map((j) => j.label)).toEqual(['FILTER › LP']);
-  expect(outs[0]).toMatchObject({ x: 340, y: 28 + 8 + 12 });
+  expect(outs[0]).toMatchObject({ x: 340, y: GHEAD + 8 + 12 });
   // a second cable from the same port is the same jack
   const extra = addModule(doc, SPECS, 'out', 1600, 400);
   const d2 = connect(extra.doc, SPECS, [filter, 'lp'], [extra.id, 'l']);
@@ -543,8 +543,8 @@ test('two collapsed frames cabled together keep that cable; a frame CLK OUT into
   };
   expect(cableHidden(patched, patched.cables.at(-1)!)).toBe(true);
   const gr = d.groups.find((x) => x.id === g)!;
-  expect(jackAt(d, SPECS, g, 'clkOut')).toEqual({ x: gr.x + 352, y: gr.y + 14 });
-  expect(jackAt(d, SPECS, g, 'clkIn')).toEqual({ x: gr.x, y: gr.y + 14 });
+  expect(jackAt(d, SPECS, g, 'clkOut')).toEqual({ x: gr.x + 352, y: gr.y + GHEAD / 2 });
+  expect(jackAt(d, SPECS, g, 'clkIn')).toEqual({ x: gr.x, y: gr.y + GHEAD / 2 });
 });
 
 test('nested collapsed frames: the outermost owns', () => {
@@ -733,8 +733,8 @@ test('a block with four jacks a side grows with them: rows at 48, 72, 96, 120', 
   const f = frameSelection(doc, SPECS, [att]);
   const b = blockOf(setCollapsed(f.doc, [f.id], true), SPECS, f.id);
   expect(b.h).toBe(GHEAD + 16 + 96);
-  expect(b.jacks.filter((j) => j.dir === 'in').map((j) => j.y)).toEqual([48, 72, 96, 120]);
-  expect(b.jacks.filter((j) => j.dir === 'out').map((j) => j.y)).toEqual([48, 72, 96, 120]);
+  expect(b.jacks.filter((j) => j.dir === 'in').map((j) => j.y)).toEqual([52, 76, 100, 124]);
+  expect(b.jacks.filter((j) => j.dir === 'out').map((j) => j.y)).toEqual([52, 76, 100, 124]);
 });
 
 test('a NOISE, an OUT and an A4 re-pack inside a STACK frame without overlap', () => {
@@ -754,4 +754,25 @@ test('a NOISE, an OUT and an A4 re-pack inside a STACK frame without overlap', (
       const b = rs[j]!;
       expect(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h, `${i} vs ${j}`).toBe(false);
     }
+});
+
+test('a free frame saved with the 28 px header keeps its child below the 32 px header', () => {
+  const { doc, ids } = mods(['src', 400, 400]);
+  const f = frameSelection(doc, S, ids);
+  const g = f.doc.groups.find((x) => x.id === f.id)!;
+  // as a saved document has it: the child 16 px under the old 28 px header
+  const old = {
+    ...f.doc,
+    groups: f.doc.groups.map((x) => ({ ...x, layout: 'free' as const })),
+    modules: f.doc.modules.map((m) => ({ ...m, y: g.y + 28 + 16 })),
+  };
+    expect(rectOf(old, S, ids[0]!).y).toBeGreaterThanOrEqual(g.y + GHEAD);
+  expect(parentOf(old, ids[0]!)).toBe(f.id);
+});
+
+test('a collapsed block counts its modules, nested frames included', () => {
+  const { doc, ids } = mods(['src', 400, 400], ['src', 800, 400], ['src', 1200, 400], ['src', 1600, 400]);
+  const inner = frameSelection(doc, S, [ids[0]!, ids[1]!]);
+  const outer = frameSelection(inner.doc, S, [inner.id, ids[2]!, ids[3]!]);
+  expect(blockOf(setCollapsed(outer.doc, [outer.id], true), S, outer.id).modules).toBe(4);
 });

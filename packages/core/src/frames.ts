@@ -5,7 +5,7 @@ import { layoutPanel, U } from './panel';
 import { inputPorts, type Specs } from './spec';
 import { portLabel } from './names';
 
-export const GHEAD = 28,
+export const GHEAD = 32,
   GPAD = 16,
   TINTS = 7;
 export const FRAME_MIN = { w: 352, h: 96 };
@@ -87,6 +87,8 @@ export interface Block {
   w: number;
   h: number;
   jacks: BlockJack[];
+  /** the modules inside, nested frames' too (the card's `N modules` line) */
+  modules: number;
 }
 
 /** What is drawn of an object: a collapsed frame is its block, anything else its rectangle. */
@@ -141,7 +143,7 @@ export function blockOf(doc: Doc, specs: Specs, gid: string): Block {
   }
   for (const list of [ins, outs]) list.forEach((j, i) => (j.y = GHEAD + 8 + BLOCK_ROW * i + 12));
   const h = Math.max(FRAME_MIN.h, GHEAD + 16 + BLOCK_ROW * Math.max(ins.length, outs.length));
-  return { w: BLOCK_W, h, jacks: [...ins, ...outs] };
+  return { w: BLOCK_W, h, jacks: [...ins, ...outs], modules: objects.filter((o) => !isGroupId(o.id)).length };
 }
 
 /** A cable inside a block, or between a collapsed frame's own jack and what it holds: not drawn. */
@@ -594,7 +596,7 @@ export function packFrame(doc: Doc, specs: Specs, gid: string, fresh = false): D
     const p = packed.at.get(k.id)!;
     d = shift(d, k.id, g0.x + pad + p.x - k.r.x, g0.y + GHEAD + pad + p.y - k.r.y);
   }
-  // the height is exact: the 28 px header is off the 8 px grid
+  // the height is exact: header, padding and the packed rows
   const h = Math.max(FRAME_MIN.h, GHEAD + 2 * pad + packed.h);
   return { ...d, groups: d.groups.map((g) => (g.id === gid ? { ...g, w, h } : g)) };
 }

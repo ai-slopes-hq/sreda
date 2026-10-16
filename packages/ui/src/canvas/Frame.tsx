@@ -10,6 +10,7 @@ import {
 import { createSignal, Index, Show, type JSX } from 'solid-js';
 import { track } from '../live';
 import { fmtRat } from './glyphs';
+import { Icon } from './icons';
 import { Jack } from './Jack';
 
 /** Fills (≈ 4 % neutral, ≈ 8 % hues) and swatch colours, by tint index. */
@@ -31,18 +32,18 @@ export interface FrameActions {
   tint(): void;
   resizeDown(edge: Edge, e: PointerEvent): void;
   hover(on: boolean): void;
-  /** the own clock: + CLOCK, ✕, a BPM drag, TAP */
+  /** the own clock: + Clock, ✕, a BPM drag, Tap */
   clock(c: Group['clock'], merge: Merge): void;
   jackDown(port: 'clkIn' | 'clkOut', e: PointerEvent): void;
   /** the CLK IN ratio field */
   fieldDown(e: PointerEvent): void;
   fieldReset(): void;
   mute(): void;
-  /** STACK on / off */
+  /** Stack on / off */
   stack(): void;
   /** save the frame as a group */
   save(): void;
-  /** ▾ / ▸ (C) */
+  /** ⌄ / › (C) */
   collapse(on: boolean): void;
   /** a press on a block jack: patches the port inside */
   blockJackDown(j: BlockJackView, e: PointerEvent): void;
@@ -56,6 +57,8 @@ export interface BlockView {
   w: number;
   h: number;
   jacks: BlockJackView[];
+  /** the modules inside, for the card's `N modules` line */
+  modules: number;
 }
 
 export interface FrameProps {
@@ -96,12 +99,13 @@ const HANDLES: Record<Edge, JSX.CSSProperties> = {
   bl: { left: '-7px', bottom: '-7px', width: '14px', height: '14px', cursor: 'nesw-resize' },
 };
 
-/** A frame (spec §5): a translucent rectangle with a 28 px header — name, tools — and resize handles. */
+/** A frame (spec §5): a translucent rectangle with a 32 px header — collapse, name, state; tools on hover or selection — and resize handles. */
 export function Frame(props: FrameProps): JSX.Element {
   const [hot, setHot] = createSignal(false);
   const [renaming, setRenaming] = createSignal(false);
   const g = () => props.group;
   const block = () => (g().collapsed ? props.block : undefined);
+  const tools = () => hot() || props.selected;
   let draft = '';
   let taps: number[] = [];
 
@@ -149,7 +153,9 @@ export function Frame(props: FrameProps): JSX.Element {
         top: g().y + 'px',
         width: (block()?.w ?? g().w) + 'px',
         height: (block()?.h ?? g().h) + 'px',
-        background: TINT_FILL[g().tint]?.[0],
+        background: block()
+          ? `color-mix(in srgb, ${TINT_FILL[g().tint]?.[1]} 8%, var(--panel))`
+          : TINT_FILL[g().tint]?.[0],
       }}
     >
       <div
@@ -169,6 +175,15 @@ export function Frame(props: FrameProps): JSX.Element {
           props.act.hover(false);
         }}
       >
+        <button
+          class="sr-gcollapse"
+          aria-label={block() ? 'Expand frame' : 'Collapse frame'}
+          title={block() ? 'expand (C)' : 'collapse to its connections (C)'}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => props.act.collapse(!block())}
+        >
+          <Icon name={block() ? 'chevron-right' : 'chevron-down'} size={14} />
+        </button>
         <Show
           when={renaming()}
           fallback={
@@ -203,36 +218,47 @@ export function Frame(props: FrameProps): JSX.Element {
           <div ref={(el) => track(el, 'meter', () => props.meter)} />
         </div>
         <div class="sr-gclock">
-          <Show when={hot() || g().muted || g().layout !== 'free'}>
-            <Show when={!block()}>
-              <button
-                class="sr-swatch"
-                aria-label="Frame colour"
-                title="frame colour"
-                style={{ background: TINT_FILL[g().tint]?.[1] }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => props.act.tint()}
-              />
-              <button
-                class="sr-gbtn"
-                classList={{ on: g().layout === 'stack' }}
-                title="pack the frame's contents densely; the width decides the rows"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => props.act.stack()}
-              >
-                STACK
-              </button>
-              <button
-                class="sr-gbtn"
-                title="save as a group (⌘S)"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => props.act.save()}
-              >
-                SAVE
-              </button>
-            </Show>
+          <Show when={!block() && g().clock.on}>
+            <div
+              class="sr-bpm"
+              classList={{ dim: props.cabledIn }}
+              title="drag to change"
+              onPointerDown={bpmDown}
+              onDblClick={(e) => e.stopPropagation()}
+            >
+              {g().clock.bpm} BPM
+            </div>
+          </Show>
+          <Show when={tools() && !block()}>
+            <button
+              class="sr-swatch"
+              aria-label="Frame colour"
+              title="frame colour"
+              style={{ background: TINT_FILL[g().tint]?.[1] }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.tint()}
+            />
             <button
               class="sr-gbtn"
+              classList={{ on: g().layout === 'stack' }}
+              title="pack the frame's contents densely; the width decides the rows"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.stack()}
+            >
+              Stack
+            </button>
+            <button
+              class="sr-gbtn"
+              title="save as a group (⌘S)"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => props.act.save()}
+            >
+              Save group
+            </button>
+          </Show>
+          <Show when={tools() || g().muted}>
+            <button
+              class="sr-gbtn sr-gmute"
               classList={{ on: g().muted }}
               aria-label="Mute frame"
               title="mute frame"
@@ -242,7 +268,7 @@ export function Frame(props: FrameProps): JSX.Element {
               M
             </button>
           </Show>
-          <Show when={!block()}>
+          <Show when={tools() && !block()}>
             <Show
               when={g().clock.on}
               fallback={
@@ -251,41 +277,24 @@ export function Frame(props: FrameProps): JSX.Element {
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => props.act.clock({ on: true, bpm: g().clock.bpm }, undefined)}
                 >
-                  + CLOCK
+                  + Clock
                 </button>
               }
             >
-              <div
-                class="sr-bpm"
-                classList={{ dim: props.cabledIn }}
-                title="drag to change"
-                onPointerDown={bpmDown}
-                onDblClick={(e) => e.stopPropagation()}
-              >
-                {g().clock.bpm} BPM
-              </div>
               <button class="sr-gbtn" onPointerDown={(e) => e.stopPropagation()} onClick={tap}>
-                TAP
+                Tap
               </button>
               <button
-                class="sr-gbtn"
+                class="sr-gbtn sr-gx"
                 aria-label="Remove group clock"
+                title="remove the group clock"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => props.act.clock({ on: false, bpm: g().clock.bpm }, undefined)}
               >
-                ✕
+                <Icon name="close" size={12} />
               </button>
             </Show>
           </Show>
-          <button
-            class="sr-gbtn"
-            aria-label={block() ? 'Expand frame' : 'Collapse frame'}
-            title={block() ? 'expand (C)' : 'collapse to its connections (C)'}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => props.act.collapse(!block())}
-          >
-            {block() ? '▸' : '▾'}
-          </button>
         </div>
       </div>
       <div
@@ -406,6 +415,9 @@ export function Frame(props: FrameProps): JSX.Element {
                   </div>
                 )}
               </Index>
+              <div class="sr-bcount">
+                {b().modules} {b().modules === 1 ? 'module' : 'modules'}
+              </div>
             </div>
           </>
         )}

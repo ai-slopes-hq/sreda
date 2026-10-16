@@ -692,7 +692,7 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 28px;
+  height: var(--frame-head);
   background: var(--panel);
   border-bottom: 1px solid var(--line);
   border-radius: var(--radius-4) var(--radius-4) 0 0;
@@ -700,15 +700,31 @@
   cursor: grab;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 8px 0 40px;
+  gap: 6px;
+  padding: 0 8px 0 30px;
   box-sizing: border-box;
   overflow: hidden;
 }
+.sr-gcollapse {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+.sr-gcollapse:hover {
+  color: var(--text);
+  background: var(--raised);
+}
 .sr-gname {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.08em;
   color: var(--text-2);
   white-space: nowrap;
 }
@@ -717,8 +733,8 @@
   background: var(--ground);
   border: 1px solid var(--muted);
   color: var(--text);
-  font: 600 10px var(--font-mono);
-  letter-spacing: 0.12em;
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.08em;
   padding: 2px 4px;
   outline: none;
 }
@@ -746,15 +762,26 @@
   pointer-events: auto;
 }
 .sr-gbtn {
-  height: 20px;
-  padding: 0 7px;
+  height: 22px;
+  padding: 0 8px;
   background: var(--ground);
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
   color: var(--text);
-  font: 500 9px var(--font-mono);
-  letter-spacing: 0.08em;
+  font: 500 12px var(--font-sans);
   cursor: pointer;
+  white-space: nowrap;
+}
+.sr-gx {
+  width: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.sr-gmute.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-text);
 }
 .sr-gbtn:hover {
   border-color: var(--muted);
@@ -765,23 +792,25 @@
   border-color: var(--on);
 }
 .sr-bpm {
-  height: 20px;
+  height: 22px;
   line-height: 20px;
-  padding: 0 6px;
-  border: 1px solid var(--line-2);
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid var(--accent);
   border-radius: var(--radius-2);
-  font-size: 9px;
+  font: 500 11px var(--font-mono);
   color: var(--accent);
   cursor: ns-resize;
   white-space: nowrap;
 }
 .sr-bpm.dim {
   color: var(--faint);
+  border-color: var(--line-2);
 }
 .sr-gfield {
   position: absolute;
   left: 10px;
-  top: 9px;
+  top: 10px;
   min-width: 18px;
   height: 11px;
   font-size: 9px;
@@ -809,8 +838,17 @@
   background: var(--text);
 }
 .sr-frame.collapsed {
-  background: var(--panel-side) !important;
   border-color: color-mix(in srgb, var(--line-2), var(--faint));
+}
+.sr-bcount {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  text-align: center;
+  font: 400 10px var(--font-mono);
+  color: var(--muted);
+  pointer-events: none;
 }
 .sr-block {
   position: absolute;

@@ -580,7 +580,8 @@ test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern',
   await seq.locator('.sr-head').click();
   await page.keyboard.press('g');
   const frame = (await fullDoc(page)).groups[0]!.id;
-  await page.locator(`[data-frame=${frame}]`).getByText('+ CLOCK').click();
+  await page.locator(`[data-frame=${frame}] .sr-ghead`).hover();
+  await page.locator(`[data-frame=${frame}]`).getByText('+ Clock').click();
   await drag(
     page,
     await center(page, page.locator(`[data-frame=${frame}] [data-jack=clkOut]`)),
@@ -729,7 +730,8 @@ test('frame clocks: an own clock pings an LPG; a nested frame at ÷2 ticks half 
   await page.locator('[data-type=lpg] .sr-head').click();
   await page.keyboard.press('g');
   const outer = (await fullDoc(page)).groups[0]!.id;
-  await page.locator(`[data-frame=${outer}]`).getByText('+ CLOCK').click();
+  await page.locator(`[data-frame=${outer}] .sr-ghead`).hover();
+  await page.locator(`[data-frame=${outer}]`).getByText('+ Clock').click();
   await drag(
     page,
     await center(page, page.locator(`[data-frame=${outer}] [data-jack=clkOut]`)),
@@ -839,7 +841,7 @@ test('MUTE: a framed voice goes silent and comes back', async () => {
   await app.close();
 });
 
-test('⌘G frames start stacked; STACK toggles off and on', async () => {
+test('⌘G frames start stacked; Stack toggles off and on', async () => {
   const { app, page } = await launch();
   // OSC → FILTER (added wired from OSC's output), OSC → OUT
   const out = await center(page, jack(page, 'osc', 'out'));
@@ -858,7 +860,7 @@ test('⌘G frames start stacked; STACK toggles off and on', async () => {
   );
   await page.keyboard.press('Meta+g');
   const frame = page.locator('.sr-frame');
-  const stack = frame.getByText('STACK', { exact: true });
+  const stack = frame.getByText('Stack', { exact: true });
   await expect(stack).toHaveClass(/on/);
   await expect(frame.getByText('FIX', { exact: true })).toHaveCount(0);
   expect((await fullDoc(page)).groups[0]!.layout).toBe('stack');
@@ -875,7 +877,7 @@ test('⌘G frames start stacked; STACK toggles off and on', async () => {
   await app.close();
 });
 
-test('a stacked frame packs densely; dragging its right edge re-packs; STACK turns it off', async () => {
+test('a stacked frame packs densely; dragging its right edge re-packs; Stack turns it off', async () => {
   const { app, page } = await launch();
   const out = await center(page, jack(page, 'osc', 'out'));
   await drag(page, out, { x: out.x + 100, y: out.y + 320 });
@@ -895,7 +897,7 @@ test('a stacked frame packs densely; dragging its right edge re-packs; STACK tur
   const frame = page.locator('.sr-frame');
   const box = async () => (await frame.boundingBox())!;
   const positions = async () => (await fullDoc(page)).modules.map((m) => [m.x, m.y]);
-  const stack = frame.getByText('STACK');
+  const stack = frame.getByText('Stack', { exact: true });
   await expect(stack).toHaveClass(/on/); // ⌘G starts stacked
   const stacked = await box();
   const overlap = async () => {
