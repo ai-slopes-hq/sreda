@@ -127,7 +127,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     void bridge.library
       .pickOne()
       .then((path) => path && s.setSample(id, path))
-      .catch(() => s.setState('notice', 'THE SAMPLE COULD NOT BE LOADED'));
+      .catch(() => s.setState('notice', 'The sample could not be loaded'));
   }
   /** a module gets a sample, or a SAMPLER with it lands at `at` */
   function useSample(path: string, target: string | undefined, at: Pt): void {
@@ -180,14 +180,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     const at = toCanvas(client(e));
     const file = files[0]!;
     if (!/\.(wav|aiff?|flac|mp3|ogg)$/i.test(file.name)) {
-      s.setState('notice', `NOT A SAMPLE · ${file.name}`);
+      s.setState('notice', `Not a sample · ${file.name}`);
       return;
     }
     void file
       .arrayBuffer()
       .then((bytes) => bridge.library.importSample(file.name, bytes))
       .then((path) => useSample(path, target, at))
-      .catch(() => s.setState('notice', `${file.name.toUpperCase()} COULD NOT BE IMPORTED`));
+      .catch(() => s.setState('notice', `${file.name} could not be imported`));
   }
   /** the frame a dragged selection would land in */
   const [drop, setDrop] = createSignal<string | null>(null);
@@ -1071,7 +1071,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         </Show>
         <Chrome session={s} lib={lib} zoom={zoomBy} fit={() => requestAnimationFrame(() => fit(false))} />
         <Show when={!st.audio}>
-          <div class="sr-line">CLICK TO START AUDIO</div>
+          <div class="sr-line">Click to start audio</div>
         </Show>
         <Show when={st.notice}>
           <div class="sr-line notice">{st.notice}</div>

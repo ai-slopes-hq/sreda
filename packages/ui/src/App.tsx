@@ -81,7 +81,7 @@ function listenForFirstClick(s: SessionApi): void {
         s.attach(h);
       })
       .catch((err: unknown) =>
-        s.setState('notice', `AUDIO FAILED · ${err instanceof Error ? err.message : String(err)}`),
+        s.setState('notice', `Audio failed · ${err instanceof Error ? err.message : String(err)}`),
       )
       .finally(() => (starting = false));
   };

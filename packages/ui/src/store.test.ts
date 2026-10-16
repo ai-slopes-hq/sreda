@@ -32,7 +32,7 @@ test('a plan the engine refuses shows a notice', () => {
   const plan = sent.find((m) => m.t === 'plan');
   expect(plan).toBeDefined();
   host.onMessage?.({ t: 'applied', seq: plan!.t === 'plan' ? plan!.seq : 0, code: 2 });
-  expect(s.state.notice).toBe('THE ENGINE REFUSED THE PATCH (2) — THE PREVIOUS ONE KEEPS PLAYING');
+  expect(s.state.notice).toBe('The engine refused the patch (2) — the previous one keeps playing');
 });
 
 test('a crashed engine shows a notice', () => {
@@ -40,7 +40,7 @@ test('a crashed engine shows a notice', () => {
   const { host, asHost } = fakeHost();
   s.attach(asHost);
   host.onError?.('boom');
-  expect(s.state.notice).toBe('THE AUDIO ENGINE STOPPED — RESTART THE APP');
+  expect(s.state.notice).toBe('The audio engine stopped — restart the app');
 });
 
 test('param edits go as knob / fixed messages; one an own-normal condition reads sends a plan', async () => {

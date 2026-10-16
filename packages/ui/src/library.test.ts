@@ -128,7 +128,7 @@ test('with no folder yet, the first save asks for one; a library entry that will
   files.set('project:foreign', { hello: 'world' });
   const before = s.current();
   expect(await lib.read({ kind: 'project', path: 'broken', factory: false })).toBeNull();
-  expect(s.state.notice).toBe('BROKEN COULD NOT BE OPENED');
+  expect(s.state.notice).toBe('broken could not be opened');
   expect(await lib.read({ kind: 'project', path: 'foreign', factory: false })).toBeNull();
   expect(s.current()).toBe(before);
 });
@@ -191,7 +191,7 @@ test('⌘O on something that is not a SREDA document leaves the session alone an
   const before = s.current();
   disk.opened = { path: '/x/notes.sreda.json', doc: { hello: 'world' } };
   expect(await lib.open()).toBe(false);
-  expect(s.state.notice).toBe('NOTES.SREDA.JSON COULD NOT BE OPENED');
+  expect(s.state.notice).toBe('notes.sreda.json could not be opened');
   expect(s.current()).toBe(before);
   expect(s.state.project).toBeNull();
   s.undo();
@@ -225,7 +225,7 @@ test('⌘O on an unreadable file names it in the notice', async () => {
   const { bridge, disk } = fakeBridge();
   disk.opened = { path: '/x/broken.sreda.json', error: true };
   expect(await libraryActions(s, SPECS, bridge).open()).toBe(false);
-  expect(s.state.notice).toBe('BROKEN.SREDA.JSON COULD NOT BE OPENED');
+  expect(s.state.notice).toBe('broken.sreda.json could not be opened');
 });
 
 test('Import Samples: a selected SAMPLER gets the first file (one undo step); nothing selected opens LIBRARY', async () => {
@@ -263,10 +263,10 @@ test('⌘S on an opened file main no longer remembers says to open it again; any
     throw new Error("Error invoking remote method 'project:save': Error: not an opened project file");
   };
   await lib.save();
-  expect(s.state.notice).toBe('JAM.SREDA.JSON — OPEN IT AGAIN (⌘O) TO SAVE');
+  expect(s.state.notice).toBe('jam.sreda.json — open it again (⌘O) to save');
   bridge.project.save = async () => {
     throw new Error('EACCES');
   };
   await lib.save();
-  expect(s.state.notice).toBe('JAM.SREDA.JSON COULD NOT BE SAVED');
+  expect(s.state.notice).toBe('jam.sreda.json could not be saved');
 });

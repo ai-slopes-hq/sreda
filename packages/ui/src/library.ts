@@ -108,7 +108,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       await lib.write(kind, path, doc);
       return true;
     } catch {
-      s.setState('notice', `${path.toUpperCase()} COULD NOT BE SAVED`);
+      s.setState('notice', `${path} could not be saved`);
       return false;
     }
   }
@@ -131,10 +131,10 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
           await bridge!.project.save(p.path, s.current());
           s.markSaved();
         } catch (e) {
-          const n = fileName(p.path).toUpperCase();
+          const n = fileName(p.path);
           // main no longer remembers the path (it aged out of the last 20 opened)
           const again = e instanceof Error && e.message.includes(NOT_OPENED);
-          s.setState('notice', again ? `${n} — OPEN IT AGAIN (⌘O) TO SAVE` : `${n} COULD NOT BE SAVED`);
+          s.setState('notice', again ? `${n} — open it again (⌘O) to save` : `${n} could not be saved`);
         }
         return;
       }
@@ -188,7 +188,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       } catch {
         doc = null;
       }
-      if (!doc) s.setState('notice', `${entry.path.toUpperCase()} COULD NOT BE OPENED`);
+      if (!doc) s.setState('notice', `${entry.path} could not be opened`);
       else if (notes[0]) s.setState('notice', notes[0]);
       return doc;
     },
@@ -199,14 +199,14 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       try {
         file = await bridge.project.open();
       } catch {
-        s.setState('notice', 'THE FILE COULD NOT BE OPENED');
+        s.setState('notice', 'The file could not be opened');
         return false;
       }
       if (!file) return false;
       const notes: string[] = [];
       const doc = file.error ? null : validateDoc(file.doc, specs, notes);
       if (!doc) {
-        s.setState('notice', `${fileName(file.path).toUpperCase()} COULD NOT BE OPENED`);
+        s.setState('notice', `${fileName(file.path)} could not be opened`);
         return false;
       }
       s.openProject(doc, { path: file.path, factory: false, file: true });
@@ -220,7 +220,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
       try {
         paths = await lib.importFromDialog();
       } catch {
-        s.setState('notice', 'THE SAMPLES COULD NOT BE IMPORTED');
+        s.setState('notice', 'The samples could not be imported');
         return;
       }
       if (!paths.length) return;

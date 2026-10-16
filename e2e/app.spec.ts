@@ -114,9 +114,9 @@ test('the first launch shows OSC → OUT; a click starts audio', async () => {
   await expect(page.locator('[data-type=osc]')).toBeVisible();
   await expect(page.locator('[data-type=out]')).toBeVisible();
   await expect(page.locator('.sr-cables path.stub')).toHaveCount(2);
-  await expect(page.getByText('CLICK TO START AUDIO')).toBeVisible();
+  await expect(page.getByText('Click to start audio')).toBeVisible();
   await page.mouse.click(1300, 800);
-  await expect(page.getByText('CLICK TO START AUDIO')).toBeHidden();
+  await expect(page.getByText('Click to start audio')).toBeHidden();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1)), {
       timeout: 1000,
@@ -165,7 +165,7 @@ test('a corrupt autosave is kept as a backup, the starter patch opens, a notice 
   await first.app.close();
   const again = await launch(first.dir);
   await expect(
-    again.page.getByText('AUTOSAVE WAS UNREADABLE — KEPT AS BACKUP, OPENED A NEW PATCH'),
+    again.page.getByText('Autosave was unreadable — kept as backup, opened a new patch'),
   ).toBeVisible();
   expect((await doc(again.page)).modules.map((m) => m.type)).toEqual(['osc', 'out']);
   const keys = await again.page.evaluate(
@@ -185,7 +185,7 @@ test('a corrupt autosave is kept as a backup, the starter patch opens, a notice 
   const third = await launch(first.dir);
   await expect(third.page.locator('[data-type=osc]')).toBeVisible();
   await expect(
-    third.page.getByText('AUTOSAVE WAS UNREADABLE — KEPT AS BACKUP, OPENED A NEW PATCH'),
+    third.page.getByText('Autosave was unreadable — kept as backup, opened a new patch'),
   ).toBeHidden();
   await third.app.close();
 });
@@ -984,9 +984,9 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await page.keyboard.press('Meta+s');
   await page.getByLabel('Name').fill('jam');
   await page.keyboard.press('Enter');
-  await expect(page.locator('.sr-brand')).toHaveText('SREDAjam');
+  await expect(page.locator('.sr-brand .sr-pname')).toHaveText('jam');
   expect(existsSync(join(library, 'projects', 'jam.sreda.json'))).toBe(true);
-  const newProject = () => page.locator('.sr-tbtn', { hasText: 'NEW' }).click();
+  const newProject = () => page.locator('.sr-tbtn', { hasText: /^New$/ }).click();
   await newProject();
   await expect(page.locator('.sr-mod')).toHaveCount(0);
   await page.keyboard.press('Meta+z');
@@ -994,7 +994,7 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await newProject();
   await page.keyboard.press('Meta+o');
   await expect(page.locator('.sr-mod')).toHaveCount(2);
-  await expect(page.locator('.sr-brand')).toHaveText('SREDAjam.sreda.json');
+  await expect(page.locator('.sr-brand .sr-pname')).toHaveText('jam');
   await app.close();
 });
 
@@ -1016,7 +1016,7 @@ test('⌘O opens a project file outside the library; ⌘S writes it back there, 
   const dir = mkdtempSync(join(tmpdir(), 'sreda-e2e-'));
   const { app, page } = await launch(dir, 'starter', library, file);
   await page.keyboard.press('Meta+o');
-  await expect(page.locator('.sr-brand')).toContainText('tune.sreda.json');
+  await expect(page.locator('.sr-brand .sr-pname')).toHaveText('tune');
   await dragKnob(page, 'osc', 'freq', -60);
   await expect(page.locator('.sr-dirty')).toHaveCount(1);
   await page.keyboard.press('Meta+s');
@@ -1029,7 +1029,7 @@ test('⌘O opens a project file outside the library; ⌘S writes it back there, 
   // relaunched with the same user data: the project resumes as that file, and ⌘S still writes it back
   const saved = readFileSync(file, 'utf8');
   const again = await launch(dir, 'starter', library);
-  await expect(again.page.locator('.sr-brand')).toContainText('tune.sreda.json');
+  await expect(again.page.locator('.sr-brand .sr-pname')).toHaveText('tune');
   await dragKnob(again.page, 'osc', 'freq', 60);
   await again.page.keyboard.press('Meta+s');
   await expect(again.page.locator('.sr-dirty')).toHaveCount(0);
@@ -1417,7 +1417,7 @@ test('an audio file dropped on empty canvas becomes a SAMPLER; another file give
   await expect.poll(async () => (await samplers(page))[0]?.sample).toBe('hat.wav');
   expect(existsSync(join(library, 'samples', 'hat.wav'))).toBe(true);
   await dropFile('notes.txt', [1, 2, 3]);
-  await expect(page.locator('.sr-line.notice')).toHaveText('NOT A SAMPLE · notes.txt');
+  await expect(page.locator('.sr-line.notice')).toHaveText('Not a sample · notes.txt');
   await app.close();
 });
 
@@ -1552,7 +1552,7 @@ test('MIX: M opens a strip per OUT and the master; M / S, the faders and ⌘Z; t
 
 test('LIBRARY: a factory group and a sample are dragged from the sidebar onto the canvas', async () => {
   const { app, page } = await launch(undefined, 'starter', libraryWithSamples());
-  await page.getByRole('button', { name: 'SIDEBAR' }).click();
+  await page.getByRole('button', { name: 'Sidebar' }).click();
   await page.getByRole('button', { name: 'LIBRARY' }).click();
   await expect(page.locator('[data-section=SAMPLES] .sr-lrow')).toHaveCount(2);
   await page
@@ -1595,7 +1595,7 @@ test("FILTER's response glyph follows the live cutoff", async () => {
 
 test('DICE throws a random patch that sounds; ⌘Z returns the one before', async () => {
   const { app, page } = await launch();
-  await page.locator('.sr-tbtn', { hasText: 'DICE' }).click();
+  await page.locator('.sr-tbtn', { hasText: /^Dice$/ }).click();
   await expect.poll(async () => (await doc(page)).modules.length).toBeGreaterThan(5);
   await expect(page.locator('.sr-frame .sr-gname', { hasText: 'DICE' })).toHaveCount(1);
   await page.mouse.click(1300, 880); // start audio

@@ -289,10 +289,10 @@ export function createSession(
       host = h;
       h.onMessage = (msg) => {
         if (msg.code !== 0)
-          setState('notice', `THE ENGINE REFUSED THE PATCH (${msg.code}) — THE PREVIOUS ONE KEEPS PLAYING`);
+          setState('notice', `The engine refused the patch (${msg.code}) — the previous one keeps playing`);
         else midi.applied(msg.seq);
       };
-      h.onError = () => setState('notice', 'THE AUDIO ENGINE STOPPED — RESTART THE APP');
+      h.onError = () => setState('notice', 'The audio engine stopped — restart the app');
       setSource(h.readouts);
       setState('audio', true);
       samples.attach((msg) => h.post(msg), h.sampleRate);

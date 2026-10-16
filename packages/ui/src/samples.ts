@@ -57,7 +57,7 @@ export async function decodeSample(bytes: ArrayBuffer, name: string, rate: numbe
           hits: [],
           peaks: new Float32Array(COLUMNS),
         });
-      if (frames / a.rate > MAX_S) throw new SampleError('LONGER THAN 10 MINUTES');
+      if (frames / a.rate > MAX_S) throw new SampleError('Longer than 10 minutes');
       const src = new AudioBuffer({
         numberOfChannels: Math.min(2, a.channels.length),
         length: frames,
@@ -68,14 +68,14 @@ export async function decodeSample(bytes: ArrayBuffer, name: string, rate: numbe
       channels = await resample(src, rate);
     } else {
       const buf = await new OfflineAudioContext(2, 1, rate).decodeAudioData(bytes);
-      if (buf.duration > MAX_S) throw new SampleError('LONGER THAN 10 MINUTES');
+      if (buf.duration > MAX_S) throw new SampleError('Longer than 10 minutes');
       channels = Array.from({ length: Math.min(2, buf.numberOfChannels) }, (_, c) =>
         buf.getChannelData(c).slice(),
       );
     }
   } catch (e) {
     if (e instanceof SampleError) throw e;
-    throw new SampleError('CANNOT BE DECODED');
+    throw new SampleError('Cannot be decoded');
   }
   const frames = channels[0]?.length ?? 0;
   const a = await analyseChannels(channels, rate);
@@ -84,8 +84,8 @@ export async function decodeSample(bytes: ArrayBuffer, name: string, rate: numbe
 
 /** Refuses a sample with no frames or longer than 10 minutes. */
 function check(s: DecodedSample): DecodedSample {
-  if (s.frames === 0) throw new SampleError('NO AUDIO IN IT');
-  if (s.frames / s.rate > MAX_S) throw new SampleError('LONGER THAN 10 MINUTES');
+  if (s.frames === 0) throw new SampleError('No audio in it');
+  if (s.frames / s.rate > MAX_S) throw new SampleError('Longer than 10 minutes');
   return s;
 }
 
@@ -134,7 +134,7 @@ export function createSampleRegistry(o: {
   /** the audition's turn: a newer audition (or a stop) makes an older decode give up */
   let turn = 0;
 
-  const name = (path: string) => (path.split('/').pop() ?? path).toUpperCase();
+  const name = (path: string) => path.split('/').pop() ?? path;
   const id = (path: string) => {
     // id 0 is the audition's slot
     if (!ids.has(path)) ids.set(path, ids.size + 1);
@@ -176,7 +176,7 @@ export function createSampleRegistry(o: {
       status.delete(path);
       bytes.delete(path);
       ready.delete(path);
-      o.notice(`${name(path)} — ${e instanceof SampleError ? e.message : 'CANNOT BE DECODED'}`);
+      o.notice(`${name(path)} — ${e instanceof SampleError ? e.message : 'Cannot be decoded'}`);
     }
     o.changed();
   };

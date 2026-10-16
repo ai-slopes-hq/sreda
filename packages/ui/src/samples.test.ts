@@ -77,7 +77,7 @@ test('more than two channels: the first two go to the engine', async () => {
 
 test('a sample that will not decode, an empty one and an 11-minute one are refused with notices', async () => {
   const fail = setup(async () => {
-    throw new SampleError('CANNOT BE DECODED');
+    throw new SampleError('Cannot be decoded');
   });
   fail.r.loadDoc(doc('drums/broken.wav'));
   const empty = setup(async () => decoded(1, 0));
@@ -85,9 +85,9 @@ test('a sample that will not decode, an empty one and an 11-minute one are refus
   const long = setup(async () => decoded(1, 11 * 60 * 48_000));
   long.r.loadDoc(doc('long.wav'));
   await flush();
-  expect(fail.notices).toEqual(['BROKEN.WAV — CANNOT BE DECODED']);
-  expect(empty.notices).toEqual(['EMPTY.WAV — NO AUDIO IN IT']);
-  expect(long.notices).toEqual(['LONG.WAV — LONGER THAN 10 MINUTES']);
+  expect(fail.notices).toEqual(['broken.wav — Cannot be decoded']);
+  expect(empty.notices).toEqual(['empty.wav — No audio in it']);
+  expect(long.notices).toEqual(['long.wav — Longer than 10 minutes']);
   for (const s of [fail, empty, long]) expect(s.posted).toEqual([]);
 });
 
@@ -280,7 +280,7 @@ test('one sweep timer; changed() only when something was dropped', async () => {
 
 test('a re-decode at a new rate that fails removes the engine copy sent before it', async () => {
   const { r, posted } = setup(async (_b, _n, rate) => {
-    if (rate !== 48_000) throw new SampleError('CANNOT BE DECODED');
+    if (rate !== 48_000) throw new SampleError('Cannot be decoded');
     return decoded(2, 100, rate);
   });
   await r.load('kick.wav');

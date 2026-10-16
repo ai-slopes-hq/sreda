@@ -4,7 +4,7 @@ import { validateDoc, type Doc, type Specs } from '@sreda/core';
 const DB = 'sreda';
 const STORE = 'session';
 const KEY = 'current';
-export const CORRUPT_NOTICE = 'AUTOSAVE WAS UNREADABLE — KEPT AS BACKUP, OPENED A NEW PATCH';
+export const CORRUPT_NOTICE = 'Autosave was unreadable — kept as backup, opened a new patch';
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

@@ -1,15 +1,17 @@
 import { Show, type JSX } from 'solid-js';
 import { fileName, type LibraryApi } from '../library';
-import type { SessionApi } from '../store';
-
-const HINT =
-  'DRAG FROM A JACK TO PATCH · DROP IN EMPTY SPACE TO ADD · CLICK AN OUTPUT TO LISTEN · / SEARCH · W WIRES · M MIX · ⌘S SAVE · ' +
-  'DOUBLE-CLICK META-SEQ TO EDIT · DRAG EMPTY SPACE TO SELECT · SCROLL OR SPACE-DRAG TO PAN · G FRAME / UNFRAME · C COLLAPSE · ' +
-  'DOUBLE-CLICK A NAME TO REPLACE · DROP A FREE MODULE ON A CABLE TO INSERT · F FIT · R RANDOMISE · ⌘Z UNDO';
+import { Icon } from './icons';
+import type { Session, SessionApi } from '../store';
 
 const stop = (e: Event) => e.stopPropagation();
 
-/** The only chrome (spec §6): SREDA and the project path (● unsaved), SAVE / NEW / DICE, the save name field, zoom, hints. */
+/** The name the brand bar shows: the last path segment without `.sreda.json`; `Untitled patch` for none. */
+export function projectName(project: Session['project']): string {
+  if (!project) return 'Untitled patch';
+  return fileName(project.path).replace(/\.sreda\.json$/, '');
+}
+
+/** The only chrome (spec §6): SREDA and the project name (● unsaved), Dice / New / Save / Sidebar, the save name field, zoom, hints. */
 export function Chrome(props: {
   session: SessionApi;
   lib: LibraryApi;
@@ -26,30 +28,18 @@ export function Chrome(props: {
   };
   return (
     <>
-      <div class="sr-brand">
-        SREDA
-        <Show when={st.project}>
-          {(p) => <span class="sr-path">{p().file ? fileName(p().path) : p().path}</span>}
-        </Show>
+      <div class="sr-brand" title={st.project?.path}>
+        <span class="sr-word">SREDA</span>
+        <span class="sr-div" />
+        <span class="sr-pname">{projectName(st.project)}</span>
         <Show when={st.dirty}>
-          <span class="sr-dirty"> ●</span>
+          <span class="sr-dirty">
+            <i class="dot" />
+            unsaved
+          </span>
         </Show>
       </div>
       <div class="sr-tbtns" onPointerDown={stop} onDblClick={stop}>
-        <button
-          class="sr-tbtn"
-          classList={{ on: st.sidebar.open }}
-          title="sidebar (W)"
-          onClick={() => props.session.setState('sidebar', 'open', !st.sidebar.open)}
-        >
-          SIDEBAR
-        </button>
-        <button class="sr-tbtn" title="save (⌘S)" onClick={() => void props.lib.save()}>
-          SAVE
-        </button>
-        <button class="sr-tbtn" title="clear the canvas" onClick={() => props.lib.clear()}>
-          NEW
-        </button>
         <button
           class="sr-tbtn"
           title="a random patch, rhythmic or ambient (⌘Z returns)"
@@ -58,7 +48,28 @@ export function Chrome(props: {
             props.fit();
           }}
         >
-          DICE
+          <Icon name="dice" />
+          Dice
+        </button>
+        <button class="sr-tbtn" title="clear the canvas" onClick={() => props.lib.clear()}>
+          <Icon name="new" />
+          New
+        </button>
+        <span class="sr-div" />
+        <button class="sr-tbtn" title="save (⌘S)" onClick={() => void props.lib.save()}>
+          <Icon name="save" />
+          Save
+          <kbd>⌘S</kbd>
+        </button>
+        <span class="sr-div" />
+        <button
+          class="sr-tbtn"
+          classList={{ on: st.sidebar.open }}
+          title="sidebar"
+          onClick={() => props.session.setState('sidebar', 'open', !st.sidebar.open)}
+        >
+          <Icon name="sidebar" />
+          Sidebar
         </button>
       </div>
       <Show when={st.saving}>
@@ -81,14 +92,22 @@ export function Chrome(props: {
           </div>
         )}
       </Show>
-      <div class="sr-hint">{HINT}</div>
+      <div class="sr-hint">
+        <kbd>/</kbd> add module · <kbd>W</kbd> wires · <kbd>G</kbd> frame · <kbd>F</kbd> fit · <kbd>R</kbd> randomise
+      </div>
       <div class="sr-zoom" onPointerDown={stop} onDblClick={stop}>
-        <button aria-label="Zoom out" onClick={() => props.zoom(1 / 1.25)}>
-          −
+        <button aria-label="Zoom out" title="zoom out" onClick={() => props.zoom(1 / 1.25)}>
+          <Icon name="minus" />
         </button>
-        <span onClick={() => props.zoom(null)}>{Math.round(st.view.z * 100)}%</span>
-        <button aria-label="Zoom in" onClick={() => props.zoom(1.25)}>
-          +
+        <button class="pct" title="back to 100%" onClick={() => props.zoom(null)}>
+          {Math.round(st.view.z * 100)}%
+        </button>
+        <button aria-label="Zoom in" title="zoom in" onClick={() => props.zoom(1.25)}>
+          <Icon name="plus" />
+        </button>
+        <span class="sr-div" />
+        <button aria-label="Fit" title="fit the patch (F)" onClick={() => props.fit()}>
+          <Icon name="fit" />
         </button>
       </div>
     </>

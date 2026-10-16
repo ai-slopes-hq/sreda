@@ -69,9 +69,7 @@
   right: 0;
   top: 14px;
   text-align: center;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
+  font: 500 13px var(--font-sans);
   color: var(--muted);
   pointer-events: none;
   z-index: 30;
@@ -844,49 +842,108 @@
 /* the chrome (spec §6) */
 .sr-brand {
   position: absolute;
-  top: 18px;
-  left: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.32em;
-  color: var(--muted);
-  pointer-events: none;
+  top: 12px;
+  left: 16px;
+  height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--popover);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-4);
+  box-shadow: var(--shadow-2);
   white-space: nowrap;
 }
-.sr-brand .sr-path {
-  margin-left: 14px;
-  letter-spacing: 0.08em;
-  font-weight: 500;
-  color: var(--text-2);
+.sr-word {
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.32em;
+  color: var(--muted);
 }
-.sr-brand .sr-dirty {
-  letter-spacing: 0;
-  color: var(--text-2);
+.sr-div {
+  width: 1px;
+  align-self: stretch;
+  margin: 10px 0;
+  background: var(--line-2);
+}
+.sr-pname {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: 500 14px var(--font-sans);
+  color: var(--text);
+}
+.sr-dirty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 13px var(--font-sans);
+  color: var(--muted);
+}
+.sr-dirty .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.sr-tbtns,
+.sr-zoom {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 4px;
+  background: var(--popover);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-4);
+  box-shadow: var(--shadow-2);
 }
 .sr-tbtns {
-  position: absolute;
   top: 12px;
   right: 16px;
-  display: flex;
-  gap: 6px;
+  height: 40px;
 }
-.sr-tbtn {
-  height: 30px;
-  padding: 0 14px;
-  background: var(--panel);
-  border: 1px solid var(--line-2);
+.sr-tbtns .sr-div,
+.sr-zoom .sr-div {
+  margin: 4px 4px;
+}
+.sr-tbtn,
+.sr-zoom button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
   border-radius: var(--radius-3);
-  color: var(--text);
-  font: 600 11px var(--font-mono);
-  letter-spacing: 0.12em;
+  color: var(--label);
+  font: 500 14px var(--font-sans);
   cursor: pointer;
 }
-.sr-tbtn:hover {
-  border-color: var(--muted);
+.sr-tbtn:hover,
+.sr-zoom button:hover {
+  background: var(--raised);
+  color: var(--text);
 }
 .sr-tbtn.on {
-  background: var(--on);
-  color: var(--on-text);
+  background: var(--raised);
+  color: var(--text);
+}
+.sr-tbtn kbd,
+.sr-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-1);
+  font: 500 10px var(--font-mono);
+  color: var(--muted);
 }
 .sr-save {
   position: absolute;
@@ -929,41 +986,30 @@
 .sr-hint {
   position: absolute;
   left: 20px;
-  right: 140px;
-  bottom: 14px;
-  font-size: 10px;
+  right: 240px;
+  bottom: 18px;
+  font: 400 13px var(--font-sans);
   color: var(--muted);
-  letter-spacing: 0.04em;
   pointer-events: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.sr-hint kbd {
+  margin-right: 4px;
+}
 .sr-zoom {
-  position: absolute;
   right: 16px;
-  bottom: 10px;
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  font-size: 10px;
-  color: var(--muted);
+  bottom: 12px;
+  height: 40px;
 }
 .sr-zoom button {
-  width: 24px;
-  height: 22px;
-  background: var(--panel);
-  border: 1px solid var(--line-2);
-  border-radius: var(--radius-2);
-  color: var(--text);
-  font: 500 12px var(--font-mono);
-  cursor: pointer;
-  padding: 0;
+  padding: 0 8px;
 }
-.sr-zoom span {
-  width: 40px;
-  text-align: center;
-  cursor: pointer;
+.sr-zoom button.pct {
+  min-width: 52px;
+  justify-content: center;
+  font: 500 13px var(--font-mono);
 }
 /* cables drawn behind (spec §4): stubs always, the whole cable on hover, focus and in WIRES */
 .sr-cables .stub {
