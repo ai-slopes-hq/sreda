@@ -135,8 +135,17 @@ of a creative tool; nothing of its UI is ported.
   twists. Deferred items in `docs/backlog.md` ("From Plan 18"). The final review's fixes are in: `feedback` cannot run away
   (60 s at the corners of its ranges stays within 3 dB), one key (every sequenced oscillator on a C, unsequenced ones on
   a degree of the scale), one kick per kit and four-on-the-floor techno, pools pruned of twists that never apply,
-  Fisher–Yates in place of a random sort, wider acid / drone / bells / Berlin school pools. **Next:** merge the branch,
-  then Plan 17.
+  Fisher–Yates in place of a random sort, wider acid / drone / bells / Berlin school pools. Also on the branch: `e2e` and `pnpm screens`
+  runs are muted (`SREDA_E2E` → Chromium `mute-audio`).
+- **Next phase (chosen by the user, 2026-10-17): every module under the microscope.** No new modules or features
+  for now (Plan 17 waits): take each module or group of modules in turn, measure it against a reference and make it
+  work seriously. Per module: a reference (an open-source implementation or well-documented hardware — e.g. FILTER
+  against Andy Simper's / Cytomic's trapezoidal SVF as in Surge and Vital, DRIVE / FOLD against Surge and Mutable
+  Instruments, LPG against vactrol LPG models, REVERB against Dattorro's plate, OSC against a band-limited reference);
+  a native measuring bench (sines across the range, saws, noise, impulses over a grid of knobs: response, THD, level,
+  self-oscillation, stability) run on ours and on the reference; short A / B renders for the user to listen to; then
+  fix the implementation, update the spec where behaviour changes, and pin the numbers in tests. **First: FILTER**
+  (`docs/backlog.md`, "From listening": it misbehaves on a sine, DRV and RES).
 
 ## The road (vertical slices: something to hear at every stage)
 
