@@ -126,7 +126,7 @@ of a creative tool; nothing of its UI is ported.
   the whole branch reviewed, the final review's fixes are in; deferred items in `docs/backlog.md` ("From Plan 16").
   Checkpoints 2–4 were the controller's screen checks (the user was away); the user looks at `screens/` or
   `pnpm dev`. **Next:** Plan 17.
-- **Plan 18 done on branch `dice-styles`, not merged** (2026-10-17; `docs/superpowers/plans/2026-10-16-18-dice-styles.md`),
+- **Plan 18 done and merged into `main`** (2026-10-17; `docs/superpowers/plans/2026-10-16-18-dice-styles.md`),
   spec revision 36: DICE throws a patch in one of eleven styles built from a library of parts (drums, bass, line,
   texture) through an assembler (role frames, MIX, the style's effects, OUT, a clock frame), plus up to three of eight
   twists per throw (FM, S&H, SPREAD switch, DELAY feedback, GRAINS, polymeter, DRIVE / FOLD, CHANCE). Tests: 500 seeds
