@@ -26,4 +26,4 @@ export const FACTORY: FactoryEntry[] = [
     output: (s: Specs) => buildWith(s, g.build).value,
   })),
 ];
-export { dicePatch, type DiceKind } from './dicepatch';
+export { dicePatch, STYLE_IDS, type DiceStyleId } from './dice';

@@ -234,9 +234,11 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
     },
     /** DICE (spec §6, revision 29): a random playable patch in place of the canvas (an undo step), the project unnamed */
     dice(seed: number = (Math.random() * 2 ** 32) >>> 0): void {
-      s.commit(dicePatch(specs, seed).doc);
+      const { doc, label } = dicePatch(specs, seed);
+      s.commit(doc);
       s.setProject(null);
       s.fadeIn();
+      s.setState('notice', `Dice: ${label}`);
     },
     /** NEW: an empty canvas (an undo step), the project unnamed */
     clear(): void {

@@ -1641,7 +1641,7 @@ test('DICE throws a random patch that sounds; ⌘Z returns the one before', asyn
   const { app, page } = await launch();
   await page.locator('.sr-tbtn', { hasText: /^Dice$/ }).click();
   await expect.poll(async () => (await doc(page)).modules.length).toBeGreaterThan(5);
-  await expect(page.locator('.sr-frame .sr-gname', { hasText: 'DICE' })).toHaveCount(1);
+  await expect(page.locator('.sr-frame .sr-gname', { hasText: /^(TECHNO|AMBIENT BELLS)$/ })).toHaveCount(1);
   await page.mouse.click(1300, 880); // start audio
   const master = () => page.evaluate(() => (window as unknown as { __sreda: Sreda }).__sreda.readout(1));
   await expect.poll(master, { timeout: 4000 }).toBeGreaterThan(0.01);

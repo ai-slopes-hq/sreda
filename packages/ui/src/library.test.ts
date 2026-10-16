@@ -150,6 +150,7 @@ test('DICE replaces the canvas with a random playable patch as an undo step; the
   lib.dice(7);
   expect(s.state.doc).toEqual(dicePatch(SPECS, 7).doc);
   expect(s.state.project).toBeNull();
+  expect(s.state.notice).toBe(`Dice: ${dicePatch(SPECS, 7).label}`);
   s.undo();
   expect(s.state.doc.modules.map((m) => m.type)).toEqual(['osc', 'out']);
   // without a seed every throw differs
