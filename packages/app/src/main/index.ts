@@ -59,6 +59,8 @@ function serveRenderer(): void {
 // e2e runs keep the window hidden: a real mouse over a visible test window injects pointer events into the
 // synthetic drags (seen as flaky knob drags); hidden windows must not be throttled.
 const e2e = !!process.env['SREDA_E2E'];
+// Test runs must not play through the speakers; the engine still runs and tests read levels from its readouts.
+if (e2e) app.commandLine.appendSwitch('mute-audio');
 
 /** The standard macOS menus (app, Edit, View, Window), with a File menu after the app menu. */
 function buildMenu(): void {
