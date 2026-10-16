@@ -12,9 +12,9 @@ of a creative tool; nothing of its UI is ported.
 
 | What | Where |
 |---|---|
-| The design (approved, revision 18) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
-| Plans 1–3 (done) | `docs/superpowers/plans/2026-10-07-1-foundation.md`, `…-2-modules.md`, `2026-10-08-3-organisation.md` |
-| Plan 15 (A4 module) and its spec | `docs/superpowers/plans/2026-10-13-15-a4.md`, `docs/superpowers/specs/2026-10-13-a4-module-design.md` |
+| The design (approved, revision 34) | `docs/superpowers/specs/2026-10-07-canvas-ux-design.md` |
+| The A4 module's design (revision 4) | `docs/superpowers/specs/2026-10-13-a4-module-design.md` |
+| Plans 1–15 (all done) | `docs/superpowers/plans/` — `YYYY-MM-DD-<n>-<name>.md`, one per plan |
 | Ideas for later | `docs/backlog.md` |
 | The clickable prototype and its headless checks | `docs/prototype/` (see its README; live artifact linked there) |
 | Repo rules for Claude | `CLAUDE.md` |
@@ -63,10 +63,6 @@ of a creative tool; nothing of its UI is ported.
   SAMPLES); LOAD / a click on a sample display open the system file dialog; the picker has ALL · MODULES · GROUPS (no
   PROJECTS, no SAMPLES, S free). Subagent-driven, token-lean; final review fixes in; deferred items in
   `docs/backlog.md` ("From the Plan 7 review").
-- **Plan 8 done on the branch `plan-8-scrub`** (2026-10-09), spec revision 25: a loaded SAMPLER / GRAINS display is a
-  cursor and a scrub — a click moves START (SAMPLER ONE / LOOP) or POS (GRAINS), a drag scrubs the file through the
-  module's outputs (hidden `scrub` voice, 10 ms glide) with START / POS following; in SLICE a click plays the slice
-  (hidden `play` one-shot). Awaiting review and the user's listening check.
 - **Plan 8 done and merged into `main`** (2026-10-09), spec revision 25: on a loaded SAMPLER / GRAINS display a click
   is the cursor (START / POS) and a drag scrubs (heard through the module's outputs; a pointer at rest fades out;
   SLICE: a click plays that slice); LOAD loads another file. Reviewed; fixes in.
@@ -92,7 +88,7 @@ of a creative tool; nothing of its UI is ported.
   STACK frames on open. The rest of the review is in `docs/backlog.md` ("From the UI / UX review").
   The prototype's live boards (Main, Panels, SoundPack) follow it; the picker stays inside the window. Next by the
   user's choice: reworking the big modules RHYTHM and STAGES.
-- **Plan 14 (META-SEQ, spec §7b rev 33–34) done on the branch `plan-14-metaseq`, not merged**; ledger in
+- **Plan 14 done and merged into `main`** (2026-10-11), META-SEQ, spec §7b revisions 33–34; ledger in
   `.superpowers/sdd/2026-10-10-14-metaseq/progress.md`. META-SEQ replaces RHYTHM and STAGES: the engine module, the
   overview panel, the editor drawer (double-click; lanes NOTE / GATE / TIE / ACC / VEL / CHNC with LEN / RATE / lock),
   patterns A–H (COPY / PASTE, PAT), GEN / DICE / per-lane ⚄, MUTATE (drift written back once per GATE cycle without an
@@ -100,7 +96,14 @@ of a creative tool; nothing of its UI is ported.
   patches are built on META-SEQ. The whole-branch review is done and its fixes
   are in (the drawer and MUTATE survive a document replace; a pattern tab is no undo step). Deferred items are in
   `docs/backlog.md` ("From Plan 14"). The live prototype artifact is not yet republished (auto mode refused it; it
-  awaits the user). **Next:** merge into `main` by the user's choice.
+  awaits the user).
+- **Plan 15 done and merged into `main`** (2026-10-13): the Elektron Analog Four over USB MIDI, as two modules
+  (spec revision 4): **A4** (one track: PITCH / GATE / VEL, NOTE, OFS, TRK T1–T4) and **A4 CLK** (CLK / RUN / RST →
+  MIDI clock 24 PPQ, Start, Stop). Held trigger inputs (`Port.held`), the engine's event outbox and `events()` export,
+  a SharedArrayBuffer event ring from the worklet, `MidiDevices` / `MidiPump` / `NoteLedger` / the MIDI session (Web
+  MIDI, sends timestamped to the speaker time, hot-plug, no stuck notes on delete / mute / close), the `device`
+  display and WIRES rows. Listening Checkpoints 1–3 passed on the A4 (a stuck-note bug found at Checkpoint 1 is
+  fixed). Final review (`/code-review`) fixes are in; deferred items are in `docs/backlog.md` ("From Plan 15").
 - **Engine performance, merged into `main`** (2026-10-16): META-SEQ inside a feedback loop syncs once per block
   and writes its trace at the block end; QUANT keeps its last snap while input, ROOT and SCALE hold. The 200-module
   patch is back to 23.2 % natively (it was 26 % after Plan 14 put QUANT into it) and ~4.4 s for 10 s in WASM.
@@ -116,6 +119,12 @@ of a creative tool; nothing of its UI is ported.
 | **C. Modules one by one** — each task: Rust DSP + tests, appears in the picker by itself, then listen | Plan 2 (`2026-10-07-2-modules.md`) | the 24 first-build modules | done, merged |
 | **D. Organisation** — frames (G, FIX / STACK, own clock, MUTE), sidebar + WIRES, library folder, group / project pickers, factory patches, remaining gestures, real-time benchmark | Plan 3 (`2026-10-08-3-organisation.md`) | the first build complete | done, merged |
 | **E. Sound pack** (milestone 2) — FILTER models, DRIVE, DELAY types, REVERB, SAMPLER, GRAINS, samples | Plan 4 (`2026-10-08-4-sound-pack.md`) | spec §7a | done, merged |
+| **F. Workflow** — STACK packing and collapse, skins and the mixer, the LIBRARY tab, sample scrub | Plans 5–8 | spec revisions 20–25 | done, merged |
+| **G. Sound from listening** — DRIVE, FOLD and FILTER models matched to references | Plans 9–11 | spec revisions 26–28 (DRIVE's tuning against renders waits for them) | done, merged |
+| **H. Something to play at once** — the DICE patch, factory groups and projects | Plans 12–13 | spec revisions 29–31 | done, merged |
+| **I. META-SEQ** — one sequencer in place of RHYTHM and STAGES | Plan 14 | spec §7b, revisions 33–34 | done, merged |
+| **J. Hardware** — the Analog Four over USB MIDI (A4, A4 CLK) | Plan 15 | A4 spec revision 4 | done, merged |
+| **Next** — recording and export are the first candidates | — | `docs/backlog.md` | to choose |
 
 **Plan 2 order** (chosen so real patches come together early): SCOPE (see signals) → LPG, SLOPE, NOISE (*Pulse*) →
 FILTER, MIX → RHYTHM, STAGES, QUANT with generators and DICE (*Acid*) → FOLD, COMPLEX, DELAY (*Drone*) →
@@ -141,20 +150,13 @@ it when writing Plan 2.
 
 - Electron (macOS, one user), Rust → WASM engine and DSP in an AudioWorklet (raw C-ABI exports, no wasm-bindgen),
   TypeScript core, SolidJS UI; device sample rate; "balanced" quality (polyBLEP, ADAA + 2× on nonlinear stages).
-- Panel grammar with "air + quiet": HP 56, lanes 32, header 32 (1U 144 / 2U 272 / 3U 400); values appear on hover,
+- Panel grammar with "air + quiet": HP 56, lanes 32, header 32 (1U 144 / 2U 288 / 3U 432); values appear on hover,
   edit, modulation or when not default; port labels on one line, ≤ 5 characters.
 - Keys: `/` (or double-click) opens the picker, ⌘O on PROJECTS; **G** frames / unframes (⌘G, ⇧⌘G too); no M / G / P
   picker keys.
-- Frames: STACK uses WIRE FIX's rows without channels and turns FIX off; frames fit their content with equal
-  margins; repeated presses change nothing.
-- LPG has the VCA folded in; SCOPE has thru outputs (`THR A`, `THR B`); STAGES is a 16-stage contour, RHYTHM 16
-  pads with OFF / ON / TIE.
+- Frames: STACK is the one managed layout (dense packing, reading order; WIRE FIX is gone); frames fit their content
+  with equal margins; repeated presses change nothing.
+- LPG has the VCA folded in; SCOPE has thru outputs (`THR A`, `THR B`); META-SEQ replaced RHYTHM and STAGES (old
+  documents migrate on open).
 - Sound pack: one SAMPLER (ONE / LOOP / SLICE; slices equal or by hits; breaks follow the clock by re-triggering
   slices) + a separate GRAINS (FILE / LIVE + FREEZE); REVERB has an Elektron-style room display.
-- **Plan 15 done on branch `plan-15-a4`** (2026-10-13): the Elektron Analog Four over USB MIDI, as two modules
-  (spec revision 4): **A4** (one track: PITCH / GATE / VEL, NOTE, OFS, TRK T1–T4) and **A4 CLK** (CLK / RUN / RST →
-  MIDI clock 24 PPQ, Start, Stop). Held trigger inputs (`Port.held`), the engine's event outbox and `events()` export,
-  a SharedArrayBuffer event ring from the worklet, `MidiDevices` / `MidiPump` / `NoteLedger` / the MIDI session (Web
-  MIDI, sends timestamped to the speaker time, hot-plug, no stuck notes on delete / mute / close), the `device`
-  display and WIRES rows. Listening Checkpoints 1–3 passed on the A4 (a stuck-note bug found at Checkpoint 1 is
-  fixed). Final review (`/code-review`) fixes are in; deferred items are in `docs/backlog.md` ("From Plan 15").
