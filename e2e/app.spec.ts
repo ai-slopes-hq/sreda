@@ -64,6 +64,21 @@ test('the app opens a cross-origin isolated SREDA window', async () => {
   await app.close();
 });
 
+test('the faces ship with the app', async () => {
+  const { app, page } = await launch();
+  const loaded = await page.evaluate(async () => {
+    // the faces load on first use; ask for the two the check names
+    await Promise.all([
+      document.fonts.load('500 9.5px "IBM Plex Mono"', 'A'),
+      document.fonts.load('13px "IBM Plex Sans"', 'A'),
+    ]);
+    await document.fonts.ready;
+    return document.fonts.check('500 9.5px "IBM Plex Mono"') && document.fonts.check('13px "IBM Plex Sans"');
+  });
+  expect(loaded).toBe(true);
+  await app.close();
+});
+
 test('cables show as stubs; hovering a stub, a module or opening WIRES shows them whole', async () => {
   const { app, page } = await launch();
   const cable = page.locator('.sr-cables path.cable');

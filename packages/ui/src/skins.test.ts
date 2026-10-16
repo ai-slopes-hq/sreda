@@ -18,13 +18,17 @@ function sources(dir: string): string[] {
 describe('skins', () => {
   it('every skin defines every token', () => {
     for (const name of SKIN_NAMES) {
-      for (const t of TOKENS) expect(SKINS[name][t], `${name} ${t}`).toMatch(/^#[0-9a-f]{6}$/);
+      for (const t of TOKENS) {
+        const format = t === 'shadow' ? /^rgba\(\d+,\d+,\d+,\.\d+\)$/ : /^#[0-9a-f]{6}$/;
+        expect(SKINS[name][t], `${name} ${t}`).toMatch(format);
+      }
     }
   });
 
   it("DEFAULT's values are the :root values in canvas.css", () => {
     const root = new Map([...rootBlock.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1]!, m[2]!]));
     expect(root.size).toBe(TOKENS.length);
+    expect(TOKENS.length).toBe(31);
     for (const t of TOKENS) expect(root.get(t), t).toBe(SKINS.DEFAULT[t]);
   });
 

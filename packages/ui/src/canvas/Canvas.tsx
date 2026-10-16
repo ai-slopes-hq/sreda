@@ -54,6 +54,7 @@ import { Drawer } from '../seq/Drawer';
 import { writeBack } from '../seq/mutate';
 import { panned } from './wheel';
 import './canvas.css';
+import '../fonts';
 
 const ZOOM = { min: 0.25, max: 2 };
 /** pixels a pointer moves before a press becomes a drag */

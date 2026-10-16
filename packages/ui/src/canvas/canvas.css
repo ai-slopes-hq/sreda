@@ -4,18 +4,21 @@
   --panel: #1b1b18;
   --panel-side: #171715;
   --raised: #2a2924;
+  --popover: #232320;
   --line: #2e2d28;
   --line-2: #3a3933;
   --text: #e9e4d8;
   --text-2: #b9b3a6;
   --muted: #8f897c;
   --quiet: #6f6a5f;
+  --label: #908b80;
   --faint: #5d594f;
   --heading: #e9e4d8;
   --on: #e9e4d8;
   --on-text: #121210;
   --accent: #f5a524;
   --destructive: #e5484d;
+  --shadow: rgba(0,0,0,.55);
   --role-audio: #e9e4d8;
   --role-mod: #6cb4ee;
   --role-pitch: #9ad18b;
@@ -28,13 +31,29 @@
   --tint-5: #6cb4ee;
   --tint-6: #b98ad0;
 }
+:root {
+  --radius-1: 2px;
+  --radius-2: 6px;
+  --radius-3: 8px;
+  --radius-4: 10px;
+  --radius-5: 12px;
+  --radius-6: 14px;
+  --shadow-1: 0 4px 14px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --shadow-2: 0 14px 36px var(--shadow);
+  --shadow-3: 0 24px 60px var(--shadow);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--text) 9%, transparent);
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --jack: 14px;
+  --frame-head: 32px;
+}
 .sr-canvas {
   position: fixed;
   inset: 0;
   overflow: hidden;
   background: var(--ground);
   color: var(--text);
-  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: var(--font-mono);
   user-select: none;
   background-image: radial-gradient(circle, var(--dot) 1px, transparent 1.2px);
 }
@@ -65,7 +84,7 @@
   position: absolute;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   box-sizing: border-box;
 }
 .sr-mod:hover {
@@ -125,7 +144,7 @@
   line-height: 11px;
   padding: 0 2px;
   margin-left: -2px;
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   white-space: nowrap;
   z-index: 2;
   color: var(--text);
@@ -133,7 +152,7 @@
 .sr-lvl {
   position: absolute;
   height: 2px;
-  border-radius: 1px;
+  border-radius: var(--radius-1);
   width: 0;
   pointer-events: none;
 }
@@ -210,7 +229,7 @@
   height: 20px;
   background: var(--ground);
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   color: var(--text);
   font: 500 9px inherit;
   font-family: inherit;
@@ -241,7 +260,7 @@
   overflow-y: auto;
   background: var(--panel);
   border: 1px solid var(--muted);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   z-index: 21;
   padding: 3px 0;
 }
@@ -289,7 +308,7 @@
   bottom: 8px;
   height: 3px;
   background: var(--raised);
-  border-radius: 1px;
+  border-radius: var(--radius-1);
   overflow: hidden;
   pointer-events: none;
 }
@@ -348,7 +367,7 @@
   transform: translateX(-50%);
   padding: 4px 12px;
   border: 1px solid var(--accent);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   background: var(--panel);
   color: var(--accent);
   font-size: 10px;
@@ -362,7 +381,7 @@
   width: 280px;
   background: var(--panel);
   border: 1px solid var(--muted);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   z-index: 40;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--ground) 70%, transparent);
 }
@@ -415,7 +434,7 @@
   position: absolute;
   background: var(--ground);
   border: 1px solid var(--raised);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   overflow: hidden;
 }
 .d-grid {
@@ -467,7 +486,7 @@
   height: 20px;
   background: var(--ground);
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   color: var(--text);
   font: 500 9px inherit;
   font-family: inherit;
@@ -516,7 +535,7 @@
 .sr-frame {
   position: absolute;
   border: 1px solid var(--line-2);
-  border-radius: 4px;
+  border-radius: var(--radius-4);
   box-sizing: border-box;
   pointer-events: none;
 }
@@ -535,7 +554,7 @@
   height: 28px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
-  border-radius: 4px 4px 0 0;
+  border-radius: var(--radius-4) var(--radius-4) 0 0;
   pointer-events: auto;
   cursor: grab;
   display: flex;
@@ -574,7 +593,7 @@
   width: 14px;
   height: 14px;
   border: 1px solid var(--faint);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   padding: 0;
   cursor: pointer;
   flex: none;
@@ -592,7 +611,7 @@
   padding: 0 7px;
   background: var(--ground);
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   color: var(--text);
   font:
     500 9px 'IBM Plex Mono',
@@ -613,7 +632,7 @@
   line-height: 20px;
   padding: 0 6px;
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   font-size: 9px;
   color: var(--accent);
   cursor: ns-resize;
@@ -631,7 +650,7 @@
   font-size: 9px;
   line-height: 11px;
   padding: 0 2px;
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   cursor: ns-resize;
   pointer-events: auto;
   z-index: 2;
@@ -643,7 +662,7 @@
   width: 28px;
   height: 3px;
   background: var(--raised);
-  border-radius: 1px;
+  border-radius: var(--radius-1);
   overflow: hidden;
   flex: none;
 }
@@ -739,7 +758,7 @@
   padding: 0 14px;
   background: var(--panel);
   border: 1px solid var(--line-2);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   color: var(--text);
   font:
     600 11px 'IBM Plex Mono',
@@ -766,7 +785,7 @@
   padding: 0 6px 0 12px;
   background: var(--panel);
   border: 1px solid var(--muted);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   font:
     500 10px 'IBM Plex Mono',
     monospace;
@@ -816,7 +835,7 @@
   height: 22px;
   background: var(--panel);
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   color: var(--text);
   font:
     500 12px 'IBM Plex Mono',
@@ -853,7 +872,7 @@
   padding: 3px 7px;
   background: var(--panel);
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--text);
@@ -879,7 +898,7 @@
   display: flex;
   flex-direction: column;
   color: var(--text);
-  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: var(--font-mono);
   user-select: none;
   z-index: 50;
 }
@@ -1018,7 +1037,7 @@
   margin: 4px 0 6px 24px;
   background: none;
   border: 1px dashed var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   color: var(--muted);
   font:
     500 10px 'IBM Plex Mono',
@@ -1034,7 +1053,7 @@
   margin: 2px 12px 6px 24px;
   background: var(--panel);
   border: 1px solid var(--muted);
-  border-radius: 3px;
+  border-radius: var(--radius-3);
   display: flex;
   flex-direction: column;
 }
@@ -1208,7 +1227,7 @@
   width: 16px;
   height: 16px;
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
 }
 
 .sr-mix {
@@ -1229,7 +1248,7 @@
   padding: 8px 4px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
 }
 .sr-strip.master {
   margin-left: auto;
@@ -1265,7 +1284,7 @@ button.sr-sname:hover {
   width: 24px;
   height: 120px;
   background: var(--raised);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
   cursor: ns-resize;
   touch-action: none;
 }
@@ -1275,7 +1294,7 @@ button.sr-sname:hover {
   right: 0;
   bottom: 0;
   background: var(--line-2);
-  border-radius: 2px;
+  border-radius: var(--radius-2);
 }
 .sr-fader-cap {
   position: absolute;
@@ -1283,13 +1302,13 @@ button.sr-sname:hover {
   right: -2px;
   height: 4px;
   background: var(--text);
-  border-radius: 1px;
+  border-radius: var(--radius-1);
 }
 .sr-smeter {
   width: 40px;
   height: 3px;
   background: var(--raised);
-  border-radius: 1px;
+  border-radius: var(--radius-1);
   overflow: hidden;
 }
 .sr-smeter div {
