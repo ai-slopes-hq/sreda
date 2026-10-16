@@ -30,6 +30,7 @@ export { build } from './build';
 export {
   dicePatch,
   DRUM_PARTS,
+  PARTS,
   STYLE_IDS,
   type DiceCtx,
   type DiceStyleId,

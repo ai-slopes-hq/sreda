@@ -1,10 +1,16 @@
 // The library of parts, by id.
 import { drumKit, DRUM_PARTS } from './drums';
-import { bassLegacy, bellsLegacy, drumKitLegacy, droneLegacy, leadLegacy } from './legacy';
+import { BASS_PARTS } from './bass';
+import { drumKitLegacy } from './legacy';
+import { LINE_PARTS } from './lines';
+import { TEXTURE_PARTS } from './textures';
 import type { Part, PartId } from '../types';
 
 export const PARTS: Record<PartId, Part> = {
   ...DRUM_PARTS,
+  ...BASS_PARTS,
+  ...LINE_PARTS,
+  ...TEXTURE_PARTS,
   // techno's kit
   drums: drumKit(
     [
@@ -16,8 +22,4 @@ export const PARTS: Record<PartId, Part> = {
     [2, 4],
   ),
   'drum-kit-legacy': drumKitLegacy,
-  'bass-legacy': bassLegacy,
-  'lead-legacy': leadLegacy,
-  'drone-legacy': droneLegacy,
-  'bells-legacy': bellsLegacy,
 };

@@ -1,4 +1,4 @@
-import { build, DRUM_PARTS, SPECS, type DiceCtx } from '@sreda/core';
+import { build, DRUM_PARTS, PARTS, SPECS, validateDoc, wireProblems, type DiceCtx } from '@sreda/core';
 import { expect, test } from 'vitest';
 import { renderDoc } from './render';
 
@@ -8,7 +8,7 @@ function solo(part: string, seed: number) {
     let s = seed;
     const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
     const c: DiceCtx = { S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 };
-    const v = DRUM_PARTS[part]!(c);
+    const v = PARTS[part]!(c);
     const o = S.add('out', 1800, 0, { level: 0.7 });
     S.wire(v.out[0], v.out[1], o, 'l');
     S.wire(v.out[0], v.out[1], o, 'r');
@@ -20,9 +20,39 @@ function solo(part: string, seed: number) {
   });
 }
 
-test('every drum part sounds on its own', () => {
+const PITCHED = [
+  'bass-pulse',
+  'bass-reese',
+  'bass-fm',
+  'bass-sub',
+  'bass-acid',
+  'pluck',
+  'arp',
+  'bells',
+  'stab',
+  'pad',
+  'westcoast',
+];
+const TEXTURES = ['drone', 'wash', 'grains', 'chaos-bells', 'blips'];
+
+test('every part builds a document with no problems that round-trips', () => {
+  for (const part of Object.keys(PARTS)) {
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const doc = solo(part, seed);
+      expect(
+        wireProblems(doc, SPECS)
+          .filter((p) => !p.info)
+          .map((p) => p.text),
+        `${part} (seed ${seed})`,
+      ).toEqual([]);
+      expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS), `${part} (seed ${seed})`).toEqual(doc);
+    }
+  }
+});
+
+test('every drum, bass, line and texture part sounds on its own', () => {
   const bad: string[] = [];
-  for (const part of Object.keys(DRUM_PARTS)) {
+  for (const part of [...Object.keys(DRUM_PARTS), ...PITCHED, ...TEXTURES]) {
     for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
       const { l, r } = renderDoc(solo(part, seed), SPECS, 4);
       let sum = 0;

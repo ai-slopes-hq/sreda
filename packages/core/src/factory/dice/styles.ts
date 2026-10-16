@@ -9,8 +9,8 @@ const techno: Style = {
   scales: [2, 3, 4, 5],
   roles: [
     { role: 'drums', p: 0.85, parts: [['drums', 1]] },
-    { role: 'bass', p: 1, parts: [['bass-legacy', 1]] },
-    { role: 'line', p: 0.45, parts: [['lead-legacy', 1]] },
+    { role: 'bass', p: 1, parts: [['bass-pulse', 1]] },
+    { role: 'line', p: 0.45, parts: [['pluck', 1]] },
   ],
   fx: [[delayReverb('tight'), 1]],
   twists: [],
@@ -23,8 +23,8 @@ const bells: Style = {
   bpm: [40, 80],
   scales: [2, 3, 4, 5],
   roles: [
-    { role: 'texture', p: 0.8, parts: [['drone-legacy', 1]] },
-    { role: 'line', p: 0.8, parts: [['bells-legacy', 1]] },
+    { role: 'texture', p: 0.8, parts: [['drone', 1]] },
+    { role: 'line', p: 0.8, parts: [['bells', 1]] },
   ],
   fx: [[delayReverb('wash'), 1]],
   twists: [],

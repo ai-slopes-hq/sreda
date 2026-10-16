@@ -7,6 +7,7 @@ import { build } from '../build';
 import { assemble } from './assemble';
 import { dicePatch } from './index';
 import { drumKit } from './parts/drums';
+import { PARTS } from './parts';
 import { STYLES } from './styles';
 import type { DiceCtx, DiceVoice } from './types';
 
@@ -97,5 +98,34 @@ test('drumKit builds 2 to 4 drum parts into one DRUMS voice', () => {
     expect(parts.length, `seed ${seed}`).toBeGreaterThanOrEqual(2);
     expect(parts.length).toBeLessThanOrEqual(4);
     expect(doc.modules.filter((m) => m.type === 'metaseq')).toHaveLength(parts.length);
+  }
+});
+
+test('pitched parts fill pitch, osc, gate and seq', () => {
+  const pitched = [
+    'bass-pulse',
+    'bass-reese',
+    'bass-fm',
+    'bass-sub',
+    'bass-acid',
+    'pluck',
+    'arp',
+    'bells',
+    'stab',
+    'pad',
+    'westcoast',
+  ];
+  for (const id of pitched) {
+    for (let seed = 1; seed <= 20; seed++) {
+      build(SPECS, (S) => {
+        let s = seed;
+        const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+        const v = PARTS[id]!({ S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 });
+        const at = `${id} (seed ${seed})`;
+        expect(v.part, at).toBe(id);
+        expect(['bass', 'line'], at).toContain(v.role);
+        for (const k of ['pitch', 'osc', 'gate', 'seq'] as const) expect(v[k], `${at}: ${k}`).toBeDefined();
+      });
+    }
   }
 });
