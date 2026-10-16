@@ -190,6 +190,15 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Migration:** cable dedup reaches beyond the remapped cables; the notice is cleared by the audio-start click; a
   free-running STAGES' SLOPE runs at the default rate (STAGES t{k} dropped).
 
+## From listening (2026-10-17)
+
+- **FILTER on a sine input:** the owner hears FILTER misbehave on a sine — DRV and RES work badly there; the suspicion
+  is the implementation, not tuning. Compare our SVF with a proven open-source one: Andy Simper's linear trapezoidal
+  SVF (Cytomic's technical paper; the basis of Surge's and Vital's filters) and REAPER's JSFX filters (open source).
+  Run both on the same set — a sine below, at and above the cutoff; RES 0…0.95; DRV 0…1 — and compare the response,
+  self-oscillation, where the saturation sits (before or after the resonance) and its character, and low-frequency
+  behaviour. Plan 11 matched FILTER against Ableton's Auto Filter renders (likely noise and saws), not sines.
+
 ## From Plan 18
 
 - **DICE fx:** the echo is capped at 2 s (DELAY's `time` maximum), so the drone style's long echoes are shorter than
