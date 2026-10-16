@@ -22,6 +22,16 @@ export interface JackProps {
   onPointerDown?: (e: PointerEvent) => void;
 }
 
+/** The patched inset fill and, over it, the ring of a listened or WIRES-highlighted jack. */
+export function jackShadow(p: Pick<JackProps, 'role' | 'filled' | 'listening' | 'ring'>): string | undefined {
+  const parts: string[] = [];
+  if (p.ring) parts.push('0 0 0 2px var(--ground), 0 0 0 3.5px var(--accent)');
+  else if (p.listening) parts.push(`0 0 0 2px var(--ground), 0 0 0 3.5px ${ROLE[p.role]}`);
+  // an inset shadow paints over the background, so the outer ring and the fill compose
+  if (p.filled) parts.push(`inset 0 0 0 2.5px ${ROLE[p.role]}`);
+  return parts.length ? parts.join(', ') : undefined;
+}
+
 export function Jack(props: JackProps): JSX.Element {
   return (
     <div
@@ -41,13 +51,7 @@ export function Jack(props: JackProps): JSX.Element {
         'border-color': ROLE[props.role],
         'border-style': props.normalled ? 'dashed' : 'solid',
         background: 'var(--ground)',
-        'box-shadow': props.ring
-          ? '0 0 0 2px var(--ground), 0 0 0 3.5px var(--accent)'
-          : props.listening
-            ? `0 0 0 2px var(--ground), 0 0 0 3.5px ${ROLE[props.role]}`
-            : props.filled
-              ? `inset 0 0 0 2.5px ${ROLE[props.role]}`
-              : undefined,
+        'box-shadow': jackShadow(props),
       }}
     />
   );

@@ -4,6 +4,7 @@ import { render } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { expect, test } from 'vitest';
 import { responseGlyph, waveGlyph } from './glyphs';
+import { jackShadow } from './Jack';
 import { Panel, type PanelActions } from './Panel';
 
 const noop: PanelActions = { knob() {}, option() {}, hover() {}, edit() {} };
@@ -176,4 +177,15 @@ test('a knob cell wears `dragging` while its knob is dragged, a field `editing` 
     window.dispatchEvent(new PointerEvent('pointerup'));
     expect(field.classList.contains('editing')).toBe(false);
   }
+});
+
+test('a listened or highlighted jack keeps its patched fill under the ring', () => {
+  const both = jackShadow({ role: 'audio', filled: true, listening: true });
+  expect(both).toContain('0 0 0 3.5px var(--role-audio)');
+  expect(both).toContain('inset 0 0 0 2.5px var(--role-audio)');
+  const ringed = jackShadow({ role: 'mod', filled: true, ring: true });
+  expect(ringed).toContain('var(--accent)');
+  expect(ringed).toContain('inset');
+  expect(jackShadow({ role: 'mod', filled: false, listening: true })).not.toContain('inset');
+  expect(jackShadow({ role: 'mod', filled: false })).toBeUndefined();
 });

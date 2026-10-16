@@ -4,6 +4,7 @@ import type { Merge } from '@sreda/core';
 import { SCALES } from '@sreda/core';
 import { readoutBuffer, track } from '../live';
 import { responseGlyph, scaleGlyph, waveGlyph } from './glyphs';
+import { Icon } from './icons';
 import { panning } from './wheel';
 
 export interface OptionProps {
@@ -150,6 +151,8 @@ export function Option(props: OptionProps): JSX.Element {
               <button
                 class="sr-mitem"
                 classList={{ on: i() === props.value }}
+                role="option"
+                aria-selected={i() === props.value}
                 onClick={(e) => {
                   e.stopPropagation();
                   props.set(i());
@@ -159,7 +162,12 @@ export function Option(props: OptionProps): JSX.Element {
                 <Show when={p().glyph}>
                   <Glyph param={p()} value={i()} big={true} />
                 </Show>
-                {name}
+                <span class="sr-mname">{name}</span>
+                <Show when={i() === props.value}>
+                  <span class="sr-mcheck">
+                    <Icon name="check" size={14} />
+                  </span>
+                </Show>
               </button>
             )}
           </For>

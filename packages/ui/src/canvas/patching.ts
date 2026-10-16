@@ -9,7 +9,14 @@ export interface End {
 export type PickerTab = 'ALL' | 'MODULES' | 'GROUPS';
 export const TABS: PickerTab[] = ['ALL', 'MODULES', 'GROUPS'];
 export type PickerItem =
-  | { kind: 'module'; type: string; label: string; desc: string }
+  | {
+      kind: 'module';
+      type: string;
+      label: string;
+      desc: string;
+      /** from a jack: the port the module will be wired by */
+      port?: { id: string; label: string; role: Role };
+    }
   | { kind: 'group' | 'project'; path: string; label: string; folder: string; factory: boolean };
 /** a group or project the picker can offer: factory paths are 'FACTORY/<name>' */
 export interface LibEntry {
@@ -23,6 +30,12 @@ type ModuleItem = Extract<PickerItem, { kind: 'module' }>;
 function targets(specs: Specs, type: string, from: End): Port[] {
   const spec = specs[type]!;
   return from.dir === 'out' ? inputPorts(spec) : spec.outputs;
+}
+
+/** The port a cable from `from` ends on: the first of the same role, else the first. */
+export function targetPort(specs: Specs, type: string, from: End): Port | undefined {
+  const ports = targets(specs, type, from);
+  return ports.find((p) => p.role === from.role) ?? ports[0];
 }
 
 /**
@@ -71,7 +84,12 @@ function moduleItems(specs: Specs, q: string, from: End | null): ModuleItem[] {
         !q || s.label.toLowerCase().includes(q) || s.type.includes(q) || s.desc.toLowerCase().includes(q),
     )
     .filter((s) => !from || targets(specs, s.type, from).length > 0)
-    .map((s) => ({ kind: 'module' as const, type: s.type, label: s.label, desc: s.desc }));
+    .map((s): ModuleItem => {
+      const item: ModuleItem = { kind: 'module', type: s.type, label: s.label, desc: s.desc };
+      const port = from && targetPort(specs, s.type, from);
+      if (port) item.port = { id: port.id, label: port.label, role: port.role };
+      return item;
+    });
   const sameRole = (t: string) => (from && targets(specs, t, from).some((p) => p.role === from.role) ? 0 : 1);
   const starts = (i: ModuleItem) => (q && i.label.toLowerCase().startsWith(q) ? 0 : 1);
   return items.sort(
@@ -87,8 +105,7 @@ export function placeFor(
   drop: { x: number; y: number },
 ): { x: number; y: number; port: string | null } {
   if (!from) return { ...drop, port: null };
-  const ports = targets(specs, type, from);
-  const port = ports.find((p) => p.role === from.role) ?? ports[0];
+  const port = targetPort(specs, type, from);
   if (!port) return { ...drop, port: null };
   const j = layoutPanel(specs[type]!).jacks[port.id]!;
   return { x: drop.x - j.x, y: drop.y - j.y, port: port.id };

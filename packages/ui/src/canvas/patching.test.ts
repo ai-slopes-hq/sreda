@@ -1,6 +1,7 @@
+import { SPECS } from '@sreda/core';
 import { expect, test } from 'vitest';
 import { TEST_SPECS as S } from '../../../core/src/testspecs';
-import { fitInside, pickerItems, placeFor, TABS, type LibEntry, type PickerTab } from './patching';
+import { fitInside, pickerItems, placeFor, targetPort, TABS, type LibEntry, type PickerTab } from './patching';
 
 const LIB: LibEntry[] = [
   { kind: 'project', path: 'FACTORY/acid', factory: true },
@@ -74,4 +75,17 @@ test('a popup stays inside the window with an 8 px margin, wherever it opens', (
   expect(fitInside({ x: 1500, y: 900 }, { w: 280, h: 360 }, { w: 1600, h: 1000 })).toEqual({ x: 1312, y: 632 });
   // taller than the window: its top stays 8 px inside
   expect(fitInside({ x: 0, y: 50 }, { w: 280, h: 900 }, { w: 1600, h: 600 })).toEqual({ x: 8, y: 8 });
+});
+
+test('from a jack a module item carries the port it will be wired by; without one, none', () => {
+  const lpg = pickerItems(SPECS, '', { dir: 'out', role: 'trigger' }, o()).find(
+    (i) => i.kind === 'module' && i.type === 'lpg',
+  )!;
+  expect(lpg).toMatchObject({ port: { id: 'ping', label: 'PING', role: 'trigger' } });
+  expect(
+    pickerItems(SPECS, '', null, o()).some((i) => i.kind === 'module' && i.port !== undefined),
+  ).toBe(false);
+  const end = { dir: 'out', role: 'trigger' } as const;
+  const port = targetPort(SPECS, 'lpg', end)!;
+  expect(placeFor(SPECS, 'lpg', end, { x: 0, y: 0 }).port).toBe(port.id);
 });

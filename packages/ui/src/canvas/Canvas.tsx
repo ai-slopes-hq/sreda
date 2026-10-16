@@ -49,6 +49,7 @@ import { bez, ROLE } from './glyphs';
 import { handleKey } from './keys';
 import { Panel, type FieldKind, type SampleView } from './Panel';
 import { placeFor, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
+import { Icon } from './icons';
 import { Picker } from './Picker';
 import { Drawer } from '../seq/Drawer';
 import { writeBack } from '../seq/mutate';
@@ -100,6 +101,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     screen: Pt;
     at: Pt;
     from: JackEnd | null;
+    /** `<module> › <port>` of the jack the drag started on */
+    fromName?: string;
     tab: PickerTab;
     /** REPLACE mode: the module being replaced */
     replace?: string;
@@ -660,7 +663,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     }
     // released on empty canvas: a picked-up cable is gone; a new one asks what to add here
     if (d.picked) s.commit(base);
-    else setPicker({ screen: p, at: toCanvas(p), from: d.from, tab: 'ALL' });
+    else
+      setPicker({
+        screen: p,
+        at: toCanvas(p),
+        from: d.from,
+        fromName: `${nameOf(st.doc, specs, d.from.id)} › ${portLabel(st.doc, specs, d.from.id, d.from.port)}`,
+        tab: 'ALL',
+      });
   }
 
   /** the picker's choice: a module (placed, wired from the jack it came from), a group, or a project */
@@ -770,14 +780,15 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
     window.removeEventListener('pointerup', up);
   });
 
+  /** what is listened to: `OSC › OUT` */
   const listenText = () => {
     const l = st.listen;
     const g = l && st.doc.groups.find((x) => x.id === l.id);
-    if (g) return `LISTENING · ${g.name} › CLK`;
+    if (g) return `${g.name} › CLK`;
     const m = l && st.doc.modules.find((x) => x.id === l.id);
     if (!l || !m) return null;
     const port = specs[m.type]!.outputs.find((p) => p.id === l.port);
-    return `LISTENING · ${nameOf(st.doc, specs, l.id)} › ${port?.label ?? l.port}`;
+    return `${nameOf(st.doc, specs, l.id)} › ${port?.label ?? l.port}`;
   };
 
   return (
@@ -1026,6 +1037,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
               y={pk.screen.y}
               bounds={() => ({ w: W(), h: H() })}
               from={pk.from}
+              fromName={pk.fromName ?? null}
               library={library()}
               tab={pk.tab}
               replace={pk.replace ? nameOf(st.doc, specs, pk.replace) : null}
@@ -1036,12 +1048,13 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         </Show>
         <Show when={listenText()}>
           {(t) => (
-            <div
-              class="sr-listen"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => s.setListen(null)}
-            >
-              {t()}
+            <div class="sr-listen" onPointerDown={(e) => e.stopPropagation()}>
+              <Icon name="speaker" size={16} />
+              <span class="lead">Listening to</span>
+              <span class="what">{t()}</span>
+              <button class="stop" aria-label="Stop listening" onClick={() => s.setListen(null)}>
+                <Icon name="close" size={14} />
+              </button>
             </div>
           )}
         </Show>
@@ -1051,6 +1064,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
               class="sr-wtag"
               style={{ left: hovered()!.at.x + 14 + 'px', top: hovered()!.at.y + 14 + 'px' }}
             >
+              <span class="dot" style={{ background: ROLE[roleOf(hovered()!.cable.from[0], hovered()!.cable.from[1], 'out')] }} />
               {t()}
             </div>
           )}

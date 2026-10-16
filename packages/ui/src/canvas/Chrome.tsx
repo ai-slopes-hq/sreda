@@ -21,8 +21,8 @@ export function Chrome(props: {
   const title = () => {
     const sv = st.saving;
     if (!sv) return '';
-    if (sv.confirm) return `REPLACE ${sv.confirm}? ⏎`;
-    return sv.kind === 'group' ? 'SAVE GROUP' : 'SAVE PROJECT';
+    if (sv.confirm) return `Replace ${sv.confirm}? ⏎`;
+    return sv.kind === 'group' ? 'Save group' : 'Save project';
   };
   return (
     <>
@@ -68,7 +68,7 @@ export function Chrome(props: {
             <input
               aria-label="Name"
               classList={{ invalid: !!sv().invalid }}
-              placeholder="NAME — a/b makes folders"
+              placeholder="Name — a/b makes folders"
               value={sv().name}
               ref={(el) => queueMicrotask(() => el.focus())}
               onKeyDown={(e) => {
@@ -77,7 +77,7 @@ export function Chrome(props: {
                 else if (e.key === 'Escape') props.lib.cancel();
               }}
             />
-            <span>↵</span>
+            <kbd>↵</kbd>
           </div>
         )}
       </Show>

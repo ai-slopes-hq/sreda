@@ -1,5 +1,8 @@
 import type { Specs } from '@sreda/core';
-import { createEffect, createMemo, createSignal, For, onMount, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onMount, Show, type JSX } from 'solid-js';
+import { ROLE } from './glyphs';
+import { Icon } from './icons';
+import { Segmented } from './Segmented';
 import { fitInside, pickerItems, TABS, type End, type LibEntry, type PickerItem, type PickerTab } from './patching';
 
 export interface PickerProps {
@@ -11,6 +14,8 @@ export interface PickerProps {
   bounds(): { w: number; h: number };
   /** a drag from a jack: only modules it can connect to (the same role first) and groups */
   from: End | null;
+  /** the jack the drag came from, as `<module> › <port>` */
+  fromName: string | null;
   /** the groups and projects on offer (factory and library) */
   library: LibEntry[];
   /** the tab it opens on */
@@ -75,7 +80,12 @@ export function Picker(props: PickerProps): JSX.Element {
   }
 
   const placeholder = () =>
-    props.replace ? `REPLACE ${props.replace}` : props.from ? 'ADD AND WIRE…' : 'SEARCH…';
+    props.replace ? `Replace ${props.replace}…` : props.from ? 'Add and wire…' : 'Add module…';
+  const TAB_LABEL: Record<PickerTab, string> = { ALL: 'All', MODULES: 'Modules', GROUPS: 'Groups' };
+  const count = (t: PickerTab) =>
+    pickerItems(props.specs, q(), props.from, { tab: t, replace: !!props.replace, library: props.library }).length;
+  /** the colour of the cable being dragged; accent when nothing is wired */
+  const edge = () => (props.from ? ROLE[props.from.role] : 'var(--accent)');
 
   return (
     <div
@@ -85,35 +95,43 @@ export function Picker(props: PickerProps): JSX.Element {
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
-      <div class="sr-ptabs">
-        <For each={tabs()}>
-          {(t) => (
-            <button
-              class="sr-ptab"
-              classList={{ on: tab() === t || !!props.replace }}
-              onPointerDown={(e) => e.preventDefault()}
-              onClick={() => setTab(t)}
-            >
-              {t}
-            </button>
-          )}
-        </For>
+      <div class="sr-psearch">
+        <Icon name="search" size={18} />
+        <input
+          ref={(el) => (input = el)}
+          class="sr-search"
+          placeholder={placeholder()}
+          value={q()}
+          onInput={(e) => setQ(e.currentTarget.value)}
+          onKeyDown={key}
+          onBlur={() => queueMicrotask(() => document.activeElement !== input && props.close())}
+        />
+        <kbd>esc</kbd>
       </div>
-      <input
-        ref={(el) => (input = el)}
-        class="sr-search"
-        placeholder={placeholder()}
-        value={q()}
-        onInput={(e) => setQ(e.currentTarget.value)}
-        onKeyDown={key}
-        onBlur={() => queueMicrotask(() => document.activeElement !== input && props.close())}
-      />
+      <Show when={props.from && props.fromName}>
+        <div class="sr-pfrom">
+          <span class="dot" style={{ background: edge() }} />
+          <span>
+            from <b>{props.fromName}</b>
+          </span>
+          <span class="role">{props.from!.role}</span>
+        </div>
+      </Show>
+      <div class="sr-ptabs">
+        <Segmented
+          label="Kind"
+          items={tabs().map((t) => ({ id: t, label: TAB_LABEL[t], count: count(t) }))}
+          value={props.replace ? 'MODULES' : tab()}
+          set={setTab}
+        />
+      </div>
       <div class="sr-plist" ref={(el) => (list = el)}>
         <For each={items()}>
           {(it, i) => (
             <button
               class="sr-pitem"
               classList={{ on: i() === idx() }}
+              style={{ '--edge': edge() }}
               data-kind={it.kind}
               onMouseEnter={() => {
                 setIdx(i());
@@ -121,15 +139,36 @@ export function Picker(props: PickerProps): JSX.Element {
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => props.pick(it)}
             >
-              <span class="sr-pname">{it.label}</span>
-              <span class="sr-pdesc">
-                {it.kind === 'module'
-                  ? it.desc
-                  : `${it.folder ? it.folder + ' · ' : ''}${it.kind.toUpperCase()}`}
+              <span class="sr-ptext">
+                <span class="sr-pname">{it.label}</span>
+                <span class="sr-pdesc">
+                  {it.kind === 'module' ? it.desc : `${it.folder ? it.folder + ' · ' : ''}${it.kind}`}
+                </span>
               </span>
+              <Show when={it.kind === 'module' && it.port}>
+                {(port) => (
+                  <span class="sr-pport" style={{ color: ROLE[port().role] }}>
+                    <span class="dot" style={{ background: ROLE[port().role] }} />
+                    {port().label}
+                  </span>
+                )}
+              </Show>
             </button>
           )}
         </For>
+      </div>
+      <div class="sr-pfoot">
+        <span>
+          <kbd>↑</kbd> <kbd>↓</kbd> move
+        </span>
+        <span>
+          <kbd>↵</kbd> add
+        </span>
+        <Show when={!props.replace}>
+          <span>
+            <kbd>tab</kbd> switch tab
+          </span>
+        </Show>
       </div>
     </div>
   );

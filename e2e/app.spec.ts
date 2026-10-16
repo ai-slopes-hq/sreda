@@ -267,9 +267,10 @@ test('listen: click an output, the bar names it, Esc ends it', async () => {
   const { app, page } = await launch();
   await page.mouse.click(1300, 900); // start audio
   await jack(page, 'osc', 'out').click();
-  await expect(page.getByText('LISTENING · OSC › OUT')).toBeVisible();
+  await expect(page.locator('.sr-listen')).toContainText('Listening to');
+  await expect(page.locator('.sr-listen .what')).toHaveText('OSC › OUT');
   await page.keyboard.press('Escape');
-  await expect(page.getByText('LISTENING · OSC › OUT')).toBeHidden();
+  await expect(page.locator('.sr-listen')).toBeHidden();
   await app.close();
 });
 
@@ -1135,7 +1136,7 @@ test('replace, R, ⌘D and magnets', async () => {
 
   // double-click OSC's name → REPLACE OSC → COMPLEX keeps the cable to OUT
   await page.locator('[data-type=osc] .sr-head').dblclick();
-  await expect(page.locator('.sr-search')).toHaveAttribute('placeholder', 'REPLACE OSC');
+  await expect(page.locator('.sr-search')).toHaveAttribute('placeholder', 'Replace OSC…');
   await page.keyboard.type('complex');
   await page.keyboard.press('Enter');
   d = await fullDoc(page);
