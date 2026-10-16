@@ -1,1 +1,38 @@
-{"v":3,"createdOnFiles":{"v":1,"at":"2026-10-07T12:00:00Z"},"title":"SREDA 2 canvas prototype","launch":{"view":"focused","file":"Main.dc.html"},"pages":[],"boards":{"Main.dc.html":{"x":0,"y":0,"w":1440,"h":900,"expand":"fill","is_interactive":true,"title":"Canvas — interactive"},"Anatomy.dc.html":{"x":1520,"y":0,"w":1200,"h":760,"title":"Module anatomy (old, see Panel system)"},"Sequencers.dc.html":{"x":0,"y":1020,"w":1660,"h":1280,"title":"STAGES / RHYTHM — variants"},"Panels.dc.html":{"x":0,"y":2420,"w":1720,"h":1620,"title":"Panel system"},"SoundPack.dc.html":{"x":0,"y":4080,"w":1720,"h":1180,"title":"Sound pack (milestone 2)"},"Density.dc.html":{"x":0,"y":5360,"w":2440,"h":1180,"title":"Panel density — 4 variants"}},"order":["Main.dc.html","Anatomy.dc.html","Sequencers.dc.html","Panels.dc.html","SoundPack.dc.html","Density.dc.html"],"notes":{},"designSystems":[]}
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Anatomy.dc.html": {"h": 760, "title": "Module anatomy (old, see Panel system)", "w": 1200, "x": 1520, "y": 0},
+    "Density.dc.html": {"h": 1180, "title": "Panel density — 4 variants", "w": 2440, "x": 0, "y": 5360},
+    "Main.dc.html": {"expand": "fill", "h": 900, "is_interactive": true, "title": "Canvas — interactive", "w": 1440, "x": 0, "y": 0},
+    "Panels.dc.html": {"h": 1620, "title": "Panel system", "w": 1720, "x": 0, "y": 2420},
+    "RedesignCloseups.dc.html": {"h": 1340, "title": "Redesign — before / after", "w": 1440, "x": 1520, "y": 6920},
+    "RedesignScene.dc.html": {"h": 900, "title": "Redesign — whole screen", "w": 1440, "x": 0, "y": 6920},
+    "RedesignSidebar.dc.html": {"h": 1080, "title": "Redesign — sidebar tabs", "w": 1640, "x": 0, "y": 8380},
+    "RedesignSkins.dc.html": {"h": 1120, "title": "Redesign — six skins + new tokens", "w": 1600, "x": 1720, "y": 8380},
+    "RedesignFrames.dc.html": {"h": 1420, "title": "Redesign — frames, hints, META-SEQ editor", "w": 1600, "x": 0, "y": 9620},
+    "Sequencers.dc.html": {"h": 1280, "title": "STAGES / RHYTHM — variants", "w": 1660, "x": 0, "y": 1020},
+    "SoundPack.dc.html": {"h": 1180, "title": "Sound pack (milestone 2)", "w": 1720, "x": 0, "y": 4080}
+  },
+  "createdOnFiles": {"at": "2026-10-07T12:00:00Z", "v": 1},
+  "designSystems": [],
+  "launch": {"file": "Main.dc.html", "view": "focused"},
+  "notes": {
+    "redesign": {"kind": "title1", "maxW": 2960, "text": "Windows and elements — visual pass (draft)", "w": 240, "x": 0, "y": 6660}
+  },
+  "order": [
+    "Main.dc.html",
+    "Anatomy.dc.html",
+    "Sequencers.dc.html",
+    "Panels.dc.html",
+    "SoundPack.dc.html",
+    "Density.dc.html",
+    "RedesignScene.dc.html",
+    "RedesignCloseups.dc.html",
+    "RedesignSidebar.dc.html",
+    "RedesignSkins.dc.html",
+    "RedesignFrames.dc.html"
+  ],
+  "pages": [],
+  "title": "SREDA 2 canvas prototype"
+}

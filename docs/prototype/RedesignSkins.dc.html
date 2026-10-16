@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SREDA redesign — six skins</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk-root{position:relative;width:1600px;height:1120px;overflow:hidden;background:#0d0d0c;color:#ece7db;font-family:'IBM Plex Sans',system-ui,sans-serif}
+/* skins: the existing 28 tokens (subset used here) + three proposed: popover, label, shadow */
+.s-default{--ground:#121210;--dot:#24231f;--panel:#1b1b18;--panel-side:#171715;--raised:#2a2924;--line:#2e2d28;--line-2:#3a3933;--text:#e9e4d8;--text-2:#b9b3a6;--muted:#8f897c;--faint:#5d594f;--heading:#e9e4d8;--on:#e9e4d8;--on-text:#121210;--accent:#f5a524;--role-audio:#e9e4d8;--role-mod:#6cb4ee;--role-pitch:#9ad18b;--role-trigger:#f5a524;--popover:#232320;--label:#908b80;--shadow:rgba(0,0,0,.55)}
+.s-annabiosis{--ground:#18211f;--dot:#273533;--panel:#212d2b;--panel-side:#1c2725;--raised:#283735;--line:#344543;--line-2:#465957;--text:#d4ddd7;--text-2:#b3c2bc;--muted:#8fa29d;--faint:#5c6f6b;--heading:#42fea2;--on:#0c7970;--on-text:#eafff5;--accent:#42fea2;--role-audio:#30da98;--role-mod:#1e7fff;--role-pitch:#fcdd14;--role-trigger:#ff5230;--popover:#283432;--label:#8e9e99;--shadow:rgba(4,10,9,.6)}
+.s-kanagawa{--ground:#1f1f28;--dot:#2a2a37;--panel:#2a2a37;--panel-side:#252530;--raised:#363646;--line:#363646;--line-2:#54546d;--text:#dcd7ba;--text-2:#c8c093;--muted:#a6a69c;--faint:#54546d;--heading:#dcd7ba;--on:#2d4f67;--on-text:#dcd7ba;--accent:#e6c384;--role-audio:#7fb4ca;--role-mod:#957fb8;--role-pitch:#98bb6c;--role-trigger:#ff9e3b;--popover:#31313c;--label:#9f9c8b;--shadow:rgba(8,8,14,.6)}
+.s-touch{--ground:#1c1c1c;--dot:#2a2a2a;--panel:#333333;--panel-side:#2d2d2d;--raised:#444444;--line:#444444;--line-2:#575757;--text:#e0e0e0;--text-2:#c4c4c4;--muted:#a0a0a0;--faint:#5e5e5e;--heading:#e0e0e0;--on:#5a5a5a;--on-text:#ffffff;--accent:#e8c547;--role-audio:#63b35b;--role-mod:#8e5fc7;--role-pitch:#4f8fd6;--role-trigger:#d0508f;--popover:#3a3a3a;--label:#a5a5a5;--shadow:rgba(0,0,0,.5)}
+.s-nord{--ground:#2e3440;--dot:#3b4252;--panel:#3b4252;--panel-side:#353c4a;--raised:#434c5e;--line:#434c5e;--line-2:#4c566a;--text:#eceff4;--text-2:#e5e9f0;--muted:#d8dee9;--faint:#616e88;--heading:#eceff4;--on:#5e81ac;--on-text:#eceff4;--accent:#ebcb8b;--role-audio:#88c0d0;--role-mod:#b48ead;--role-pitch:#a3be8c;--role-trigger:#d08770;--popover:#424958;--label:#b3bac6;--shadow:rgba(22,26,34,.5)}
+.s-tokyo{--ground:#1a1b26;--dot:#24283b;--panel:#24283b;--panel-side:#1f2231;--raised:#292e42;--line:#343a55;--line-2:#414868;--text:#c0caf5;--text-2:#a9b1d6;--muted:#737aa2;--faint:#3b4261;--heading:#c0caf5;--on:#3d59a1;--on-text:#c0caf5;--accent:#ff9e64;--role-audio:#7dcfff;--role-mod:#bb9af7;--role-pitch:#9ece6a;--role-trigger:#f7768e;--popover:#2a2e42;--label:#8c96c0;--shadow:rgba(6,7,14,.6)}
+
+.tile{position:relative;width:480px;height:460px;border-radius:14px;overflow:hidden;background-color:var(--ground);background-image:radial-gradient(circle,var(--dot) 1px,transparent 1.5px);background-size:24px 24px;color:var(--text);box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+.t-name{position:absolute;left:20px;top:22px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.24em;color:var(--muted)}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.gw{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex:none}
+/* module, on the panel grammar: N × 56 HP, 144 px = 1U, head 32, inset 6, lanes 32 */
+.md{position:absolute;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-sizing:border-box;overflow:hidden;box-shadow:0 4px 14px color-mix(in srgb,var(--shadow) 55%,transparent)}
+.md.sel{border-color:var(--muted);box-shadow:0 0 0 3px color-mix(in srgb,var(--text) 9%,transparent),0 4px 14px color-mix(in srgb,var(--shadow) 55%,transparent)}
+.md-h{height:32px;flex:none;box-sizing:border-box;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid var(--line);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--heading)}
+.md-b{flex:1;display:flex}
+.pc{width:56px;flex:none;box-sizing:border-box;padding:6px 0 0 8px;background:var(--panel-side);display:flex;flex-direction:column}
+.pc.out{padding:6px 8px 0 0;align-items:flex-end}
+.ln{height:32px;display:flex;align-items:center;gap:6px}
+.pc.out .ln{flex-direction:row-reverse}
+.pls{display:flex;flex-direction:column;gap:2px}
+.pc.out .pls{align-items:flex-end}
+.pl{font:500 9.5px/10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--label)}
+.pf{font:500 10px/10px 'IBM Plex Mono',monospace}
+.lv{height:3px;border-radius:2px}
+.j{width:14px;height:14px;flex:none;border-radius:50%;border:2px solid;box-sizing:border-box;background:var(--ground)}
+.j.nrm{border-style:dashed}
+.ja{border-color:var(--role-audio)}.jm{border-color:var(--role-mod)}.jt{border-color:var(--role-trigger)}
+.ja.on{background:radial-gradient(circle,var(--ground) 0 2.5px,var(--role-audio) 3px)}
+.jt.on{background:radial-gradient(circle,var(--ground) 0 2.5px,var(--role-trigger) 3px)}
+.ctl{flex:1;display:flex;flex-direction:column;padding-top:6px}
+.krow{height:64px;display:flex}
+.mstrip{height:32px;display:flex;align-items:center;gap:8px;padding:0 4px}
+.cl{position:relative;width:56px;height:64px}
+.cl svg{display:block}
+.mj{position:absolute;left:5px;top:3px;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--role-mod);box-sizing:border-box;opacity:.55}
+.mj.on{background:var(--role-mod);opacity:1}
+.cl-l{position:absolute;left:0;right:0;top:43px;text-align:center;font:500 9px/10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--label)}
+.cl-v{position:absolute;left:0;right:0;top:54px;text-align:center;font:500 10px/10px 'IBM Plex Mono',monospace;color:var(--text)}
+.kt{fill:none;stroke:var(--raised);stroke-width:3;stroke-linecap:round}
+.ka{fill:none;stroke:var(--text);stroke-width:3;stroke-linecap:round}
+.kr{fill:none;stroke:var(--role-mod);stroke-width:2;stroke-opacity:.55;stroke-linecap:round}
+.kb{fill:color-mix(in srgb,var(--panel) 92%,var(--text));stroke:var(--line-2);stroke-width:1}
+.kp{stroke:var(--text);stroke-width:1.8;stroke-linecap:round}
+.kd{fill:var(--role-mod)}
+.op{height:24px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--ground);border:1px solid var(--line-2);border-radius:6px;color:var(--text);font:500 9.5px 'IBM Plex Mono',monospace;padding:0;box-sizing:border-box}
+.op.open{border-color:var(--label);box-shadow:0 0 0 3px color-mix(in srgb,var(--text) 10%,transparent)}
+.stub{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+/* floating windows */
+.pop{position:absolute;display:flex;flex-direction:column;background:var(--popover);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 14px 36px var(--shadow);overflow:hidden}
+.mi{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;margin:0 4px;background:none;border:0;border-radius:7px;color:var(--text);text-align:left}
+.mi.on{background:var(--raised)}
+.mi-n{width:36px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.mi-d{flex:1;font-size:12px;color:var(--label)}
+.ps{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-bottom:1px solid var(--line);color:var(--label);font-size:13px}
+.it{display:flex;align-items:center;gap:10px;height:42px;padding:0 10px;margin:0 4px;border-radius:7px}
+.it.on{background:var(--raised);box-shadow:inset 2px 0 0 var(--role-trigger)}
+.it-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.it-n{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.it-d{font-size:11.5px;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it-p{display:flex;align-items:center;gap:5px;height:20px;padding:0 7px;border:1px solid var(--line-2);border-radius:10px;font:500 9.5px 'IBM Plex Mono',monospace;color:var(--label)}
+.stabs{position:absolute;display:flex;gap:2px;padding:3px;background:var(--ground);border:1px solid var(--line);border-radius:9px}
+.stabs span{height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;color:var(--label);font:500 11.5px 'IBM Plex Sans',sans-serif}
+.stabs span.on{background:var(--raised);color:var(--text)}
+/* readout */
+.ro{position:absolute;left:20px;right:20px;bottom:18px;display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+.ro-r{display:flex;gap:14px;flex-wrap:wrap;font:500 10.5px 'IBM Plex Mono',monospace;color:var(--label)}
+.ro-r span{display:flex;align-items:center;gap:6px}
+.ro-r i{display:block;width:12px;height:12px;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+.ro-f{font-size:12px;line-height:17px;color:var(--text-2)}
+.leg{position:absolute;font-size:13px;line-height:20px;color:#a59f92}
+.leg b{font:600 11px 'IBM Plex Mono',monospace;color:#ece7db;letter-spacing:.06em}
+</style>
+</helmet>
+<div class="sk-root">
+
+<div style="position: absolute; left: 40px; top: 36px; width: 1100px">
+<div class="mono" style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 10px 0 0; font-size: 28px; font-weight: 600">New style in all six skins</h1>
+<div style="margin-top: 6px; font-size: 14px; line-height: 21px; color: #a59f92">The same LPG 1 on the panel grammar (4 HP × 1U), its MODE menu and the add-module window, painted only with tokens. Each skin keeps its 28 colours and gains three: <span class="mono" style="color: #ece7db">popover</span>, <span class="mono" style="color: #ece7db">label</span>, <span class="mono" style="color: #ece7db">shadow</span>.</div>
+</div>
+
+<div style="position: absolute; left: 40px; top: 150px; display: grid; grid-template-columns: repeat(3, 480px); gap: 40px">
+<sc-for list="{{skins}}" as="s" hint-placeholder-count="6">
+<div class="tile {{s.cls}}">
+<div class="t-name">{{s.name}}</div>
+<div class="stabs" style="right: 16px; top: 14px"><span class="on">Wires</span><span>Mix</span><span>Library</span><span>Settings</span></div>
+
+<div class="md sel" style="left: 36px; top: 72px; width: 224px; height: 144px">
+<div class="md-h">LPG 1</div>
+<div class="md-b">
+<div class="pc">
+<div class="ln"><span class="j ja on"></span><span class="pl">IN</span></div>
+<div class="ln"><span class="j jm nrm"></span><span class="pls"><span class="pl">CV</span><span class="pf" style="color: var(--faint)">1.00</span></span></div>
+<div class="ln"><span class="j jt on"></span><span class="pls"><span class="pl">PING</span><span class="pf" style="color: var(--role-trigger)">×2</span></span></div>
+</div>
+<div class="ctl">
+<div class="krow">
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.lvl.track}}"></path><path class="ka" d="{{K.lvl.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.lvl.px}}" y2="{{K.lvl.py}}"></line></svg><span class="mj"></span><span class="cl-l">LVL</span><span class="cl-v">1.00</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.dec.track}}"></path><path class="kr" d="{{K.dec.ring}}"></path><path class="ka" d="{{K.dec.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.dec.px}}" y2="{{K.dec.py}}"></line><circle class="kd" cx="{{K.dec.dx}}" cy="{{K.dec.dy}}" r="2.4"></circle></svg><span class="mj on"></span><span class="cl-l">DEC</span><span class="cl-v" style="color: var(--role-mod)">400ms</span></div>
+</div>
+<div class="mstrip"><button class="op open" style="width: 104px" aria-label="Mode: both" aria-haspopup="listbox" aria-expanded="true">BOTH<svg width="8" height="6" aria-hidden="true"><path class="gw" d="M1 1 L4 4.5 L7 1"></path></svg></button></div>
+</div>
+<div class="pc out">
+<div class="ln"><span class="j ja on"></span><span class="pls"><span class="pl">OUT</span><span class="lv" style="width: 20px; background: var(--role-audio)"></span></span></div>
+</div>
+</div>
+</div>
+<svg class="stub" width="480" height="460" aria-hidden="true">
+<path d="M0 127 H52" stroke="var(--role-audio)" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+<path d="M0 191 H52" stroke="var(--role-trigger)" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+<path d="M244 127 H286" stroke="var(--role-audio)" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+</svg>
+
+<div class="pop" role="listbox" aria-label="Mode" style="left: 93px; top: 210px; width: 200px; padding: 4px 0">
+<div class="mi"><span class="mi-n">VCA</span><span class="mi-d">Level only</span></div>
+<div class="mi"><span class="mi-n">LP</span><span class="mi-d">Filter only</span></div>
+<div class="mi on"><span class="mi-n">BOTH</span><span class="mi-d">Low-pass gate</span><svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7.5 l2.5 2.5 l5.5 -6"></path></svg></div>
+</div>
+
+<div class="pop" style="left: 290px; top: 72px; width: 174px">
+<div class="ps"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle class="ico" cx="7" cy="7" r="4.5"></circle><path class="ico" d="M10.5 10.5 l3 3"></path></svg>Add module…</div>
+<div style="padding: 4px 0">
+<div class="it on"><span class="it-m"><span class="it-n">RHYTHM</span><span class="it-d">16 pads</span></span><span class="it-p"><span class="dot" style="background: var(--role-trigger)"></span>CLK</span></div>
+<div class="it"><span class="it-m"><span class="it-n">CHANCE</span><span class="it-d">Bernoulli</span></span><span class="it-p"><span class="dot" style="background: var(--role-trigger)"></span>TRIG</span></div>
+<div class="it"><span class="it-m"><span class="it-n">SHIFT</span><span class="it-d">Swing</span></span><span class="it-p"><span class="dot" style="background: var(--role-trigger)"></span>TRIG</span></div>
+</div>
+</div>
+
+<div class="ro">
+<div class="ro-r">
+<span><i style="background: var(--popover)"></i>popover {{s.pop}}</span>
+<span><i style="background: var(--label)"></i>label {{s.label}} · {{s.labelCr}}</span>
+<span><i style="background: var(--muted)"></i>muted {{s.mutedCr}}</span>
+</div>
+<div class="ro-f">{{s.note}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1120}}'>
+function ang(v) { return (-135 + 270 * v) * Math.PI / 180; }
+function pt(r, v) { var a = ang(v); return [(28 + r * Math.sin(a)).toFixed(2), (22 - r * Math.cos(a)).toFixed(2)]; }
+function arc(v0, v1, r) {
+  if (v1 - v0 < 0.003) return '';
+  var p0 = pt(r, v0), p1 = pt(r, v1), large = (v1 - v0) * 270 > 180 ? 1 : 0;
+  return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0] + ' ' + p1[1];
+}
+function knob(v, m) {
+  var p = pt(7, v), d = pt(18, Math.min(1, v + (m || 0)));
+  return { track: arc(0, 1, 14), arc: arc(0, v, 14), px: p[0], py: p[1], ring: m ? arc(Math.max(0, v - m), Math.min(1, v + m), 18) : '', dx: d[0], dy: d[1] };
+}
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      K: { lvl: knob(1), dec: knob(0.45, 0.2) },
+      skins: [
+        { cls: 's-default', name: 'DEFAULT', pop: '#232320', label: '#908b80', labelCr: '5.1:1', mutedCr: '5.0:1', note: 'Labels move up from quiet (3.2:1) to label (5.1:1). Reads as intended.' },
+        { cls: 's-annabiosis', name: 'ANNABIOSIS', pop: '#283432', label: '#8e9e99', labelCr: '5.1:1', mutedCr: '5.3:1', note: 'Shadow tinted green-black; neutral black looked muddy on the green ground.' },
+        { cls: 's-kanagawa', name: 'KANAGAWA', pop: '#31313c', label: '#9f9c8b', labelCr: '5.1:1', mutedCr: '5.8:1', note: 'faint equals line-2 here (#54546d), so a default value nearly disappears. Raise faint.' },
+        { cls: 's-touch', name: 'TOUCH', pop: '#3a3a3a', label: '#a5a5a5', labelCr: '5.1:1', mutedCr: '4.8:1', note: 'Light panel: the popover only separates by its shadow and border. Border line-2 is enough.' },
+        { cls: 's-nord', name: 'NORD', pop: '#424958', label: '#b3bac6', labelCr: '5.2:1', mutedCr: '7.5:1', note: 'muted (#d8dee9) is nearly as bright as text-2, so hints compete with values. Consider lowering muted.' },
+        { cls: 's-tokyo', name: 'TOKYO NIGHT', pop: '#2a2e42', label: '#8c96c0', labelCr: '5.0:1', mutedCr: '3.5:1', note: 'muted fails on panel (3.5:1) and popover (3.2:1). Use label for secondary text here.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

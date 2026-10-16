@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SREDA redesign — frames, hints, META-SEQ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.fr-root{--ground:#121210;--dot:#24231f;--panel:#1b1b18;--panel-side:#171715;--raised:#2a2924;--line:#2e2d28;--line-2:#3a3933;--text:#e9e4d8;--text-2:#b9b3a6;--muted:#8f897c;--faint:#5d594f;--on:#e9e4d8;--on-text:#121210;--accent:#f5a524;--role-audio:#e9e4d8;--role-mod:#6cb4ee;--role-pitch:#9ad18b;--role-trigger:#f5a524;--popover:#232320;--label:#908b80;--shadow:rgba(0,0,0,.55);
+position:relative;width:1600px;height:1420px;overflow:hidden;background-color:var(--ground);background-image:radial-gradient(circle,var(--dot) 1px,transparent 1.5px);background-size:24px 24px;color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.h2{position:absolute;font:600 16px 'IBM Plex Sans',sans-serif;color:var(--text)}
+.h2 span{font-weight:400;font-size:13px;color:var(--label);margin-left:10px}
+.lab{position:absolute;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;color:var(--muted)}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.gw{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border:1px solid #3d3b34;border-bottom-width:2px;border-radius:4px;font:500 10px 'IBM Plex Mono',monospace;color:var(--label);background:#161614}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+/* frames */
+.fr{position:absolute;border:1px solid;border-radius:10px;box-sizing:border-box}
+.fh{position:absolute;left:0;right:0;top:0;height:32px;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;background:var(--panel);border-bottom:1px solid var(--line);border-radius:9px 9px 0 0;box-sizing:border-box}
+.fh.hov{background:#201f1c}
+.car{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--label);flex:none}
+.fn{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:var(--text-2);white-space:nowrap}
+.fm{width:28px;height:3px;border-radius:2px;background:var(--raised);overflow:hidden;flex:none}
+.fm div{height:3px;background:var(--text)}
+.sp{flex:1}
+.bpm{height:22px;display:flex;align-items:center;padding:0 8px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:11px;font:500 10px 'IBM Plex Mono',monospace;color:var(--accent);white-space:nowrap}
+.tb{height:22px;display:flex;align-items:center;gap:5px;padding:0 8px;background:none;border:1px solid var(--line-2);border-radius:6px;color:var(--text);font:500 11.5px 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.tb.on{background:var(--on);border-color:var(--on);color:var(--on-text)}
+.tb.lit{background:var(--accent);border-color:var(--accent);color:#121210;font:600 10px 'IBM Plex Mono',monospace;padding:0 7px}
+.sw{width:14px;height:14px;border-radius:4px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.15) inset}
+.vd{width:1px;height:16px;background:var(--line-2);margin:0 2px}
+.fj{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid var(--role-trigger);box-sizing:border-box;background:var(--ground)}
+.fj.on{background:radial-gradient(circle,var(--ground) 0 2.5px,var(--role-trigger) 3px)}
+.fjl{position:absolute;font:500 9.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--label)}
+/* module stubs (quiet, seen from a distance) */
+.ms{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-sizing:border-box;overflow:hidden}
+.ms-h{height:32px;box-sizing:border-box;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid var(--line);font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em}
+.ms-c{position:absolute;top:32px;bottom:0;width:56px;background:var(--panel-side)}
+.mj{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid;box-sizing:border-box;background:var(--ground)}
+.kn{position:absolute;width:28px;height:28px;border-radius:50%;border:3px solid var(--raised);box-sizing:border-box}
+.cb{position:absolute;display:flex;flex-direction:column;border:1px solid;border-radius:10px;box-sizing:border-box;overflow:hidden}
+/* hint bar */
+.hrow{position:absolute;left:40px;width:1520px;height:44px;display:flex;align-items:center;gap:0}
+.hctx{width:170px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:var(--muted)}
+.hbar{flex:1;height:44px;display:flex;align-items:center;gap:18px;padding:0 16px;border:1px dashed #2a2924;border-radius:10px;font-size:12px;color:var(--label)}
+.hbar span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.hbar b{font-weight:500;color:var(--text-2)}
+.hobj{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--text)}
+/* META-SEQ drawer */
+.dr{position:absolute;left:40px;width:1520px;background:var(--popover);border:1px solid var(--line-2);border-radius:14px;box-shadow:0 -12px 40px var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.dr-g{position:absolute;left:50%;top:6px;width:44px;height:4px;margin-left:-22px;border-radius:2px;background:var(--line-2)}
+.dr-h{height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px 0 16px;border-bottom:1px solid var(--line);box-sizing:border-box}
+.dr-n{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--text);margin-right:8px}
+.pt{display:flex;gap:2px;padding:3px;background:var(--ground);border:1px solid var(--line);border-radius:9px}
+.pt span{width:30px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;font:600 11px 'IBM Plex Mono',monospace;color:var(--label)}
+.pt span.on{background:var(--raised);color:var(--text)}
+.pt span.play{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent)}
+.df{height:28px;display:flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--line-2);border-radius:7px;font-size:12px;color:var(--label);white-space:nowrap}
+.df b{font:500 11px 'IBM Plex Mono',monospace;color:var(--text)}
+.ib{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:7px;color:var(--label);padding:0}
+.ib:disabled{opacity:.4}
+.lane{display:flex;border-bottom:1px solid var(--line)}
+.lh{width:210px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;border-right:1px solid var(--line);box-sizing:border-box}
+.ln{width:44px;font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:var(--text-2)}
+.lf{height:24px;display:flex;align-items:center;gap:5px;padding:0 8px;border-radius:6px;background:var(--ground);border:1px solid var(--line);font:500 10.5px 'IBM Plex Mono',monospace;color:var(--text)}
+.lf i{font-style:normal;color:var(--label)}
+.lg{flex:1;position:relative;display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:4px;padding:6px 12px}
+.st{position:relative;border-radius:4px;background:var(--raised)}
+.st .v{position:absolute;left:0;right:0;bottom:0;border-radius:4px}
+.st .nn{position:absolute;left:0;right:0;top:4px;text-align:center;font:500 9.5px 'IBM Plex Mono',monospace;color:var(--label)}
+.st .pc{position:absolute;left:0;right:0;top:4px;text-align:center;font:500 9.5px 'IBM Plex Mono',monospace;color:var(--text)}
+.st.cur{box-shadow:0 0 0 1.5px var(--accent)}
+.st.ghost{opacity:.3}
+.tie{position:absolute;top:50%;height:4px;margin-top:-2px;right:-6px;width:8px;background:var(--text-2);border-radius:2px;z-index:1}
+.lm{position:absolute;top:2px;bottom:2px;width:3px;border-radius:2px;background:var(--accent);opacity:.75}
+.foot{position:absolute;font-size:12.5px;line-height:19px;color:var(--label)}
+</style>
+</helmet>
+<div class="fr-root">
+
+<div style="position: absolute; left: 40px; top: 36px; width: 1300px">
+<div class="mono" style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 10px 0 0; font-size: 28px; font-weight: 600">Frames, hint bar, META-SEQ editor</h1>
+<div style="margin-top: 6px; font-size: 14px; color: #a59f92">In the new style. Frame headers show state at rest and tools on hover (problem 3). The hint bar shows only what applies to what is under the pointer (problem 6).</div>
+</div>
+
+<!-- ══ FRAMES ══ -->
+<div class="h2" style="left: 40px; top: 150px">Frame header<span>state at rest, tools on hover</span></div>
+
+<div class="lab" style="left: 40px; top: 190px">AT REST · NESTED, NO OWN CLOCK</div>
+<div class="fr" style="left: 40px; top: 210px; width: 720px; height: 74px; border-color: color-mix(in srgb, #d8b25e 40%, #3a3933); background: color-mix(in srgb, #d8b25e 8%, transparent); border-bottom: 0; border-radius: 10px 10px 0 0">
+<div class="fh"><span class="car"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg></span><span class="fn">DRUMS</span><span class="fm"><div style="width: 70%"></div></span><span class="sp"></span></div>
+<span class="fj" style="left: -8px; top: 9px"></span>
+<span class="fj on" style="left: 10px; top: 42px"></span><span class="fjl" style="left: 30px; top: 44px">CLK</span>
+</div>
+
+<div class="lab" style="left: 40px; top: 302px">AT REST · OWN CLOCK</div>
+<div class="fr" style="left: 40px; top: 322px; width: 720px; height: 74px; border-color: color-mix(in srgb, #d97757 40%, #3a3933); background: color-mix(in srgb, #d97757 8%, transparent); border-bottom: 0; border-radius: 10px 10px 0 0">
+<div class="fh"><span class="car"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg></span><span class="fn">TECHNO</span><span class="fm"><div style="width: 82%"></div></span><span class="sp"></span><span class="bpm">130 BPM</span></div>
+<span class="fj on" style="left: -8px; top: 9px"></span>
+<span class="fj on" style="left: 10px; top: 42px"></span><span class="fjl" style="left: 30px; top: 44px">CLK</span>
+</div>
+
+<div class="lab" style="left: 40px; top: 414px">HOVER OR SELECTED · TOOLS APPEAR</div>
+<div class="fr" style="left: 40px; top: 434px; width: 720px; height: 74px; border-color: color-mix(in srgb, #d97757 60%, #3a3933); background: color-mix(in srgb, #d97757 8%, transparent); border-bottom: 0; border-radius: 10px 10px 0 0">
+<div class="fh hov"><span class="car" style="color: var(--text)"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg></span><span class="fn" style="color: var(--text)">TECHNO</span><span class="fm"><div style="width: 82%"></div></span><span class="sp"></span>
+<button class="sw" style="background: #d97757; border: 0; padding: 0" aria-label="Frame colour"></button>
+<button class="tb on">Stack</button>
+<button class="tb">Save group</button>
+<button class="tb" aria-label="Mute frame">M</button>
+<span class="vd"></span>
+<span class="bpm">130 BPM</span>
+<button class="tb">Tap</button>
+<button class="tb" aria-label="Remove frame clock" style="padding: 0 6px"><svg width="10" height="10" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<span class="fj on" style="left: -8px; top: 9px"></span>
+<span class="fj on" style="left: 10px; top: 42px"></span><span class="fjl" style="left: 30px; top: 44px">CLK</span>
+</div>
+
+<div class="lab" style="left: 40px; top: 526px">AT REST · MUTED</div>
+<div class="fr" style="left: 40px; top: 546px; width: 720px; height: 74px; border-color: color-mix(in srgb, #8fbf80 40%, #3a3933); background: color-mix(in srgb, #8fbf80 5%, transparent); border-bottom: 0; border-radius: 10px 10px 0 0">
+<div class="fh"><span class="car"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg></span><span class="fn">CLAP</span><span class="fm"><div style="width: 0%"></div></span><span class="sp"></span><span class="tb lit">M</span></div>
+<span class="fj" style="left: -8px; top: 9px"></span>
+<div style="position: absolute; left: 0; right: 0; top: 33px; bottom: 0; opacity: .4"><span class="fj on" style="left: 10px; top: 9px"></span><span class="fjl" style="left: 30px; top: 11px">CLK</span></div>
+</div>
+
+<!-- full frame example -->
+<div class="lab" style="left: 840px; top: 190px">NESTED FRAMES AND A COLLAPSED ONE</div>
+<div class="fr" style="left: 840px; top: 210px; width: 520px; height: 410px; border-color: color-mix(in srgb, #d97757 40%, #3a3933); background: color-mix(in srgb, #d97757 6%, transparent)">
+<div class="fh"><span class="car"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg></span><span class="fn">TECHNO</span><span class="fm"><div style="width: 82%"></div></span><span class="sp"></span><span class="bpm">130 BPM</span></div>
+<span class="fj on" style="left: -8px; top: 9px"></span>
+<span class="fj on" style="left: 10px; top: 42px"></span><span class="fjl" style="left: 30px; top: 44px">CLK</span>
+
+<div class="fr" style="left: 16px; top: 66px; width: 486px; height: 214px; border-color: color-mix(in srgb, #d8b25e 40%, #3a3933); background: color-mix(in srgb, #d8b25e 8%, transparent)">
+<div class="fh"><span class="car"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg></span><span class="fn">DRUMS</span><span class="fm"><div style="width: 70%"></div></span><span class="sp"></span></div>
+<span class="fj on" style="left: -8px; top: 9px"></span>
+<span class="fj on" style="left: 10px; top: 42px"></span><span class="fjl" style="left: 30px; top: 44px">CLK</span>
+<div class="ms" style="left: 16px; top: 62px; width: 224px; height: 144px"><div class="ms-h">LPG 1</div><div class="ms-c" style="left: 0"></div><div class="ms-c" style="right: 0"></div><span class="mj" style="left: 8px; top: 48px; border-color: #e9e4d8"></span><span class="mj" style="left: 8px; top: 80px; border-color: #6cb4ee; border-style: dashed"></span><span class="mj" style="left: 8px; top: 112px; border-color: #f5a524; background: radial-gradient(circle,#121210 0 2.5px,#f5a524 3px)"></span><span class="mj" style="right: 8px; top: 48px; border-color: #e9e4d8; background: radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)"></span><span class="kn" style="left: 70px; top: 48px; border-top-color: #e9e4d8; border-right-color: #e9e4d8"></span><span class="kn" style="left: 126px; top: 48px; border-top-color: #e9e4d8"></span></div>
+<div class="ms" style="left: 248px; top: 62px; width: 224px; height: 144px"><div class="ms-h">NOISE 1</div><div class="ms-c" style="left: 0"></div><div class="ms-c" style="right: 0"></div><span class="mj" style="right: 8px; top: 48px; border-color: #e9e4d8; background: radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)"></span><span class="mj" style="right: 8px; top: 80px; border-color: #e9e4d8"></span><span class="kn" style="left: 70px; top: 48px; border-top-color: #e9e4d8; border-left-color: #e9e4d8"></span></div>
+</div>
+
+<div class="ms" style="left: 16px; top: 296px; width: 224px; height: 98px"><div class="ms-h">MIX 3</div><div class="ms-c" style="left: 0"></div><div class="ms-c" style="right: 0"></div><span class="mj" style="left: 8px; top: 48px; border-color: #e9e4d8; background: radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)"></span><span class="mj" style="right: 8px; top: 48px; border-color: #e9e4d8; background: radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)"></span><span class="kn" style="left: 70px; top: 48px; border-top-color: #e9e4d8"></span></div>
+</div>
+
+<div class="cb" style="left: 1390px; top: 210px; width: 170px; height: 144px; border-color: color-mix(in srgb, #8fbf80 45%, #3a3933); background: color-mix(in srgb, #8fbf80 10%, #1b1b18)">
+<div class="fh" style="position: static; padding-left: 8px"><span class="car"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M3.5 2 L6.5 5 L3.5 8"></path></svg></span><span class="fn">CLAP</span><span class="fm"><div style="width: 60%"></div></span></div>
+<div style="position: relative; flex: 1">
+<span class="mj" style="left: 8px; top: 15px; border-color: #f5a524; background: radial-gradient(circle,#121210 0 2.5px,#f5a524 3px)"></span><span class="fjl" style="left: 28px; top: 17px">CLK</span>
+<span class="mj" style="left: 8px; top: 47px; border-color: #6cb4ee"></span><span class="fjl" style="left: 28px; top: 49px">CV</span>
+<span class="mj" style="right: 8px; top: 15px; border-color: #e9e4d8; background: radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)"></span><span class="fjl" style="right: 28px; top: 17px">OUT</span>
+<span class="fjl" style="left: 8px; bottom: 10px; color: var(--muted)">4 modules</span>
+</div>
+</div>
+<div class="foot" style="left: 1390px; top: 370px; width: 170px">Collapsed: one jack per port that crosses the frame edge. Click ▸ or press C to open.</div>
+
+<!-- ══ HINT BAR ══ -->
+<div class="h2" style="left: 40px; top: 670px">Hint bar<span>a few hints for what is under the pointer; ? lists all</span></div>
+<div class="hrow" style="top: 708px"><span class="hctx">EMPTY CANVAS</span><div class="hbar"><span><b>Drag</b>select</span><span><span class="kbd">/</span>or <b>double-click</b> add module</span><span><span class="kbd">space</span>+ <b>drag</b> pan</span><span><span class="kbd">F</span>fit</span><span style="margin-left: auto"><span class="kbd">?</span>all shortcuts</span></div></div>
+<div class="hrow" style="top: 760px"><span class="hctx">MODULE</span><div class="hbar"><span class="hobj">LPG 1</span><span><b>Drag</b>move</span><span><b>Drop on a cable</b>insert</span><span><b>Double-click name</b>replace</span><span><span class="kbd">R</span>randomise</span><span><span class="kbd">G</span>frame</span><span style="margin-left: auto"><span class="kbd">?</span>all shortcuts</span></div></div>
+<div class="hrow" style="top: 812px"><span class="hctx">JACK</span><div class="hbar"><span class="hobj"><span class="dot" style="background: #e9e4d8; width: 6px; height: 6px; margin-right: 6px"></span>LPG 1 › OUT</span><span><b>Drag</b>patch</span><span><b>Drop in empty space</b>add a module</span><span><b>Click</b>listen</span><span style="margin-left: auto"><span class="kbd">?</span>all shortcuts</span></div></div>
+<div class="hrow" style="top: 864px"><span class="hctx">FRAME HEADER</span><div class="hbar"><span class="hobj">TECHNO</span><span><b>Drag</b>move the frame</span><span><b>Double-click name</b>rename</span><span><span class="kbd">C</span>collapse</span><span><span class="kbd">G</span>unframe</span><span style="margin-left: auto"><span class="kbd">?</span>all shortcuts</span></div></div>
+<div class="hrow" style="top: 916px"><span class="hctx">META-SEQ</span><div class="hbar"><span class="hobj">META-SEQ 1</span><span><b>Double-click</b>open the editor</span><span><b>Click a pad</b>off → on → tie</span><span><span class="kbd">R</span>randomise</span><span style="margin-left: auto"><span class="kbd">?</span>all shortcuts</span></div></div>
+
+<!-- ══ META-SEQ DRAWER ══ -->
+<div class="h2" style="left: 40px; top: 990px">META-SEQ editor<span>docked under the canvas, one lane per row, current step in accent</span></div>
+<div class="dr" style="top: 1026px; height: 376px">
+<span class="dr-g"></span>
+<div class="dr-h">
+<span class="dr-n">META-SEQ 1</span>
+<div class="pt" role="tablist" aria-label="Pattern"><span class="on">A</span><span class="play">B</span><span>C</span><span>D</span></div>
+<span style="font-size: 12px; color: var(--label)">editing A · playing B</span>
+<span style="width: 12px"></span>
+<span class="df">Rate <b>×4</b></span>
+<span class="df">Scale <b>MINOR</b><svg width="8" height="6" aria-hidden="true"><path class="gw" d="M1 1 L4 4.5 L7 1"></path></svg></span>
+<span class="df">Gen <b>EUCLID</b><svg width="8" height="6" aria-hidden="true"><path class="gw" d="M1 1 L4 4.5 L7 1"></path></svg></span>
+<span style="flex: 1"></span>
+<button class="ib" disabled aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path class="ico" d="M5 4 L2.5 6.5 L5 9 M2.5 6.5 h7 a3.5 3.5 0 0 1 0 7 h-2"></path></svg></button>
+<button class="ib" aria-label="Close editor"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<sc-for list="{{lanes}}" as="L" hint-placeholder-count="6">
+<div class="lane" style="{{L.h}}">
+<div class="lh"><span class="ln">{{L.name}}</span><span class="lf"><i>LEN</i>{{L.len}}</span></div>
+<div class="lg">
+<sc-for list="{{L.steps}}" as="s">
+<div class="st {{s.cls}}"><div class="v" style="{{s.v}}"></div><span class="nn">{{s.nn}}</span><span class="pc">{{s.pc}}</span><sc-if value="{{s.tie}}" hint-placeholder-val="{{false}}"><span class="tie"></span></sc-if></div>
+</sc-for>
+<sc-if value="{{L.hasMark}}" hint-placeholder-val="{{false}}"><span class="lm" style="{{L.mark}}"></span></sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1420}}'>
+var CUR = 5;
+var NOTES = ['C3','C3','D#3','G3','C3','A#2','C3','G3','C3','C3','D#3','F3','C3','A#2','G2','C3'];
+var PITCH = [0.40,0.40,0.52,0.70,0.40,0.32,0.40,0.70,0.40,0.40,0.52,0.62,0.40,0.32,0.22,0.40];
+var GATE = 'x.x-..x.x.xx-.x.';
+var ACC  = '...x.....x..';
+var VEL  = [0.9,0.4,0.7,0.7,0.5,0.4,0.8,0.5,0.9,0.4,0.6,0.7,0.6,0.4,0.8,0.5];
+var CHN  = [1,1,1,0.5,1,0.25,1,1,1,1,0.75,1,1,0.5,1,1];
+function lane(name, len, height, fn) {
+  var steps = [];
+  for (var i = 0; i < 16; i++) {
+    var s = fn(i) || {};
+    var cls = (i === CUR ? 'cur ' : '') + (i >= len ? 'ghost' : '');
+    steps.push({ cls: cls, v: s.v || 'display:none;', nn: s.nn || '', pc: s.pc || '', tie: !!s.tie });
+  }
+  var mark = len < 16 ? 'left:calc(12px + (100% - 24px + 4px) * ' + (len / 16) + ' - 4px);' : '';
+  return { name: name, len: len, h: 'height:' + height + 'px;', steps: steps, hasMark: len < 16, mark: mark };
+}
+class Component extends DCLogic {
+  renderVals() {
+    return { lanes: [
+      lane('NOTE', 16, 96, function (i) { var on = GATE[i] !== '.'; return { v: 'height:' + Math.round(PITCH[i] * 100) + '%;background:#9ad18b;opacity:' + (on ? 1 : .35) + ';', nn: NOTES[i] }; }),
+      lane('GATE', 16, 48, function (i) { return GATE[i] === '.' ? null : { v: 'top:0;background:#b9b3a6;' }; }),
+      lane('TIE', 16, 40, function (i) { return GATE[i + 1] === '-' ? { tie: true, v: 'top:0;background:#3a3933;' } : null; }),
+      lane('ACC', 12, 40, function (i) { return ACC[i] === 'x' ? { v: 'top:0;background:#f5a524;' } : null; }),
+      lane('VEL', 16, 48, function (i) { return { v: 'height:' + Math.round(VEL[i] * 100) + '%;background:#6cb4ee;opacity:.75;' }; }),
+      lane('CHNC', 8, 48, function (i) { return { v: 'height:' + Math.round(CHN[i] * 100) + '%;background:#6cb4ee;opacity:.45;', pc: CHN[i] < 1 ? Math.round(CHN[i] * 100) + '%' : '' }; })
+    ] };
+  }
+}
+</script>
+</body>
+</html>

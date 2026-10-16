@@ -108,7 +108,14 @@ of a creative tool; nothing of its UI is ported.
   and writes its trace at the block end; QUANT keeps its last snap while input, ROOT and SCALE hold. The 200-module
   patch is back to 23.2 % natively (it was 26 % after Plan 14 put QUANT into it) and ~4.4 s for 10 s in WASM.
 - **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
-- **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
+- **Next milestone (chosen 2026-10-16): the redesign and the UI / UX review leftovers.** A designer's handoff
+  (boards `docs/prototype/Redesign*.dc.html`) is written into the spec as revision 35, §1b (the visual style: two
+  faces, sentence-case chrome, shadows on floating things, new radii, `popover` / `label` / `shadow` tokens, 14 px
+  jacks, a 32 px frame header, restyled chrome, sidebar, frames and META-SEQ drawer). Two plans: **Plan 16** the new
+  style plus the small decided behaviours (frame tools on hover, the sidebar narrows the canvas, no SAVE AS / NEW in
+  LIBRARY, no empty side column); **Plan 17** the new functions (STACK stretch to the right with a wider display, 2U
+  displays for MIX / SPREAD / SWITCH / ATT, context hints and `?`, menu item descriptions, the save dialog, a LIMIT
+  lamp, truncated text). **Next:** write Plan 16.
 
 ## The road (vertical slices: something to hear at every stage)
 

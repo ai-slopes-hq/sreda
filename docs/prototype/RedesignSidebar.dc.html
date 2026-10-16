@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SREDA redesign — sidebar tabs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sb-root{position:relative;width:1640px;height:1080px;overflow:hidden;background-color:#121210;background-image:radial-gradient(circle,#26251f 1px,transparent 1.5px);background-size:24px 24px;color:#ece7db;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.cap{position:absolute;width:360px}
+.cap-t{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.2em;color:#8f897c}
+.cap-d{margin-top:6px;font-size:13px;line-height:19px;color:#a59f92}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.gw{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;box-sizing:border-box}
+.dot.nrm{background:transparent;border:1.5px dashed}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border:1px solid #3d3b34;border-bottom-width:2px;border-radius:4px;font:500 10px 'IBM Plex Mono',monospace;color:#a59f92;background:#161614}
+.ib{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:6px;color:#a59f92;padding:0;cursor:pointer;flex:none}
+/* sidebar shell */
+.side{position:absolute;display:flex;flex-direction:column;background:#1a1916;border:1px solid #2f2d28;border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.45);box-sizing:border-box;overflow:hidden}
+.sd-h{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px 0 12px;flex:none}
+.stabs{flex:1;display:flex;gap:2px;padding:3px;background:#121210;border:1px solid #2a2924;border-radius:9px}
+.stabs button{flex:1;height:28px;background:none;border:0;border-radius:6px;color:#a59f92;font:500 12.5px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.stabs button.on{background:#2f2e29;color:#ece7db;box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.fld{display:flex;align-items:center;gap:8px;height:34px;margin:0 12px 6px;padding:0 10px;background:#121210;border:1px solid #34322c;border-radius:8px;color:#8f897c;flex:none}
+.fld input{flex:1;min-width:0;background:none;border:0;outline:none;color:#ece7db;font:400 13px 'IBM Plex Sans',sans-serif;padding:0}
+.fld input::placeholder{color:#8f897c}
+.chips{display:flex;gap:6px;padding:4px 12px 10px;border-bottom:1px solid #2a2924;flex:none}
+.chip{height:26px;display:flex;align-items:center;gap:6px;padding:0 10px;background:none;border:1px solid #34322c;border-radius:13px;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.chip.on{background:#2c2b26;border-color:#4a473f;color:#ece7db}
+.chip .n{color:#8f897c}
+.sd-b{flex:1;overflow:hidden;padding:6px 8px 12px}
+.sd-f{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid #2a2924;font-size:12px;color:#8f897c;flex:none}
+.sd-f span{display:flex;align-items:center;gap:6px}
+.sec{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;background:none;border:0;color:#a59f92;font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-align:left;cursor:pointer;margin-top:6px}
+.sec .n{margin-left:auto;font-weight:500;color:#8f897c;letter-spacing:0}
+/* wires */
+.wr{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) auto 24px;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;border-radius:7px;font:500 11px 'IBM Plex Mono',monospace;color:#ece7db}
+.wr.hl{background:#24231f;box-shadow:inset 2px 0 0 #f5a524}
+.wp{display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden}
+.wp .m{color:#a59f92}
+.wv{height:22px;line-height:22px;padding:0 7px;border-radius:5px;background:#121210;border:1px solid #2f2d28;font-size:10.5px;color:#ece7db}
+.wx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:5px;color:#8f897c;padding:0;opacity:0}
+.wr.hl .wx{opacity:1}
+.add{display:flex;align-items:center;gap:8px;height:30px;margin:4px 4px 0;padding:0 10px;background:none;border:1px dashed #3a3832;border-radius:7px;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;width:calc(100% - 8px);box-sizing:border-box}
+.nr{display:flex;gap:9px;padding:6px 8px 6px 12px;font:500 11px/16px 'IBM Plex Mono',monospace;color:#ece7db}
+.nr .dot{margin-top:4px}
+.nr .nd{font:400 12px/16px 'IBM Plex Sans',sans-serif;color:#a59f92}
+.ok{display:flex;align-items:center;gap:8px;margin:12px 8px 0;font-size:12px;color:#8f897c}
+/* mix */
+.strip{margin:8px 4px 0;padding:12px 12px 14px;background:#1f1e1b;border:1px solid #2f2d28;border-radius:10px;display:flex;flex-direction:column;gap:12px}
+.strip.master{background:#22211d;border-color:#3a3832}
+.st-h{display:flex;align-items:center;gap:8px}
+.st-n{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em}
+.st-s{font-size:12px;color:#8f897c}
+.ms{margin-left:auto;display:flex;gap:4px}
+.ms button{width:30px;height:28px;background:#121210;border:1px solid #3a3832;border-radius:6px;color:#a59f92;font:600 10.5px 'IBM Plex Mono',monospace;padding:0;cursor:pointer}
+.ms button.on{background:#e9e4d8;border-color:#e9e4d8;color:#121210}
+.fd{display:flex;align-items:center;gap:12px}
+.fd-t{position:relative;flex:1;height:6px;border-radius:3px;background:#2a2924}
+.fd-f{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:#e9e4d8}
+.fd-k{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#ece7db;box-shadow:0 0 0 3px #1f1e1b,0 2px 6px rgba(0,0,0,.5)}
+.fd-v{width:44px;text-align:right;font:500 11px 'IBM Plex Mono',monospace;color:#ece7db}
+.mt{display:flex;flex-direction:column;gap:3px}
+.mt-b{position:relative;height:4px;border-radius:2px;background:#24231f;overflow:hidden}
+.mt-b div{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#e9e4d8}
+.mt-b i{position:absolute;top:0;bottom:0;width:2px;background:#ece7db}
+.mt-s{display:flex;justify-content:space-between;font:500 9px 'IBM Plex Mono',monospace;color:#77716a;margin-top:2px}
+.lamp{display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #34322c;border-radius:11px;font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#8f897c}
+.empty{margin:14px 8px 0;padding:14px;border:1px dashed #34322c;border-radius:10px;font-size:12.5px;line-height:18px;color:#a59f92}
+.empty b{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#ece7db}
+/* library */
+.lr{display:flex;align-items:center;gap:8px;height:28px;padding:0 10px 0 12px;border-radius:7px;font:500 12px 'IBM Plex Mono',monospace;color:#ece7db;white-space:nowrap}
+.lr .f{color:#8f897c}
+.lr.on{background:#2c2b26}
+.lr.hl{background:#24231f}
+.lr .r{margin-left:auto;color:#8f897c;display:flex;align-items:center;gap:6px;font:400 11.5px 'IBM Plex Sans',sans-serif}
+.more{display:flex;align-items:center;height:28px;padding:0 12px;background:none;border:0;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.sbtn{margin-left:auto;height:24px;display:flex;align-items:center;gap:6px;padding:0 9px;background:none;border:1px solid #3a3832;border-radius:6px;color:#ece7db;font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:0;cursor:pointer}
+/* settings */
+.sk{display:flex;align-items:center;gap:12px;margin:0 4px 6px;padding:8px 10px 8px 8px;border:1px solid transparent;border-radius:10px}
+.sk.on{background:#24231f;border-color:#4a473f}
+.sk.hl{background:#1f1e1b;border-color:#2f2d28}
+.tile{position:relative;width:76px;height:44px;border-radius:7px;flex:none;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
+.tile .p{position:absolute;left:9px;top:9px;width:46px;height:26px;border-radius:4px}
+.tile .t{position:absolute;left:15px;top:15px;width:22px;height:3px;border-radius:2px}
+.tile .rd{position:absolute;top:24px;width:5px;height:5px;border-radius:50%}
+.sk-n{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em}
+.sk-d{font-size:12px;color:#8f897c;margin-top:3px}
+.sk-r{margin-left:auto;color:#ece7db}
+</style>
+</helmet>
+<div class="sb-root">
+
+<div style="position: absolute; left: 40px; top: 36px; width: 1200px">
+<div class="mono" style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 10px 0 0; font-size: 28px; font-weight: 600">Sidebar: four tabs</h1>
+<div style="margin-top: 6px; font-size: 14px; color: #a59f92">One shell, one active-tab look, close on the right. Shown with FACTORY/pulse. The open sidebar narrows the canvas instead of covering it.</div>
+</div>
+
+<div class="cap" style="left: 40px; top: 140px"><div class="cap-t">WIRES · W</div><div class="cap-d">Full names on both ends. Normals wrap to two lines instead of being cut. Empty sections hide.</div></div>
+<div class="cap" style="left: 440px; top: 140px"><div class="cap-t">MIX · M</div><div class="cap-d">Strips lie flat, so a narrow sidebar fits them. MASTER stays pinned at the bottom.</div></div>
+<div class="cap" style="left: 840px; top: 140px"><div class="cap-t">LIBRARY</div><div class="cap-d">One filter for all three sections. No SAVE AS / NEW here: saving lives in the top bar.</div></div>
+<div class="cap" style="left: 1240px; top: 140px"><div class="cap-t">SETTINGS</div><div class="cap-d">Each skin as a small preview of ground, panel and the four role colours. Hover tries it on.</div></div>
+
+<!-- ── WIRES ── -->
+<aside class="side" style="left: 40px; top: 200px; width: 360px; height: 840px" aria-label="Sidebar: wires">
+<div class="sd-h">
+<div class="stabs" role="tablist"><button class="on" role="tab" aria-selected="true">Wires</button><button role="tab">Mix</button><button role="tab">Library</button><button role="tab">Settings</button></div>
+<button class="ib" aria-label="Close sidebar"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<label class="fld"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle class="ico" cx="7" cy="7" r="4.5"></circle><path class="ico" d="M10.5 10.5 l3 3"></path></svg><input placeholder="Filter by module or port" aria-label="Filter wires"></label>
+<div class="chips"><button class="chip on">All <span class="n">9</span></button><button class="chip">Selection</button></div>
+<div class="sd-b">
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>UNGROUPED<span class="n">9</span></button>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OSC 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #f5a524"></span><span class="m">LPG 1 ›</span>PING</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OSC 2 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">LPG 1 ›</span>IN</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr hl"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OSC 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #f5a524"></span><span class="m">LPG 2 ›</span>PING</span><span class="wv" style="color: #f5a524">×2</span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">NOISE ›</span>WHT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">LPG 2 ›</span>IN</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">LPG 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">MIX ›</span>A</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">LPG 2 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">MIX ›</span>B</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">MIX ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OUT ›</span>L</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">MIX ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">SCOPE ›</span>A</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OSC 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">SCOPE ›</span>B</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<button class="add"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M7 2.5 v9 M2.5 7 h9"></path></svg>New wire</button>
+
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>NORMALS<span class="n">3</span></button>
+<div class="nr"><span class="dot nrm" style="border-color: #6cb4ee"></span><div>LPG 1 › CV <span style="color: #77716a">←</span> PING env<div class="nd">or 1 while PING is unpatched</div></div></div>
+<div class="nr"><span class="dot nrm" style="border-color: #6cb4ee"></span><div>LPG 2 › CV <span style="color: #77716a">←</span> PING env<div class="nd">or 1 while PING is unpatched</div></div></div>
+<div class="nr"><span class="dot nrm" style="border-color: #e9e4d8"></span><div>OUT › R <span style="color: #77716a">←</span> L<div class="nd">until something is patched into R</div></div></div>
+
+<div class="ok"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7.5 l2.5 2.5 l5.5 -6"></path></svg>No problems</div>
+</div>
+<div class="sd-f"><span>9 wires · 8 modules</span><span>all cables drawn</span></div>
+</aside>
+
+<!-- ── MIX ── -->
+<aside class="side" style="left: 440px; top: 200px; width: 360px; height: 840px" aria-label="Sidebar: mix">
+<div class="sd-h">
+<div class="stabs" role="tablist"><button role="tab">Wires</button><button class="on" role="tab" aria-selected="true">Mix</button><button role="tab">Library</button><button role="tab">Settings</button></div>
+<button class="ib" aria-label="Close sidebar"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<div class="sd-b" style="padding-top: 0">
+<button class="sec" style="margin-top: 0"><span>OUTPUTS</span><span class="n">1</span></button>
+<div class="strip">
+<div class="st-h"><span class="st-n">OUT</span><span class="st-s">from MIX</span><div class="ms"><button aria-label="Mute OUT">M</button><button aria-label="Solo OUT">S</button></div></div>
+<div class="fd" role="slider" aria-label="OUT level" aria-valuenow="70"><div class="fd-t"><div class="fd-f" style="width: 70%"></div><div class="fd-k" style="left: 70%"></div></div><span class="fd-v">0.70</span></div>
+<div class="mt">
+<div class="mt-b"><div style="width: 58%"></div><i style="left: 66%"></i></div>
+<div class="mt-b"><div style="width: 54%"></div><i style="left: 63%"></i></div>
+<div class="mt-s"><span>−48</span><span>−24</span><span>−12</span><span>−6</span><span>0 dB</span></div>
+</div>
+</div>
+<div class="empty">One strip per <b>OUT</b> module. Add another OUT to give a voice its own strip, mute and solo.</div>
+</div>
+<div style="padding: 0 8px 8px">
+<div class="strip master" style="margin: 0">
+<div class="st-h"><span class="st-n">MASTER</span><span class="lamp" style="margin-left: auto"><span class="dot" style="width: 6px; height: 6px; background: #3a3832"></span>LIMIT</span></div>
+<div class="fd" role="slider" aria-label="Master level" aria-valuenow="100"><div class="fd-t"><div class="fd-f" style="width: 100%"></div><div class="fd-k" style="left: 100%"></div></div><span class="fd-v">1.00</span></div>
+<div class="mt">
+<div class="mt-b"><div style="width: 62%"></div><i style="left: 70%"></i></div>
+<div class="mt-b"><div style="width: 60%"></div><i style="left: 68%"></i></div>
+<div class="mt-s"><span>−48</span><span>−24</span><span>−12</span><span>−6</span><span>0 dB</span></div>
+</div>
+</div>
+</div>
+<div class="sd-f"><span>after the limiter</span><span><span class="kbd">M</span></span></div>
+</aside>
+
+<!-- ── LIBRARY ── -->
+<aside class="side" style="left: 840px; top: 200px; width: 360px; height: 840px" aria-label="Sidebar: library">
+<div class="sd-h">
+<div class="stabs" role="tablist"><button role="tab">Wires</button><button role="tab">Mix</button><button class="on" role="tab" aria-selected="true">Library</button><button role="tab">Settings</button></div>
+<button class="ib" aria-label="Close sidebar"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<label class="fld"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle class="ico" cx="7" cy="7" r="4.5"></circle><path class="ico" d="M10.5 10.5 l3 3"></path></svg><input placeholder="Filter projects, groups, samples" aria-label="Filter library"></label>
+<div class="sd-b" style="border-top: 1px solid #2a2924; margin-top: 4px">
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>PROJECTS<span class="n">10</span></button>
+<div class="lr"><span class="f">FACTORY ·</span>acid</div>
+<div class="lr"><span class="f">FACTORY ·</span>ambient bells</div>
+<div class="lr"><span class="f">FACTORY ·</span>drone</div>
+<div class="lr"><span class="f">FACTORY ·</span>dub</div>
+<div class="lr"><span class="f">FACTORY ·</span>generative</div>
+<div class="lr"><span class="f">FACTORY ·</span>polymeter</div>
+<div class="lr on"><span class="f">FACTORY ·</span>pulse<span class="r"><span class="dot" style="width: 6px; height: 6px; background: #f5a524"></span>open</span></div>
+<div class="lr"><span class="f">FACTORY ·</span>ratchet</div>
+<div class="lr"><span class="f">FACTORY ·</span>self-clocked</div>
+<div class="lr"><span class="f">FACTORY ·</span>techno</div>
+
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>GROUPS<span class="n">17</span></button>
+<div class="lr"><span class="f">FACTORY ·</span>303 voice</div>
+<div class="lr"><span class="f">FACTORY ·</span>bleep-bloop</div>
+<div class="lr hl"><span class="f">FACTORY ·</span>chaotic bells<span class="r">drag to canvas<svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><circle cx="3" cy="3" r="1.1" fill="currentColor"></circle><circle cx="7" cy="3" r="1.1" fill="currentColor"></circle><circle cx="3" cy="7" r="1.1" fill="currentColor"></circle><circle cx="7" cy="7" r="1.1" fill="currentColor"></circle><circle cx="3" cy="11" r="1.1" fill="currentColor"></circle><circle cx="7" cy="11" r="1.1" fill="currentColor"></circle></svg></span></div>
+<div class="lr"><span class="f">FACTORY ·</span>clap</div>
+<div class="lr"><span class="f">FACTORY ·</span>complex vco</div>
+<div class="lr"><span class="f">FACTORY ·</span>drone</div>
+<div class="lr"><span class="f">FACTORY ·</span>fm bass</div>
+<button class="more">Show all 17</button>
+
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>SAMPLES<span class="n" style="margin-left: 6px">0</span><span class="sbtn"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M7 2.5 v7 M4 6.5 l3 3 l3 -3 M2.5 11.5 h9"></path></svg>Import</span></button>
+<div class="empty" style="margin-top: 4px">No samples yet. Import WAV files or drop them here; hover a sample to hear it.</div>
+</div>
+</aside>
+
+<!-- ── SETTINGS ── -->
+<aside class="side" style="left: 1240px; top: 200px; width: 360px; height: 840px" aria-label="Sidebar: settings">
+<div class="sd-h">
+<div class="stabs" role="tablist"><button role="tab">Wires</button><button role="tab">Mix</button><button role="tab">Library</button><button class="on" role="tab" aria-selected="true">Settings</button></div>
+<button class="ib" aria-label="Close sidebar"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<div class="sd-b" style="padding-top: 0">
+<button class="sec" style="margin-top: 0; margin-bottom: 4px"><span>SKIN</span><span class="n">6</span></button>
+
+<div class="sk on">
+<div class="tile" style="background: #121210"><div class="p" style="background: #1b1b18"></div><div class="t" style="background: #e9e4d8"></div><span class="rd" style="left: 15px; background: #e9e4d8"></span><span class="rd" style="left: 23px; background: #6cb4ee"></span><span class="rd" style="left: 31px; background: #9ad18b"></span><span class="rd" style="left: 39px; background: #f5a524"></span></div>
+<div><div class="sk-n">DEFAULT</div><div class="sk-d">Warm graphite</div></div>
+<svg class="sk-r" width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7.5 l2.5 2.5 l5.5 -6"></path></svg>
+</div>
+<div class="sk">
+<div class="tile" style="background: #18211f"><div class="p" style="background: #212d2b"></div><div class="t" style="background: #d4ddd7"></div><span class="rd" style="left: 15px; background: #30da98"></span><span class="rd" style="left: 23px; background: #1e7fff"></span><span class="rd" style="left: 31px; background: #fcdd14"></span><span class="rd" style="left: 39px; background: #ff5230"></span></div>
+<div><div class="sk-n">ANNABIOSIS</div><div class="sk-d">Deep green, neon roles</div></div>
+</div>
+<div class="sk hl">
+<div class="tile" style="background: #1f1f28"><div class="p" style="background: #2a2a37"></div><div class="t" style="background: #dcd7ba"></div><span class="rd" style="left: 15px; background: #7fb4ca"></span><span class="rd" style="left: 23px; background: #957fb8"></span><span class="rd" style="left: 31px; background: #98bb6c"></span><span class="rd" style="left: 39px; background: #ff9e3b"></span></div>
+<div><div class="sk-n">KANAGAWA</div><div class="sk-d">Previewing — click to keep</div></div>
+</div>
+<div class="sk">
+<div class="tile" style="background: #1c1c1c"><div class="p" style="background: #333333"></div><div class="t" style="background: #e0e0e0"></div><span class="rd" style="left: 15px; background: #63b35b"></span><span class="rd" style="left: 23px; background: #8e5fc7"></span><span class="rd" style="left: 31px; background: #4f8fd6"></span><span class="rd" style="left: 39px; background: #d0508f"></span></div>
+<div><div class="sk-n">TOUCH</div><div class="sk-d">Neutral grey</div></div>
+</div>
+<div class="sk">
+<div class="tile" style="background: #2e3440"><div class="p" style="background: #3b4252"></div><div class="t" style="background: #eceff4"></div><span class="rd" style="left: 15px; background: #88c0d0"></span><span class="rd" style="left: 23px; background: #b48ead"></span><span class="rd" style="left: 31px; background: #a3be8c"></span><span class="rd" style="left: 39px; background: #d08770"></span></div>
+<div><div class="sk-n">NORD</div><div class="sk-d">Cool slate</div></div>
+</div>
+<div class="sk">
+<div class="tile" style="background: #1a1b26"><div class="p" style="background: #24283b"></div><div class="t" style="background: #c0caf5"></div><span class="rd" style="left: 15px; background: #7dcfff"></span><span class="rd" style="left: 23px; background: #bb9af7"></span><span class="rd" style="left: 31px; background: #9ece6a"></span><span class="rd" style="left: 39px; background: #f7768e"></span></div>
+<div><div class="sk-n">TOKYO NIGHT</div><div class="sk-d">Indigo night</div></div>
+</div>
+</div>
+<div class="sd-f"><span>Skins change colour only</span></div>
+</aside>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1640,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SREDA redesign — screen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.rs-root{position:relative;width:1440px;height:900px;overflow:hidden;background-color:#121210;background-image:radial-gradient(circle,#26251f 1px,transparent 1.5px);background-size:24px 24px;color:#ece7db;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+/* module */
+.md{position:absolute;display:flex;flex-direction:column;background:#1c1b18;border:1px solid #2f2d28;border-radius:8px;box-shadow:0 1px 0 rgba(255,255,255,.035) inset,0 8px 20px rgba(0,0,0,.35);box-sizing:border-box;overflow:hidden}
+.md.sel{border-color:#7d776b;box-shadow:0 0 0 3px rgba(233,228,216,.07),0 8px 20px rgba(0,0,0,.4)}
+.md-h{height:32px;flex:none;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 12px;border-bottom:1px solid #2a2924;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em}
+.md-h .md-sub{font:400 11px 'IBM Plex Sans',sans-serif;letter-spacing:0;color:#8f897c}
+.md-b{flex:1;display:flex}
+.pc{width:56px;flex:none;box-sizing:border-box;padding:6px 0 0 8px;background:#181715;display:flex;flex-direction:column}
+.pc.out{padding:6px 8px 0 0;align-items:flex-end}
+.ctl{flex:1;display:flex;flex-direction:column;padding-top:6px}
+.krow{height:64px;display:flex}
+.mstrip{height:32px;display:flex;align-items:center;gap:8px;padding:0 4px}
+.mstrip .op{position:static}
+.ln{height:32px;display:flex;align-items:center;gap:6px}
+.pc.out .ln{flex-direction:row-reverse}
+.pls{display:flex;flex-direction:column;gap:2px}
+.pc.out .pls{align-items:flex-end}
+.pl{font:500 9.5px/10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#a59f92}
+.pf{font:500 10px/10px 'IBM Plex Mono',monospace}
+.lv{height:3px;border-radius:2px}
+.j{width:14px;height:14px;flex:none;border-radius:50%;border:2px solid;box-sizing:border-box;background:#121210}
+.j.nrm{border-style:dashed}
+.ja{border-color:#e9e4d8}.jm{border-color:#6cb4ee}.jp{border-color:#9ad18b}.jt{border-color:#f5a524}
+.ja.on{background:radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)}
+.jm.on{background:radial-gradient(circle,#121210 0 2.5px,#6cb4ee 3px)}
+.jp.on{background:radial-gradient(circle,#121210 0 2.5px,#9ad18b 3px)}
+.jt.on{background:radial-gradient(circle,#121210 0 2.5px,#f5a524 3px)}
+.cells{flex:1;display:grid;grid-template-columns:repeat(2,56px);grid-auto-rows:64px;padding-top:8px}
+.cells.c3{grid-template-columns:repeat(3,56px)}
+.cells.c1{grid-template-columns:repeat(1,56px)}
+.cl{position:relative;width:56px;height:64px}
+.cl svg{display:block}
+.mj{position:absolute;left:5px;top:3px;width:9px;height:9px;border-radius:50%;border:1.5px solid #6cb4ee;box-sizing:border-box;opacity:.55}
+.mj.on{background:#6cb4ee;opacity:1}
+.cl-l{position:absolute;left:0;right:0;top:43px;text-align:center;font:500 9px/10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#a59f92}
+.cl-v{position:absolute;left:0;right:0;top:54px;text-align:center;font:500 10px/10px 'IBM Plex Mono',monospace;color:#ece7db}
+.kt{fill:none;stroke:#2f2e29;stroke-width:3;stroke-linecap:round}
+.ka{fill:none;stroke:#e9e4d8;stroke-width:3;stroke-linecap:round}
+.kr{fill:none;stroke:#6cb4ee;stroke-width:2;stroke-opacity:.5;stroke-linecap:round}
+.kb{fill:#262520;stroke:#3a3832;stroke-width:1}
+.kp{stroke:#ece7db;stroke-width:1.8;stroke-linecap:round}
+.kd{fill:#6cb4ee}
+.op{position:absolute;left:4px;top:10px;width:48px;height:24px;display:flex;align-items:center;justify-content:center;gap:3px;background:#121210;border:1px solid #3a3832;border-radius:6px;color:#ece7db;font:500 9.5px 'IBM Plex Mono',monospace;padding:0;box-sizing:border-box}
+.op.on{background:#e9e4d8;border-color:#e9e4d8;color:#121210}
+.gw{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}
+/* cables */
+.cbs{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.cu{fill:none;stroke:#0b0b0a;stroke-width:6;stroke-opacity:.55;stroke-linecap:round}
+.cc{fill:none;stroke-width:2.5;stroke-linecap:round}
+.cg{fill:none;stroke:#f5a524;stroke-width:1.6;stroke-dasharray:4 5;stroke-linecap:round}
+.ctag{position:absolute;display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;background:#1f1e1b;border:1px solid #34322c;border-radius:6px;font:500 10px 'IBM Plex Mono',monospace;color:#ece7db;box-shadow:0 4px 12px rgba(0,0,0,.4);white-space:nowrap}
+.ctag .mut{color:#8f897c}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+/* chrome */
+.bar{position:absolute;display:flex;align-items:center;gap:4px;height:40px;padding:0 4px;background:rgba(28,27,24,.92);border:1px solid #2f2d28;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);box-sizing:border-box}
+.brand{padding:0 14px 0 12px;gap:10px}
+.b-name{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.3em;color:#ece7db}
+.b-proj{font-size:13px;color:#ece7db}
+.b-state{font-size:12px;color:#8f897c;display:flex;align-items:center;gap:6px}
+.vdiv{width:1px;height:20px;background:#34322c;margin:0 4px}
+.tbb{height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:none;border:0;border-radius:7px;color:#ece7db;font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.tbb.on{background:#2c2b26}
+.tbb svg,.ib svg{flex:none}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border:1px solid #3d3b34;border-bottom-width:2px;border-radius:4px;font:500 10px 'IBM Plex Mono',monospace;color:#a59f92;background:#161614}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.listen{position:absolute;display:flex;align-items:center;gap:10px;height:36px;padding:0 6px 0 14px;background:#1f1e1b;border:1px solid #e9e4d8;border-radius:18px;font-size:13px;color:#ece7db;box-sizing:border-box;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.listen b{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em}
+.ib{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:6px;color:#a59f92;padding:0;cursor:pointer}
+.ib.on{background:#2c2b26;color:#ece7db}
+.hint{position:absolute;display:flex;align-items:center;gap:16px;font-size:12px;color:#8f897c}
+.hint span{display:flex;align-items:center;gap:6px}
+.zoom{position:absolute;display:flex;align-items:center;gap:2px;height:36px;padding:0 4px;background:rgba(28,27,24,.92);border:1px solid #2f2d28;border-radius:9px;box-sizing:border-box}
+.zoom span{width:48px;text-align:center;font:500 11px 'IBM Plex Mono',monospace;color:#a59f92}
+/* popover */
+.pop{position:absolute;display:flex;flex-direction:column;background:#1f1e1b;border:1px solid #3a3832;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);overflow:hidden}
+.pop-s{display:flex;align-items:center;gap:10px;height:46px;padding:0 12px 0 14px;border-bottom:1px solid #2f2d28;color:#8f897c}
+.pop-s input{flex:1;min-width:0;background:none;border:0;outline:none;color:#ece7db;font:400 14px 'IBM Plex Sans',sans-serif;padding:0}
+.pop-s input::placeholder{color:#8f897c}
+.ctx{display:flex;align-items:center;gap:8px;padding:10px 14px 4px;font-size:12px;color:#a59f92}
+.ctx b{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#ece7db}
+.ctx .r{margin-left:auto;color:#8f897c}
+.seg{display:flex;gap:2px;margin:8px 10px 6px;padding:3px;background:#161614;border-radius:8px}
+.seg button{flex:1;height:26px;background:none;border:0;border-radius:6px;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg button.on{background:#2f2e29;color:#ece7db;box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.seg .n{font:500 10px 'IBM Plex Mono',monospace;color:#8f897c}
+.lst{display:flex;flex-direction:column;padding:2px 6px 6px}
+.it{display:flex;align-items:center;gap:12px;height:48px;padding:0 10px;background:none;border:0;border-radius:8px;color:#ece7db;text-align:left;cursor:pointer}
+.it.on{background:#2c2b26;box-shadow:inset 2px 0 0 #f5a524}
+.it-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.it-n{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.it-d{font-size:12px;color:#a59f92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it-p{display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #34322c;border-radius:11px;font:500 10px 'IBM Plex Mono',monospace;color:#a59f92;white-space:nowrap}
+.pop-f{display:flex;gap:14px;align-items:center;height:36px;padding:0 14px;border-top:1px solid #2f2d28;font-size:11px;color:#8f897c;background:#1b1a17}
+.pop-f span{display:flex;align-items:center;gap:5px}
+/* sidebar */
+.side{position:absolute;display:flex;flex-direction:column;background:#1a1916;border:1px solid #2f2d28;border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.45);box-sizing:border-box;overflow:hidden}
+.stabs{flex:1;display:flex;gap:2px;padding:3px;background:#121210;border:1px solid #2a2924;border-radius:9px}
+.stabs button{flex:1;height:28px;background:none;border:0;border-radius:6px;color:#a59f92;font:500 12.5px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.stabs button.on{background:#2f2e29;color:#ece7db;box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.wr .wp .m{color:#a59f92}
+.nr{display:flex;gap:9px;padding:7px 8px 7px 12px;font:500 11px/16px 'IBM Plex Mono',monospace;color:#ece7db}
+.nr .nd{font:400 12px/16px 'IBM Plex Sans',sans-serif;color:#a59f92}
+.ok{display:flex;align-items:center;gap:8px;margin:10px 8px 0;font-size:12px;color:#8f897c}
+.sd-h{display:flex;align-items:center;gap:8px;height:52px;padding:0 10px 0 16px;flex:none}
+.sd-h h2{margin:0;font:600 15px 'IBM Plex Sans',sans-serif;color:#ece7db}
+.sd-h .cnt{font:500 11px 'IBM Plex Mono',monospace;color:#8f897c;padding:2px 7px;border-radius:9px;background:#24231f}
+.fld{display:flex;align-items:center;gap:8px;height:34px;margin:0 12px 6px;padding:0 10px;background:#121210;border:1px solid #34322c;border-radius:8px;color:#8f897c}
+.fld input{flex:1;min-width:0;background:none;border:0;outline:none;color:#ece7db;font:400 13px 'IBM Plex Sans',sans-serif;padding:0}
+.fld input::placeholder{color:#8f897c}
+.chips{display:flex;gap:6px;padding:4px 12px 10px;border-bottom:1px solid #2a2924}
+.chip{height:26px;display:flex;align-items:center;gap:6px;padding:0 10px;background:none;border:1px solid #34322c;border-radius:13px;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.chip.on{background:#2c2b26;border-color:#4a473f;color:#ece7db}
+.sd-b{flex:1;overflow:hidden;padding:6px 8px 12px}
+.sec{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;background:none;border:0;color:#a59f92;font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-align:left;cursor:pointer;margin-top:6px}
+.sec .n{margin-left:auto;font-weight:500;color:#8f897c;letter-spacing:0}
+.note{display:flex;gap:10px;margin:0 4px 4px;padding:10px 12px;background:rgba(245,165,36,.07);border:1px solid rgba(245,165,36,.25);border-radius:8px}
+.note-t{font-size:12.5px;color:#ece7db;line-height:17px}
+.note-s{font-size:12px;color:#a59f92;line-height:16px;margin-top:2px}
+.wr{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) auto 24px;align-items:center;gap:6px;height:36px;padding:0 6px 0 12px;border-radius:7px;font:500 11px 'IBM Plex Mono',monospace;color:#ece7db}
+.wr.hl{background:#24231f;box-shadow:inset 2px 0 0 #f5a524}
+.wp{display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden}
+.wp .m{color:#8f897c}
+.wv{height:22px;line-height:22px;padding:0 7px;border-radius:5px;background:#121210;border:1px solid #2f2d28;font-size:10.5px;color:#ece7db;text-align:right}
+.wx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:5px;color:#8f897c;padding:0;opacity:0}
+.wr.hl .wx{opacity:1}
+.add{display:flex;align-items:center;gap:8px;height:30px;margin:4px 4px 0;padding:0 10px;background:none;border:1px dashed #3a3832;border-radius:7px;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;width:calc(100% - 8px);box-sizing:border-box}
+.sd-f{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid #2a2924;font-size:12px;color:#8f897c}
+</style>
+</helmet>
+<div class="rs-root">
+
+<!-- ── modules ── -->
+<div class="md" style="left: 96px; top: 132px; width: 280px; height: 144px">
+<div class="md-h"><span>OSC 1</span></div>
+<div class="md-b">
+<div class="pc">
+<div class="ln"><span class="j jp"></span><span class="pl">PTCH</span></div>
+<div class="ln"><span class="j ja"></span><span class="pl">FM</span></div>
+<div class="ln"><span class="j jt"></span><span class="pl">SYNC</span></div>
+</div>
+<div class="ctl">
+<div class="krow">
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.freq.track}}"></path><path class="ka" d="{{K.freq.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.freq.px}}" y2="{{K.freq.py}}"></line></svg><span class="mj"></span><span class="cl-l">FREQ</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.pw.track}}"></path><path class="ka" d="{{K.pw.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.pw.px}}" y2="{{K.pw.py}}"></line></svg><span class="mj"></span><span class="cl-l">PW</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.fm.track}}"></path><path class="ka" d="{{K.fm.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.fm.px}}" y2="{{K.fm.py}}"></line></svg><span class="mj"></span><span class="cl-l">FM</span></div>
+</div>
+<div class="mstrip"><button class="op" aria-label="Wave: saw" style="width: 48px"><svg width="22" height="10" aria-hidden="true"><path class="gw" d="M1 9 L8 1 L8 9 L15 1 L15 9 L21 3"></path></svg><svg width="6" height="5" aria-hidden="true"><path class="gw" d="M1 1 L3 3.5 L5 1"></path></svg></button></div>
+</div>
+<div class="pc out">
+<div class="ln"><span class="j ja on"></span><span class="pls"><span class="pl">OUT</span><span class="lv" style="width: 18px; background: #e9e4d8"></span></span></div>
+</div>
+</div>
+</div>
+
+<div class="md sel" style="left: 440px; top: 168px; width: 224px; height: 144px">
+<div class="md-h"><span>LPG 1</span></div>
+<div class="md-b">
+<div class="pc">
+<div class="ln"><span class="j ja on"></span><span class="pl">IN</span></div>
+<div class="ln"><span class="j jm on"></span><span class="pls"><span class="pl">CV</span><span class="pf" style="color: #6cb4ee">0.60</span></span></div>
+<div class="ln"><span class="j jt on"></span><span class="pls"><span class="pl">PING</span><span class="pf" style="color: #f5a524">×2</span></span></div>
+</div>
+<div class="ctl">
+<div class="krow">
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.lvl.track}}"></path><path class="ka" d="{{K.lvl.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.lvl.px}}" y2="{{K.lvl.py}}"></line></svg><span class="mj"></span><span class="cl-l">LVL</span><span class="cl-v">1.00</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.dec.track}}"></path><path class="kr" d="{{K.dec.ring}}"></path><path class="ka" d="{{K.dec.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.dec.px}}" y2="{{K.dec.py}}"></line><circle class="kd" cx="{{K.dec.dx}}" cy="{{K.dec.dy}}" r="2.4"></circle></svg><span class="mj on"></span><span class="cl-l">DEC</span><span class="cl-v" style="color: #6cb4ee">400ms</span></div>
+</div>
+<div class="mstrip"><button class="op" style="width: 104px" aria-label="Mode: both" aria-haspopup="listbox">BOTH<svg width="8" height="6" aria-hidden="true"><path class="gw" d="M1 1 L4 4.5 L7 1"></path></svg></button></div>
+</div>
+<div class="pc out">
+<div class="ln"><span class="j ja on"></span><span class="pls"><span class="pl">OUT</span><span class="lv" style="width: 24px; background: #e9e4d8"></span></span></div>
+</div>
+</div>
+</div>
+
+<div class="md" style="left: 760px; top: 150px; width: 112px; height: 144px">
+<div class="md-h"><span>OUT</span></div>
+<div class="md-b">
+<div class="pc">
+<div class="ln"><span class="j ja on"></span><span class="pl">L</span></div>
+<div class="ln"><span class="j ja nrm"></span><span class="pl">R</span></div>
+</div>
+<div class="ctl">
+<div class="krow">
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.vol.track}}"></path><path class="ka" d="{{K.vol.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.vol.px}}" y2="{{K.vol.py}}"></line></svg><span class="mj"></span><span class="cl-l">LVL</span></div>
+</div>
+<div class="mstrip" style="flex-direction: column; justify-content: center; align-items: stretch; gap: 3px; padding: 0 8px 0 4px">
+<div style="height: 3px; border-radius: 2px; background: #24231f; overflow: hidden"><div style="width: 64%; height: 3px; background: #e9e4d8"></div></div>
+<div style="height: 3px; border-radius: 2px; background: #24231f; overflow: hidden"><div style="width: 58%; height: 3px; background: #e9e4d8"></div></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="md" style="left: 96px; top: 380px; width: 280px; height: 144px">
+<div class="md-h"><span>SLOPE 1</span></div>
+<div class="md-b">
+<div class="pc">
+<div class="ln"><span class="j jt"></span><span class="pl">TRIG</span></div>
+<div class="ln"><span class="j ja"></span><span class="pl">IN</span></div>
+</div>
+<div class="ctl">
+<div class="krow">
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.rise.track}}"></path><path class="ka" d="{{K.rise.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.rise.px}}" y2="{{K.rise.py}}"></line></svg><span class="mj"></span><span class="cl-l">RISE</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.fall.track}}"></path><path class="ka" d="{{K.fall.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.fall.px}}" y2="{{K.fall.py}}"></line></svg><span class="mj"></span><span class="cl-l">FALL</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.shp.track}}"></path><path class="ka" d="{{K.shp.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.shp.px}}" y2="{{K.shp.py}}"></line></svg><span class="mj"></span><span class="cl-l">SHP</span></div>
+</div>
+<div class="mstrip"><button class="op on" style="width: 48px" aria-pressed="true">CYC</button></div>
+</div>
+<div class="pc out">
+<div class="ln"><span class="j jm on"></span><span class="pls"><span class="pl">OUT</span><span class="lv" style="width: 16px; background: #6cb4ee"></span></span></div>
+<div class="ln"><span class="j jt"></span><span class="pls"><span class="pl">EOR</span><span class="lv" style="width: 10px; background: #f5a524"></span></span></div>
+<div class="ln"><span class="j jt on"></span><span class="pls"><span class="pl">EOC</span><span class="lv" style="width: 12px; background: #f5a524"></span></span></div>
+</div>
+</div>
+</div>
+
+<!-- ── cables ── -->
+<svg class="cbs" width="1440" height="900" aria-hidden="true">
+<path class="cu" d="M360 187 C408 187 408 223 456 223"></path><path class="cc" stroke="#e9e4d8" d="M360 187 C408 187 408 223 456 223"></path>
+<path class="cu" d="M648 223 C712 223 712 205 776 205"></path><path class="cc" stroke="#e9e4d8" d="M648 223 C712 223 712 205 776 205"></path>
+<path class="cu" d="M360 435 C408 435 408 255 456 255"></path><path class="cc" stroke="#6cb4ee" d="M360 435 C408 435 408 255 456 255"></path>
+<path class="cu" d="M360 499 C408 499 408 287 456 287"></path><path class="cc" stroke="#f5a524" d="M360 499 C408 499 408 287 456 287"></path>
+<path class="cg" d="M360 467 C415 467 415 456 470 456"></path>
+</svg>
+<div class="ctag" style="left: 420px; top: 330px"><span class="dot" style="background: #6cb4ee"></span>SLOPE 1 › OUT <span class="mut">→</span> LPG 1 › CV</div>
+
+<!-- ── chrome ── -->
+<div class="bar brand" style="left: 16px; top: 16px">
+<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle class="ico" cx="4.5" cy="9" r="3"></circle><circle class="ico" cx="13.5" cy="9" r="3"></circle><path class="ico" d="M7.5 9 h3"></path></svg>
+<span class="b-name">SREDA</span>
+<span class="vdiv"></span>
+<span class="b-proj">Untitled patch</span>
+<span class="b-state"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>unsaved</span>
+</div>
+
+<div class="listen" style="left: 540px; top: 18px; transform: translateX(-50%)">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path class="ico" d="M2.5 6 h2.5 l3.5 -3 v10 l-3.5 -3 h-2.5 z"></path><path class="ico" d="M11 5.5 q1.6 2.5 0 5"></path></svg>
+<span>Listening to <b>OSC › OUT</b></span>
+<button class="ib" aria-label="Stop listening"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+
+<div class="bar" style="right: 376px; top: 16px">
+<button class="tbb"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect class="ico" x="2.5" y="2.5" width="11" height="11" rx="2.5"></rect><circle cx="5.8" cy="5.8" r="1" fill="currentColor"></circle><circle cx="10.2" cy="10.2" r="1" fill="currentColor"></circle><circle cx="8" cy="8" r="1" fill="currentColor"></circle></svg>Dice</button>
+<span class="vdiv"></span>
+<button class="tbb"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path class="ico" d="M8 3 v10 M3 8 h10"></path></svg>New</button>
+<button class="tbb"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path class="ico" d="M8 2.5 v7 M5 7 l3 3 l3 -3 M3 12.5 h10"></path></svg>Save<span class="kbd">⌘S</span></button>
+<span class="vdiv"></span>
+<button class="tbb on" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect class="ico" x="2" y="2.5" width="12" height="11" rx="2"></rect><path class="ico" d="M10 2.5 v11"></path></svg>Sidebar</button>
+</div>
+
+<div class="hint" style="left: 20px; bottom: 22px">
+<span><span class="kbd">/</span>add module</span>
+<span><span class="kbd">W</span>wires</span>
+<span><span class="kbd">G</span>frame</span>
+<span><span class="kbd">F</span>fit</span>
+<span><span class="kbd">R</span>randomise</span>
+<span><span class="kbd">?</span>all shortcuts</span>
+</div>
+
+<div class="zoom" style="right: 376px; bottom: 16px">
+<button class="ib" aria-label="Zoom out"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7 h8"></path></svg></button>
+<span>100%</span>
+<button class="ib" aria-label="Zoom in"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7 h8 M7 3 v8"></path></svg></button>
+<span class="vdiv" style="margin: 0 2px"></span>
+<button class="ib" aria-label="Fit to screen"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M2 5 v-3 h3 M9 2 h3 v3 M12 9 v3 h-3 M5 12 h-3 v-3"></path></svg></button>
+</div>
+
+<!-- ── add-module popover ── -->
+<div class="pop" style="left: 470px; top: 404px; width: 368px">
+<div class="pop-s">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle class="ico" cx="7" cy="7" r="4.5"></circle><path class="ico" d="M10.5 10.5 l3 3"></path></svg>
+<input placeholder="Add module…" aria-label="Search modules">
+<span class="kbd">esc</span>
+</div>
+<div class="ctx"><span class="dot" style="background: #f5a524"></span>from <b>SLOPE › EOR</b><span class="r">trigger</span></div>
+<div class="seg">
+<button class="on">All <span class="n">7</span></button>
+<button>Modules <span class="n">6</span></button>
+<button>Groups <span class="n">1</span></button>
+</div>
+<div class="lst">
+<button class="it on"><span class="it-m"><span class="it-n">LPG</span><span class="it-d">Low-pass gate and VCA</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>PING</span></button>
+<button class="it"><span class="it-m"><span class="it-n">RHYTHM</span><span class="it-d">16 pads: euclid or grid, accents</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>CLK</span></button>
+<button class="it"><span class="it-m"><span class="it-n">STAGES</span><span class="it-d">16 stages drawn as a contour</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>ADV</span></button>
+<button class="it"><span class="it-m"><span class="it-n">SLOPE</span><span class="it-d">Rise / fall, cycle, slew</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>TRIG</span></button>
+<button class="it"><span class="it-m"><span class="it-n">CHANCE</span><span class="it-d">Bernoulli: each trigger to A or B</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>TRIG</span></button>
+<button class="it"><span class="it-m"><span class="it-n">SHIFT</span><span class="it-d">Delay triggers by part of the period</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>TRIG</span></button>
+</div>
+<div class="pop-f">
+<span><span class="kbd">↑</span><span class="kbd">↓</span>move</span>
+<span><span class="kbd">↵</span>add</span>
+<span><span class="kbd">tab</span>switch tab</span>
+</div>
+</div>
+
+<!-- ── wires sidebar ── -->
+<aside class="side" style="left: 1080px; top: 16px; width: 344px; height: 868px" aria-label="Sidebar">
+<div class="sd-h" style="padding: 0 10px 0 12px; gap: 6px">
+<div class="stabs" role="tablist"><button class="on" role="tab" aria-selected="true">Wires</button><button role="tab">Mix</button><button role="tab">Library</button><button role="tab">Settings</button></div>
+<button class="ib" aria-label="Close sidebar"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button>
+</div>
+<label class="fld"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle class="ico" cx="7" cy="7" r="4.5"></circle><path class="ico" d="M10.5 10.5 l3 3"></path></svg><input placeholder="Filter by module or port" aria-label="Filter wires"></label>
+<div class="chips">
+<button class="chip on">All <span style="color: #8f897c">4</span></button>
+<button class="chip">Selection</button>
+</div>
+<div class="sd-b">
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>UNGROUPED<span class="n">4</span></button>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OSC 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">LPG 1 ›</span>IN</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #6cb4ee"></span><span class="m">SLOPE 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #6cb4ee"></span><span class="m">LPG 1 ›</span>CV</span><span class="wv" style="color: #6cb4ee">0.60</span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr hl"><span class="wp"><span class="dot" style="background: #f5a524"></span><span class="m">SLOPE 1 ›</span>EOC</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #f5a524"></span><span class="m">LPG 1 ›</span>PING</span><span class="wv" style="color: #f5a524">×2</span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<div class="wr"><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">LPG 1 ›</span>OUT</span><svg width="14" height="10" aria-hidden="true"><path class="gw" d="M1 5 h11 M9 2 l3 3 l-3 3" style="color: #77716a"></path></svg><span class="wp"><span class="dot" style="background: #e9e4d8"></span><span class="m">OUT ›</span>L</span><span></span><button class="wx" aria-label="Delete wire"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3.5 3.5 l7 7 M10.5 3.5 l-7 7"></path></svg></button></div>
+<button class="add"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M7 2.5 v9 M2.5 7 h9"></path></svg>New wire</button>
+
+<button class="sec"><svg width="10" height="10" aria-hidden="true"><path class="gw" d="M2 3.5 L5 6.5 L8 3.5"></path></svg>NORMALS<span class="n">1</span></button>
+<div class="nr"><span class="dot" style="background: transparent; border: 1.5px dashed #e9e4d8; box-sizing: border-box; margin-top: 4px"></span><div>OUT › R <span style="color: #77716a">←</span> L<div class="nd">Plays L until something is patched into R.</div></div></div>
+
+<div class="ok"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7.5 l2.5 2.5 l5.5 -6"></path></svg>No problems</div>
+</div>
+<div class="sd-f"><span>4 wires · 4 modules</span><span><span class="kbd">W</span></span></div>
+</aside>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+function ang(v) { return (-135 + 270 * v) * Math.PI / 180; }
+function pt(r, v) { var a = ang(v); return [(28 + r * Math.sin(a)).toFixed(2), (22 - r * Math.cos(a)).toFixed(2)]; }
+function arc(v0, v1, r) {
+  if (v1 - v0 < 0.003) return '';
+  var p0 = pt(r, v0), p1 = pt(r, v1), large = (v1 - v0) * 270 > 180 ? 1 : 0;
+  return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0] + ' ' + p1[1];
+}
+function knob(v, m) {
+  var p = pt(7, v), d = pt(18, Math.min(1, v + (m || 0)));
+  return { track: arc(0, 1, 14), arc: arc(0, v, 14), px: p[0], py: p[1], ring: m ? arc(Math.max(0, v - m), Math.min(1, v + m), 18) : '', dx: d[0], dy: d[1] };
+}
+class Component extends DCLogic {
+  renderVals() {
+    return { K: {
+      freq: knob(0.45), pw: knob(0.5), fm: knob(0.1),
+      lvl: knob(1), dec: knob(0.45, 0.2),
+      vol: knob(0.7),
+      rise: knob(0.2), fall: knob(0.5), shp: knob(0.5)
+    } };
+  }
+}
+</script>
+</body>
+</html>

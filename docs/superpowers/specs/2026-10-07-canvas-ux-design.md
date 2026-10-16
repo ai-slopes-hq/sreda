@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 34 (§7b: META-SEQ's migration, as built) · Status: approved
+Date: 2026-10-07 · Revision 35 (§1b: the visual style after the redesign) · Status: approved
 
 ## Why
 
@@ -29,7 +29,8 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
 
 - One infinite 2D canvas. Pan: wheel / two-finger scroll, Space+drag, middle-button drag. Zoom: ⌘-scroll / pinch,
   25–200 %. Modules snap to a 16 px grid.
-- Flat dark panels, monospace labels, no gradients, shadows or hardware imitation. UI text is English.
+- Dark panels with thin borders, soft shadows only on floating things (§1b), no gradients or hardware imitation.
+  UI text is English.
 - Colours come from the active **skin** (§1a); the first build has one, DEFAULT: background `#121210`, panel
   `#1b1b18`, text `#e9e4d8`, muted `#8f897c`, destructive `#e5484d`; port roles: audio `#e9e4d8`, mod `#6cb4ee`,
   pitch `#9ad18b`, trigger `#f5a524`.
@@ -43,7 +44,7 @@ Timeline, arrangement, transport, recording, audio export, multiple open canvase
 
 A **skin** is one full set of the colour tokens below. Every colour in the UI (canvas, panels, displays, cables,
 frames, sidebar, picker) comes from a token; no component keeps a colour of its own. Skins change colour only:
-geometry, type (IBM Plex Mono), the panel grammar and the meaning of colour (role = colour, §1) are the same in
+geometry, type (IBM Plex Mono and Sans, §1b), the panel grammar and the meaning of colour (role = colour, §1) are the same in
 every skin. A document does not store a skin, and a frame's tint is stored as an index (0 neutral, 1–6 hues), so a
 patch looks right in any skin.
 
@@ -65,7 +66,7 @@ were compared on one small patch: https://claude.ai/artifact/U5d9RCXf13k7nkraC3V
 | `text` | values, names, active text | `#e9e4d8` | `#d4ddd7` | `#dcd7ba` | `#e0e0e0` | `#eceff4` | `#c0caf5` |
 | `text-2` | frame names, ties | `#b9b3a6` | `#b3c2bc` | `#c8c093` | `#c4c4c4` | `#e5e9f0` | `#a9b1d6` |
 | `muted` | secondary text, hints, selected outline | `#8f897c` | `#8fa29d` | `#a6a69c` | `#a0a0a0` | `#d8dee9` | `#737aa2` |
-| `quiet` | port and knob labels | `#6f6a5f` | `#6f827d` | `#727169` | `#7a7a7a` | `#8a93a5` | `#565f89` |
+| `quiet` | quiet secondary marks (revision 35: port and knob labels moved to `label`, §1b) | `#6f6a5f` | `#6f827d` | `#727169` | `#7a7a7a` | `#8a93a5` | `#565f89` |
 | `faint` | default-valued fields, off glyph parts | `#5d594f` | `#5c6f6b` | `#54546d` | `#5e5e5e` | `#616e88` | `#3b4261` |
 | `heading` | module names, section heads | = `text` | `#42fea2` | = `text` | = `text` | = `text` | = `text` |
 | `on` | a pressed toggle, the current menu item, a picked row | `#e9e4d8` | `#0c7970` | `#2d4f67` | `#5a5a5a` | `#5e81ac` | `#3d59a1` |
@@ -116,6 +117,102 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 | red | `#d8a08b` | `#ff5230` | `#db3323` | `#b71918` | `#930f18` | `#7a0919` |
 | violet | `#c6bccd` | `#c9a6fa` | `#b583fc` | `#a260ff` | `#8f40ff` | `#7730dd` |
 
+## 1b. Visual style (revision 35)
+
+The UI's look after the redesign of 2026-10-16 (designer's handoff; boards *Redesign — whole screen*, *before /
+after*, *sidebar tabs*, *six skins + new tokens*, *frames, hints, META-SEQ editor* in `docs/prototype/`). The panel
+grammar (§2: 56 px HP, n × 144 px U, 32 px lanes) does not change; colour still means role; skins still change colour
+only. Where a board and this section disagree, this section wins (the boards were drawn from the older prototype:
+they show RHYTHM / STAGES, four patterns and a mark beside the wordmark, none of which exist).
+
+**Rules.**
+- **Two faces.** IBM Plex Mono for names, port and knob labels, values and keys; IBM Plex Sans for words:
+  descriptions, buttons, tabs, menus, hints, dialogs. Both ship with the app (400 / 500 / 600 each, `@fontsource`
+  packages at fixed versions, served from `app://`); no face is fetched at run time.
+- **Case.** Module, frame and port names stay uppercase mono (`LPG 1`, `DRUMS`, `PTCH`). Chrome copy is sentence case
+  in Sans (`Sidebar`, `Save group`, `Filter by module or port`).
+- **Depth.** Borders still separate panels. Floating things (menus, picker, sidebar, dialogs, the top bar, cable
+  tags, the LISTEN pill) also get a soft shadow; modules a faint one. No gradients, no hardware imitation.
+- **Corners** from the radius scale below (2–14 px).
+- **Readable labels.** Port and knob labels use `label` (≥ 5 : 1 on `panel` and `popover` in every skin); `faint` keeps
+  its role for values at their default.
+- **Icons.** Chrome has a small set of inline stroke icons (search, close, save, new, dice, sidebar, zoom, fit, undo,
+  speaker, check, chevron, import, drag grip). Panels stay icon-free (glyphs as before). No icon font, no emoji. No
+  mark beside the wordmark: `SREDA` alone.
+
+**New tokens.** Each skin keeps its 28 colours (§1a) and gains `popover` (the surface of floating windows: `panel`
+mixed 4 % toward `text`), `label` and `shadow`; three existing values change:
+
+| Skin | `popover` | `label` (on `panel`) | `shadow` | changed |
+|---|---|---|---|---|
+| DEFAULT | `#232320` | `#908b80` (5.1 : 1) | `rgba(0,0,0,.55)` | — |
+| ANNABIOSIS | `#283432` | `#8e9e99` (5.1 : 1) | `rgba(4,10,9,.6)` | — |
+| KANAGAWA | `#31313c` | `#9f9c8b` (5.1 : 1) | `rgba(8,8,14,.6)` | `faint` `#54546d` → `#676678` (it equalled `line-2`) |
+| TOUCH | `#3a3a3a` | `#a5a5a5` (5.1 : 1) | `rgba(0,0,0,.5)` | — |
+| NORD | `#424958` | `#b3bac6` (5.2 : 1) | `rgba(22,26,34,.5)` | `muted` `#d8dee9` → `#bac0cc` (hints competed with values) |
+| TOKYO NIGHT | `#2a2e42` | `#8c96c0` (5.0 : 1) | `rgba(6,7,14,.6)` | `muted` `#737aa2` → `#8c94bd` (failed on `panel`) |
+
+**Scales** (CSS custom properties, built from tokens so they follow the skin):
+- Radii: `radius-1` 2 px (level bars, meters), `radius-2` 6 px (fields, options, frame buttons, value chips, displays),
+  `radius-3` 8 px (module panels, menu and list rows), `radius-4` 10 px (frames, menus, the top bar, zoom),
+  `radius-5` 12 px (sidebar, picker), `radius-6` 14 px (dialogs, the META-SEQ drawer).
+- Shadows: `shadow-1` `0 4px 14px` of `shadow` at 55 % (modules); `shadow-2` `0 14px 36px shadow` (menus, picker,
+  sidebar, top bar, tags); `shadow-3` `0 24px 60px shadow` (dialogs; upward for the drawer); `ring` `0 0 0 3px` of
+  `text` at 9 % (a selected module, an open option, a focused field).
+- Sizes: a jack is 14 px with a 2 px ring, its centre 15 px in from the panel edge (was 11 px / 13 px); patched =
+  the role colour with a 5 px `ground` centre. A knob: a 3 px track in `raised`, a 3 px arc in `text`, a body circle
+  (r 9.5), a 1.8 px pointer, the mod ring in `role-mod` at 55 %. Port and knob labels 9.5 px mono 500 in `label`;
+  values 10 px. Chrome text 12–13 px Sans. The frame header is 32 px (was 28). Top-bar buttons 32 px in a 40 px bar.
+  List rows (WIRES, LIBRARY, picker) 28–48 px. An option (`BOTH ▾`) is 24 px tall.
+
+**Components.**
+- **Module** (`radius-3`, `shadow-1`): selected = border `muted` + `ring`; the head divider in `line`. A value shown
+  under a label sits in a small chip on hover / edit (`radius-2`).
+- **A side with no ports has no column** (refines §2.2): the panel is 1 HP narrower — NOISE 2 × 1, OUT 2 × 1, A4 and
+  A4 CLK 3 × 2. Free modules keep their left edge; STACK frames re-pack on open.
+- **Menus** (an option's list): `popover`, border `line-2`, `radius-4`, `shadow-2`, 34 px rows; the picked item =
+  `raised` fill and a check, not inverted. (A short description per item comes in Plan 17.)
+- **Picker** (`popover`, `radius-5`, `shadow-2`): a 46 px search field with an icon and `esc`; opened from a jack, a
+  line `● from SLOPE › EOR   trigger` and every item showing, as a pill in the role colour, the port it will patch
+  into; tabs All · Modules · Groups as one segmented control with counts; 48 px two-line rows (mono name, Sans
+  description), the picked one with a role-coloured left edge; a footer with keys (`↑ ↓ move · ↵ add · tab switch tab`).
+- **Cable tag** on `popover` with a role dot and `shadow-2`. **LISTEN** is a pill at the top centre: speaker icon,
+  `Listening to OSC › OUT`, ✕ to stop.
+- **Top bar.** Top left a bar with the wordmark and the project — its name (`techno`, `Untitled patch` when unnamed)
+  and `● unsaved` while there are unsaved changes; the full path in its tooltip. Top right one grouped bar
+  (`radius-4`, `shadow-2`): Dice · New | Save `⌘S` | Sidebar, 32 px Sans buttons with icons and key hints.
+- **Zoom**, bottom right: a small grouped bar `− 100 % +` and fit.
+- **Hint bar**, bottom left: Sans text with key caps (`/ add module · W wires · G frame · F fit · R randomise`) and
+  `? all shortcuts` (the context hints and the shortcut list come in Plan 17).
+- **Sidebar** (§5a): floats 16 px from the window's edges, `popover`, `radius-5`, `shadow-2`; the tabs Wires · Mix ·
+  Library · Settings as one segmented control (one active look), ✕ on the right; a footer line per tab.
+  - Wires: a filter field with an icon; chips `All 9` / `Selection`; section heads with counts; 34 px rows with full
+    names at both ends, the value as a chip, ✕ on hover; `+ New wire` as a dashed row; **Normals** a section of its
+    own, each normal on two lines (the normal, then what it does); no problems = one line `✓ No problems`; empty
+    sections hide; footer `9 wires · 8 modules`.
+  - Mix: each OUT a flat card — name (`OUT from MIX`), M / S (30 × 28), a horizontal fader (the OUT's LVL), a stereo
+    meter with a dB scale (−48 … 0); MASTER pinned to the bottom; footer `after the limiter`; with no OUT an empty
+    state.
+  - Library: one filter for all sections; 28 px rows; the open project marked `● open`; a group row shows
+    `drag to canvas` and a grip on hover; a long section shows its first eight rows and `Show all 17`; SAMPLES has
+    Import and an empty state. No Save as / New (§6).
+  - Settings: each skin a row with a 76 × 44 preview tile (ground, panel, text, four roles), its name and a line
+    (`Warm graphite`, `Deep green, neon roles`, `Ink-blue night`, `Neutral grey`, `Cool slate`, `Indigo night`);
+    the chosen one bordered with a check; hovering another reads `Previewing — click to keep`.
+- **Frames** (§5): `radius-4`; the 32 px header holds `⌄` / `›` (collapse) left of the name, then the level meter.
+  At rest only state shows: `NN BPM` as an accent-outlined pill when the frame has its own clock, a lit `M` (in
+  `accent`) when muted. Hovering the header or selecting the frame adds the tools as 22 px Sans buttons (`radius-2`):
+  tint, Stack, Save group, M, `+ Clock` or Tap and ✕. Stack is the default, so it does not show at rest.
+- **Collapsed frame** (§5): a tinted card — header with `›`, one jack per crossing port, a `N modules` line.
+- **Save** becomes a dialog (Plan 17; until then the name field takes the new look) (`radius-6`, `shadow-3`): `Save project` / `Save group`, a labelled name field, the
+  module and wire count, Cancel / Save `↵`.
+- **META-SEQ drawer** (§7b; drawn after the board but with the spec's contents): `popover`, top corners `radius-6`,
+  `shadow-3` upward, a grip; the header holds the module's name, pattern tabs A–H as a segmented control (the edited
+  one selected, the playing one ringed in `accent`, `editing A · playing B`), Copy / Paste, Scale ▾, Root, Gen ▾,
+  Dice, Mutate, undo and ✕. Lane heads 210 px: name, LEN, RATE, STEP / PLAYED (NOTE), lock, ⚄. Step cells 4 px apart,
+  `radius` 4 px, the current step ringed in `accent`, a marker at each lane's LEN; CHNC shows its percentage.
+- **Displays**: `radius-2`; otherwise unchanged.
+
 ## 2. Modules
 
 - A module is a compact block: name on top, inputs on the left edge, outputs on the right edge, parameters on the
@@ -127,9 +224,9 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   stays free (8 px grid, magnets); the sizes make STACK pack cleanly.
 - **Panel grammar — one layout for every module, small or large** (board *Panel system* in the prototype):
   1. Under a 32 px header (the name) and a 6 px inset, the panel is cut into **lanes of 32 px**: 1U = 3 lanes,
-     2U = 7, 3U = 12 (as many as fit in n × 144). Room to breathe is part of the grammar: knobs 56 × 40, jacks 11 px, 4 px inside the edges of a
+     2U = 7, 3U = 12 (as many as fit in n × 144). Room to breathe is part of the grammar: knobs 56 × 40, jacks 14 px (revision 35; were 11), 4 px inside the edges of a
      display or a button.
-  2. **Three columns, always:** the IN column (1 HP) on the left, the OUT column (1 HP) on the right, the control
+  2. **Three columns** (revision 35: a side with no ports has none, §1b): the IN column (1 HP) on the left, the OUT column (1 HP) on the right, the control
      area (N − 2 HP) between them, the side columns a shade darker (#171715). Ports live only in the side columns
      (knob mod jacks excepted).
   3. **One jack per lane**, top down in spec order: sound, then clocks and triggers, then CV. A jack's label and its
@@ -149,7 +246,8 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   7. **Size follows content:** control columns = max(knobs per row, the display's width); height = the smallest of
      1U / 2U / 3U that holds the jacks and the control area. Large modules are the same grammar with a larger
      display, not a different design.
-  8. **Type:** the module name 11 px semibold, labels 9 px in a quiet colour (#6f6a5f), values 9–10 px; no other
+  8. **Type:** the module name 11 px semibold mono, labels 9.5 px mono 500 in `label` (revision 35; were 9 px in
+     `quiet`), values 10 px; no other
      sizes on a panel.
   9. **Quiet panels:** a knob's value shows only while the module is under the pointer, selected alone or being
      edited, and always on a modulated knob (in the mod colour). Labels, arcs and pointers always show, so the
@@ -256,9 +354,10 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 
 ## 5. Groups (frames)
 
-- A group is a **frame**: a rectangle of its own with a translucent fill and a 28 px header strip carrying the name
-  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. The frame tools (tint, STACK, SAVE, M) show while the header is hovered, and stay visible
-  while STACK or M is on. Drag an edge or corner to resize (minimum 352 × 96); a STACK frame re-packs its
+- A group is a **frame**: a rectangle of its own with a translucent fill and a 32 px header strip (revision 35; was 28) carrying the name
+  (`GROUP 1`, `GROUP 2`…; double-click to rename), the frame tools and the clock controls. At rest the header shows only state (revision 35, §1b): the
+  name, the level meter, the BPM of its own clock, a lit M while muted; the tools (tint, Stack, Save group, M, the
+  clock's + Clock / Tap / ✕) show while the header is hovered or the frame is selected. Drag an edge or corner to resize (minimum 352 × 96); a STACK frame re-packs its
   children to the new width as you drag (see below);
   drag the header to move the frame and everything inside it; click the header to select it.
 - **Membership is containment.** Every module and frame has a `parent` (a frame or none): the innermost frame that
@@ -284,7 +383,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - CLK out flashes on each tick.
 - The header shows a small level meter: the peak of what leaves the frame (its outgoing audio cables and OUT
   modules inside it), held and falling over 300 ms.
-- **Frame tools** in the header (tint, STACK, SAVE, M, collapse):
+- **Frame tools** in the header (tint, Stack, Save group, M, collapse):
   - **Tint** (a small swatch): click cycles the fill through neutral (≈ 4 % white) and six muted hues (≈ 8 %).
     Nested frames layer, so the hierarchy reads without extra lines.
   - **STACK:** a frame mode (`layout: 'stack'`), toggled, **on by default** — ⌘G frames and factory frames start
@@ -306,7 +405,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
     frame that holds its source but not its target, when that frame or one of its parents is muted. Its contents are drawn at 40 % (its own
     header stays as is). Muting a frame mutes its children.
 - **Collapse** (the big picture): **C** collapses or expands the selected frames, **⇧C** collapses all frames (or
-  expands all, when every frame is collapsed); the header's `▾` / `▸` (always visible) does the same for one frame. A collapsed frame
+  expands all, when every frame is collapsed); the header's `⌄` / `›` left of the name (always visible; revision 35, were `▾` / `▸` at the right) does the same for one frame. A collapsed frame
   is a block at the frame's top-left: its header (name, level meter, CLK in / out, M, `▸`), then one jack per port
   inside it that has a cable crossing its edge — inputs on the left, outputs on the right, labelled `MODULE › PORT`;
   several cables from one port share its jack. Cables inside are hidden; cables crossing the edge end on the block's
@@ -318,7 +417,7 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 
 ## 5a. Sidebar and the WIRES editor
 
-- **Sidebar:** a panel docked on the right, hidden by default (W or the SIDEBAR button opens and closes it; Esc closes
+- **Sidebar:** a panel floating 16 px from the window's right, top and bottom edges (revision 35, §1b), hidden by default (W or the SIDEBAR button opens and closes it; Esc closes
   it). It does not cover the canvas: the canvas, the top-right buttons, the zoom control and the hint line end at its
   edge. It opens at a fixed width (440 px) with every new window and every opened project; within a session its
   left edge can be dragged (320 px … 70 % of the window). A tab row at its top holds its functions: **WIRES**,
@@ -372,7 +471,8 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   - Later (backlog): recording and export.
 - **LIBRARY** — the library folder (§6) in three sections, each with a filter field and folders as path prefixes:
   - **PROJECTS** (factory first, then the library's): a click opens the project (replaces the canvas, one undo step,
-    fits it in view); the section's header holds SAVE AS and NEW. This is the one place library projects are listed
+    fits it in view); saving lives in the top bar only (revision 35; its header held SAVE AS and
+    NEW). This is the one place library projects are listed
     (the picker has no PROJECTS tab).
   - **GROUPS**: drag a row onto the canvas to place the group at the drop point, or click it to place it at the
     middle of the view (fresh ids, as from the picker).
@@ -385,9 +485,9 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
 - The current canvas autosaves to IndexedDB 500 ms after the last edit. Opening the app resumes it; the very first
   launch opens the factory project *Pulse*, so there is sound after one click.
 - Audio starts on the first click anywhere (browser autoplay rule); until then a single line reads
-  `CLICK TO START AUDIO`.
-- Top right: **SIDEBAR** (opens the sidebar, §5a; its first tab is WIRES), **SAVE** (saves the project, as ⌘S with no
-  frame selected), **NEW** (clears the canvas; an undo step; also in LIBRARY › PROJECTS) and **DICE** (a random
+  `Click to start audio` (sentence case since revision 35).
+- Top right (revision 35: one grouped bar in the order Dice · New | Save | Sidebar, sentence case, §1b): **SIDEBAR** (opens the sidebar, §5a; its first tab is WIRES), **SAVE** (saves the project, as ⌘S with no
+  frame selected), **NEW** (clears the canvas; an undo step) and **DICE** (a random
   playable patch, below; revision 30: beside NEW, not in its place). With the listen bar these are the only chrome.
 - **DICE** replaces the canvas with a new random patch (one undo step, fit in view, the speakers fade in) and the
   project becomes unnamed. Each throw picks one of two kinds at random:
@@ -405,10 +505,10 @@ The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to 
   `groups/**/<name>.sreda-group.json` and `projects/**/<name>.sreda.json`; any subfolders made in the Finder show up
   as path prefixes. Files are the document JSON (`version`, `modules`, `cables`, `groups`); a group file holds one
   top frame with everything inside it.
-- **Save:** a frame's header has a SAVE tool, and ⌘S with exactly one frame selected does the same: it saves that group — a name field appears (`acid/303 voice`: a slash
+- **Save:** a frame's header has a Save group tool, and ⌘S with exactly one frame selected does the same: it saves that group — a name field appears (a dialog since revision 35, §1b) (`acid/303 voice`: a slash
   makes subfolders); it stores the frame, everything inside it, the cables between those, its clock and tint, not
   cables from outside. ⌘S with anything else saves the project (straight away if it already has a name, else a
-  name field); ⇧⌘S is save-as. The project's path shows next to SREDA at the top left, with `●` while there are
+  name field); ⇧⌘S is save-as. The project's name shows next to SREDA at the top left (its path in the tooltip, revision 35), with `● unsaved` while there are
   unsaved changes. Factory entries are read-only: saving one asks for a new name.
 - **One picker** for modules and groups: the module search (§4) gets tabs ALL · MODULES · GROUPS (Tab / ⇧Tab cycle, a click picks); typing searches names and folders in the current tab; each row shows its folder
   and kind. **/** (or a double-click on empty canvas) opens it at the pointer on ALL. No single-letter keys for tabs
@@ -493,7 +593,7 @@ Size is `HP × U`.
 | | **SCOPE** — with thru, like a Mordax DATA | a, b (audio), trig (trigger) | time (1 ms–10 s per screen), gain a, gain b, mode A·B / XY | thruA, thruB (audio: the inputs unchanged; gains affect the display only) | — |
 | | **OUT** | l, r (audio) | level | — | r ← l |
 
-- Sizes (HP × U): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 5×1 (revision 27),
+- Sizes (HP × U; revision 35: NOISE 2×1, OUT 2×1, a side with no ports has no column): OSC 5×1, COMPLEX 6×1, NOISE 3×1, UNCERTAINTY 4×1, SLOPE 5×1, LPG 4×1, FILTER 4×1, FOLD 5×1 (revision 27),
   STAGES 10×3, RHYTHM 10×2, CHANCE 3×1, SHIFT 3×1, COMPARE 3×1, FOLLOW 6×1, SWITCH 4×2, SPREAD 4×2, S&H 2×1, QUANT 3×1,
   MIX 4×2, ATT 6×2, A×B+C 5×2, DELAY 5×1, SCOPE 6×2, OUT 3×1 (24 modules).
 - Displays in lanes: STAGES' contour 9 (revision 32; then LEN and ROOT, then GEN ▾ · SCALE ▾ · DICE), RHYTHM's pads 4 (then LEN,

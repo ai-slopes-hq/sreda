@@ -29,7 +29,7 @@ collide with other devices. The UI never shows channel numbers.
 ## 1. The module specs (Rust)
 
 The A4 is two small modules, in SREDA's atomic spirit. One module with 15 inputs would break the panel grammar
-(one jack per lane, at most 12 lanes at 3U). Both are sinks with no outputs, size (4, 2), display `device` (§6).
+(one jack per lane, at most 12 lanes at 3U). Both are sinks with no outputs, size (4, 2) — 3 × 2 since canvas spec revision 35 (a side with no ports has no column) —, display `device` (§6).
 
 | | `a4` — `A4`, one track | `a4clk` — `A4 CLK`, clock and transport |
 |---|---|---|

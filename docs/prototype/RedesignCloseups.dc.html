@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SREDA redesign — before and after</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ba-root{position:relative;width:1440px;height:1340px;overflow:hidden;background:#121210;color:#ece7db;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.colh{position:absolute;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.3em;color:#8f897c}
+.rowh{position:absolute;font:600 14px 'IBM Plex Sans',sans-serif;color:#ece7db}
+.rowh span{font-weight:400;color:#8f897c;margin-left:10px;font-size:13px}
+/* ── OLD ── */
+.o-mod{position:absolute;background:#1b1b18;border:1px solid #2e2d28;border-radius:3px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace}
+.o-head{height:32px;line-height:32px;padding:0 10px;font-size:11px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid #2a2924}
+.o-col{position:absolute;top:32px;bottom:0;width:56px;background:#171715}
+.o-jack{position:absolute;width:11px;height:11px;border-radius:50%;border:1.5px solid;box-sizing:border-box;background:#121210}
+.o-pl{position:absolute;font-size:9px;line-height:10px;color:#6f6a5f;letter-spacing:.04em;white-space:nowrap}
+.o-fld{position:absolute;font-size:10px;line-height:11px;white-space:nowrap}
+.o-cell{position:absolute;top:36px;width:56px;height:64px}
+.o-cl{position:absolute;left:0;right:0;top:43px;text-align:center;font-size:9px;line-height:10px;color:#6f6a5f;letter-spacing:.04em}
+.o-cv{position:absolute;left:0;right:0;top:53px;text-align:center;font-size:9px;line-height:10px;color:#e9e4d8}
+.o-opt{position:absolute;left:6px;top:10px;width:44px;height:20px;background:#121210;border:1px solid #3a3933;border-radius:2px;color:#e9e4d8;font:500 9px 'IBM Plex Mono',monospace;padding:0}
+.o-kt,.o-ka,.o-kr{fill:none;stroke-linecap:round}
+.o-kt{stroke:#34332d;stroke-width:2.5}
+.o-ka{stroke:#e9e4d8;stroke-width:2.5}
+.o-kr{stroke:#6cb4ee;stroke-width:2;stroke-opacity:.45}
+.o-kp{stroke:#e9e4d8;stroke-width:1.5;stroke-linecap:round}
+.o-kd{fill:#6cb4ee}
+.o-menu{position:absolute;min-width:84px;background:#1b1b18;border:1px solid #8f897c;border-radius:3px;padding:3px 0;font-family:'IBM Plex Mono',monospace}
+.o-mi{display:block;width:100%;padding:4px 10px;background:none;border:0;color:#e9e4d8;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-align:left}
+.o-mi.on{color:#121210;background:#e9e4d8}
+.o-search{position:absolute;width:280px;background:#1b1b18;border:1px solid #8f897c;border-radius:3px;font-family:'IBM Plex Mono',monospace}
+.o-search input{display:block;width:100%;box-sizing:border-box;background:#121210;border:0;border-bottom:1px solid #2e2d28;color:#e9e4d8;font:500 12px 'IBM Plex Mono',monospace;padding:9px 10px;outline:none}
+.o-search input::placeholder{color:#8f897c}
+.o-tabs{display:flex;gap:2px;padding:5px 6px 3px;border-bottom:1px solid #2e2d28}
+.o-tab{flex:1;height:20px;background:none;border:0;border-radius:2px;color:#8f897c;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.o-tab.on{background:#2a2924;color:#e9e4d8}
+.o-from{padding:5px 10px 3px;font-size:9px;color:#8f897c;letter-spacing:.06em}
+.o-item{display:flex;width:100%;justify-content:space-between;align-items:baseline;gap:8px;padding:5px 10px;background:none;border:0;color:#e9e4d8;font:500 11px 'IBM Plex Mono',monospace;text-align:left}
+.o-item.on{background:#2a2924}
+.o-item .d{color:#8f897c;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-item .k{font-size:8px;letter-spacing:.08em;color:#5d594f;margin-left:6px}
+.o-btn{height:30px;padding:0 14px;background:#1b1b18;border:1px solid #3a3933;border-radius:3px;color:#e9e4d8;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em}
+.o-btn.on{background:#e9e4d8;color:#121210;border-color:#e9e4d8}
+.o-save{position:absolute;display:flex;align-items:center;gap:8px;height:30px;padding:0 6px 0 12px;background:#1b1b18;border:1px solid #8f897c;border-radius:3px;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#8f897c}
+.o-save input{width:240px;background:#121210;border:1px solid #3a3933;color:#e9e4d8;font:500 11px 'IBM Plex Mono',monospace;padding:4px 6px;outline:none}
+/* ── NEW ── */
+.md{position:absolute;display:flex;flex-direction:column;background:#1c1b18;border:1px solid #2f2d28;border-radius:8px;box-shadow:0 1px 0 rgba(255,255,255,.035) inset,0 8px 20px rgba(0,0,0,.35);box-sizing:border-box;overflow:hidden}
+.md.sel{border-color:#7d776b;box-shadow:0 0 0 3px rgba(233,228,216,.07),0 8px 20px rgba(0,0,0,.4)}
+.md-h{height:32px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 12px;border-bottom:1px solid #2a2924;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em}
+.md-h .md-sub{font:400 11px 'IBM Plex Sans',sans-serif;letter-spacing:0;color:#8f897c}
+.md-b{flex:1;display:flex}
+.pc{width:56px;flex:none;box-sizing:border-box;padding:6px 0 0 8px;background:#181715;display:flex;flex-direction:column}
+.pc.out{padding:6px 8px 0 0;align-items:flex-end}
+.ctl{flex:1;display:flex;flex-direction:column;padding-top:6px}
+.krow{height:64px;display:flex}
+.mstrip{height:32px;display:flex;align-items:center;gap:8px;padding:0 4px}
+.mstrip .op{position:static}
+.ln{height:32px;display:flex;align-items:center;gap:7px}
+.pc.out .ln{flex-direction:row-reverse}
+.pls{display:flex;flex-direction:column;gap:2px}
+.pc.out .pls{align-items:flex-end}
+.pl{font:500 9.5px/10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#a59f92}
+.pf{font:500 10px/10px 'IBM Plex Mono',monospace}
+.lv{height:3px;border-radius:2px}
+.j{width:14px;height:14px;flex:none;border-radius:50%;border:2px solid;box-sizing:border-box;background:#121210}
+.j.nrm{border-style:dashed}
+.ja{border-color:#e9e4d8}.jm{border-color:#6cb4ee}.jt{border-color:#f5a524}
+.ja.on{background:radial-gradient(circle,#121210 0 2.5px,#e9e4d8 3px)}
+.jm.on{background:radial-gradient(circle,#121210 0 2.5px,#6cb4ee 3px)}
+.jt.on{background:radial-gradient(circle,#121210 0 2.5px,#f5a524 3px)}
+.cells{flex:1;display:grid;grid-template-columns:repeat(3,56px);grid-auto-rows:64px;padding-top:8px}
+.cl{position:relative;width:56px;height:64px}
+.cl svg{display:block}
+.mj{position:absolute;left:5px;top:3px;width:9px;height:9px;border-radius:50%;border:1.5px solid #6cb4ee;box-sizing:border-box;opacity:.55}
+.mj.on{background:#6cb4ee;opacity:1}
+.cl-l{position:absolute;left:0;right:0;top:43px;text-align:center;font:500 9px/10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#a59f92}
+.cl-v{position:absolute;left:0;right:0;top:54px;text-align:center;font:500 10px/10px 'IBM Plex Mono',monospace;color:#ece7db}
+.kt{fill:none;stroke:#2f2e29;stroke-width:3;stroke-linecap:round}
+.ka{fill:none;stroke:#e9e4d8;stroke-width:3;stroke-linecap:round}
+.kr{fill:none;stroke:#6cb4ee;stroke-width:2;stroke-opacity:.5;stroke-linecap:round}
+.kb{fill:#262520;stroke:#3a3832;stroke-width:1}
+.kp{stroke:#ece7db;stroke-width:1.8;stroke-linecap:round}
+.kd{fill:#6cb4ee}
+.op{position:absolute;left:4px;top:10px;width:48px;height:24px;display:flex;align-items:center;justify-content:center;gap:3px;background:#121210;border:1px solid #3a3832;border-radius:6px;color:#ece7db;font:500 9.5px 'IBM Plex Mono',monospace;padding:0;box-sizing:border-box}
+.op.open{border-color:#a59f92;box-shadow:0 0 0 3px rgba(233,228,216,.08)}
+.gw{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}
+.ico{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border:1px solid #3d3b34;border-bottom-width:2px;border-radius:4px;font:500 10px 'IBM Plex Mono',monospace;color:#a59f92;background:#161614}
+.menu{position:absolute;display:flex;flex-direction:column;padding:4px;background:#1f1e1b;border:1px solid #3a3832;border-radius:10px;box-shadow:0 14px 36px rgba(0,0,0,.55)}
+.mi{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;background:none;border:0;border-radius:7px;color:#ece7db;text-align:left}
+.mi.on{background:#2c2b26}
+.mi-n{width:40px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.mi-d{flex:1;font-size:12px;color:#a59f92}
+.pop{position:absolute;display:flex;flex-direction:column;background:#1f1e1b;border:1px solid #3a3832;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);overflow:hidden}
+.pop-s{display:flex;align-items:center;gap:10px;height:46px;padding:0 12px 0 14px;border-bottom:1px solid #2f2d28;color:#8f897c}
+.pop-s input{flex:1;min-width:0;background:none;border:0;outline:none;color:#ece7db;font:400 14px 'IBM Plex Sans',sans-serif;padding:0}
+.pop-s input::placeholder{color:#8f897c}
+.ctx{display:flex;align-items:center;gap:8px;padding:10px 14px 4px;font-size:12px;color:#a59f92}
+.ctx b{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#ece7db}
+.ctx .r{margin-left:auto;color:#8f897c}
+.seg{display:flex;gap:2px;margin:8px 10px 6px;padding:3px;background:#161614;border-radius:8px}
+.seg button{flex:1;height:26px;background:none;border:0;border-radius:6px;color:#a59f92;font:500 12px 'IBM Plex Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg button.on{background:#2f2e29;color:#ece7db}
+.seg .n{font:500 10px 'IBM Plex Mono',monospace;color:#8f897c}
+.lst{display:flex;flex-direction:column;padding:2px 6px 6px}
+.it{display:flex;align-items:center;gap:12px;height:48px;padding:0 10px;background:none;border:0;border-radius:8px;color:#ece7db;text-align:left}
+.it.on{background:#2c2b26;box-shadow:inset 2px 0 0 #f5a524}
+.it-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.it-n{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em}
+.it-d{font-size:12px;color:#a59f92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it-p{display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #34322c;border-radius:11px;font:500 10px 'IBM Plex Mono',monospace;color:#a59f92;white-space:nowrap}
+.pop-f{display:flex;gap:14px;align-items:center;height:36px;padding:0 14px;border-top:1px solid #2f2d28;font-size:11px;color:#8f897c;background:#1b1a17}
+.pop-f span{display:flex;align-items:center;gap:5px}
+.bar{position:absolute;display:flex;align-items:center;gap:4px;height:40px;padding:0 4px;background:#1c1b18;border:1px solid #2f2d28;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);box-sizing:border-box}
+.vdiv{width:1px;height:20px;background:#34322c;margin:0 4px}
+.tbb{height:32px;display:flex;align-items:center;gap:8px;padding:0 10px;background:none;border:0;border-radius:7px;color:#ece7db;font:500 13px 'IBM Plex Sans',sans-serif}
+.tbb.on{background:#2c2b26}
+.dlg{position:absolute;display:flex;flex-direction:column;gap:14px;padding:18px 18px 16px;background:#1f1e1b;border:1px solid #3a3832;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.6);box-sizing:border-box}
+.dlg h3{margin:0;font:600 15px 'IBM Plex Sans',sans-serif}
+.dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#a59f92}
+.dlg input{height:38px;padding:0 12px;background:#121210;border:1px solid #a59f92;border-radius:8px;color:#ece7db;font:400 14px 'IBM Plex Sans',sans-serif;outline:none;box-shadow:0 0 0 3px rgba(233,228,216,.08)}
+.dlg .meta{font-size:12px;color:#8f897c}
+.dlg .acts{display:flex;justify-content:flex-end;gap:8px}
+.btn{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:8px;font:500 13px 'IBM Plex Sans',sans-serif;border:1px solid #3a3832;background:none;color:#ece7db}
+.btn.pri{background:#e9e4d8;border-color:#e9e4d8;color:#121210}
+.btn.pri .kbd{background:rgba(18,18,16,.08);border-color:rgba(18,18,16,.25);color:#3a3832}
+</style>
+</helmet>
+<div class="ba-root">
+
+<div style="position: absolute; left: 40px; top: 40px; width: 1000px">
+<div class="mono" style="font-size: 11px; font-weight: 600; letter-spacing: .32em; color: #8f897c">SREDA</div>
+<h1 style="margin: 10px 0 0; font-size: 28px; font-weight: 600">Before / after</h1>
+<div style="margin-top: 8px; font-size: 14px; line-height: 21px; color: #a59f92">Same content and layout. What changes: depth and soft shadows on floating windows, rounder corners, a sans for words and mono for numbers, bigger hit targets, greys that are readable on dark.</div>
+</div>
+
+<div class="colh" style="left: 40px; top: 150px">BEFORE</div>
+<div class="colh" style="left: 760px; top: 150px">AFTER</div>
+<div style="position: absolute; left: 720px; top: 150px; width: 1px; height: 1150px; background: #24231f"></div>
+
+<!-- ── Row 1: module + option menu ── -->
+<div class="rowh" style="left: 40px; top: 186px">Module and option menu</div>
+<div class="rowh" style="left: 760px; top: 186px">Module and option menu<span>same 4 HP × 1U grammar; values show because it is selected</span></div>
+
+<div class="o-mod" style="left: 40px; top: 224px; width: 280px; height: 132px">
+<div class="o-head">LPG</div>
+<div class="o-col" style="left: 0"></div>
+<div class="o-col" style="right: 0"></div>
+<div class="o-jack" style="left: 6.5px; top: 46.5px; border-color: #e9e4d8; background: #e9e4d8"></div>
+<div class="o-pl" style="left: 24px; top: 47px">IN</div>
+<div class="o-jack" style="left: 6.5px; top: 74.5px; border-color: #6cb4ee; border-style: dashed"></div>
+<div class="o-pl" style="left: 24px; top: 69px">CV</div>
+<div class="o-fld" style="left: 24px; top: 81px; color: #5d594f">1.00</div>
+<div class="o-jack" style="left: 6.5px; top: 102.5px; border-color: #f5a524; background: #f5a524"></div>
+<div class="o-pl" style="left: 24px; top: 97px">PING</div>
+<div class="o-fld" style="left: 24px; top: 109px; color: #f5a524">×2</div>
+<div class="o-jack" style="right: 6.5px; top: 46.5px; border-color: #e9e4d8; background: #e9e4d8"></div>
+<div class="o-pl" style="right: 24px; top: 44px; text-align: right">OUT</div>
+<div style="position: absolute; right: 24px; top: 56px; width: 16px; height: 2px; border-radius: 1px; background: #e9e4d8"></div>
+<div class="o-cell" style="left: 56px"><svg width="56" height="40" viewBox="0 0 48 34" style="display: block; margin-top: 2px; overflow: visible" aria-hidden="true"><path class="o-kt" d="{{O.lvl.track}}"></path><path class="o-ka" d="{{O.lvl.arc}}"></path><line class="o-kp" x1="24" y1="17" x2="{{O.lvl.px}}" y2="{{O.lvl.py}}"></line></svg><div class="o-jack" style="left: 1px; top: 1px; width: 9px; height: 9px; border-color: #6cb4ee"></div><div class="o-cl">LVL</div><div class="o-cv">1.00</div></div>
+<div class="o-cell" style="left: 112px"><svg width="56" height="40" viewBox="0 0 48 34" style="display: block; margin-top: 2px; overflow: visible" aria-hidden="true"><path class="o-kt" d="{{O.dec.track}}"></path><path class="o-kr" d="{{O.dec.ring}}"></path><path class="o-ka" d="{{O.dec.arc}}"></path><line class="o-kp" x1="24" y1="17" x2="{{O.dec.px}}" y2="{{O.dec.py}}"></line><circle class="o-kd" cx="{{O.dec.dx}}" cy="{{O.dec.dy}}" r="2.2"></circle></svg><div class="o-jack" style="left: 1px; top: 1px; width: 9px; height: 9px; border-color: #6cb4ee; background: #6cb4ee"></div><div class="o-cl">DEC</div><div class="o-cv">400ms</div></div>
+<div class="o-cell" style="left: 168px"><button class="o-opt">BOTH ▾</button><div class="o-cl">MODE</div></div>
+</div>
+<div class="o-menu" style="left: 214px; top: 290px">
+<button class="o-mi">VCA</button>
+<button class="o-mi">LP</button>
+<button class="o-mi on">BOTH</button>
+</div>
+
+<div class="md sel" style="left: 760px; top: 224px; width: 224px; height: 144px">
+<div class="md-h" style="box-sizing: border-box"><span>LPG 1</span></div>
+<div class="md-b">
+<div class="pc">
+<div class="ln"><span class="j ja on"></span><span class="pl">IN</span></div>
+<div class="ln"><span class="j jm nrm"></span><span class="pls"><span class="pl">CV</span><span class="pf" style="color: #77716a">1.00</span></span></div>
+<div class="ln"><span class="j jt on"></span><span class="pls"><span class="pl">PING</span><span class="pf" style="color: #f5a524">×2</span></span></div>
+</div>
+<div class="ctl">
+<div class="krow">
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.lvl.track}}"></path><path class="ka" d="{{K.lvl.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.lvl.px}}" y2="{{K.lvl.py}}"></line></svg><span class="mj"></span><span class="cl-l">LVL</span><span class="cl-v">1.00</span></div>
+<div class="cl"><svg width="56" height="44" aria-hidden="true"><path class="kt" d="{{K.dec.track}}"></path><path class="kr" d="{{K.dec.ring}}"></path><path class="ka" d="{{K.dec.arc}}"></path><circle class="kb" cx="28" cy="22" r="9.5"></circle><line class="kp" x1="28" y1="22" x2="{{K.dec.px}}" y2="{{K.dec.py}}"></line><circle class="kd" cx="{{K.dec.dx}}" cy="{{K.dec.dy}}" r="2.4"></circle></svg><span class="mj on"></span><span class="cl-l">DEC</span><span class="cl-v" style="color: #6cb4ee">400ms</span></div>
+</div>
+<div class="mstrip"><button class="op open" style="width: 104px" aria-label="Mode: both" aria-haspopup="listbox" aria-expanded="true">BOTH<svg width="8" height="6" aria-hidden="true"><path class="gw" d="M1 1 L4 4.5 L7 1"></path></svg></button></div>
+</div>
+<div class="pc out">
+<div class="ln"><span class="j ja on"></span><span class="pls"><span class="pl">OUT</span><span class="lv" style="width: 24px; background: #e9e4d8"></span></span></div>
+</div>
+</div>
+</div>
+<div class="menu" role="listbox" aria-label="Mode" style="left: 817px; top: 362px; width: 240px">
+<button class="mi" role="option" aria-selected="false"><span class="mi-n">VCA</span><span class="mi-d">Level only</span></button>
+<button class="mi" role="option" aria-selected="false"><span class="mi-n">LP</span><span class="mi-d">Filter only</span></button>
+<button class="mi on" role="option" aria-selected="true"><span class="mi-n">BOTH</span><span class="mi-d">Classic low-pass gate</span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path class="ico" d="M3 7.5 l2.5 2.5 l5.5 -6"></path></svg></button>
+</div>
+<div style="position: absolute; left: 1188px; top: 312px; width: 210px; font-size: 12px; line-height: 18px; color: #8f897c">Jacks are bigger (14 px) with a dark centre when plugged. Knobs get a body and a thicker track. Labels move from #6f6a5f to #a59f92 so they pass contrast.</div>
+
+<!-- ── Row 2: add module ── -->
+<div class="rowh" style="left: 40px; top: 496px">Add module</div>
+<div class="rowh" style="left: 760px; top: 496px">Add module<span>two-line items, the port it will patch into</span></div>
+
+<div class="o-search" style="left: 40px; top: 530px">
+<input placeholder="add module…" aria-label="Search modules (before)">
+<div class="o-tabs"><button class="o-tab on">ALL</button><button class="o-tab">MODULES</button><button class="o-tab">GROUPS</button><button class="o-tab">PROJECTS</button></div>
+<div class="o-from">FROM SLOPE › EOR</div>
+<div>
+<button class="o-item on"><span>LPG</span><span class="d">low-pass gate and VCA<span class="k">MODULE</span></span></button>
+<button class="o-item"><span>RHYTHM</span><span class="d">16 pads: euclid or…<span class="k">MODULE</span></span></button>
+<button class="o-item"><span>STAGES</span><span class="d">16 stages drawn as…<span class="k">MODULE</span></span></button>
+<button class="o-item"><span>SLOPE</span><span class="d">rise / fall, cycle…<span class="k">MODULE</span></span></button>
+<button class="o-item"><span>CHANCE</span><span class="d">bernoulli: each…<span class="k">MODULE</span></span></button>
+<button class="o-item"><span>SHIFT</span><span class="d">delay triggers by…<span class="k">MODULE</span></span></button>
+</div>
+</div>
+
+<div class="pop" style="left: 760px; top: 530px; width: 368px">
+<div class="pop-s">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle class="ico" cx="7" cy="7" r="4.5"></circle><path class="ico" d="M10.5 10.5 l3 3"></path></svg>
+<input placeholder="Add module…" aria-label="Search modules">
+<span class="kbd">esc</span>
+</div>
+<div class="ctx"><span class="dot" style="background: #f5a524"></span>from <b>SLOPE › EOR</b><span class="r">trigger</span></div>
+<div class="seg">
+<button class="on">All <span class="n">7</span></button>
+<button>Modules <span class="n">6</span></button>
+<button>Groups <span class="n">1</span></button>
+</div>
+<div class="lst">
+<button class="it on"><span class="it-m"><span class="it-n">LPG</span><span class="it-d">Low-pass gate and VCA</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>PING</span></button>
+<button class="it"><span class="it-m"><span class="it-n">RHYTHM</span><span class="it-d">16 pads: euclid or grid, accents</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>CLK</span></button>
+<button class="it"><span class="it-m"><span class="it-n">STAGES</span><span class="it-d">16 stages drawn as a contour</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>ADV</span></button>
+<button class="it"><span class="it-m"><span class="it-n">SLOPE</span><span class="it-d">Rise / fall, cycle, slew</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>TRIG</span></button>
+<button class="it"><span class="it-m"><span class="it-n">CHANCE</span><span class="it-d">Bernoulli: each trigger to A or B</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>TRIG</span></button>
+<button class="it"><span class="it-m"><span class="it-n">SHIFT</span><span class="it-d">Delay triggers by part of the period</span></span><span class="it-p"><span class="dot" style="background: #f5a524; width: 6px; height: 6px"></span>TRIG</span></button>
+</div>
+<div class="pop-f">
+<span><span class="kbd">↑</span><span class="kbd">↓</span>move</span>
+<span><span class="kbd">↵</span>add</span>
+<span><span class="kbd">tab</span>switch tab</span>
+</div>
+</div>
+<div style="position: absolute; left: 1150px; top: 560px; width: 248px; font-size: 12px; line-height: 18px; color: #8f897c">The bright #8f897c outline becomes a dark border plus a soft shadow, so the window lifts off the canvas instead of being outlined. Selection gets a role-coloured edge: amber here because the cable being dragged is a trigger.</div>
+
+<!-- ── Row 3: save + toolbar ── -->
+<div class="rowh" style="left: 40px; top: 1010px">Save and toolbar</div>
+<div class="rowh" style="left: 760px; top: 1010px">Save and toolbar<span>one grouped bar, shortcuts shown as keys</span></div>
+
+<div style="position: absolute; left: 40px; top: 1048px; display: flex; gap: 8px">
+<button class="o-btn on">SIDEBAR</button>
+<button class="o-btn">SAVE</button>
+<button class="o-btn">NEW</button>
+<button class="o-btn">DICE</button>
+</div>
+<div class="o-save" style="left: 40px; top: 1104px"><span>SAVE PROJECT</span><input value="untitled" aria-label="Name (before)"><span>↵</span></div>
+
+<div class="bar" style="left: 760px; top: 1044px">
+<button class="tbb"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect class="ico" x="2.5" y="2.5" width="11" height="11" rx="2.5"></rect><circle cx="5.8" cy="5.8" r="1" fill="currentColor"></circle><circle cx="10.2" cy="10.2" r="1" fill="currentColor"></circle><circle cx="8" cy="8" r="1" fill="currentColor"></circle></svg>Dice</button>
+<span class="vdiv"></span>
+<button class="tbb"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path class="ico" d="M8 3 v10 M3 8 h10"></path></svg>New</button>
+<button class="tbb"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path class="ico" d="M8 2.5 v7 M5 7 l3 3 l3 -3 M3 12.5 h10"></path></svg>Save<span class="kbd">⌘S</span></button>
+<span class="vdiv"></span>
+<button class="tbb on" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect class="ico" x="2" y="2.5" width="12" height="11" rx="2"></rect><path class="ico" d="M10 2.5 v11"></path></svg>Sidebar</button>
+</div>
+
+<div class="dlg" style="left: 760px; top: 1104px; width: 400px">
+<h3>Save project</h3>
+<label>Name<input value="Untitled patch"></label>
+<div class="meta">4 modules · 4 wires</div>
+<div class="acts">
+<button class="btn">Cancel</button>
+<button class="btn pri">Save<span class="kbd">↵</span></button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1340}}'>
+function ang(v) { return (-135 + 270 * v) * Math.PI / 180; }
+function mk(cx, cy) {
+  function pt(r, v) { var a = ang(v); return [(cx + r * Math.sin(a)).toFixed(2), (cy - r * Math.cos(a)).toFixed(2)]; }
+  function arc(v0, v1, r) {
+    if (v1 - v0 < 0.003) return '';
+    var p0 = pt(r, v0), p1 = pt(r, v1), large = (v1 - v0) * 270 > 180 ? 1 : 0;
+    return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0] + ' ' + p1[1];
+  }
+  return { pt: pt, arc: arc };
+}
+var N = mk(28, 22), OL = mk(24, 17);
+function knob(v, m) {
+  var p = N.pt(7, v), d = N.pt(18, Math.min(1, v + (m || 0)));
+  return { track: N.arc(0, 1, 14), arc: N.arc(0, v, 14), px: p[0], py: p[1], ring: m ? N.arc(Math.max(0, v - m), Math.min(1, v + m), 18) : '', dx: d[0], dy: d[1] };
+}
+function oknob(v, m) {
+  var p = OL.pt(8, v), d = OL.pt(15, Math.min(1, v + (m || 0)));
+  return { track: OL.arc(0, 1, 11), arc: OL.arc(0, v, 11), px: p[0], py: p[1], ring: m ? OL.arc(Math.max(0, v - m), Math.min(1, v + m), 15) : '', dx: d[0], dy: d[1] };
+}
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      K: { lvl: knob(1), dec: knob(0.45, 0.2) },
+      O: { lvl: oknob(1), dec: oknob(0.45, 0.2) }
+    };
+  }
+}
+</script>
+</body>
+</html>
