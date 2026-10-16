@@ -188,6 +188,7 @@ pub mod bench {
                 b.connected_in = inputs.iter().map(|s| !s.is_empty()).collect();
                 let mut dsp = make();
                 let mut res = vec![Vec::new(); outputs];
+                let mut traces = Vec::new();
                 for blk in 0..blocks {
                     for (j, sig) in inputs.iter().enumerate() {
                         if !sig.is_empty() {
@@ -212,13 +213,21 @@ pub mod bench {
                     for (o, r) in b.out.iter().zip(res.iter_mut()) {
                         r.extend_from_slice(o);
                     }
+                    if let Some(t) = dsp.trace() {
+                        traces.push(t.to_vec());
+                    }
                 }
-                res
+                (res, traces)
             };
+            let (blockwise, blockwise_traces) = run(false);
+            let (per_sample, per_sample_traces) = run(true);
             assert_eq!(
-                run(false),
-                run(true),
+                blockwise, per_sample,
                 "block-wise and per-sample outputs differ"
+            );
+            assert_eq!(
+                blockwise_traces, per_sample_traces,
+                "block-wise and per-sample traces differ"
             );
         }
     }

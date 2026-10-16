@@ -434,6 +434,33 @@ fn the_trace_reports_pattern_cursors_and_live_steps() {
     assert_eq!(m.trace().unwrap()[9], 19.0);
 }
 
+#[test]
+fn in_a_feedback_loop_an_edit_reaches_the_trace_by_the_next_block_end() {
+    // one sample per call, as inside a feedback loop: the edit is seen once per block, the trace written at its end
+    let mut f = defaults();
+    steps(&mut f, 0, N, &[12.0, 14.0]);
+    let mut b = bench([0.0, 0.0, 0.0, 0.5], &f);
+    let mut m = MetaSeq::new(SR);
+    let block = |b: &mut Bench, m: &mut MetaSeq| {
+        let mut io = Io {
+            inp: &b.inp,
+            par: &b.par,
+            fixed: &b.fixed,
+            out: &mut b.out,
+            connected_in: &b.connected_in,
+            connected_out: &b.connected_out,
+        };
+        for i in 0..BLOCK {
+            m.process(&mut io, &mut b.ctx, i, i + 1);
+        }
+    };
+    block(&mut b, &mut m);
+    assert_eq!(m.trace().unwrap()[TR_LIVE + N * STEPS + 1], 14.0);
+    b.fixed[lane_at(0, N) + 1] = 19.0;
+    block(&mut b, &mut m);
+    assert_eq!(m.trace().unwrap()[TR_LIVE + N * STEPS + 1], 19.0);
+}
+
 /// A pattern A with something in every lane, each lane 8 steps long (STEP mode, so every lane wraps every 8 clocks).
 fn busy() -> Vec<f64> {
     let mut f = with_gate(0, "x.xx..x.");

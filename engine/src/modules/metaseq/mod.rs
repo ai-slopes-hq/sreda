@@ -3,7 +3,7 @@
 
 use std::sync::OnceLock;
 
-use crate::dsp::{Ctx, Dsp, Io, TRACE_LEN};
+use crate::dsp::{Ctx, Dsp, Io, BLOCK, TRACE_LEN};
 use crate::spec::{choice, knob, port, Display, ModuleSpec, Param, Role, Unit};
 
 const PATTERNS: usize = 8;
@@ -518,7 +518,10 @@ impl MetaSeq {
 
 impl Dsp for MetaSeq {
     fn process(&mut self, io: &mut Io, ctx: &mut Ctx, from: usize, to: usize) {
-        self.sync(io);
+        // `fixed` changes only between blocks: inside a feedback loop (one sample per call) look once per block
+        if from == 0 {
+            self.sync(io);
+        }
         let slide_len = SLIDE_S * self.sample_rate;
         for i in from..to {
             let reset = io.inp[RESET][i] > 0.5;
@@ -614,7 +617,9 @@ impl Dsp for MetaSeq {
             io.out[OUT_EOC][i] = if self.now < self.eoc_until { 1.0 } else { 0.0 };
             self.now += 1;
         }
-        self.write_trace();
+        if to == BLOCK {
+            self.write_trace();
+        }
     }
 
     fn reset(&mut self) {
