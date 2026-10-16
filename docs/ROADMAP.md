@@ -101,6 +101,9 @@ of a creative tool; nothing of its UI is ported.
   are in (the drawer and MUTATE survive a document replace; a pattern tab is no undo step). Deferred items are in
   `docs/backlog.md` ("From Plan 14"). The live prototype artifact is not yet republished (auto mode refused it; it
   awaits the user). **Next:** merge into `main` by the user's choice.
+- **Branch `metaseq-perf`** (2026-10-16), on top of Plan 15: META-SEQ inside a feedback loop syncs once per block
+  and writes its trace at the block end; QUANT keeps its last snap while input, ROOT and SCALE hold. The 200-module
+  patch is back to 23.2 % natively (it was 26 % after Plan 14 put QUANT into it) and ~4.4 s for 10 s in WASM.
 - **Later (backlog):** META-OSC (OSC + COMPLEX + LFO range); a patch language with a live REPL.
 - **Next:** choose the next milestone (candidates in `docs/backlog.md`: recording and export).
 

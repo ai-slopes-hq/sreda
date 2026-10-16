@@ -168,9 +168,10 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 
 ## From Plan 14
 
-- **META-SEQ inside a feedback loop is slow:** `sync()` and `write_trace()` run on every one-sample call; ~0.14 ms
-  compile per META-SEQ.
-- `protocol/src/bench.test.ts` 5 s threshold is marginal under machine load (flaky).
+- **A META-SEQ compiles in ~0.14 ms.** (Inside a feedback loop it now syncs once per block and writes its trace at
+  the block end.)
+- `protocol/src/bench.test.ts` 5 s threshold was marginal (flaky): the 200-module patch had QUANT re-snapping held
+  pitch on every sample. QUANT now keeps its last snap; the patch renders in ~4.4 s.
 - **The prototype's Main board** keeps dormant contour / pads display code (no module uses those kinds now) and draws
   META-SEQ as a plain 2U panel with a stand-in Sim; the drawer is not prototyped.
 - **Drift made at a PAT switch** is not in the document until that pattern plays again (the trace carries only the

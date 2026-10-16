@@ -62,17 +62,50 @@ pub fn snap(semis: f64, scale: &[i32], root: i32) -> f64 {
     pick + root as f64
 }
 
-pub struct Quant;
+/// Pitch mostly arrives as held steps, so the last snap is kept and reused while input, ROOT and SCALE stay put.
+pub struct Quant {
+    last_in: f32,
+    last_root: i32,
+    last_scale: usize,
+    last_out: f32,
+}
+
+impl Quant {
+    pub fn new() -> Self {
+        // a NaN input never equals itself: the first sample always snaps
+        Quant {
+            last_in: f32::NAN,
+            last_root: 0,
+            last_scale: 0,
+            last_out: 0.0,
+        }
+    }
+}
+
+impl Default for Quant {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Dsp for Quant {
     fn process(&mut self, io: &mut Io, _ctx: &mut Ctx, from: usize, to: usize) {
-        let scale = SCALES[(io.fixed[0] as usize).min(SCALES.len() - 1)];
+        let s = (io.fixed[0] as usize).min(SCALES.len() - 1);
         for i in from..to {
+            let x = io.inp[0][i];
             let root = io.par[0][i].round() as i32;
-            io.out[0][i] = (snap(io.inp[0][i] as f64 * 12.0, scale, root) / 12.0) as f32;
+            if x != self.last_in || root != self.last_root || s != self.last_scale {
+                self.last_out = (snap(x as f64 * 12.0, SCALES[s], root) / 12.0) as f32;
+                self.last_in = x;
+                self.last_root = root;
+                self.last_scale = s;
+            }
+            io.out[0][i] = self.last_out;
         }
     }
-    fn reset(&mut self) {}
+    fn reset(&mut self) {
+        self.last_in = f32::NAN;
+    }
 }
 
 #[cfg(test)]
@@ -84,7 +117,7 @@ mod tests {
     fn q(input_st: f64, scale: f64, root: f64) -> f64 {
         let mut b = Bench::new(48_000.0, 1, &[root], &[scale], 1);
         b.connected_in = vec![true];
-        let o = b.run(&mut Quant, 1, |_, i, inp| {
+        let o = b.run(&mut Quant::new(), 1, |_, i, inp| {
             inp[0][i] = (input_st / 12.0) as f32
         });
         o[0][0] as f64 * 12.0
@@ -107,8 +140,26 @@ mod tests {
     }
 
     #[test]
+    fn a_held_input_follows_a_root_or_scale_change() {
+        let mut b = Bench::new(48_000.0, 1, &[0.0], &[1.0], 1);
+        b.connected_in = vec![true];
+        let mut m = Quant::new();
+        let last = |b: &mut Bench, m: &mut Quant| {
+            b.run(m, 1, |_, i, inp| inp[0][i] = (1.0 / 12.0) as f32)[0][BLOCK - 1] as f64 * 12.0
+        };
+        // C# held: C major → C (a tie goes down)
+        assert!((last(&mut b, &mut m) - 0.0).abs() < 1e-4);
+        // ROOT D: D major has C#
+        b.par[0] = [2.0; BLOCK];
+        assert!((last(&mut b, &mut m) - 1.0).abs() < 1e-4);
+        // SCALE WHL from D: D, E, F#, G#, A#, C → C (a tie goes down)
+        b.fixed[0] = 7.0;
+        assert!((last(&mut b, &mut m) - 0.0).abs() < 1e-4);
+    }
+
+    #[test]
     fn blockwise_equals_per_sample() {
         let x: Vec<f32> = (0..4 * BLOCK).map(|i| (i as f32 * 0.01).sin()).collect();
-        Bench::blockwise_equals_per_sample(|| Box::new(Quant), &[x], &[3.0], &[2.0], 1, 4);
+        Bench::blockwise_equals_per_sample(|| Box::new(Quant::new()), &[x], &[3.0], &[2.0], 1, 4);
     }
 }
