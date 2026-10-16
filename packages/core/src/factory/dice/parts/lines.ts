@@ -50,7 +50,7 @@ const bells: Part = (c) => {
   const lp = S.add('lpg', ...at(3, true), { decay: between(R, 0.8, 2.5), mode: LPG.BOTH });
   S.wire(seq, 'gate', lp, 'ping');
   if (kind === 'comb') {
-    // the ping is the tone: the gate rings a comb tuned by the line
+    // the ping is the tone: the gate rings a comb tuned by the line. No audio-rate oscillator, so no `osc` / `fm`.
     const fl = S.add('filter', ...at(1), {
       cutoff: pick(R, [440, 523.3, 587.3]),
       res: between(R, 0.93, 0.98),
@@ -67,8 +67,8 @@ const bells: Part = (c) => {
       'line',
       'bells',
       0.6,
-      fl,
-      { cutoff: [fl, '@cutoff'] },
+      null,
+      { pitch: [fl, 'pitch'], cutoff: [fl, '@cutoff'] },
       2,
     );
   }

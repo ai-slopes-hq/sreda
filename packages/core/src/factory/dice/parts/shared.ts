@@ -73,7 +73,8 @@ export function gateEnv(
   return env;
 }
 
-/** the voice of a sequenced part: gate and seq always; its oscillator's pitch, out and FM inputs, and its filter's cutoff */
+/** the voice of a sequenced part: gate and seq always; with an `osc` (an oscillator module) its pitch, out and FM
+ * ports; a part with no audio-rate oscillator passes null and sets `pitch` (or nothing) in `extra` */
 export function pitchedVoice(
   seq: string,
   ids: string[],
@@ -82,7 +83,7 @@ export function pitchedVoice(
   role: Role,
   part: PartId,
   level: number,
-  osc: string,
+  osc: string | null,
   extra: Partial<DiceVoice> = {},
   ratio = 4,
 ): DiceVoice {
@@ -96,9 +97,7 @@ export function pitchedVoice(
     level,
     seq,
     gate: [seq, 'gate'],
-    pitch: [osc, 'pitch'],
-    osc: [osc, 'out'],
-    fm: [osc, 'fm'],
+    ...(osc ? { pitch: [osc, 'pitch'], osc: [osc, 'out'], fm: [osc, 'fm'] } : {}),
     ...extra,
   };
 }

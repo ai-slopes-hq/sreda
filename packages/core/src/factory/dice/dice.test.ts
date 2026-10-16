@@ -3,7 +3,7 @@ import { compile } from '../../compile';
 import { validateDoc } from '../../doc';
 import { SPECS } from '../../spec';
 import { wireProblems } from '../../wires';
-import { build } from '../build';
+import { build, buildWith } from '../build';
 import { assemble } from './assemble';
 import { dicePatch } from './index';
 import { drumKit } from './parts/drums';
@@ -101,21 +101,22 @@ test('drumKit builds 2 to 4 drum parts into one DRUMS voice', () => {
   }
 });
 
+const PITCHED = [
+  'bass-pulse',
+  'bass-reese',
+  'bass-fm',
+  'bass-sub',
+  'bass-acid',
+  'pluck',
+  'arp',
+  'bells',
+  'stab',
+  'pad',
+  'westcoast',
+];
+
 test('pitched parts fill pitch, osc, gate and seq', () => {
-  const pitched = [
-    'bass-pulse',
-    'bass-reese',
-    'bass-fm',
-    'bass-sub',
-    'bass-acid',
-    'pluck',
-    'arp',
-    'bells',
-    'stab',
-    'pad',
-    'westcoast',
-  ];
-  for (const id of pitched) {
+  for (const id of PITCHED) {
     for (let seed = 1; seed <= 20; seed++) {
       build(SPECS, (S) => {
         let s = seed;
@@ -124,8 +125,43 @@ test('pitched parts fill pitch, osc, gate and seq', () => {
         const at = `${id} (seed ${seed})`;
         expect(v.part, at).toBe(id);
         expect(['bass', 'line'], at).toContain(v.role);
-        for (const k of ['pitch', 'osc', 'gate', 'seq'] as const) expect(v[k], `${at}: ${k}`).toBeDefined();
+        for (const k of ['pitch', 'gate', 'seq'] as const) expect(v[k], `${at}: ${k}`).toBeDefined();
+        // every pitched part has an oscillator, except bells' COMB (the gate rings a filter)
+        if (!(id === 'bells' && v.osc === undefined)) expect(v.osc, `${at}: osc`).toBeDefined();
       });
     }
   }
+});
+
+test('every voice field names a real port of its module, in the right direction', () => {
+  let comb = 0;
+  for (const id of Object.keys(PARTS)) {
+    for (let seed = 1; seed <= 30; seed++) {
+      const { doc, value: v } = buildWith(SPECS, (S) => {
+        let s = seed;
+        const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+        return PARTS[id]!({ S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 });
+      });
+      const at = `${id} (seed ${seed})`;
+      const spec = (mid: string) => SPECS[doc.modules.find((m) => m.id === mid)!.type]!;
+      const has = (ports: { id: string }[], p: string) => ports.some((x) => x.id === p);
+      const input = ([m, p]: [string, string]) => has(spec(m).inputs, p);
+      const output = ([m, p]: [string, string]) => has(spec(m).outputs, p);
+      expect(output(v.out), `${at}: out`).toBe(true);
+      if (v.pitch) expect(input(v.pitch), `${at}: pitch`).toBe(true);
+      if (v.fm) expect(input(v.fm), `${at}: fm`).toBe(true);
+      if (v.osc) expect(output(v.osc), `${at}: osc`).toBe(true);
+      if (v.gate) {
+        expect(output(v.gate), `${at}: gate`).toBe(true);
+        expect(doc.modules.find((m) => m.id === v.gate![0])!.type, `${at}: gate`).toBe('metaseq');
+      }
+      if (v.cutoff) {
+        expect(v.cutoff[1], at).toBe('@cutoff');
+        expect(has(spec(v.cutoff[0]).params, 'cutoff'), `${at}: cutoff`).toBe(true);
+      }
+      for (const [cid, port] of v.clocks) expect(input([cid, port]), `${at}: clock`).toBe(true);
+      if (id === 'bells' && v.osc === undefined) comb++;
+    }
+  }
+  expect(comb, 'the COMB bells branch was hit').toBeGreaterThan(0);
 });
