@@ -115,8 +115,17 @@ of a creative tool; nothing of its UI is ported.
   style plus the small decided behaviours (frame tools on hover, the sidebar narrows the canvas, no SAVE AS / NEW in
   LIBRARY, no empty side column); **Plan 17** the new functions (STACK stretch to the right with a wider display, 2U
   displays for MIX / SPREAD / SWITCH / ATT, context hints and `?`, menu item descriptions, the save dialog, a LIMIT
-  lamp, truncated text). **Plan 16 written:** `docs/superpowers/plans/2026-10-16-16-restyle.md` (7 tasks, 4
-  checkpoints), on the branch `plan-16-restyle`. **Next:** execute it.
+  lamp, truncated text). **Plan 16 done on the branch `plan-16-restyle`, not merged**
+  (2026-10-16; `docs/superpowers/plans/2026-10-16-16-restyle.md`): spec §1b as built — Plex Mono + Sans shipped,
+  `popover` / `label` / `shadow` tokens and four skin fixes (TOUCH `muted` `#a3a3a3` added after the contrast check),
+  radius / shadow / ring scales, 14 px jacks, knobs with a body, NOISE / OUT 2 HP and A4 / A4 CLK 3 HP, the menu and
+  picker (port pill, from line), LISTEN pill, top bars with the project name, zoom, hints with key caps,
+  sentence-case chrome and notices, the floating sidebar that narrows the canvas with the four tabs restyled (MIX:
+  horizontal fader, dB meter), frames with a 32 px header and tools on hover, the collapsed card, the META-SEQ
+  drawer. `pnpm screens` captures 14 screens in six skins to `screens/`. Executed subagent-driven; every task and
+  the whole branch reviewed, the final review's fixes are in; deferred items in `docs/backlog.md` ("From Plan 16").
+  The user went away before checkpoints 2–4: they look at `screens/` (or `pnpm dev`) before the merge. **Next:**
+  the user's look, then merge; then Plan 17.
 
 ## The road (vertical slices: something to hear at every stage)
 

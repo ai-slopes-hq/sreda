@@ -190,6 +190,34 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Migration:** cable dedup reaches beyond the remapped cables; the notice is cleared by the audio-start click; a
   free-running STAGES' SLOPE runs at the default rate (STAGES t{k} dropped).
 
+## From Plan 16
+
+- **Plan 17 (decided, spec §1b):** STACK stretch to the right with a wider display; 2U displays for MIX / SPREAD /
+  SWITCH / ATT; context hints and `? all shortcuts`; a short description per menu item; the save dialog; the LIMIT
+  lamp (needs a pre-limiter readout); the stereo MIX meter (needs L / R peaks per OUT).
+- **Keyboard:** `Segmented` has no roving tabindex / arrow keys; the LISTEN ✕ has no focus style; the LEN chip in the
+  drawer is mouse-only.
+- **Picker:** counts run `pickerItems` three extra times per query; replace mode shows a lone `Modules` segment; the
+  frame-CLK `from` line has no e2e (portLabel is unit-tested); the listen helper in `Canvas.tsx` duplicates
+  `portLabel`.
+- **Sidebar:** a WIRES / LIBRARY filter matching nothing leaves a bare panel (no `No matches`); the MIX fader's range
+  is a fixed 200 px of travel, not the track width; MASTER's card is ~4 px wider than the strips; a stray
+  `.sr-cables .preview` rule sits in the sidebar block of `canvas.css`.
+- **Frames:** `1 module` (singular) is untested; `GHEAD` (TS) and `--frame-head` (CSS) both say 32 with nothing
+  keeping them in step; a collapsed frame shows no BPM pill (ruled; reconsider if tempo should show).
+- **Drawer:** the two-row lane head overflows at the drawer's minimum height (160 px); the read-only Mutate field
+  gets a hover border; magic offsets and a duplicated rule in `seq.css`; brittle drawer tests (header order by
+  `textContent.indexOf`, 210 px read from `seq.css` by regex, a selector-rewriting helper).
+- **Chrome:** `Click to start audio` stays at top 14 px (fine on a full-width canvas); the notice sits at 100 px
+  even without LISTEN; tooltip casing is mixed (`save (⌘S)` vs `Undo (⌘Z)`); `.sr-hint`'s `right: 240px` is tied to
+  the zoom bar's width; a narrow canvas (sidebar dragged wide) lets the bars overlap and the picker slide under the
+  sidebar — no window `minWidth`.
+- **Panels:** the field `editing` state clears only on `pointerup` (not `pointercancel`); `.sr-cval` overflows its
+  cell by 1 px; the pill radii of `.sr-pport` / `.sr-listen` are literals.
+- **Tests / tooling:** `Chrome.test` covers little of the zoom / hint / sidebar-on states and casts the session with
+  `{} as never`; `scripts/screens.mjs` builds a RegExp from a tab name unescaped and leaves `SREDA_A4_PORT` without a
+  comment.
+
 ## From Plan 15
 
 - **A4 CC / NRPN parameter control** — the next step on the same event path; the tables are in the `elektron`
