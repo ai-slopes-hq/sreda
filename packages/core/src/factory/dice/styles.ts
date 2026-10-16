@@ -55,7 +55,28 @@ const acid: Style = {
   scales: MINOR,
   roles: [
     { role: 'bass', p: 1, parts: [['bass-acid', 1]] },
+    // a second line: a sub under the first, or another acid line
+    {
+      role: 'bass',
+      p: 0.3,
+      parts: [
+        ['bass-sub', 2],
+        ['bass-acid', 1],
+      ],
+    },
     { role: 'drums', p: 0.7, parts: [['drums-acid', 1]] },
+    // hats or a little percussion of their own, over the kit or alone
+    {
+      role: 'drums',
+      p: 0.4,
+      parts: [
+        ['hats-noise', 2],
+        ['hats-metal', 1],
+        ['hats-comb', 1],
+        ['perc-tom', 1],
+        ['perc-ping', 1],
+      ],
+    },
   ],
   fx: [
     [none, 1],
@@ -106,7 +127,6 @@ const electro: Style = {
   ],
   fx: [[digiEcho, 1]],
   twists: [
-    ['fm', 2],
     ['shaper', 1],
     ['chance', 1],
     ['snh', 1],
@@ -141,7 +161,6 @@ const idm: Style = {
     ['switch', 1],
     ['polymeter', 2],
     ['shaper', 1],
-    ['fm', 1],
   ],
   twistCount: TWISTS,
 };
@@ -184,6 +203,17 @@ const berlin: Style = {
   roles: [
     { role: 'line', p: 1, parts: [['arp', 1]] },
     { role: 'line', p: 0.8, parts: [['pad', 1]] },
+    // a second voice over the arp: another arp, a pluck, bells or a stab
+    {
+      role: 'line',
+      p: 0.45,
+      parts: [
+        ['arp', 1],
+        ['pluck', 1],
+        ['bells', 1],
+        ['stab', 1],
+      ],
+    },
     {
       role: 'bass',
       p: 0.35,
@@ -240,15 +270,14 @@ const industrial: Style = {
   fx: [[driveReverb, 1]],
   twists: [
     ['shaper', 3],
-    ['fm', 1],
     ['feedback', 1],
     ['chance', 1],
-    ['switch', 1],
   ],
   twistCount: TWISTS,
 };
 
-// a drone may already have GRAINS, so it has no `grains` twist
+// a drone may already have GRAINS, so it has no `grains` twist; it has no gate or oscillator input for `fm`, `snh`
+// or `switch` to use. Every twist in a pool must be able to apply to that style's parts (a test throws 500 of each).
 const drone: Style = {
   id: 'drone',
   label: 'drone',
@@ -256,14 +285,23 @@ const drone: Style = {
   scales: [5, 6],
   roles: [
     { role: 'texture', p: 1, count: [1, 2], parts: [['drone', 1]] },
-    { role: 'texture', p: 0.35, parts: [['grains', 1]] },
+    { role: 'texture', p: 0.4, parts: [['grains', 1]] },
+    // the other textures, sparingly: a wash, chance-played blips or bells
+    {
+      role: 'texture',
+      p: 0.45,
+      parts: [
+        ['wash', 2],
+        ['blips', 1],
+        ['chaos-bells', 1],
+      ],
+    },
+    { role: 'line', p: 0.25, parts: [['pad', 1]] },
   ],
   fx: [[droneEcho, 1]],
   twists: [
-    ['fm', 1],
     ['feedback', 2],
     ['shaper', 1],
-    ['snh', 1],
   ],
   twistCount: TWISTS,
 };
@@ -280,9 +318,20 @@ const bells: Style = {
       parts: [
         ['bells', 3],
         ['pad', 1],
+        ['pluck', 1],
       ],
     },
     { role: 'texture', p: 0.35, parts: [['drone', 1]] },
+    // chance-played bells or a wash under them
+    {
+      role: 'texture',
+      p: 0.4,
+      parts: [
+        ['chaos-bells', 2],
+        ['wash', 1],
+      ],
+    },
+    { role: 'line', p: 0.3, parts: [['pad', 1]] },
   ],
   fx: [[delayReverb('wash'), 1]],
   twists: [

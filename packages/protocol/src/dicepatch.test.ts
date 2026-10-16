@@ -1,4 +1,4 @@
-import { dicePatch, SPECS, STYLE_IDS } from '@sreda/core';
+import { build, dicePatch, PARTS, SPECS, STYLE_IDS, TWISTS, type DiceCtx } from '@sreda/core';
 import { expect, test } from 'vitest';
 import { renderDoc } from './render';
 
@@ -60,4 +60,38 @@ test('throws with a twist sound too: three renders of each twist stay in the sam
     'switch',
   ]);
   expect(bad).toEqual([]);
+}, 240_000);
+
+test('the feedback twist does not run away: at the corners of its ranges, 60 s on a drum, a plucked and a sustained voice stay within 3 dB', () => {
+  const grown: string[] = [];
+  for (const part of ['drums-techno', 'pluck', 'drone']) {
+    for (const corner of [0.9999, 0.0001]) {
+      for (const seed of [1, 2]) {
+        const doc = build(SPECS, (S) => {
+          let s = seed;
+          const R = () => (s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+          const c: DiceCtx = { S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 };
+          const v = PARTS[part]!(c);
+          // every random choice of the twist at an end of its range
+          TWISTS.feedback({ ...c, R: () => corner }, [v]);
+          const o = S.add('out', 1800, 0, { level: 0.7 });
+          S.wire(v.out[0], v.out[1], o, 'l');
+          const g = S.frame([...v.ids, o], part, { bpm: 120 });
+          for (const [id, port, ratio] of v.clocks) {
+            S.wire(g, 'clkOut', id, port);
+            if (ratio !== 1) S.rat(id, port, ratio);
+          }
+        });
+        const { l } = renderDoc(doc, SPECS, 60);
+        const rms = (a: number, b: number) => {
+          let q = 0;
+          for (let i = a * 48_000; i < b * 48_000; i++) q += l[i]! * l[i]!;
+          return 10 * Math.log10(q / ((b - a) * 48_000) + 1e-20);
+        };
+        const rise = rms(50, 60) - rms(4, 14);
+        if (!(rise <= 3)) grown.push(`${part} R=${corner} seed ${seed}: ${rise.toFixed(1)} dB`);
+      }
+    }
+  }
+  expect(grown).toEqual([]);
 }, 240_000);

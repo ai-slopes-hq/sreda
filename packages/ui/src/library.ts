@@ -232,7 +232,7 @@ export function libraryActions(s: SessionApi, specs: Specs, bridge: SredaBridge 
         s.setState('sidebar', { open: true, tab: 'LIBRARY' });
       }
     },
-    /** DICE (spec §6, revision 29): a random playable patch in place of the canvas (an undo step), the project unnamed */
+    /** DICE (spec §6, revision 36): a random playable patch in place of the canvas (an undo step), the project unnamed */
     dice(seed: number = (Math.random() * 2 ** 32) >>> 0): void {
       const { doc, label } = dicePatch(specs, seed);
       s.commit(doc);

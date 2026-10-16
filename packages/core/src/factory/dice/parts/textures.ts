@@ -1,7 +1,7 @@
 // The texture parts: drones, washes and clouds that sit under the rest, and the chance-played bells and blips over it.
 import { between, chance, logBetween, pick } from '../random';
 import type { DiceCtx, DiceVoice, Part } from '../types';
-import { FILTER, LPG, WAVE } from './shared';
+import { C, degreeFreq, FILTER, LPG, WAVE } from './shared';
 
 /** a texture's grid: column `col`, rows 200 apart from `c.y` (a new row unless `same`) */
 function rows(c: DiceCtx) {
@@ -16,7 +16,8 @@ const drone: Part = (c) => {
   const { S, R } = c;
   const at = rows(c);
   const cx = S.add('complex', ...at(0), {
-    freq: logBetween(R, 40, 110),
+    // nothing plays a drone's pitch, so it sits on a degree of the throw's scale
+    freq: degreeFreq(c, 40, 110),
     ratio: pick(R, [0.5, 1.5, 2, 3]),
     index: between(R, 0.1, 0.4),
     timbre: between(R, 0, 0.5),
@@ -42,7 +43,7 @@ const drone: Part = (c) => {
   S.wire(sw, 'out', fl, '@cutoff');
   S.att(fl, '@cutoff', between(R, 0.25, 0.5));
   ids.push(fl, sw);
-  return { ids, out: [fl, 'lp'], clocks: [], name: 'DRONE', role: 'texture', part: 'drone', level: 0.6 };
+  return { ids, out: [fl, 'lp'], clocks: [], name: 'HUM', role: 'texture', part: 'drone', level: 0.6 };
 };
 
 const wash: Part = (c) => {
@@ -73,7 +74,7 @@ const wash: Part = (c) => {
 const grains: Part = (c) => {
   const { S, R } = c;
   const at = rows(c);
-  const os = S.add('osc', ...at(0), { freq: pick(R, [330, 440, 523.3]), wave: WAVE.SIN });
+  const os = S.add('osc', ...at(0), { freq: degreeFreq(c, 300, 620), wave: WAVE.SIN });
   const lp = S.add('lpg', ...at(1, true), { decay: between(R, 1, 2.5), mode: LPG.BOTH });
   const gr = S.add('grains', ...at(2, true), {
     source: 1,
@@ -103,9 +104,9 @@ const chaosBells: Part = (c) => {
   const ch = S.add('chance', ...at(0), { p: between(R, 0.35, 0.55) });
   const un = S.add('uncertainty', ...at(1, true), { levels: Math.round(between(R, 6, 10)) });
   const q = S.add('quant', ...at(2, true), { scale: c.scale, root: c.root });
-  const a = S.add('osc', ...at(0), { freq: pick(R, [660, 880, 1046.5]), wave: WAVE.SIN });
+  const a = S.add('osc', ...at(0), { freq: C[5], wave: WAVE.SIN });
   const al = S.add('lpg', ...at(1, true), { decay: between(R, 1.6, 2.8), mode: LPG.BOTH });
-  const b = S.add('osc', ...at(0), { freq: pick(R, [1320, 1568]), wave: WAVE.TRI });
+  const b = S.add('osc', ...at(0), { freq: C[6], wave: WAVE.TRI });
   const bl = S.add('lpg', ...at(1, true), { decay: between(R, 1, 1.8), mode: LPG.BOTH });
   const mx = S.add('mix', ...at(2, true), { la: 0.6, lb: 0.4 });
   const rv = S.add('reverb', ...at(3, true), {
@@ -141,14 +142,16 @@ const blips: Part = (c) => {
   const at = rows(c);
   const ch = S.add('chance', ...at(0), { p: between(R, 0.35, 0.65) });
   const un = S.add('uncertainty', ...at(1, true), { levels: Math.round(between(R, 4, 10)) });
-  const os = S.add('osc', ...at(0), { freq: pick(R, [220, 330, 440]), wave: pick(R, [WAVE.SIN, WAVE.TRI]) });
+  const q = S.add('quant', ...at(2, true), { scale: c.scale, root: c.root });
+  const os = S.add('osc', ...at(0), { freq: C[4], wave: pick(R, [WAVE.SIN, WAVE.TRI]) });
   const lp = S.add('lpg', ...at(1, true), { decay: between(R, 0.05, 0.2), mode: LPG.BOTH });
   S.wire(ch, 'a', un, 'trig');
-  S.wire(un, 'stepped', os, 'pitch');
+  S.wire(un, 'stepped', q, 'in');
+  S.wire(q, 'out', os, 'pitch');
   S.wire(os, 'out', lp, 'in');
   S.wire(ch, 'a', lp, 'ping');
   const v: DiceVoice = {
-    ids: [ch, un, os, lp],
+    ids: [ch, un, q, os, lp],
     out: [lp, 'out'],
     clocks: [[ch, 'trig', 4]],
     name: 'BLIPS',

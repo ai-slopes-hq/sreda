@@ -2,13 +2,13 @@
 import { gridRhythm } from '../../build';
 import { between, chance, intIn, logBetween, pick } from '../random';
 import type { Part } from '../types';
-import { FILTER, gateEnv, grid, LPG, pitchedSeq, pitchedVoice, WAVE } from './shared';
+import { C, FILTER, gateEnv, grid, LPG, pitchedSeq, pitchedVoice, WAVE } from './shared';
 
 const bassPulse: Part = (c) => {
   const { S, R } = c;
   const seq = pitchedSeq(c, { hits: [5, 10], slides: intIn(R, 1, 3) });
   const at = grid(c);
-  const os = S.add('osc', ...at(1), { freq: between(R, 55, 74), wave: pick(R, [WAVE.SAW, WAVE.SQR]) });
+  const os = S.add('osc', ...at(1), { freq: C[2], wave: pick(R, [WAVE.SAW, WAVE.SQR]) });
   const fl = S.add('filter', ...at(2, true), {
     cutoff: logBetween(R, 180, 700),
     res: between(R, 0.35, 0.8),
@@ -29,9 +29,10 @@ const bassReese: Part = (c) => {
   const { S, R } = c;
   const seq = pitchedSeq(c, { hits: [4, 8], slides: intIn(R, 1, 3) });
   const at = grid(c);
-  const f = between(R, 55, 74);
-  const a = S.add('osc', ...at(1), { freq: f, wave: WAVE.SAW });
-  const b = S.add('osc', ...at(1), { freq: f * (1 + between(R, 0.005, 0.012)), wave: WAVE.SAW });
+  const a = S.add('osc', ...at(1), { freq: C[2], wave: WAVE.SAW });
+  const b = S.add('osc', ...at(1), { freq: C[2], wave: WAVE.SAW });
+  // the second oscillator is detuned 0.5–1.2 % by a constant on its pitch input, so its FREQ stays on the C
+  const dt = S.add('att', ...at(1), { a1: 0, o1: between(R, 0.0072, 0.0173) });
   const mx = S.add('mix', ...at(2, true), { la: 0.3, lb: 0.3 });
   const fl = S.add('filter', ...at(3, true), {
     cutoff: logBetween(R, 300, 600),
@@ -41,12 +42,13 @@ const bassReese: Part = (c) => {
   const sw = S.add('slope', ...at(3), { rise: between(R, 2, 5), fall: between(R, 3, 6), cycle: 1 });
   S.wire(seq, 'cv', a, 'pitch');
   S.wire(seq, 'cv', b, 'pitch');
+  S.wire(dt, 'out1', b, 'pitch');
   S.wire(a, 'out', mx, 'a');
   S.wire(b, 'out', mx, 'b');
   S.wire(mx, 'out', fl, 'in');
   S.wire(sw, 'out', fl, '@cutoff');
   S.att(fl, '@cutoff', between(R, 0.2, 0.4));
-  return pitchedVoice(seq, [a, b, mx, fl, sw], [fl, 'lp'], 'BASS', 'bass', 'bass-reese', 0.5, a, {
+  return pitchedVoice(seq, [a, b, dt, mx, fl, sw], [fl, 'lp'], 'BASS', 'bass', 'bass-reese', 0.5, a, {
     cutoff: [fl, '@cutoff'],
   });
 };
@@ -56,7 +58,7 @@ const bassFm: Part = (c) => {
   const seq = pitchedSeq(c, { hits: [5, 9], slides: intIn(R, 1, 3) });
   const at = grid(c);
   const cx = S.add('complex', ...at(1), {
-    freq: between(R, 50, 70),
+    freq: C[2],
     ratio: pick(R, [1, 1.5, 2, 3]),
     index: between(R, 0.1, 0.2),
   });
@@ -72,7 +74,7 @@ const bassSub: Part = (c) => {
   const { S, R } = c;
   const seq = pitchedSeq(c, { hits: [3, 7], slides: intIn(R, 0, 2) });
   const at = grid(c);
-  const os = S.add('osc', ...at(1), { freq: between(R, 40, 60), wave: WAVE.SIN });
+  const os = S.add('osc', ...at(1), { freq: C[2], wave: WAVE.SIN });
   const lp = S.add('lpg', ...at(2, true), { level: 0, mode: LPG.VCA });
   const env = S.add('slope', ...at(1), { rise: 0.005, fall: between(R, 0.2, 0.5) });
   S.wire(seq, 'cv', os, 'pitch');
@@ -92,7 +94,7 @@ const bassAcid: Part = (c) => {
   const accents = steps.map((k) => (on.has(k) && R() < 0.3 ? 'A' : '.')).join('');
   const seq = pitchedSeq(c, { slides: intIn(R, 3, 6), algos: ['303'], gate: gridRhythm(gates, accents) });
   const at = grid(c);
-  const os = S.add('osc', ...at(1), { freq: between(R, 55, 65), wave: WAVE.SAW });
+  const os = S.add('osc', ...at(1), { freq: C[2], wave: WAVE.SAW });
   const fl = S.add('filter', ...at(2, true), {
     cutoff: logBetween(R, 200, 500),
     res: between(R, 0.7, 0.9),

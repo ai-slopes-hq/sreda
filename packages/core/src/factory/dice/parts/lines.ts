@@ -1,13 +1,13 @@
 // The line parts: a melody over a gate, each its own instrument.
 import { between, intIn, logBetween, pick } from '../random';
 import type { Part } from '../types';
-import { FILTER, grid, LPG, pitchedSeq, pitchedVoice, WAVE } from './shared';
+import { C, FILTER, grid, LPG, pitchedSeq, pitchedVoice, WAVE } from './shared';
 
 const pluck: Part = (c) => {
   const { S, R } = c;
   const seq = pitchedSeq(c, { hits: [3, 7], slides: 1 });
   const at = grid(c);
-  const os = S.add('osc', ...at(1), { freq: pick(R, [220, 261.6, 293.7]), wave: WAVE.SAW });
+  const os = S.add('osc', ...at(1), { freq: C[4], wave: WAVE.SAW });
   const lp = S.add('lpg', ...at(2, true), { decay: between(R, 0.15, 0.35), mode: LPG.LP });
   S.wire(seq, 'cv', os, 'pitch');
   S.wire(os, 'out', lp, 'in');
@@ -20,7 +20,7 @@ const arp: Part = (c) => {
   const seq = pitchedSeq(c, { hits: [8, 12], slides: 0, algos: ['ARP', 'MOTIF'] });
   const at = grid(c);
   const os = S.add('osc', ...at(1), {
-    freq: pick(R, [110, 130.8, 164.8, 220]),
+    freq: pick(R, [C[3], C[4]]),
     wave: pick(R, [WAVE.SAW, WAVE.SQR]),
   });
   const fl = S.add('filter', ...at(2, true), {
@@ -52,7 +52,7 @@ const bells: Part = (c) => {
   if (kind === 'comb') {
     // the ping is the tone: the gate rings a comb tuned by the line. No audio-rate oscillator, so no `osc` / `fm`.
     const fl = S.add('filter', ...at(1), {
-      cutoff: pick(R, [440, 523.3, 587.3]),
+      cutoff: C[5],
       res: between(R, 0.93, 0.98),
       model: FILTER.COMB,
     });
@@ -72,7 +72,7 @@ const bells: Part = (c) => {
       2,
     );
   }
-  const f = pick(R, [440, 523.3, 587.3]);
+  const f = C[5];
   const os =
     kind === 'sin'
       ? S.add('osc', ...at(1), { freq: f, wave: WAVE.SIN })
@@ -87,7 +87,7 @@ const stab: Part = (c) => {
   // one to three chords a bar
   const seq = pitchedSeq(c, { hits: [1, 3], slides: 0 });
   const at = grid(c);
-  const os = S.add('osc', ...at(1), { freq: pick(R, [220, 261.6, 293.7]), wave: WAVE.SAW });
+  const os = S.add('osc', ...at(1), { freq: C[4], wave: WAVE.SAW });
   const fl = S.add('filter', ...at(2, true), {
     cutoff: logBetween(R, 800, 2000),
     res: between(R, 0.3, 0.55),
@@ -107,7 +107,7 @@ const pad: Part = (c) => {
   const { S, R } = c;
   const seq = pitchedSeq(c, { hits: [2, 4], slides: 2 });
   const at = grid(c);
-  const os = S.add('osc', ...at(1), { freq: pick(R, [110, 130.8, 146.8]), wave: WAVE.TRI });
+  const os = S.add('osc', ...at(1), { freq: C[3], wave: WAVE.TRI });
   const lp = S.add('lpg', ...at(2, true), { level: 0, mode: LPG.VCA });
   const env = S.add('slope', ...at(1), { rise: between(R, 1, 3), fall: between(R, 2, 5) });
   S.wire(seq, 'cv', os, 'pitch');
@@ -122,7 +122,7 @@ const westcoast: Part = (c) => {
   const seq = pitchedSeq(c, { hits: [4, 8], slides: intIn(R, 1, 2) });
   const at = grid(c);
   const cx = S.add('complex', ...at(1), {
-    freq: pick(R, [110, 130.8, 164.8, 220]),
+    freq: pick(R, [C[3], C[4]]),
     ratio: pick(R, [1, 1.5, 2, 3]),
     index: between(R, 0.15, 0.4),
   });

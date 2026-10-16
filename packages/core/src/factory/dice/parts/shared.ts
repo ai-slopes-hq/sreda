@@ -13,6 +13,27 @@ export const LPG = { VCA: 0, LP: 1, BOTH: 2 };
 export const WAVE = { SIN: 0, TRI: 1, SAW: 2, SQR: 3 };
 export const FILTER = { SVF: 0, LADDER: 1, DIODE: 2, SK: 3, COMB: 4 };
 
+/**
+ * One key for the whole patch. META-SEQ's 0 V is C and its notes already carry the throw's root, so every oscillator
+ * (or COMB) a sequencer or QUANT plays has a C for its base `freq` (these, by octave); the root and scale do the rest.
+ */
+export const C = { 1: 32.7032, 2: 65.4064, 3: 130.8128, 4: 261.6256, 5: 523.2511, 6: 1046.5022 };
+
+/** the frequency of a scale degree of the throw's scale and root within lo…hi Hz: for what no sequencer plays (a
+ * drone, a ping), a random degree and octave in the range. Needs a range of an octave or more to be sure of a degree. */
+export function degreeFreq(c: DiceCtx, lo: number, hi: number): number {
+  const sc = SCALES[c.scale]!;
+  const fits: number[] = [];
+  for (let o = -5; o <= 3; o++)
+    for (const d of sc) {
+      const f = C[4] * 2 ** ((c.root + d + 12 * o) / 12);
+      if (f >= lo && f <= hi) fits.push(f);
+    }
+  if (!fits.length)
+    throw new Error(`no degree of scale ${c.scale} from ${c.root} between ${lo} and ${hi} Hz`);
+  return pick(c.R, fits);
+}
+
 /** A generated line in STAGES' saved form (for `seqParams`): `algos` picks the generator (any by default), the style's
  * scale and root, length, 16 notes, `slides` steps tied. */
 export function line(c: DiceCtx, slides: number, algos: readonly Algo[] = ALGOS): Record<string, number> {

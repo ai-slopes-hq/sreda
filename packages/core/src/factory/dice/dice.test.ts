@@ -1,17 +1,19 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import { compile } from '../../compile';
 import { validateDoc } from '../../doc';
-import { SPECS } from '../../spec';
+import { SCALES } from '../../generators';
+import { laneLen, laneSteps } from '../../metaseq';
+import { fromKnob, SPECS, toKnob, type KnobParam } from '../../spec';
 import { wireProblems } from '../../wires';
 import { build, buildWith } from '../build';
 import { assemble } from './assemble';
 import { dicePatch, dicePatchIn } from './index';
 import { drumKit } from './parts/drums';
 import { PARTS } from './parts';
-import { STYLES } from './styles';
+import { STYLE_IDS, STYLES } from './styles';
 import { TWISTS } from './twists';
-import { STYLE_IDS } from './styles';
-import { toKnob, type KnobParam } from '../../spec';
 import type { DiceCtx, DiceVoice, Part, Style } from './types';
 
 test('every throw is a valid document with sound reaching OUT and no empty inputs; every style comes up', () => {
@@ -341,25 +343,37 @@ test('every twist applies or returns null, and leaves nothing unconnected, on a 
 });
 
 test('throws of one style are not near-copies', () => {
+  // compared by what is built, not by cable ids (which differ between any two throws): the multisets of module
+  // types and of part ids
   for (const id of STYLE_IDS) {
     const sigs = Array.from({ length: 10 }, (_, i) => {
-      const { doc } = dicePatchIn(SPECS, STYLES[id]!, 1000 + i);
-      return {
-        types: doc.modules
+      const { doc, parts } = dicePatchIn(SPECS, STYLES[id]!, 1000 + i);
+      return (
+        doc.modules
           .map((m) => m.type)
           .sort()
-          .join(),
-        cables: JSON.stringify(doc.cables),
-      };
+          .join() +
+        ' | ' +
+        [...parts].sort().join()
+      );
     });
     let differ = 0;
     let pairs = 0;
     for (let i = 0; i < 10; i++)
       for (let j = i + 1; j < 10; j++) {
         pairs++;
-        if (sigs[i]!.types !== sigs[j]!.types || sigs[i]!.cables !== sigs[j]!.cables) differ++;
+        if (sigs[i] !== sigs[j]) differ++;
       }
     expect(differ / pairs, id).toBeGreaterThanOrEqual(0.8);
+  }
+});
+
+test('acid, drone, ambient bells and Berlin school throw at least 15 distinct part combinations in 100 throws', () => {
+  for (const id of ['acid', 'drone', 'bells', 'berlin'] as const) {
+    const combos = new Set<string>();
+    for (let i = 0; i < 100; i++)
+      combos.add([...dicePatchIn(SPECS, STYLES[id]!, 1 + i).parts].sort().join('+'));
+    expect(combos.size, id).toBeGreaterThanOrEqual(15);
   }
 });
 
@@ -376,4 +390,134 @@ test('twists build what they say', () => {
     if (twists.includes('grains')) expect(has('grains'), `seed ${seed}`).toBe(true);
   }
   for (const t of TWIST_IDS) expect(counts[t], t).toBeGreaterThan(5);
+});
+
+const freqOf = (type: string, params: Record<string, number>, id: string): number =>
+  fromKnob(SPECS[type]!.params.find((p) => p.id === id) as KnobParam, params[id]!);
+/** semitones above the nearest C below, 0…12 */
+const aboveC = (f: number): number => (((12 * Math.log2(f / 261.6256)) % 12) + 12) % 12;
+const centsFrom = (semis: number, target: number): number => {
+  const d = Math.abs(semis - target) % 12;
+  return Math.min(d, 12 - d) * 100;
+};
+const BONGOS = ['perc-bongo', 'idm-bongo', 'poly-bongo'];
+
+test('one key: a pitched input is wired to an oscillator on a C; an unwired pitched one sits on the scale', () => {
+  const bad: string[] = [];
+  for (let seed = 1; seed <= 300; seed++) {
+    const { doc, scale, root, voices, style } = dicePatch(SPECS, seed);
+    const wired = (id: string) => doc.cables.some((w) => w.to[0] === id && w.to[1] === 'pitch');
+    for (const m of doc.modules) {
+      const pitched = m.type === 'osc' || m.type === 'complex' || (m.type === 'filter' && wired(m.id));
+      if (!pitched || !wired(m.id)) continue;
+      const f = freqOf(m.type, m.params, m.type === 'filter' ? 'cutoff' : 'freq');
+      if (centsFrom(aboveC(f), 0) > 5)
+        bad.push(`seed ${seed} (${style}) ${m.id} ${m.type} ${f.toFixed(2)} Hz is not a C`);
+    }
+    // the unwired ones in a pitched role (not the kits' kicks and hats) sit on a degree of the scale from the root
+    for (const v of voices) {
+      if (v.role === 'drums' && !BONGOS.includes(v.part)) continue;
+      for (const id of v.ids) {
+        const m = doc.modules.find((x) => x.id === id)!;
+        if ((m.type !== 'osc' && m.type !== 'complex') || wired(id)) continue;
+        const semis = aboveC(freqOf(m.type, m.params, 'freq'));
+        const off = Math.min(...SCALES[scale]!.map((d) => centsFrom(semis, (root + d) % 12)));
+        if (off > 5)
+          bad.push(
+            `seed ${seed} (${style}) ${v.part} ${id} ${freqOf(m.type, m.params, 'freq').toFixed(2)} Hz is off the scale by ${off.toFixed(0)} cents`,
+          );
+      }
+    }
+  }
+  expect(bad).toEqual([]);
+});
+
+test('a kit has at most one kick; techno plays it on 1, 5, 9, 13, the others on 3 to 5 steps', () => {
+  for (let seed = 1; seed <= 500; seed++) {
+    const { parts } = dicePatch(SPECS, seed);
+    expect(parts.filter((p) => p.startsWith('kick')).length, `seed ${seed}`).toBeLessThanOrEqual(1);
+  }
+  for (const kit of ['drums-techno', 'drums-acid', 'drums-dub', 'drums-industrial']) {
+    for (let seed = 1; seed <= 100; seed++) {
+      const { doc, value: v } = buildWith(SPECS, (S) => {
+        let s = seed;
+        const R = () => (s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+        return PARTS[kit]!({ S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 });
+      });
+      expect(
+        v.members!.filter((p) => p.startsWith('kick')),
+        `${kit} seed ${seed}`,
+      ).toHaveLength(1);
+      const params = doc.modules.find((m) => m.id === v.seq)!.params;
+      const gate = laneSteps(params, 0, 'g').slice(0, laneLen(params, 0, 'g'));
+      const hits = gate.flatMap((x, i) => (x === 1 ? [i + 1] : []));
+      if (kit === 'drums-techno') expect(hits, `seed ${seed}`).toEqual([1, 5, 9, 13]);
+      else expect(hits.length, `${kit} seed ${seed}`).toBeGreaterThanOrEqual(3);
+      if (kit !== 'drums-techno') expect(hits.length, `${kit} seed ${seed}`).toBeLessThanOrEqual(5);
+    }
+  }
+});
+
+test("every twist in a style's pool applies in that style at least once in 500 seeds", () => {
+  const never: string[] = [];
+  for (const id of STYLE_IDS) {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 500; seed++)
+      for (const t of dicePatchIn(SPECS, STYLES[id]!, seed).twists) seen.add(t);
+    for (const [t] of STYLES[id]!.twists) if (!seen.has(t)) never.push(`${id}: ${t}`);
+  }
+  expect(never).toEqual([]);
+}, 60_000);
+
+test('no random comparator anywhere in the dice folder (a shuffle is Fisher–Yates over R)', () => {
+  const dir = fileURLToPath(new URL('.', import.meta.url));
+  const files = readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter(
+    (f) => f.endsWith('.ts') && !f.endsWith('.test.ts'),
+  );
+  expect(files.length).toBeGreaterThan(5);
+  for (const f of files)
+    expect(readFileSync(dir + f, 'utf8'), f).not.toMatch(
+      /\.sort\(\s*\(\s*\)\s*=>|\.sort\(\([^)]*\)\s*=>[^)]*\bR\(/,
+    );
+});
+
+test('switch: the SPREAD is two long, so both of its outputs play and no hit is lost', () => {
+  for (let seed = 1; seed <= 100; seed++) {
+    let sp = '';
+    const doc = build(SPECS, (S) => {
+      let s = seed;
+      const R = () => (s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+      const c: DiceCtx = { S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 };
+      const voices = ['drums-techno', 'bass-sub', 'pluck'].map((id, i) => PARTS[id]!({ ...c, y: i * 900 }));
+      TWISTS.switch(c, voices);
+    });
+    sp = doc.modules.find((m) => m.type === 'spread')!.id;
+    const len = fromKnob(
+      SPECS['spread']!.params.find((p) => p.id === 'len') as KnobParam,
+      doc.modules.find((m) => m.id === sp)!.params['len']!,
+    );
+    expect(Math.round(len), `seed ${seed}`).toBe(2);
+  }
+});
+
+test("snh on a cutoff keeps the filter's own envelope depth and goes through an ATT", () => {
+  const make = (twist: boolean) => {
+    let fl = '';
+    const doc = build(SPECS, (S) => {
+      const c: DiceCtx = { S, R: () => 0.1, scale: 2, root: 0, bpm: 120, x: 0, y: 0 };
+      const kit = PARTS['drums-acid']!(c);
+      const bass = PARTS['bass-pulse']!({ ...c, y: 900 });
+      fl = bass.cutoff![0];
+      if (twist) expect(TWISTS.snh(c, [kit, bass])).not.toBeNull();
+    });
+    return { doc, fl };
+  };
+  const plain = make(false);
+  const { doc, fl } = make(true);
+  const own = plain.doc.modules.find((m) => m.id === plain.fl)!.atts['@cutoff'];
+  expect(own).toBeDefined();
+  expect(doc.modules.find((m) => m.id === fl)!.atts['@cutoff']).toBe(own);
+  const into = doc.cables.filter((w) => w.to[0] === fl && w.to[1] === '@cutoff');
+  expect(into.some((w) => doc.modules.find((m) => m.id === w.from[0])!.type === 'att')).toBe(true);
+  expect(into.some((w) => doc.modules.find((m) => m.id === w.from[0])!.type === 'snh')).toBe(false);
 });

@@ -32,6 +32,7 @@ export {
   DRUM_PARTS,
   PARTS,
   STYLE_IDS,
+  TWISTS,
   type DiceCtx,
   type DiceStyleId,
   type DiceVoice,

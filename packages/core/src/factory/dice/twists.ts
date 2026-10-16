@@ -2,7 +2,7 @@
 // wires what it adds (and moves a voice's out or clock where it must) and returns null when the voices lack what it
 // needs, so no twist leaves a dangling module or an empty input.
 import { laneParam } from '../../metaseq';
-import { between, intIn, logBetween, pick } from './random';
+import { between, intIn, logBetween, pick, shuffle } from './random';
 import type { DiceCtx, DiceVoice, Twist, TwistId } from './types';
 
 /** a random element of `xs`, or undefined when there is none */
@@ -50,8 +50,12 @@ const snh: Twist = (c, voices) => {
   S.wire(src.gate[0], src.gate[1], sh, 'trig');
   const ids = [nz, sh];
   if (dst.cutoff && (!dst.pitch || R() < 0.5)) {
-    S.wire(sh, 'out', dst.cutoff[0], dst.cutoff[1]);
-    S.att(dst.cutoff[0], dst.cutoff[1], between(R, 0.2, 0.4));
+    // the cutoff input keeps its own envelope and its depth (the input's ATT scales the whole sum); the sampled noise
+    // joins it through an attenuverter, as on the pitch branch
+    const at = S.add('att', c.x + 600, c.y, { a1: between(R, 0.5, 1) });
+    S.wire(sh, 'out', at, 'in1');
+    S.wire(at, 'out1', dst.cutoff[0], dst.cutoff[1]);
+    ids.push(at);
   } else if (dst.pitch) {
     // the pitch input keeps its own melody; the sampled noise joins it through an attenuverter
     const at = S.add('att', c.x + 600, c.y, { a1: between(R, 0.05, 0.15) });
@@ -62,7 +66,8 @@ const snh: Twist = (c, voices) => {
   return { ids, clocks: [] };
 };
 
-/** a SPREAD sends one voice's gate alternately to two other voices, which lose their own gate cables */
+/** a SPREAD sends one voice's gate alternately to two other voices, which lose their own gate cables. It is two long:
+ * a longer one would leave OUT3 / OUT4 playing nothing and swallow every second hit. */
 const switchTwist: Twist = (c, voices) => {
   const gated = voices.filter((v) => v.gate);
   if (gated.length < 3) return null;
@@ -74,7 +79,7 @@ const switchTwist: Twist = (c, voices) => {
     rest.filter((v) => v !== a),
   );
   const { S, R } = c;
-  const sp = S.add('spread', c.x, c.y, { len: intIn(R, 2, 4), mode: pick(R, [0, 1]) });
+  const sp = S.add('spread', c.x, c.y, { len: 2, mode: pick(R, [0, 1]) });
   S.wire(src.gate![0], src.gate![1], sp, 'in');
   S.wire(src.gate![0], src.gate![1], sp, 'adv');
   S.retarget(a.gate!, [sp, 'out1']);
@@ -82,14 +87,18 @@ const switchTwist: Twist = (c, voices) => {
   return { ids: [sp], clocks: [] };
 };
 
-/** a DIGI echo on a voice with a band-pass in its loop and the feedback turned up */
+/**
+ * A DIGI echo on a voice with a band-pass in its loop. DIGI does not saturate, so the loop gain has to stay below 1 at
+ * every corner of the ranges: the echo's own feedback ≤ 0.55, and the outer loop (the echo → a band-pass, at most
+ * +7 dB at RES 0.5, ≈ 2.2× → an ATT at 0.1) adds at most about 0.25.
+ */
 const feedback: Twist = (c, voices) => {
   const v = some(c, voices);
   if (!v) return null;
   const { S, R } = c;
   const dl = S.add('delay', c.x, c.y, {
     time: Math.min(2, (pick(R, [0.5, 0.75, 1]) * 60) / c.bpm),
-    feedback: between(R, 0.7, 0.85),
+    feedback: between(R, 0.35, 0.55),
     mix: between(R, 0.3, 0.5),
     type: 0,
   });
@@ -98,7 +107,7 @@ const feedback: Twist = (c, voices) => {
     res: between(R, 0.2, 0.5),
     model: 0,
   });
-  const at = S.add('att', c.x + 600, c.y, { a1: 0.2 });
+  const at = S.add('att', c.x + 600, c.y, { a1: 0.1 });
   S.wire(v.out[0], v.out[1], dl, 'in');
   S.wire(dl, 'l', fl, 'in');
   S.wire(fl, 'bp', at, 'in1');
@@ -143,7 +152,7 @@ const polymeter: Twist = (c, voices) => {
   const seqd = voices.filter((v) => v.seq);
   if (!seqd.length) return null;
   const { S, R } = c;
-  const chosen = [...seqd].sort(() => R() - 0.5).slice(0, intIn(R, 1, Math.min(3, seqd.length)));
+  const chosen = shuffle(R, seqd).slice(0, intIn(R, 1, Math.min(3, seqd.length)));
   for (const v of chosen) {
     const lane = pick(R, ['g', 'n'] as const);
     S.seqSet(v.seq!, { [laneParam(0, lane, 'len')]: (pick(R, [5, 7, 9, 11, 13]) - 1) / 15 });
@@ -158,7 +167,11 @@ const shaper: Twist = (c, voices) => {
   const { S, R } = c;
   const sh =
     R() < 0.5
-      ? S.add('drive', c.x, c.y, { gain: between(R, 6, 14), model: pick(R, [0, 1, 2, 3]), mix: between(R, 0.5, 1) })
+      ? S.add('drive', c.x, c.y, {
+          gain: between(R, 6, 14),
+          model: pick(R, [0, 1, 2, 3]),
+          mix: between(R, 0.5, 1),
+        })
       : S.add('fold', c.x, c.y, { fold: between(R, 1.5, 5), level: -3, model: pick(R, [0, 1, 2]) });
   S.wire(v.out[0], v.out[1], sh, 'in');
   v.ids.push(sh);
@@ -176,7 +189,9 @@ const chanceTwist: Twist = (c, voices) => {
   const { S, R } = c;
   const ch = S.add('chance', c.x, c.y, { p: between(R, 0.4, 0.75) });
   S.wire(ch, 'a', v.seq!, 'clk');
-  v.clocks = v.clocks.map(([id, port, r]) => (id === v.seq && port === 'clk' ? [ch, 'trig', r] : [id, port, r]));
+  v.clocks = v.clocks.map(([id, port, r]) =>
+    id === v.seq && port === 'clk' ? [ch, 'trig', r] : [id, port, r],
+  );
   v.ids.push(ch);
   return nothing();
 };

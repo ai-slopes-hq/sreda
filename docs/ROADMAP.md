@@ -132,7 +132,11 @@ of a creative tool; nothing of its UI is ported.
   twists per throw (FM, S&H, SPREAD switch, DELAY feedback, GRAINS, polymeter, DRIVE / FOLD, CHANCE). Tests: 500 seeds
   valid with no PROBLEMS and every style, part and twist coming up; ten throws of a style are not near-copies; renders
   of every style and of every twist stay in −40…−3 dBFS. The Builder gained `set`, `typeOf` and `retarget` for the
-  twists. Deferred items in `docs/backlog.md` ("From Plan 18"). **Next:** merge the branch, then Plan 17.
+  twists. Deferred items in `docs/backlog.md` ("From Plan 18"). The final review's fixes are in: `feedback` cannot run away
+  (60 s at the corners of its ranges stays within 3 dB), one key (every sequenced oscillator on a C, unsequenced ones on
+  a degree of the scale), one kick per kit and four-on-the-floor techno, pools pruned of twists that never apply,
+  Fisher–Yates in place of a random sort, wider acid / drone / bells / Berlin school pools. **Next:** merge the branch,
+  then Plan 17.
 
 ## The road (vertical slices: something to hear at every stage)
 

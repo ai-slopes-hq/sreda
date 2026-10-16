@@ -13,13 +13,25 @@ import type { DiceCtx, DiceStyleId, DiceVoice, Part, PartId, Rand, Style, TwistI
 
 export { DRUM_PARTS } from './parts/drums';
 export { PARTS } from './parts';
+export { TWISTS } from './twists';
 export { STYLE_IDS, STYLES } from './styles';
 export type { DiceCtx, DiceStyleId, DiceVoice, PartId, TwistId } from './types';
 
 /** vertical room a part takes on the canvas (STACK packing sets the real layout) */
 const ROOM = 900;
 
-type Thrown = { doc: Doc; style: DiceStyleId; label: string; parts: PartId[]; twists: TwistId[] };
+type Thrown = {
+  doc: Doc;
+  style: DiceStyleId;
+  label: string;
+  parts: PartId[];
+  twists: TwistId[];
+  /** the throw's scale (an index into SCALES) and root (0…11) */
+  scale: number;
+  root: number;
+  /** the voices as assembled (their modules, roles and part ids), for tests and tools */
+  voices: DiceVoice[];
+};
 
 /** the role that plays when the dice leave none: the style's most likely one (the first of equals) */
 function mainRole(style: Style): Style['roles'][number] {
@@ -70,6 +82,9 @@ function throwStyle(specs: Specs, style: Style, R: Rand, parts: Record<PartId, P
     label: style.label,
     parts: voices.flatMap((v) => (kept.includes(v.part) ? [v.part, ...(v.members ?? [])] : [])),
     twists,
+    scale,
+    root,
+    voices,
   };
 }
 

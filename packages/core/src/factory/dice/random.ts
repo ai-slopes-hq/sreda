@@ -18,3 +18,12 @@ export function weighted<T>(R: Rand, xs: readonly [T, number][]): T {
   }
   return xs[xs.length - 1]![0];
 }
+/** a copy of `xs` in random order (Fisher–Yates: every order equally likely, one `R()` per swap) */
+export function shuffle<T>(R: Rand, xs: readonly T[]): T[] {
+  const out = [...xs];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(R() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}

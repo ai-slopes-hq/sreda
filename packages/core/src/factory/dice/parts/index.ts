@@ -26,6 +26,7 @@ export const PARTS: Record<PartId, Part> = {
     ],
     [3, 4],
     'drums-techno',
+    { kick: 'four' },
   ),
   'drums-acid': drumKit(
     [

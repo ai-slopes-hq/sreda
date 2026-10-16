@@ -208,6 +208,10 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **DICE twists:** `feedback` always makes its own DELAY on one voice (the style's effect DELAY is built later, in
   `assemble`, out of the twist's reach); letting a twist reshape the style's chain would need `assemble` to take the
   twists. `switch` needs three gated voices, so it is rare in two-voice styles.
+- **DICE (after the final review):** dub (8 part combinations per 100 throws) and electro (14) are as thin as acid,
+  drone, bells and Berlin school were; widen their pools the same way. `chance` can thin techno's four-on-the-floor
+  kick (the kit's gate is its kick's); a sparse bells throw with `chance` can stay quiet for its first 4 s (seed 5048:
+  −46 dBFS). `perc-bongo` has no `pitch` (nothing wires it, so no twist wobbles it off its scale degree).
 
 ## From Plan 16
 
