@@ -6,6 +6,7 @@ import { wireProblems } from '../../wires';
 import { build } from '../build';
 import { assemble } from './assemble';
 import { dicePatch } from './index';
+import { drumKit } from './parts/drums';
 import { STYLES } from './styles';
 import type { DiceCtx, DiceVoice } from './types';
 
@@ -65,5 +66,36 @@ test('assemble chains a second MIX past four voices', () => {
   const oscs = doc.modules.filter((m) => m.type === 'osc').map((m) => m.id);
   for (const o of oscs) {
     expect(doc.cables.some((w) => w.from[0] === o && mixes.some((m) => m.id === w.to[0]))).toBe(true);
+  }
+});
+
+test('drumKit builds 2 to 4 drum parts into one DRUMS voice', () => {
+  const weights: [string, number][] = [
+    ['kick-sine', 1],
+    ['hats-noise', 1],
+    ['snare', 1],
+    ['clap', 1],
+    ['perc-tom', 1],
+  ];
+  for (let seed = 1; seed <= 40; seed++) {
+    let mixId = '';
+    const doc = build(SPECS, (S) => {
+      let s = seed;
+      const R = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+      const c: DiceCtx = { S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 };
+      const v = drumKit(weights, [2, 4])(c);
+      expect(v.role, `seed ${seed}`).toBe('drums');
+      expect(v.name).toBe('DRUMS');
+      expect(v.level).toBe(0.8);
+      expect(v.gate).toBeDefined();
+      mixId = v.out[0];
+      expect(v.out[1]).toBe('out');
+    });
+    const mixes = doc.modules.filter((m) => m.type === 'mix');
+    expect(mixes.map((m) => m.id), `seed ${seed}`).toEqual([mixId]);
+    const parts = doc.cables.filter((w) => w.to[0] === mixId);
+    expect(parts.length, `seed ${seed}`).toBeGreaterThanOrEqual(2);
+    expect(parts.length).toBeLessThanOrEqual(4);
+    expect(doc.modules.filter((m) => m.type === 'metaseq')).toHaveLength(parts.length);
   }
 });

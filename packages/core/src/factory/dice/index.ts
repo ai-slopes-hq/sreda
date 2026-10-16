@@ -10,8 +10,10 @@ import { chance, intIn, pick, weighted } from './random';
 import { STYLE_IDS, STYLES } from './styles';
 import type { DiceCtx, DiceStyleId, DiceVoice, PartId, Style, TwistId } from './types';
 
+export { DRUM_PARTS } from './parts/drums';
+export { PARTS } from './parts';
 export { STYLE_IDS, STYLES } from './styles';
-export type { DiceStyleId, PartId, TwistId } from './types';
+export type { DiceCtx, DiceStyleId, DiceVoice, PartId, TwistId } from './types';
 
 /** vertical room a part takes on the canvas (STACK packing sets the real layout) */
 const ROOM = 900;

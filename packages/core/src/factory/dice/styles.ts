@@ -8,7 +8,7 @@ const techno: Style = {
   bpm: [90, 150],
   scales: [2, 3, 4, 5],
   roles: [
-    { role: 'drums', p: 0.85, parts: [['drum-kit-legacy', 1]] },
+    { role: 'drums', p: 0.85, parts: [['drums', 1]] },
     { role: 'bass', p: 1, parts: [['bass-legacy', 1]] },
     { role: 'line', p: 0.45, parts: [['lead-legacy', 1]] },
   ],
