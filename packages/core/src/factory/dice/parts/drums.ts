@@ -236,10 +236,10 @@ const ROW = 560;
 
 /**
  * A drum kit: `count` of the weighted parts (a kick first when the weights have one) built side by side and mixed
- * into one DRUMS voice, whose gate is its kick's.
+ * into one DRUMS voice, whose gate is its kick's. `id` is the kit's registry key.
  */
 export const drumKit =
-  (weights: [PartId, number][], count: [number, number] = [2, 4]): Part =>
+  (weights: [PartId, number][], count: [number, number] = [2, 4], id: PartId = 'drums'): Part =>
   (c) => {
     const { S, R } = c;
     const n = Math.min(4, intIn(R, count[0], count[1]), weights.length);
@@ -255,7 +255,7 @@ export const drumKit =
     const kicks = left.filter(([p]) => p.startsWith('kick'));
     const chosen: PartId[] = kicks.length ? [take(kicks)] : [];
     while (chosen.length < n) chosen.push(take(left));
-    const voices = chosen.map((id, i) => DRUM_PARTS[id]!({ ...c, y: c.y + i * ROW }));
+    const voices = chosen.map((pid, i) => DRUM_PARTS[pid]!({ ...c, y: c.y + i * ROW }));
     const mx = S.add('mix', c.x + 1500, c.y, Object.fromEntries(voices.map((v, i) => ['l' + 'abcd'[i], v.level])));
     voices.forEach((v, i) => S.wire(v.out[0], v.out[1], mx, 'abcd'[i]!));
     const lead = voices.find((v) => v.part.startsWith('kick')) ?? voices[0]!;
@@ -265,7 +265,8 @@ export const drumKit =
       clocks: voices.flatMap((v) => v.clocks),
       name: 'DRUMS',
       role: 'drums',
-      part: 'drums',
+      part: id,
+      members: chosen,
       level: 0.8,
       ...(lead.seq ? { seq: lead.seq } : {}),
       ...(lead.gate ? { gate: lead.gate } : {}),

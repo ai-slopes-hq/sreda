@@ -34,6 +34,8 @@ export interface DiceVoice extends Voice {
   name: string;
   role: Role;
   part: PartId;
+  /** the parts a kit is made of (a kit is one voice) */
+  members?: PartId[];
   /** its MIX level 0…1 */
   level: number;
   /** its META-SEQ (polymeter, chance twists) */

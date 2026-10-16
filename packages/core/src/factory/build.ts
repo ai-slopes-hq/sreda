@@ -12,6 +12,8 @@ export interface Builder {
   rat(id: string, port: string, r: number): void;
   /** a META-SEQ; `params` in the document's units (knob positions, option indices), as `seqParams` gives them */
   seq(x: number, y: number, params: Record<string, number>): string;
+  /** more params on an existing META-SEQ, in the same units as `seq` (a lane's steps, LEN, RATE) */
+  seqSet(id: string, params: Record<string, number>): void;
   frame(ids: string[], name: string, o?: { ratio?: number; tint?: number; bpm?: number }): string;
 }
 
@@ -47,7 +49,14 @@ export function gridRhythm(gates: string, accents: string): Record<string, numbe
  * line its slides go on TIE at that line's hits */
 export function melodyLine(
   semis: number[],
-  o: { slides?: number[]; rests?: number[]; length?: number; scale?: number; root?: number; gen?: number } = {},
+  o: {
+    slides?: number[];
+    rests?: number[];
+    length?: number;
+    scale?: number;
+    root?: number;
+    gen?: number;
+  } = {},
 ): Record<string, number> {
   const out: Record<string, number> = { length: ((o.length ?? semis.length) - 1) / 15 };
   semis.forEach((x, i) => (out['v' + (i + 1)] = x / 24));
@@ -91,10 +100,14 @@ export function buildWith<T>(specs: Specs, f: (b: Builder) => T): { doc: Doc; va
     },
     seq(x, y, params) {
       const id = b.add('metaseq', x, y);
+      b.seqSet(id, params);
+      return id;
+    },
+    seqSet(id, params) {
+      if (mod(id).type !== 'metaseq') throw new Error(`${id} is not a metaseq`);
       const ids = new Set(specs['metaseq']!.params.map((p) => p.id));
       for (const k of Object.keys(params)) if (!ids.has(k)) throw new Error(`no param ${k} on metaseq`);
       Object.assign(mod(id).params, params);
-      return id;
     },
     frame(ids, name, o = {}) {
       const id = `g${n++}`;
