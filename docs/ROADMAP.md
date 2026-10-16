@@ -115,7 +115,8 @@ of a creative tool; nothing of its UI is ported.
   style plus the small decided behaviours (frame tools on hover, the sidebar narrows the canvas, no SAVE AS / NEW in
   LIBRARY, no empty side column); **Plan 17** the new functions (STACK stretch to the right with a wider display, 2U
   displays for MIX / SPREAD / SWITCH / ATT, context hints and `?`, menu item descriptions, the save dialog, a LIMIT
-  lamp, truncated text). **Next:** write Plan 16.
+  lamp, truncated text). **Plan 16 written:** `docs/superpowers/plans/2026-10-16-16-restyle.md` (7 tasks, 4
+  checkpoints), on the branch `plan-16-restyle`. **Next:** execute it.
 
 ## The road (vertical slices: something to hear at every stage)
 

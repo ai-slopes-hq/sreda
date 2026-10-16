@@ -134,8 +134,8 @@ they show RHYTHM / STAGES, four patterns and a mark beside the wordmark, none of
 - **Depth.** Borders still separate panels. Floating things (menus, picker, sidebar, dialogs, the top bar, cable
   tags, the LISTEN pill) also get a soft shadow; modules a faint one. No gradients, no hardware imitation.
 - **Corners** from the radius scale below (2–14 px).
-- **Readable labels.** Port and knob labels use `label` (≥ 5 : 1 on `panel` and `popover` in every skin); `faint` keeps
-  its role for values at their default.
+- **Readable labels.** Port and knob labels use `label`: ≥ 5 : 1 on `panel` and ≥ 4.5 : 1 on `popover` in every skin
+  (measured: ≈ 5.1 and ≈ 4.6); `muted` ≥ 4.5 : 1 on both; `faint` keeps its role for values at their default.
 - **Icons.** Chrome has a small set of inline stroke icons (search, close, save, new, dice, sidebar, zoom, fit, undo,
   speaker, check, chevron, import, drag grip). Panels stay icon-free (glyphs as before). No icon font, no emoji. No
   mark beside the wordmark: `SREDA` alone.
@@ -148,7 +148,7 @@ mixed 4 % toward `text`), `label` and `shadow`; three existing values change:
 | DEFAULT | `#232320` | `#908b80` (5.1 : 1) | `rgba(0,0,0,.55)` | — |
 | ANNABIOSIS | `#283432` | `#8e9e99` (5.1 : 1) | `rgba(4,10,9,.6)` | — |
 | KANAGAWA | `#31313c` | `#9f9c8b` (5.1 : 1) | `rgba(8,8,14,.6)` | `faint` `#54546d` → `#676678` (it equalled `line-2`) |
-| TOUCH | `#3a3a3a` | `#a5a5a5` (5.1 : 1) | `rgba(0,0,0,.5)` | — |
+| TOUCH | `#3a3a3a` | `#a5a5a5` (5.1 : 1) | `rgba(0,0,0,.5)` | `muted` `#a0a0a0` → `#a3a3a3` (4.35 : 1 on `popover`) |
 | NORD | `#424958` | `#b3bac6` (5.2 : 1) | `rgba(22,26,34,.5)` | `muted` `#d8dee9` → `#bac0cc` (hints competed with values) |
 | TOKYO NIGHT | `#2a2e42` | `#8c96c0` (5.0 : 1) | `rgba(6,7,14,.6)` | `muted` `#737aa2` → `#8c94bd` (failed on `panel`) |
 
@@ -160,8 +160,8 @@ mixed 4 % toward `text`), `label` and `shadow`; three existing values change:
   sidebar, top bar, tags); `shadow-3` `0 24px 60px shadow` (dialogs; upward for the drawer); `ring` `0 0 0 3px` of
   `text` at 9 % (a selected module, an open option, a focused field).
 - Sizes: a jack is 14 px with a 2 px ring, its centre 15 px in from the panel edge (was 11 px / 13 px); patched =
-  the role colour with a 5 px `ground` centre. A knob: a 3 px track in `raised`, a 3 px arc in `text`, a body circle
-  (r 9.5), a 1.8 px pointer, the mod ring in `role-mod` at 55 %. Port and knob labels 9.5 px mono 500 in `label`;
+  the role colour with a 5 px `ground` centre. A knob (56 × 44, centre 28 / 22): a 3 px track (r 14) in `line`, a 3 px arc in `text`, a body circle
+  (r 9.5, `raised` with a `line-2` edge), a 1.8 px pointer to r 7, the mod ring (r 18) in `role-mod` at 55 %. Port and knob labels 9.5 px mono 500 in `label`;
   values 10 px. Chrome text 12–13 px Sans. The frame header is 32 px (was 28). Top-bar buttons 32 px in a 40 px bar.
   List rows (WIRES, LIBRARY, picker) 28–48 px. An option (`BOTH ▾`) is 24 px tall.
 
@@ -183,16 +183,17 @@ mixed 4 % toward `text`), `label` and `shadow`; three existing values change:
   (`radius-4`, `shadow-2`): Dice · New | Save `⌘S` | Sidebar, 32 px Sans buttons with icons and key hints.
 - **Zoom**, bottom right: a small grouped bar `− 100 % +` and fit.
 - **Hint bar**, bottom left: Sans text with key caps (`/ add module · W wires · G frame · F fit · R randomise`) and
-  `? all shortcuts` (the context hints and the shortcut list come in Plan 17).
+  (the context hints and `? all shortcuts` come in Plan 17; until then the hint bar shows the five general hints).
 - **Sidebar** (§5a): floats 16 px from the window's edges, `popover`, `radius-5`, `shadow-2`; the tabs Wires · Mix ·
   Library · Settings as one segmented control (one active look), ✕ on the right; a footer line per tab.
   - Wires: a filter field with an icon; chips `All 9` / `Selection`; section heads with counts; 34 px rows with full
     names at both ends, the value as a chip, ✕ on hover; `+ New wire` as a dashed row; **Normals** a section of its
     own, each normal on two lines (the normal, then what it does); no problems = one line `✓ No problems`; empty
     sections hide; footer `9 wires · 8 modules`.
-  - Mix: each OUT a flat card — name (`OUT from MIX`), M / S (30 × 28), a horizontal fader (the OUT's LVL), a stereo
-    meter with a dB scale (−48 … 0); MASTER pinned to the bottom; footer `after the limiter`; with no OUT an empty
-    state.
+  - Mix: each OUT a flat card — name (`OUT from MIX`), M / S (30 × 28), a horizontal fader (the OUT's LVL), a
+    meter with a dB scale (−48 … 0; one bar, stereo in Plan 17); MASTER pinned to the bottom; footer `after the
+    limiter`; while there is at most one OUT a note: `One strip per OUT module. Add another OUT to give a voice its own
+    strip, mute and solo.`
   - Library: one filter for all sections; 28 px rows; the open project marked `● open`; a group row shows
     `drag to canvas` and a grip on hover; a long section shows its first eight rows and `Show all 17`; SAMPLES has
     Import and an empty state. No Save as / New (§6).
