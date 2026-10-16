@@ -18,7 +18,7 @@
   --on-text: #121210;
   --accent: #f5a524;
   --destructive: #e5484d;
-  --shadow: rgba(0,0,0,.55);
+  --shadow: rgba(0, 0, 0, 0.55);
   --role-audio: #e9e4d8;
   --role-mod: #6cb4ee;
   --role-pitch: #9ad18b;
@@ -576,9 +576,7 @@
   background: var(--ground);
   border: 1px solid var(--muted);
   color: var(--text);
-  font:
-    600 10px 'IBM Plex Mono',
-    monospace;
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.12em;
   padding: 2px 4px;
   outline: none;
@@ -613,9 +611,7 @@
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
   color: var(--text);
-  font:
-    500 9px 'IBM Plex Mono',
-    monospace;
+  font: 500 9px var(--font-mono);
   letter-spacing: 0.08em;
   cursor: pointer;
 }
@@ -714,9 +710,7 @@
   border: none;
   border-bottom: 1px solid transparent;
   color: var(--muted);
-  font:
-    500 9px 'IBM Plex Mono',
-    monospace;
+  font: 500 9px var(--font-mono);
   letter-spacing: 0.08em;
   cursor: pointer;
 }
@@ -760,9 +754,7 @@
   border: 1px solid var(--line-2);
   border-radius: var(--radius-3);
   color: var(--text);
-  font:
-    600 11px 'IBM Plex Mono',
-    monospace;
+  font: 600 11px var(--font-mono);
   letter-spacing: 0.12em;
   cursor: pointer;
 }
@@ -786,9 +778,7 @@
   background: var(--panel);
   border: 1px solid var(--muted);
   border-radius: var(--radius-3);
-  font:
-    500 10px 'IBM Plex Mono',
-    monospace;
+  font: 500 10px var(--font-mono);
   letter-spacing: 0.08em;
   color: var(--muted);
   z-index: 22;
@@ -798,9 +788,7 @@
   background: var(--ground);
   border: 1px solid var(--line-2);
   color: var(--text);
-  font:
-    500 11px 'IBM Plex Mono',
-    monospace;
+  font: 500 11px var(--font-mono);
   padding: 4px 6px;
   outline: none;
 }
@@ -837,9 +825,7 @@
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
   color: var(--text);
-  font:
-    500 12px 'IBM Plex Mono',
-    monospace;
+  font: 500 12px var(--font-mono);
   cursor: pointer;
   padding: 0;
 }
@@ -924,9 +910,7 @@
   background: var(--ground);
   border: 1px solid var(--line-2);
   color: var(--text);
-  font:
-    500 11px 'IBM Plex Mono',
-    monospace;
+  font: 500 11px var(--font-mono);
   padding: 5px 7px;
   outline: none;
 }
@@ -945,9 +929,7 @@
   border: none;
   border-top: 1px solid var(--dot);
   color: var(--heading);
-  font:
-    600 10px 'IBM Plex Mono',
-    monospace;
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.1em;
   cursor: pointer;
   text-align: left;
@@ -1039,9 +1021,7 @@
   border: 1px dashed var(--line-2);
   border-radius: var(--radius-2);
   color: var(--muted);
-  font:
-    500 10px 'IBM Plex Mono',
-    monospace;
+  font: 500 10px var(--font-mono);
   letter-spacing: 0.06em;
   padding: 3px 8px;
   cursor: pointer;
@@ -1081,9 +1061,7 @@
   background: none;
   border: none;
   color: var(--text);
-  font:
-    500 10px 'IBM Plex Mono',
-    monospace;
+  font: 500 10px var(--font-mono);
   letter-spacing: 0.04em;
   text-align: left;
   cursor: pointer;
@@ -1192,9 +1170,7 @@
 .sr-skins-head {
   padding: 8px 12px;
   color: var(--heading);
-  font:
-    600 10px 'IBM Plex Mono',
-    monospace;
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.1em;
 }
 .sr-skin {
@@ -1207,9 +1183,7 @@
   background: none;
   border: none;
   color: var(--text);
-  font:
-    500 11px 'IBM Plex Mono',
-    monospace;
+  font: 500 11px var(--font-mono);
   letter-spacing: 0.08em;
   text-align: left;
   cursor: pointer;
@@ -1266,9 +1240,7 @@
   background: none;
   border: none;
   color: var(--text-2);
-  font:
-    500 9px 'IBM Plex Mono',
-    monospace;
+  font: 500 9px var(--font-mono);
   letter-spacing: 0.08em;
   cursor: pointer;
 }
@@ -1332,9 +1304,7 @@ button.sr-sname:hover {
   align-items: center;
   padding: 8px 12px;
   color: var(--heading);
-  font:
-    600 10px 'IBM Plex Mono',
-    monospace;
+  font: 600 10px var(--font-mono);
   letter-spacing: 0.1em;
   cursor: pointer;
 }
@@ -1349,9 +1319,7 @@ button.sr-sname:hover {
   display: flex;
   padding: 5px 12px 5px 28px;
   color: var(--text);
-  font:
-    500 11px 'IBM Plex Mono',
-    monospace;
+  font: 500 11px var(--font-mono);
   cursor: pointer;
   overflow: hidden;
   white-space: nowrap;
