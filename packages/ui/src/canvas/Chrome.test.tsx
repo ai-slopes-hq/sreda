@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { render } from '@solidjs/testing-library';
-import { expect, test } from 'vitest';
+import { fireEvent, render } from '@solidjs/testing-library';
+import { expect, test, vi } from 'vitest';
 import { createSession } from '../store';
 import type { LibraryApi } from '../library';
 import { Chrome, projectName } from './Chrome';
@@ -44,4 +44,18 @@ test('a 60-character name sits in .sr-pname', () => {
   const name = 'x'.repeat(60);
   const c = mount({ path: `a/${name}`, factory: false });
   expect(c.querySelector('.sr-pname')!.textContent).toBe(name);
+});
+
+test('a press or double-click on the brand bar does not reach the canvas', () => {
+  const s = createSession({} as never, { modules: [], cables: [], groups: [] } as never, null, null);
+  const seen = vi.fn();
+  const { container } = render(() => (
+    <div onPointerDown={seen} onDblClick={seen}>
+      <Chrome session={s} lib={lib} zoom={() => {}} fit={() => {}} />
+    </div>
+  ));
+  const bar = container.querySelector('.sr-brand')!;
+  fireEvent.pointerDown(bar);
+  fireEvent.dblClick(bar);
+  expect(seen).not.toHaveBeenCalled();
 });
