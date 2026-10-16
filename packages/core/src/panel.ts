@@ -18,6 +18,8 @@ export interface PanelLayout {
   cells: Record<string, { x: number; y: number; w: number; mode: boolean }>;
   display: { x: number; y: number; w: number; h: number } | null;
   fits: boolean;
+  /** which side columns are drawn: a side with no ports has none */
+  cols: { in: boolean; out: boolean };
 }
 
 /**
@@ -38,17 +40,20 @@ function computeLayout(spec: ModuleSpec): PanelLayout {
   const visible = spec.params.filter((p) => p.kind === 'action' || !p.hidden);
   const knobs = visible.filter((p) => p.kind === 'knob');
   const modes = visible.filter((p) => p.kind !== 'knob');
-  const C = spec.size[0] - 2;
+  const inCol = spec.inputs.length ? 1 : 0;
+  const outCol = spec.outputs.length ? 1 : 0;
+  const C = spec.size[0] - inCol - outCol;
+  const X0 = inCol * HP;
   const lanes = lanesOf(spec.size[1]);
   const w = spec.size[0] * HP;
   const h = spec.size[1] * U;
   const dl = spec.display?.lanes ?? 0;
   const jacks: PanelLayout['jacks'] = {};
   const cells: PanelLayout['cells'] = {};
-  spec.inputs.forEach((p, i) => (jacks[p.id] = { x: 13, y: TOP + i * LANE + LANE / 2 }));
-  spec.outputs.forEach((p, i) => (jacks[p.id] = { x: w - 13, y: TOP + i * LANE + LANE / 2 }));
+  spec.inputs.forEach((p, i) => (jacks[p.id] = { x: 15, y: TOP + i * LANE + LANE / 2 }));
+  spec.outputs.forEach((p, i) => (jacks[p.id] = { x: w - 15, y: TOP + i * LANE + LANE / 2 }));
   knobs.forEach((p, j) => {
-    const x = HP + (j % C) * HP;
+    const x = X0 + (j % C) * HP;
     const y = TOP + (dl + Math.floor(j / C) * 2) * LANE;
     cells[p.id] = { x, y, w: HP, mode: false };
     jacks['@' + p.id] = { x: x + 7, y: y + 7 };
@@ -61,9 +66,9 @@ function computeLayout(spec: ModuleSpec): PanelLayout {
     let x: number;
     if (p.kind === 'action') {
       right += hp;
-      x = HP + (C - right) * HP;
+      x = X0 + (C - right) * HP;
     } else {
-      x = HP + left * HP;
+      x = X0 + left * HP;
       left += hp;
     }
     cells[p.id] = { x, y: my, w: hp * HP, mode: true };
@@ -74,6 +79,6 @@ function computeLayout(spec: ModuleSpec): PanelLayout {
     used <= lanes &&
     left + right <= Math.max(0, C) &&
     Math.max(spec.inputs.length, spec.outputs.length) <= lanes;
-  const display = dl ? { x: HP + 4, y: TOP + 2, w: C * HP - 8, h: dl * LANE - 6 } : null;
-  return { w, h, lanes, jacks, cells, display, fits };
+  const display = dl ? { x: X0 + 4, y: TOP + 2, w: C * HP - 8, h: dl * LANE - 6 } : null;
+  return { w, h, lanes, jacks, cells, display, fits, cols: { in: !!inCol, out: !!outCol } };
 }

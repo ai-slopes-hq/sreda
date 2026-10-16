@@ -14,13 +14,13 @@ export function ang(k: number): number {
   return ((-135 + 270 * k) * Math.PI) / 180;
 }
 
-/** An arc of the knob between two positions at radius r, in the knob's 48 × 34 box (centre 24, 17). */
+/** An arc of the knob between two positions at radius r, in the knob's 56 × 44 box (centre 28, 22). */
 export function arc(k0: number, k1: number, r: number): string {
   if (k1 - k0 < 0.002) return '';
   const a0 = ang(k0);
   const a1 = ang(k1);
   const large = (k1 - k0) * 270 > 180 ? 1 : 0;
-  const p = (a: number) => `${(24 + r * Math.sin(a)).toFixed(2)} ${(17 - r * Math.cos(a)).toFixed(2)}`;
+  const p = (a: number) => `${(28 + r * Math.sin(a)).toFixed(2)} ${(22 - r * Math.cos(a)).toFixed(2)}`;
   return `M${p(a0)} A${r} ${r} 0 ${large} 1 ${p(a1)}`;
 }
 

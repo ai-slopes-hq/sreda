@@ -1,13 +1,19 @@
 // pnpm screens: drives the built app (Playwright _electron) through the screens the restyle touches and writes one
-// PNG per screen and skin to test-results/screens/<SKIN>/. Needs `pnpm build` first (the package script does it).
-import { mkdirSync, mkdtempSync } from 'node:fs';
+// PNG per screen and skin to screens/<SKIN>/ (a root folder: Playwright empties test-results/ on every e2e run). Needs `pnpm build` first (the package script does it).
+import { mkdirSync, mkdtempSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron } from '@playwright/test';
 
 const SKINS = ['DEFAULT', 'ANNABIOSIS', 'KANAGAWA', 'TOUCH', 'NORD', 'TOKYO NIGHT'];
-const OUT = 'test-results/screens';
+const OUT = 'screens';
+const SCREENS = 11;
 const exactly = (name) => new RegExp(`^${name}$`, 'i');
+
+/** a screen that cannot be captured stops the run: never a silent skip */
+function need(ok, name, skin, why) {
+  if (!ok) throw new Error(`screen "${name}" (${skin}): ${why}`);
+}
 
 async function run(skin) {
   const dir = join(OUT, skin.replace(/ /g, '-'));
@@ -80,7 +86,8 @@ async function run(skin) {
   // a cable dragged from an output into empty space opens the picker
   const jack = page.locator('.sr-jack[data-dir="out"]').first();
   const jb = await jack.boundingBox();
-  if (jb) {
+  need(jb, 'picker-from-jack', skin, 'no output jack on the canvas');
+  {
     const x = jb.x + jb.width / 2;
     const y = jb.y + jb.height / 2;
     await page.mouse.move(x, y);
@@ -94,7 +101,8 @@ async function run(skin) {
 
   // an LPG's MODE option, open
   const mode = page.locator('.sr-mod[data-type="lpg"] [data-option="mode"] .sr-opt').first();
-  if ((await mode.count()) > 0) {
+  need((await mode.count()) > 0, 'option-menu', skin, 'no LPG MODE option on the canvas');
+  {
     await mode.click();
     await shot('option-menu');
     await clean();
@@ -102,14 +110,16 @@ async function run(skin) {
 
   const frame = page.locator('.sr-frame').nth(1);
   const fb = await frame.boundingBox();
-  if (fb) {
+  need(fb, 'frame-hover', skin, 'no second frame on the canvas');
+  {
     await page.mouse.move(fb.x + 60, fb.y + 12);
     await shot('frame-hover');
   }
 
   // the META-SEQ drawer opens with a click on the display (a double-click on the head opens the replace picker)
   const disp = page.locator('.sr-mod[data-type="metaseq"] .sr-disp').first();
-  if ((await disp.count()) > 0) {
+  need((await disp.count()) > 0, 'drawer', skin, 'no META-SEQ display on the canvas');
+  {
     await disp.click();
     await shot('drawer');
     await clean();
@@ -124,7 +134,14 @@ async function run(skin) {
 
   await app.close();
   if (errors.length > 0) console.log(`${skin}: page errors`, errors);
+  const pngs = readdirSync(dir).filter((f) => f.endsWith('.png')).length;
+  need(pngs === SCREENS, 'all', skin, `${pngs} PNGs written, expected ${SCREENS}`);
   console.log(`${skin}: done`);
 }
 
-for (const skin of SKINS) await run(skin);
+try {
+  for (const skin of SKINS) await run(skin);
+} catch (e) {
+  console.error(e instanceof Error ? e.message : e);
+  process.exit(1);
+}

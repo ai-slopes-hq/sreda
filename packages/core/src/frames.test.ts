@@ -12,6 +12,7 @@ import {
   extractGroup,
   mergeDoc,
   packFrame,
+  repackManaged,
   setLayout,
   settle,
   effectiveMuted,
@@ -734,4 +735,23 @@ test('a block with four jacks a side grows with them: rows at 48, 72, 96, 120', 
   expect(b.h).toBe(GHEAD + 16 + 96);
   expect(b.jacks.filter((j) => j.dir === 'in').map((j) => j.y)).toEqual([48, 72, 96, 120]);
   expect(b.jacks.filter((j) => j.dir === 'out').map((j) => j.y)).toEqual([48, 72, 96, 120]);
+});
+
+test('a NOISE, an OUT and an A4 re-pack inside a STACK frame without overlap', () => {
+  let doc = emptyDoc;
+  const ids: string[] = [];
+  for (const [t, x] of [['noise', 0], ['out', 130], ['a4', 260]] as const) {
+    const r = addModule(doc, SPECS, t, x, 0);
+    doc = r.doc;
+    ids.push(r.id);
+  }
+  const g = frameSelection(doc, SPECS, ids);
+  const packed = repackManaged(g.doc, SPECS, [g.id]);
+  const rs = rectsOf(packed, ids, SPECS);
+  for (let i = 0; i < rs.length; i++)
+    for (let j = i + 1; j < rs.length; j++) {
+      const a = rs[i]!;
+      const b = rs[j]!;
+      expect(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h, `${i} vs ${j}`).toBe(false);
+    }
 });

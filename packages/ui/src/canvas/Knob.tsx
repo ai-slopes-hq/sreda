@@ -85,32 +85,33 @@ export function Knob(props: KnobProps): JSX.Element {
         onWheel={wheel}
         onDblClick={() => props.set(toKnob(p(), p().def), undefined)}
       >
-        <svg width="56" height="40" viewBox="0 0 48 34" style={{ display: 'block', overflow: 'visible' }}>
-          <path class="k-track" d={arc(0, 1, 11)} />
+        <svg width="56" height="44" viewBox="0 0 56 44" style={{ display: 'block', overflow: 'visible' }}>
+          <path class="k-track" d={arc(0, 1, 14)} />
           <Show when={props.modulated}>
             <path
               class="k-ring"
               d={arc(
                 Math.max(0, props.value - Math.abs(props.depth)),
                 Math.min(1, props.value + Math.abs(props.depth)),
-                15,
+                18,
               )}
             />
           </Show>
-          <path class="k-arc" d={arc(0, props.value, 11)} />
+          <path class="k-arc" d={arc(0, props.value, 14)} />
+          <circle class="k-body" cx="28" cy="22" r="9.5" />
           <line
             class="k-ptr"
-            x1="24"
-            y1="17"
-            x2={(24 + 8 * Math.sin(a())).toFixed(2)}
-            y2={(17 - 8 * Math.cos(a())).toFixed(2)}
+            x1="28"
+            y1="22"
+            x2={(28 + 7 * Math.sin(a())).toFixed(2)}
+            y2={(22 - 7 * Math.cos(a())).toFixed(2)}
           />
           <Show when={props.modulated}>
             <g
               ref={(el) => track(el, 'modDot', () => props.readout)}
-              transform={`rotate(${(-135 + 270 * props.value).toFixed(1)} 24 17)`}
+              transform={`rotate(${(-135 + 270 * props.value).toFixed(1)} 28 22)`}
             >
-              <circle class="k-tick" cx="24" cy="2" r="2.2" />
+              <circle class="k-tick" cx="28" cy="4" r="2.2" />
             </g>
           </Show>
         </svg>

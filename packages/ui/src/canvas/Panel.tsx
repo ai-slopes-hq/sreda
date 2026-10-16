@@ -189,10 +189,10 @@ export function Panel(props: PanelProps): JSX.Element {
       onMouseLeave={() => props.act.hover(false)}
       onPointerDown={(e) => props.act.moduleDown?.(e)}
     >
-      <Show when={props.spec.inputs.length}>
+      <Show when={L().cols.in}>
         <div class="sr-col" style={{ left: '0' }} />
       </Show>
-      <Show when={props.spec.outputs.length}>
+      <Show when={L().cols.out}>
         <div class="sr-col" style={{ right: '0' }} />
       </Show>
       <div
@@ -391,7 +391,7 @@ export function Panel(props: PanelProps): JSX.Element {
               <div
                 class="sr-plabel"
                 data-port={port.id}
-                style={{ left: j().x + 11 + 'px', top: j().y - 10 + 'px' }}
+                style={{ left: j().x + 13 + 'px', top: j().y - 10 + 'px' }}
               >
                 {port.label}
               </div>
@@ -401,7 +401,7 @@ export function Panel(props: PanelProps): JSX.Element {
                     class="sr-field"
                     data-field={port.id}
                     style={{
-                      left: j().x + 11 + 'px',
+                      left: j().x + 13 + 'px',
                       top: j().y + 1 + 'px',
                       color: value() === 1 ? 'var(--faint)' : undefined,
                     }}
@@ -436,14 +436,14 @@ export function Panel(props: PanelProps): JSX.Element {
               <div
                 class="sr-plabel"
                 data-port={port.id}
-                style={{ right: L().w - j().x + 11 + 'px', top: j().y - 10 + 'px', 'text-align': 'right' }}
+                style={{ right: L().w - j().x + 13 + 'px', top: j().y - 10 + 'px', 'text-align': 'right' }}
               >
                 {port.label}
               </div>
               <div
                 class="sr-lvl"
                 style={{
-                  right: L().w - j().x + 11 + 'px',
+                  right: L().w - j().x + 13 + 'px',
                   top: j().y + 5 + 'px',
                   background: `var(--role-${port.role})`,
                 }}

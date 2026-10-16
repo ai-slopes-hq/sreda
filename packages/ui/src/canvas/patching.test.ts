@@ -29,8 +29,8 @@ test('from an input: modules with an output', () => {
 test('placing puts the chosen port at the drop point, preferring the same role', () => {
   const p = placeFor(S, 'fx', { dir: 'out', role: 'trigger' }, { x: 500, y: 300 });
   expect(p.port).toBe('clk');
-  // clk is fx's third input: x 13, y 38 + 2·32 + 16 = 118
-  expect([p.x, p.y]).toEqual([487, 182]);
+  // clk is fx's third input: x 15, y 38 + 2·32 + 16 = 118
+  expect([p.x, p.y]).toEqual([485, 182]);
   expect(placeFor(S, 'src', { dir: 'in', role: 'mod' }, { x: 0, y: 0 }).port).toBe('out');
   expect(placeFor(S, 'src', null, { x: 100, y: 100 })).toMatchObject({ port: null, x: 100, y: 100 });
 });

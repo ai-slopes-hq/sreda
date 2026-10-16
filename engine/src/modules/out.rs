@@ -9,7 +9,7 @@ pub fn spec() -> ModuleSpec {
         internal: false,
         label: "OUT",
         desc: "to speakers",
-        size: (3, 1),
+        size: (2, 1),
         inputs: vec![port("l", "L", Role::Audio), port("r", "R", Role::Audio)],
         outputs: vec![],
         params: vec![

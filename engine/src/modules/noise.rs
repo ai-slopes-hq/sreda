@@ -9,7 +9,7 @@ pub fn spec() -> ModuleSpec {
         internal: false,
         label: "NOISE",
         desc: "white and pink",
-        size: (3, 1),
+        size: (2, 1),
         inputs: vec![],
         outputs: vec![
             port("white", "WHT", Role::Audio),

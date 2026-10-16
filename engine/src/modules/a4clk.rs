@@ -19,7 +19,7 @@ pub fn spec() -> ModuleSpec {
         internal: false,
         label: "A4 CLK",
         desc: "Analog Four MKII clock and transport over USB MIDI",
-        size: (4, 2),
+        size: (3, 2),
         inputs: vec![
             port("clk", "CLK", Role::Trigger),
             port("run", "RUN", Role::Trigger).held(),
@@ -222,7 +222,7 @@ mod tests {
     #[test]
     fn spec_matches_the_contract() {
         let s = spec();
-        assert_eq!(s.size, (4, 2));
+        assert_eq!(s.size, (3, 2));
         assert_eq!(s.label, "A4 CLK");
         assert!(s.outputs.is_empty());
     }

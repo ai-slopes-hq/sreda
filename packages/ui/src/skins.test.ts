@@ -29,7 +29,9 @@ describe('skins', () => {
     const root = new Map([...rootBlock.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1]!, m[2]!]));
     expect(root.size).toBe(TOKENS.length);
     expect(TOKENS.length).toBe(31);
-    for (const t of TOKENS) expect(root.get(t), t).toBe(SKINS.DEFAULT[t]);
+    // Prettier writes rgba(0, 0, 0, 0.55); skins.ts keeps it compact
+    const norm = (v: string | undefined) => v?.replace(/\s+/g, '').replace(/(?<!\d)0\./g, '.');
+    for (const t of TOKENS) expect(norm(root.get(t)), t).toBe(norm(SKINS.DEFAULT[t]));
   });
 
   it('applySkin sets the tokens on the root', () => {

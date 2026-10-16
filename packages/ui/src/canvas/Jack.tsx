@@ -36,16 +36,18 @@ export function Jack(props: JackProps): JSX.Element {
         props.onPointerDown?.(e);
       }}
       style={{
-        left: props.x - 5.5 + 'px',
-        top: props.y - 5.5 + 'px',
+        left: props.x - 7 + 'px',
+        top: props.y - 7 + 'px',
         'border-color': ROLE[props.role],
         'border-style': props.normalled ? 'dashed' : 'solid',
-        background: props.filled ? ROLE[props.role] : 'var(--ground)',
+        background: 'var(--ground)',
         'box-shadow': props.ring
           ? '0 0 0 2px var(--ground), 0 0 0 3.5px var(--accent)'
           : props.listening
             ? `0 0 0 2px var(--ground), 0 0 0 3.5px ${ROLE[props.role]}`
-            : undefined,
+            : props.filled
+              ? `inset 0 0 0 2.5px ${ROLE[props.role]}`
+              : undefined,
       }}
     />
   );

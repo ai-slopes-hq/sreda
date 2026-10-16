@@ -15,7 +15,7 @@ pub fn spec() -> ModuleSpec {
         internal: false,
         label: "A4",
         desc: "Analog Four MKII track over USB MIDI",
-        size: (4, 2),
+        size: (3, 2),
         inputs: vec![
             port("pitch", "PITCH", Role::Pitch),
             port("gate", "GATE", Role::Trigger).held(),

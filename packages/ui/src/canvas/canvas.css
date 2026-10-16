@@ -85,6 +85,7 @@
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-3);
+  box-shadow: var(--shadow-1);
   box-sizing: border-box;
 }
 .sr-mod:hover {
@@ -105,7 +106,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
-  border-bottom: 1px solid var(--raised);
+  border-bottom: 1px solid var(--line);
   color: var(--heading);
   white-space: nowrap;
   overflow: hidden;
@@ -113,10 +114,10 @@
 }
 .sr-jack {
   position: absolute;
-  width: 11px;
-  height: 11px;
+  width: var(--jack);
+  height: var(--jack);
   border-radius: 50%;
-  border: 1.5px solid;
+  border: 2px solid;
   box-sizing: border-box;
   cursor: crosshair;
   z-index: 2;
@@ -131,9 +132,8 @@
 }
 .sr-plabel {
   position: absolute;
-  font-size: 9px;
-  line-height: 10px;
-  color: var(--quiet);
+  font: 500 9.5px/10px var(--font-mono);
+  color: var(--label);
   letter-spacing: 0.04em;
   pointer-events: none;
   white-space: nowrap;
@@ -169,18 +169,17 @@
   left: 0;
   top: 2px;
   width: 56px;
-  height: 40px;
+  height: 44px;
   cursor: ns-resize;
 }
 .sr-clabel {
   position: absolute;
   left: 0;
   right: 0;
-  top: 43px;
+  top: 45px;
   text-align: center;
-  font-size: 9px;
-  line-height: 10px;
-  color: var(--quiet);
+  font: 500 9.5px/10px var(--font-mono);
+  color: var(--label);
   letter-spacing: 0.04em;
   pointer-events: none;
 }
@@ -188,9 +187,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 53px;
+  top: 55px;
   text-align: center;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 10px;
   color: var(--text);
   pointer-events: none;
@@ -202,21 +201,26 @@
   stroke-linecap: round;
 }
 .k-track {
-  stroke: color-mix(in srgb, var(--line), var(--line-2));
-  stroke-width: 2.5;
+  stroke: var(--line);
+  stroke-width: 3;
 }
 .k-arc {
   stroke: var(--text);
-  stroke-width: 2.5;
+  stroke-width: 3;
 }
 .k-ring {
   stroke: var(--role-mod);
   stroke-width: 2;
-  stroke-opacity: 0.45;
+  stroke-opacity: 0.55;
+}
+.k-body {
+  fill: var(--raised);
+  stroke: var(--line-2);
+  stroke-width: 1;
 }
 .k-ptr {
   stroke: var(--text);
-  stroke-width: 1.5;
+  stroke-width: 1.8;
   stroke-linecap: round;
 }
 .k-tick {
@@ -225,8 +229,8 @@
 .sr-opt {
   position: absolute;
   left: 4px;
-  top: 6px;
-  height: 20px;
+  top: 4px;
+  height: 24px;
   background: var(--ground);
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
@@ -242,6 +246,10 @@
 }
 .sr-opt:hover {
   border-color: var(--muted);
+}
+.sr-opt.open {
+  border-color: var(--label);
+  box-shadow: var(--ring);
 }
 .sr-opt.on {
   background: var(--on);
@@ -334,6 +342,7 @@
 }
 .sr-mod.sel {
   border-color: var(--muted);
+  box-shadow: var(--ring), var(--shadow-1);
 }
 .sr-canvas.wiring-out .sr-jack[data-dir='out'],
 .sr-canvas.wiring-in .sr-jack[data-dir='in'] {
@@ -359,6 +368,7 @@
 }
 .sr-field:hover {
   background: var(--raised);
+  border-radius: var(--radius-2);
 }
 .sr-listen {
   position: absolute;

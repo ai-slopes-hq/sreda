@@ -128,7 +128,7 @@ export function Option(props: OptionProps): JSX.Element {
     >
       <button
         class="sr-opt"
-        classList={{ on: toggle() && props.value === 1 }}
+        classList={{ on: toggle() && props.value === 1, open: open() }}
         style={{ width: props.w - 8 + 'px' }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={click}

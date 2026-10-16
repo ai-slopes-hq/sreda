@@ -4,7 +4,7 @@
     "label": "A4",
     "desc": "Analog Four MKII track over USB MIDI",
     "size": [
-      4,
+      3,
       2
     ],
     "inputs": [
@@ -72,7 +72,7 @@
     "label": "A4 CLK",
     "desc": "Analog Four MKII clock and transport over USB MIDI",
     "size": [
-      4,
+      3,
       2
     ],
     "inputs": [
@@ -11599,7 +11599,7 @@
     "label": "NOISE",
     "desc": "white and pink",
     "size": [
-      3,
+      2,
       1
     ],
     "inputs": [],
@@ -11715,7 +11715,7 @@
     "label": "OUT",
     "desc": "to speakers",
     "size": [
-      3,
+      2,
       1
     ],
     "inputs": [

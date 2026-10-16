@@ -23,9 +23,9 @@ test('a 5×1 module with 3 knobs and a 3-value option follows the grammar', () =
     [168, 38],
   ]);
   expect(l.cells['m']).toEqual({ x: 56, y: 102, w: 112, mode: true });
-  expect(l.jacks['a']).toEqual({ x: 13, y: 54 });
-  expect(l.jacks['b']).toEqual({ x: 13, y: 86 });
-  expect(l.jacks['o']).toEqual({ x: 267, y: 54 });
+  expect(l.jacks['a']).toEqual({ x: 15, y: 54 });
+  expect(l.jacks['b']).toEqual({ x: 15, y: 86 });
+  expect(l.jacks['o']).toEqual({ x: 265, y: 54 });
   expect(l.jacks['@x']).toEqual({ x: 63, y: 45 });
   expect(l.display).toBeNull();
   expect(l.fits).toBe(true);
@@ -34,6 +34,8 @@ test('a 5×1 module with 3 knobs and a 3-value option follows the grammar', () =
 test('actions go right, glyph options take 1 HP, displays sit on top', () => {
   const spec: ModuleSpec = mod('t', {
     size: [6, 2],
+    inputs: [p('a', 'audio')],
+    outputs: [p('o', 'audio')],
     params: [
       k('x'),
       { kind: 'option', id: 'w', label: 'W', options: ['A', 'B', 'C'], def: 0, glyph: 'wave' },
@@ -50,7 +52,7 @@ test('actions go right, glyph options take 1 HP, displays sit on top', () => {
 });
 
 test('a module that does not fit says so', () => {
-  const spec = mod('t', { size: [3, 1], params: [k('a'), k('b')] });
+  const spec = mod('t', { size: [3, 1], inputs: [p('i', 'audio')], outputs: [p('o', 'audio')], params: [k('a'), k('b')] });
   expect(layoutPanel(spec).fits).toBe(false);
 });
 
@@ -66,4 +68,20 @@ test('heights are exactly n × 1U, so stacked 1U modules line up with 2U and 3U'
     [432, 12],
   ]);
   for (const s of Object.values(SPECS)) expect(layoutPanel(s).h % 144).toBe(0);
+});
+
+test('jacks sit 15 px in from the edges', () => {
+  const l = layoutPanel(SPECS.osc!);
+  expect(l.jacks.pitch!.x).toBe(15);
+  expect(l.jacks.out!.x).toBe(l.w - 15);
+});
+
+test('a side with no ports has no column', () => {
+  const n = layoutPanel(SPECS.noise!);
+  expect([n.w, n.cols]).toEqual([112, { in: false, out: true }]);
+  expect(n.cells.level!.x).toBe(0);
+  const o = layoutPanel(SPECS.out!);
+  expect([o.w, o.cols]).toEqual([112, { in: true, out: false }]);
+  expect(layoutPanel(SPECS.a4!).w).toBe(168);
+  expect(layoutPanel(SPECS.a4clk!).w).toBe(168);
 });
