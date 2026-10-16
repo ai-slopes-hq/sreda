@@ -157,3 +157,23 @@ test('SAMPLER display: a drag scrubs and moves START in one undo stroke; SLICE: 
   slice.dispatchEvent(ptr('pointerup', 100));
   expect(calls).toEqual(['fixed play 1.50', 'fixed play 2.50']);
 });
+
+test('a knob cell wears `dragging` while its knob is dragged, a field `editing` while it is dragged', async () => {
+  const { container } = oscPanel();
+  const cell = container.querySelector('[data-knob=freq]')!;
+  const knob = cell.querySelector('.sr-knob')!;
+  (knob as HTMLElement).setPointerCapture = () => {};
+  expect(cell.classList.contains('dragging')).toBe(false);
+  knob.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, clientY: 100 }));
+  expect(cell.classList.contains('dragging')).toBe(true);
+  knob.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+  expect(cell.classList.contains('dragging')).toBe(false);
+  const field = container.querySelector('[data-field]')!;
+  expect(field).not.toBeNull();
+  {
+    field.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    expect(field.classList.contains('editing')).toBe(true);
+    window.dispatchEvent(new PointerEvent('pointerup'));
+    expect(field.classList.contains('editing')).toBe(false);
+  }
+});

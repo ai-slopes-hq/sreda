@@ -30,7 +30,7 @@ export interface KnobProps {
 /** A knob: vertical drag (200 px = full range, Shift ×0.1), wheel 1 % a notch, double-click resets;
  *  Alt-drag on a modulated knob sets the modulation depth. */
 export function Knob(props: KnobProps): JSX.Element {
-  const [, setDragging] = createSignal(false);
+  const [dragging, setDragging] = createSignal(false);
   let start = 0;
   let k0 = 0;
   let key = '';
@@ -75,7 +75,7 @@ export function Knob(props: KnobProps): JSX.Element {
   }
 
   return (
-    <div class="sr-cell" data-knob={p().id} style={{ left: props.x + 'px', top: props.y + 'px' }}>
+    <div class="sr-cell" classList={{ dragging: dragging() }} data-knob={p().id} style={{ left: props.x + 'px', top: props.y + 'px' }}>
       <div
         class="sr-knob"
         onPointerDown={down}

@@ -9,7 +9,7 @@ import {
   type OptionParam,
   type Role,
 } from '@sreda/core';
-import { createMemo, For, Show, type JSX } from 'solid-js';
+import { createMemo, createSignal, For, Show, type JSX } from 'solid-js';
 import { readoutBuffer, track } from '../live';
 import { fmtAtt, fmtRat, ROLE } from './glyphs';
 import { Jack } from './Jack';
@@ -95,6 +95,8 @@ export interface PanelProps {
 /** A module drawn by the panel grammar from its spec: jacks in the side columns, knobs, the mode strip. */
 export function Panel(props: PanelProps): JSX.Element {
   const L = createMemo(() => layoutPanel(props.spec));
+  /** the input whose value field is being dragged (it wears the value chip) */
+  const [editingField, setEditingField] = createSignal<string | null>(null);
   const knobs = () => props.spec.params.filter((p): p is KnobParam => p.kind === 'knob' && !p.hidden);
   const options = () => props.spec.params.filter((p): p is OptionParam => p.kind === 'option' && !p.hidden);
   const actions = () => props.spec.params.filter((p) => p.kind === 'action');
@@ -405,7 +407,12 @@ export function Panel(props: PanelProps): JSX.Element {
                       top: j().y + 1 + 'px',
                       color: value() === 1 ? 'var(--faint)' : undefined,
                     }}
-                    onPointerDown={(e) => props.act.fieldDown?.(port.id, kind(), e)}
+                    classList={{ editing: editingField() === port.id }}
+                    onPointerDown={(e) => {
+                      setEditingField(port.id);
+                      window.addEventListener('pointerup', () => setEditingField(null), { once: true });
+                      props.act.fieldDown?.(port.id, kind(), e);
+                    }}
                     onDblClick={() => props.act.fieldReset?.(port.id, kind())}
                   >
                     {show() ? text() : ''}

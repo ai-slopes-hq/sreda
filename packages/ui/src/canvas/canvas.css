@@ -185,14 +185,20 @@
 }
 .sr-cval {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 3px;
   top: 55px;
   text-align: center;
   font-size: 10px;
   line-height: 10px;
   color: var(--text);
+  border-radius: var(--radius-2);
   pointer-events: none;
+}
+.sr-cell:hover .sr-cval:not(:empty),
+.sr-cell.dragging .sr-cval:not(:empty) {
+  background: var(--raised);
 }
 .k-track,
 .k-arc,
@@ -366,7 +372,8 @@
   min-width: 14px;
   min-height: 11px;
 }
-.sr-field:hover {
+.sr-field:hover,
+.sr-field.editing {
   background: var(--raised);
   border-radius: var(--radius-2);
 }
