@@ -990,7 +990,7 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await page.keyboard.press('Meta+s');
   await page.getByLabel('Name').fill('jam');
   await page.keyboard.press('Enter');
-  await expect(page.locator('.sr-brand .sr-pname')).toHaveText('jam');
+  await expect(page.locator('.sr-brand .sr-projname')).toHaveText('jam');
   expect(existsSync(join(library, 'projects', 'jam.sreda.json'))).toBe(true);
   const newProject = () => page.locator('.sr-tbtn', { hasText: /^New$/ }).click();
   await newProject();
@@ -1000,7 +1000,7 @@ test('library: ⌘S saves the project, NEW clears, ⌘O opens it again; NEW then
   await newProject();
   await page.keyboard.press('Meta+o');
   await expect(page.locator('.sr-mod')).toHaveCount(2);
-  await expect(page.locator('.sr-brand .sr-pname')).toHaveText('jam');
+  await expect(page.locator('.sr-brand .sr-projname')).toHaveText('jam');
   await app.close();
 });
 
@@ -1022,7 +1022,7 @@ test('⌘O opens a project file outside the library; ⌘S writes it back there, 
   const dir = mkdtempSync(join(tmpdir(), 'sreda-e2e-'));
   const { app, page } = await launch(dir, 'starter', library, file);
   await page.keyboard.press('Meta+o');
-  await expect(page.locator('.sr-brand .sr-pname')).toHaveText('tune');
+  await expect(page.locator('.sr-brand .sr-projname')).toHaveText('tune');
   await dragKnob(page, 'osc', 'freq', -60);
   await expect(page.locator('.sr-dirty')).toHaveCount(1);
   await page.keyboard.press('Meta+s');
@@ -1035,7 +1035,7 @@ test('⌘O opens a project file outside the library; ⌘S writes it back there, 
   // relaunched with the same user data: the project resumes as that file, and ⌘S still writes it back
   const saved = readFileSync(file, 'utf8');
   const again = await launch(dir, 'starter', library);
-  await expect(again.page.locator('.sr-brand .sr-pname')).toHaveText('tune');
+  await expect(again.page.locator('.sr-brand .sr-projname')).toHaveText('tune');
   await dragKnob(again.page, 'osc', 'freq', 60);
   await again.page.keyboard.press('Meta+s');
   await expect(again.page.locator('.sr-dirty')).toHaveCount(0);

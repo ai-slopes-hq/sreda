@@ -176,7 +176,9 @@ export function createSampleRegistry(o: {
       status.delete(path);
       bytes.delete(path);
       ready.delete(path);
-      o.notice(`${name(path)} — ${e instanceof SampleError ? e.message : 'Cannot be decoded'}`);
+      const why = e instanceof SampleError ? e.message : 'Cannot be decoded';
+      // a notice reads on after the dash: lower case, like the library's
+      o.notice(`${name(path)} — ${why.charAt(0).toLowerCase()}${why.slice(1)}`);
     }
     o.changed();
   };

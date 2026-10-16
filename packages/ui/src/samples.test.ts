@@ -85,9 +85,9 @@ test('a sample that will not decode, an empty one and an 11-minute one are refus
   const long = setup(async () => decoded(1, 11 * 60 * 48_000));
   long.r.loadDoc(doc('long.wav'));
   await flush();
-  expect(fail.notices).toEqual(['broken.wav — Cannot be decoded']);
-  expect(empty.notices).toEqual(['empty.wav — No audio in it']);
-  expect(long.notices).toEqual(['long.wav — Longer than 10 minutes']);
+  expect(fail.notices).toEqual(['broken.wav — cannot be decoded']);
+  expect(empty.notices).toEqual(['empty.wav — no audio in it']);
+  expect(long.notices).toEqual(['long.wav — longer than 10 minutes']);
   for (const s of [fail, empty, long]) expect(s.posted).toEqual([]);
 });
 

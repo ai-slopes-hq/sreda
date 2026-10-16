@@ -57,6 +57,8 @@ function Fader(props: { value: number; label: string; set(v: number, merge: Merg
   );
 }
 
+const SCALE = [-48, -24, -12, -6, 0];
+
 /** A level bar over its dB scale (−48 … 0). One bar; stereo comes with Plan 17. */
 function Meter(props: { offset(): number | undefined }): JSX.Element {
   return (
@@ -65,11 +67,17 @@ function Meter(props: { offset(): number | undefined }): JSX.Element {
         <div ref={(el) => track(el, 'meterDb', props.offset)} />
       </div>
       <div class="sr-mt-s">
-        <span>−48</span>
-        <span>−24</span>
-        <span>−12</span>
-        <span>−6</span>
-        <span>0 dB</span>
+        {/* the bar is linear in dB over −48 … 0, so each label sits at its dB, not evenly spaced */}
+        <For each={SCALE}>
+          {(db) => (
+            <span
+              classList={{ first: db === -48, last: db === 0 }}
+              style={{ left: `${(1 + db / 48) * 100}%` }}
+            >
+              {db === 0 ? '0 dB' : String(db).replace('-', '−')}
+            </span>
+          )}
+        </For>
       </div>
     </div>
   );

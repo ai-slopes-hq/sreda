@@ -2,6 +2,8 @@
 import type { Group } from '@sreda/core';
 import { fireEvent, render } from '@solidjs/testing-library';
 import { expect, test, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Frame, type BlockView, type FrameActions } from './Frame';
 
 const group: Group = {
@@ -251,4 +253,20 @@ test('an expanded frame has ⌄, which collapses it', () => {
   const { calls, getByLabelText } = frame();
   fireEvent.click(getByLabelText('Collapse frame'));
   expect(calls).toEqual(['collapse true']);
+});
+
+test('at the minimum width the name gives way and the tools stay: ellipsis on the name, a rigid cluster, no level meter', () => {
+  const css = readFileSync(resolve(__dirname, 'canvas.css'), 'utf8');
+  const rule = (sel: string) => new RegExp(`\\n${sel.replace('.', '\\.')} \\{([^}]*)\\}`).exec(css)![1]!;
+  const name = rule('.sr-gname');
+  for (const d of ['flex: 0 1 auto', 'min-width: 0', 'overflow: hidden', 'text-overflow: ellipsis', 'white-space: nowrap'])
+    expect(name).toContain(d);
+  expect(rule('.sr-gclock')).toContain('flex: none');
+  const { container } = frame({ name: 'A-VERY-LONG-FRAME-NAME-THAT-CANNOT-FIT', w: 352 }, false, undefined, true);
+  expect(container.querySelector('.sr-gname')!.textContent).toBe('A-VERY-LONG-FRAME-NAME-THAT-CANNOT-FIT');
+  const cluster = container.querySelector('.sr-gclock')!;
+  expect(cluster.querySelector('.sr-swatch')).not.toBeNull();
+  expect([...cluster.querySelectorAll('.sr-gbtn')].map((b) => b.textContent)).toEqual(['Stack', 'Save group', 'M', expect.any(String)]);
+  expect(cluster.querySelector('[aria-label="Mute frame"]')).not.toBeNull();
+  expect(container.querySelector('.sr-gmeter')!.classList.contains('hide')).toBe(true);
 });

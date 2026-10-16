@@ -76,7 +76,7 @@
 }
 .sr-line.notice {
   color: var(--accent);
-  top: 34px;
+  top: 100px;
 }
 .sr-mod {
   position: absolute;
@@ -239,8 +239,7 @@
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
   color: var(--text);
-  font: 500 9px inherit;
-  font-family: inherit;
+  font: 500 9px var(--font-mono);
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -382,7 +381,7 @@
 .sr-listen {
   position: absolute;
   left: 50%;
-  top: 10px;
+  top: 64px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -633,14 +632,13 @@
 .sr-action {
   position: absolute;
   left: 4px;
-  top: 6px;
-  height: 20px;
+  top: 4px;
+  height: 24px;
   background: var(--ground);
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
   color: var(--text);
-  font: 500 9px inherit;
-  font-family: inherit;
+  font: 500 9px var(--font-mono);
   letter-spacing: 0.06em;
   cursor: pointer;
   padding: 0;
@@ -730,6 +728,10 @@
   font: 600 11px var(--font-mono);
   letter-spacing: 0.08em;
   color: var(--text-2);
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .sr-gname-in {
@@ -743,6 +745,7 @@
   outline: none;
 }
 .sr-gclock {
+  flex: none;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -836,6 +839,9 @@
   overflow: hidden;
   flex: none;
 }
+.sr-gmeter.hide {
+  display: none;
+}
 .sr-gmeter div {
   height: 3px;
   width: 0;
@@ -909,7 +915,7 @@
   margin: 10px 0;
   background: var(--line-2);
 }
-.sr-pname {
+.sr-projname {
   max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1301,6 +1307,15 @@
 }
 .sr-wrow .m {
   color: var(--text-2);
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sr-wrow .pn {
+  flex: none;
+  white-space: nowrap;
 }
 .sr-wrow .arr {
   flex: none;
@@ -1350,6 +1365,9 @@
 }
 .sr-wrow:hover .x,
 .sr-wrow.on .x {
+  opacity: 1;
+}
+.sr-wrow .x:focus-visible {
   opacity: 1;
 }
 .sr-wrow .x:hover {
@@ -1796,10 +1814,22 @@ button.sr-sname:hover {
   border-radius: var(--radius-1);
 }
 .sr-mt-s {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 12px;
   color: var(--quiet);
   font: 500 9px var(--font-mono);
+}
+.sr-mt-s span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.sr-mt-s span.first {
+  transform: none;
+}
+.sr-mt-s span.last {
+  transform: translateX(-100%);
 }
 .sr-note,
 .sr-empty {

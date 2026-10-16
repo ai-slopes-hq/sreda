@@ -199,7 +199,7 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
                   }}
                 >
                   <span class="dot" style={{ background: ROLE[w()[end]] }} />
-                  <span class="m">{label()[0]}</span> {label()[1]}
+                  <span class="m">{label()[0]}</span> <span class="pn">{label()[1]}</span>
                 </span>
               </>
             );

@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 import { addModule, connect, emptyDoc, SPECS, starterDoc, type Doc } from '@sreda/core';
 import { fireEvent, render } from '@solidjs/testing-library';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test } from 'vitest';
 import { createSession } from '../store';
 import { Wires } from './Wires';
@@ -70,4 +72,15 @@ test('the Selection chip keeps the wires touching the selection', () => {
   expect(rows()).toBeLessThan(4);
   fireEvent.click(container.querySelector('.sr-chip')!);
   expect(rows()).toBe(4);
+});
+
+test('a wire end is a shrinking module name and a rigid port name', () => {
+  const { container } = setup();
+  const port = container.querySelector('.sr-wrow .port')!;
+  expect(port.querySelector('.m')!.textContent).not.toBe('');
+  expect(port.querySelector('.pn')!.textContent).not.toBe('');
+  const css = readFileSync(resolve(__dirname, '../canvas/canvas.css'), 'utf8');
+  const m = /\n\.sr-wrow \.m \{([^}]*)\}/.exec(css)![1]!;
+  for (const d of ['min-width: 0', 'overflow: hidden', 'text-overflow: ellipsis', 'white-space: nowrap']) expect(m).toContain(d);
+  expect(/\n\.sr-wrow \.pn \{([^}]*)\}/.exec(css)![1]).toContain('flex: none');
 });

@@ -1,6 +1,7 @@
 // Everything that moves every frame bypasses Solid: one requestAnimationFrame loop reads the readout buffer and
 // writes registered elements directly.
 import { createEffect, onCleanup } from 'solid-js';
+import { KNOB_CX, KNOB_CY } from './canvas/glyphs';
 import { tracePaths } from './canvas/displays/trace';
 
 type Kind =
@@ -105,7 +106,7 @@ export function frame(now: number): void {
         break;
       }
       case 'modDot':
-        e.el.setAttribute('transform', `rotate(${(-135 + 270 * v).toFixed(1)} 24 17)`);
+        e.el.setAttribute('transform', `rotate(${(-135 + 270 * v).toFixed(1)} ${KNOB_CX} ${KNOB_CY})`);
         break;
       case 'flash':
         if (v !== e.last && !Number.isNaN(e.last)) e.until = now + 120;

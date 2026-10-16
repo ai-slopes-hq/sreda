@@ -31,7 +31,7 @@ export function Chrome(props: {
       <div class="sr-brand" title={st.project?.path} onPointerDown={stop} onDblClick={stop}>
         <span class="sr-word">SREDA</span>
         <span class="sr-div" />
-        <span class="sr-pname">{projectName(st.project)}</span>
+        <span class="sr-projname">{projectName(st.project)}</span>
         <Show when={st.dirty}>
           <span class="sr-dirty">
             <i class="dot" />

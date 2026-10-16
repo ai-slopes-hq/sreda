@@ -1,6 +1,10 @@
 // Pure drawing and text helpers for panels and cables (ported from the prototype).
 import type { KnobParam, Role } from '@sreda/core';
 
+/** the knob's centre in its 56 x 44 SVG (Knob.tsx draws around it; live.ts turns the mod dot around it) */
+export const KNOB_CX = 28;
+export const KNOB_CY = 22;
+
 export const ROLE: Record<Role, string> = {
   audio: 'var(--role-audio)',
   mod: 'var(--role-mod)',

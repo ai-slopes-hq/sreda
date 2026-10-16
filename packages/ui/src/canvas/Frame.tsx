@@ -214,7 +214,7 @@ export function Frame(props: FrameProps): JSX.Element {
             onBlur={() => done(true)}
           />
         </Show>
-        <div class="sr-gmeter" title="level leaving the frame">
+        <div class="sr-gmeter" classList={{ hide: tools() && !block() }} title="level leaving the frame">
           <div ref={(el) => track(el, 'meter', () => props.meter)} />
         </div>
         <div class="sr-gclock">

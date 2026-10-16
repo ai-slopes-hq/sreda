@@ -164,7 +164,7 @@
   letter-spacing: 0.1em;
 }
 /* LEN and RATE: a chip of a faint label and a mono value */
-.sr-chip {
+.sr-lchip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -177,7 +177,7 @@
   color: var(--text);
   font: 500 10px var(--font-mono);
 }
-.sr-chip i {
+.sr-lchip i {
   font-style: normal;
   color: var(--label);
 }

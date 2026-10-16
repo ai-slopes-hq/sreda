@@ -93,3 +93,10 @@ test('the one-OUT note shows with one OUT and hides with two; MASTER is the last
   expect(two.container.querySelector('.sr-mix')!.lastElementChild!.matches('.master')).toBe(true);
   expect(two.container.querySelector('.sr-sfoot')?.textContent).toBe('after the limiter');
 });
+
+test('the meter scale puts each dB label where the dB-linear bar is', () => {
+  const { strip } = setup();
+  const labels = [...strip.querySelectorAll<HTMLElement>('.sr-mt-s span')];
+  expect(labels.map((l) => l.textContent)).toEqual(['−48', '−24', '−12', '−6', '0 dB']);
+  expect(labels.map((l) => parseFloat(l.style.left))).toEqual([0, 50, 75, 87.5, 100]);
+});

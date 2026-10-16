@@ -1,7 +1,7 @@
 import { fromKnob, toKnob, type KnobParam, type Merge } from '@sreda/core';
 import { createSignal, Show, type JSX } from 'solid-js';
 import { track } from '../live';
-import { ang, arc, curveGlyph, fmt } from './glyphs';
+import { ang, arc, curveGlyph, fmt, KNOB_CX, KNOB_CY } from './glyphs';
 import { panning } from './wheel';
 
 let strokes = 0;
@@ -98,18 +98,18 @@ export function Knob(props: KnobProps): JSX.Element {
             />
           </Show>
           <path class="k-arc" d={arc(0, props.value, 14)} />
-          <circle class="k-body" cx="28" cy="22" r="9.5" />
+          <circle class="k-body" cx={KNOB_CX} cy={KNOB_CY} r="9.5" />
           <line
             class="k-ptr"
-            x1="28"
-            y1="22"
-            x2={(28 + 7 * Math.sin(a())).toFixed(2)}
-            y2={(22 - 7 * Math.cos(a())).toFixed(2)}
+            x1={KNOB_CX}
+            y1={KNOB_CY}
+            x2={(KNOB_CX + 7 * Math.sin(a())).toFixed(2)}
+            y2={(KNOB_CY - 7 * Math.cos(a())).toFixed(2)}
           />
           <Show when={props.modulated}>
             <g
               ref={(el) => track(el, 'modDot', () => props.readout)}
-              transform={`rotate(${(-135 + 270 * props.value).toFixed(1)} 28 22)`}
+              transform={`rotate(${(-135 + 270 * props.value).toFixed(1)} ${KNOB_CX} ${KNOB_CY})`}
             >
               <circle class="k-tick" cx="28" cy="4" r="2.2" />
             </g>

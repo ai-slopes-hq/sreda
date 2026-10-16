@@ -249,7 +249,7 @@ export function Lane(props: LaneProps): JSX.Element {
   const optionCell = (id: () => string, value: () => number, label?: string) => (
     <Show when={option(id())}>
       {(prm) => (
-        <span class="sr-chip sr-lane-opt">
+        <span class="sr-lchip sr-lane-opt">
           <Show when={label}>
             <i>{label}</i>
           </Show>
@@ -312,7 +312,7 @@ export function Lane(props: LaneProps): JSX.Element {
         </div>
         <div class="sr-lane-chips">
           <span
-            class="sr-chip sr-lane-field"
+            class="sr-lchip sr-lane-field"
             title="LEN (drag or wheel)"
             onPointerDown={fieldDown}
             onPointerMove={fieldMove}

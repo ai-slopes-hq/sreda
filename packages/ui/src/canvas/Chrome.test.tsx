@@ -24,14 +24,14 @@ test('the brand bar names the project, its title is the full path', () => {
   const c = mount({ path: '/Users/x/jam.sreda.json', factory: false, file: true });
   const bar = c.querySelector('.sr-brand')!;
   expect(bar.getAttribute('title')).toBe('/Users/x/jam.sreda.json');
-  expect(bar.querySelector('.sr-pname')!.textContent).toBe('jam');
+  expect(bar.querySelector('.sr-projname')!.textContent).toBe('jam');
   expect(bar.textContent).not.toContain('unsaved');
 });
 
 test('dirty shows unsaved; no project reads Untitled patch', () => {
   const c = mount(null, true);
   expect(c.querySelector('.sr-brand')!.textContent).toContain('unsaved');
-  expect(c.querySelector('.sr-pname')!.textContent).toBe('Untitled patch');
+  expect(c.querySelector('.sr-projname')!.textContent).toBe('Untitled patch');
 });
 
 test('the right bar reads Dice, New, Save, Sidebar in that order', () => {
@@ -40,10 +40,10 @@ test('the right bar reads Dice, New, Save, Sidebar in that order', () => {
   expect(names).toEqual(['Dice', 'New', 'Save', 'Sidebar']);
 });
 
-test('a 60-character name sits in .sr-pname', () => {
+test('a 60-character name sits in .sr-projname', () => {
   const name = 'x'.repeat(60);
   const c = mount({ path: `a/${name}`, factory: false });
-  expect(c.querySelector('.sr-pname')!.textContent).toBe(name);
+  expect(c.querySelector('.sr-projname')!.textContent).toBe(name);
 });
 
 test('a press or double-click on the brand bar does not reach the canvas', () => {

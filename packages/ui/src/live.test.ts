@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { expect, test, vi } from 'vitest';
+import { KNOB_CX, KNOB_CY } from './canvas/glyphs';
 import { frame, register, setLayoutSeq, setSource } from './live';
 
 test("a watch fires on a rising count read under its own plan's layout only", () => {
@@ -50,4 +51,18 @@ test('a meterDb bar is the peak in dB over a 48 dB range, as a width in %', () =
   expect(width(0)).toBe(0);
   expect(width(NaN)).toBe(0);
   expect(width(Infinity)).toBe(0);
+});
+
+test("a modDot turns around the knob's centre", () => {
+  const buf = new Float32Array(4);
+  setSource(buf);
+  setLayoutSeq(1);
+  buf[0] = 1;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const off = register(g, 'modDot', 2);
+  buf[2] = 0.5;
+  frame(0);
+  off();
+  expect(g.getAttribute('transform')).toBe(`rotate(0.0 ${KNOB_CX} ${KNOB_CY})`);
+  expect([KNOB_CX, KNOB_CY]).toEqual([28, 22]);
 });
