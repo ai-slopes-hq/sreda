@@ -4,7 +4,7 @@ import { createEffect, onCleanup } from 'solid-js';
 import { tracePaths } from './canvas/displays/trace';
 
 type Kind =
-  'level' | 'meter' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw' | 'playhead' | 'tick';
+  'level' | 'meter' | 'meterDb' | 'modDot' | 'flash' | 'trace' | 'step' | 'watch' | 'draw' | 'playhead' | 'tick';
 interface Entry {
   el: Element;
   kind: Kind;
@@ -39,7 +39,7 @@ export function setLayoutSeq(n: number): void {
   layoutSeq = n;
 }
 
-/** level: a bar's width (22 px at full); meter: width in %; modDot: rotation of a knob's dot; flash: a trigger count changed. */
+/** level: a bar's width (22 px at full); meter: width in %; meterDb: width in % of a −48 … 0 dB scale; modDot: rotation of a knob's dot; flash: a trigger count changed. */
 export function register(
   el: Element,
   kind: Kind,
@@ -96,6 +96,14 @@ export function frame(now: number): void {
         e.hold = Math.max(Math.min(1, v), e.hold - dt / 0.3);
         style.width = e.hold * 100 + '%';
         break;
+      case 'meterDb': {
+        // the same 300 ms hold; the bar is the peak in dB over 48 dB (−48 … 0), nothing for 0 or a non-finite reading
+        const peak = v > 0 && v < Infinity ? Math.min(1, v) : 0;
+        e.hold = Math.max(peak, e.hold - dt / 0.3);
+        const bar = e.hold > 0 ? (20 * Math.log10(e.hold) + 48) / 48 : 0;
+        style.width = Math.min(1, Math.max(0, bar)) * 100 + '%';
+        break;
+      }
       case 'modDot':
         e.el.setAttribute('transform', `rotate(${(-135 + 270 * v).toFixed(1)} 24 17)`);
         break;

@@ -42,7 +42,7 @@ async function run(skin) {
     await page.mouse.move(720, 450);
     await page.keyboard.press(key);
   };
-  const tab = (name) => page.getByRole('button', { name: exactly(name) }).click();
+  const tab = (name) => page.getByRole('tab', { name: exactly(name) }).click();
   const sidebar = async () => {
     if ((await page.locator('.sr-side').count()) === 0)
       await page.getByRole('button', { name: /^sidebar/i }).click();
@@ -65,6 +65,8 @@ async function run(skin) {
   // a factory project, fitted
   await sidebar();
   await tab('LIBRARY');
+  // a long section shows its first eight rows: TECHNO is the tenth project
+  await page.locator('[data-section=PROJECTS] .sr-more').click();
   await page
     .locator('.sr-lrow', { hasText: /·\s*techno\s*$/i })
     .first()

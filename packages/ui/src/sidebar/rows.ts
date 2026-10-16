@@ -1,4 +1,4 @@
-// What WIRES lists (spec §5a): sections of wire rows (and dimmed normals), then PROBLEMS.
+// What WIRES lists (spec §5a, §1b): sections of wire rows, NORMALS, then PROBLEMS; empty sections are left out.
 import {
   chainOf,
   hiddenIn,
@@ -32,7 +32,10 @@ export interface WireRow {
 export interface NormalRow {
   kind: 'normal';
   id: string;
+  /** the normal: `OUT › R ← L` */
   text: string;
+  /** what it does: `until something is patched into R` */
+  note: string;
   role: Role;
 }
 export interface ProblemRow {
@@ -127,12 +130,14 @@ export function wireSections(
           : n.kind === 'internal'
             ? n.internal.toUpperCase()
             : (n.value >= 0 ? '+' : '') + n.value;
-      const text = `${portLabel(doc, specs, m.id, n.input)}  ← ${source} (normal)`;
+      const text = `${portLabel(doc, specs, m.id, n.input)} ← ${source}`;
       if (!keep(text, [m.id])) continue;
-      add(chainOf(doc, m.id)[0] ?? 'ungrouped', {
+      const input = inputPorts(spec).find((p) => p.id === n.input)?.label ?? n.input.toUpperCase();
+      add('normals', {
         kind: 'normal',
         id: m.id,
         text,
+        note: `until something is patched into ${input}`,
         role: roleIn(doc, specs, m.id, n.input),
       });
     }
@@ -155,6 +160,8 @@ export function wireSections(
   visit(null, 0);
   section('ungrouped', 'UNGROUPED', 0);
   section('between', 'BETWEEN GROUPS', 0);
+  const normals = rows.get('normals') ?? [];
+  out.push({ key: 'normals', title: 'NORMALS', depth: 0, rows: normals, count: normals.length });
   const problems = wireProblems(doc, specs, (p) => o.missing?.includes(p) ?? false, o.midi)
     .filter((p) => !q || p.text.toLowerCase().includes(q))
     .map((p): ProblemRow => ({ kind: 'problem', problem: p, text: p.text }));
@@ -165,5 +172,6 @@ export function wireSections(
     rows: problems,
     count: problems.filter((p) => !p.problem.info).length,
   });
-  return out;
+  // a section with nothing to list is not shown (no problems is one line the list adds itself)
+  return out.filter((x) => x.rows.length > 0);
 }

@@ -29,3 +29,25 @@ test("a watch fires on a rising count read under its own plan's layout only", ()
   expect(fired).toHaveBeenCalledTimes(1);
   off();
 });
+
+test('a meterDb bar is the peak in dB over a 48 dB range, as a width in %', () => {
+  const buf = new Float32Array(4);
+  setSource(buf);
+  setLayoutSeq(1);
+  buf[0] = 1;
+  // a fresh bar per reading: a held peak would still be falling
+  const width = (peak: number): number => {
+    const el = document.createElement('div');
+    const off = register(el, 'meterDb', 2);
+    buf[2] = peak;
+    frame(0);
+    off();
+    return parseFloat(el.style.width);
+  };
+  expect(width(1)).toBeCloseTo(100, 5);
+  expect(width(0.0039811)).toBeCloseTo(0, 2);
+  expect(Math.abs(width(0.25) - 75)).toBeLessThan(0.5);
+  expect(width(0)).toBe(0);
+  expect(width(NaN)).toBe(0);
+  expect(width(Infinity)).toBe(0);
+});

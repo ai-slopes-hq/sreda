@@ -946,7 +946,7 @@ test('picker: a factory project replaces the canvas (⌘Z returns); a group drop
   const { app, page } = await launch();
   await page.mouse.move(700, 500);
   await page.keyboard.press('w');
-  await page.getByRole('button', { name: 'LIBRARY' }).click();
+  await page.getByRole('tab', { name: 'Library' }).click();
   await page.locator('[data-section=PROJECTS] [data-path="FACTORY/acid"]').click();
   await expect(page.locator('.sr-frame .sr-gname')).toHaveText('ACID');
   await expect(page.locator('[data-type=metaseq]')).toHaveCount(1);
@@ -1172,13 +1172,13 @@ test('WIRES: W opens the sidebar beside the canvas; sections, problems, a value 
 
   await page.keyboard.press('w');
   await expect(page.locator('.sr-side')).toBeVisible();
-  expect(full - (await width())).toBe(440);
+  expect(full - (await width())).toBe(456); // the sidebar's 440 px and its 16 px gap
   const group = page.locator('[data-section]').filter({ hasText: 'GROUP 1' });
-  await expect(group.locator('.sr-wrow').filter({ hasText: 'OSC › OUT  →  OUT › L' })).toHaveCount(1);
+  await expect(group.locator('.sr-wrow').filter({ hasText: /OSC › OUT→OUT › L/ })).toHaveCount(1);
   await expect(page.locator('[data-section=problems]')).toContainText('FILTER › IN — empty input');
 
   // drag the PTCH row's value down 50 px: the attenuverter on the module is 0.5
-  const row = group.locator('.sr-wrow').filter({ hasText: '→  OSC › PTCH' });
+  const row = group.locator('.sr-wrow').filter({ hasText: 'OSC › PTCH' });
   const v = await center(page, row.locator('.value'));
   await drag(page, v, { x: v.x, y: v.y + 50 });
   expect((await fullDoc(page)).modules[0]!.atts['pitch']).toBeCloseTo(0.5, 2);
@@ -1192,9 +1192,47 @@ test('WIRES: W opens the sidebar beside the canvas; sections, problems, a value 
   for (const box of await page
     .locator('.sr-mod')
     .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right)))
-    expect(box).toBeLessThan(vw - 440);
+    expect(box).toBeLessThan(vw - 456);
   await page.keyboard.press('Escape');
   await expect(page.locator('.sr-side')).toBeHidden();
+  await app.close();
+});
+
+test('the open sidebar narrows the canvas, also above the drawer', async () => {
+  const { app, page } = await launch();
+  await page.mouse.dblclick(500, 300);
+  await page.keyboard.type('meta');
+  await page.keyboard.press('Enter');
+  const seq = page.locator('[data-type=metaseq]');
+  await expect(seq).toBeVisible();
+  await page.mouse.move(900, 500);
+  await page.keyboard.press('w');
+  const box = async (sel: string) => (await page.locator(sel).boundingBox())!;
+  const vw = await page.evaluate(() => innerWidth);
+  const vh = await page.evaluate(() => innerHeight);
+  const side = await box('.sr-side');
+  let canvas = await box('.sr-canvas');
+  expect(Math.abs(canvas.x + canvas.width - side.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(vw - (side.x + side.width) - 16)).toBeLessThanOrEqual(1);
+  expect(Math.abs(side.y - 16)).toBeLessThanOrEqual(1);
+  expect(Math.abs(vh - (side.y + side.height) - 16)).toBeLessThanOrEqual(1);
+
+  // META-SEQ's drawer: the sidebar floats 16 px above it
+  const face = (await seq.boundingBox())!;
+  await page.mouse.dblclick(face.x + 6, face.y + face.height - 6);
+  await expect(page.locator('.sr-drawer')).toBeVisible();
+  const drawer = await box('.sr-drawer');
+  const lifted = await box('.sr-side');
+  expect(Math.abs(drawer.y - (lifted.y + lifted.height) - 16)).toBeLessThanOrEqual(1);
+  canvas = await box('.sr-canvas');
+  expect(Math.abs(canvas.x + canvas.width - lifted.x)).toBeLessThanOrEqual(1);
+
+  await page.mouse.move(300, 300);
+  await page.keyboard.press('f');
+  for (const right of await page
+    .locator('.sr-mod')
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right)))
+    expect(right).toBeLessThan(lifted.x);
   await app.close();
 });
 
@@ -1220,7 +1258,7 @@ test('WIRES: move an end from the port list, a new wire, rows light the canvas, 
   expect((await fullDoc(page)).cables).toEqual([{ from: ['m1', 'out'], to: ['m2', 'r'] }]);
 
   // + new wire: OSC › OUT, then FILTER › IN
-  await page.getByText('+ new wire').click();
+  await page.getByRole('button', { name: 'New wire' }).click();
   await page.keyboard.type('osc › out');
   await page.keyboard.press('Enter');
   await page.keyboard.type('filter › in');
@@ -1230,10 +1268,10 @@ test('WIRES: move an end from the port list, a new wire, rows light the canvas, 
 
   // SELECTION with OSC selected: only OSC's wires (both of them here); with the FILTER selected: one
   await page.locator('[data-type=filter] .sr-head').click();
-  await page.getByText('SELECTION', { exact: true }).click();
+  await page.getByRole('button', { name: 'Selection' }).click();
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText('FILTER › IN');
-  await page.getByText('SELECTION', { exact: true }).click();
+  await page.getByRole('button', { name: /^All/ }).click();
 
   // ↓ picks the first row, Backspace removes its wire
   await page.mouse.click(1200, 820); // the canvas has the keys (and nothing is selected)
@@ -1497,13 +1535,13 @@ test('SETTINGS: W opens WIRES; choosing NORD recolours the canvas and is remembe
   const ground = () =>
     first.page.locator('.sr-canvas').evaluate((el) => getComputedStyle(el).backgroundColor);
   await first.page.keyboard.press('w');
-  await expect(first.page.locator('.sr-wfilter')).toBeVisible();
-  await first.page.getByRole('button', { name: 'SETTINGS' }).click();
-  await expect(first.page.locator('.sr-wfilter')).toHaveCount(0);
+  await expect(first.page.locator('.sr-sfield')).toBeVisible();
+  await first.page.getByRole('tab', { name: 'Settings' }).click();
+  await expect(first.page.locator('.sr-sfield')).toHaveCount(0);
   await first.page.locator('[data-skin="NORD"]').click();
   await expect.poll(ground).toBe('rgb(46, 52, 64)');
   await first.page.keyboard.press('w'); // on another tab than WIRES: switches to it
-  await expect(first.page.locator('.sr-wfilter')).toBeVisible();
+  await expect(first.page.locator('.sr-sfield')).toBeVisible();
   await first.page.keyboard.press('w'); // on WIRES: closes
   await expect(first.page.locator('.sr-side')).toHaveCount(0);
   await first.app.close();
@@ -1524,19 +1562,19 @@ test('MIX: M opens a strip per OUT and the master; M / S, the faders and ⌘Z; t
   await expect(page.locator('.sr-strip[data-out] .sr-sname')).toHaveText('OUT');
   await expect(page.locator('.sr-strip.master')).toBeVisible();
   const strip = page.locator('.sr-strip[data-out]');
-  await strip.getByRole('button', { name: 'S', exact: true }).click(); // solo keeps the sound
+  await strip.getByRole('button', { name: 'Solo OUT' }).click(); // solo keeps the sound
   await page.waitForTimeout(100);
   expect(await master()).toBeGreaterThan(0.05);
-  await strip.getByRole('button', { name: 'M', exact: true }).click();
+  await strip.getByRole('button', { name: 'Mute OUT' }).click();
   await expect.poll(master, { timeout: 500 }).toBeLessThan(0.001);
   await page.keyboard.press('Meta+z');
   await expect.poll(master).toBeGreaterThan(0.05);
   // the master fader to 0: silence; ⌘Z: sound
   const mf = (await page.locator('.sr-strip.master .sr-fader').boundingBox())!;
-  const x = mf.x + mf.width / 2;
-  await page.mouse.move(x, mf.y + 10);
+  const y = mf.y + mf.height / 2;
+  await page.mouse.move(mf.x + mf.width / 2, y);
   await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(x, mf.y + 10 + 20 * i);
+  for (let i = 1; i <= 10; i++) await page.mouse.move(mf.x + mf.width / 2 - 20 * i, y);
   await page.mouse.up();
   await expect.poll(master, { timeout: 500 }).toBeLessThan(0.001);
   await page.keyboard.press('Meta+z');
@@ -1553,7 +1591,7 @@ test('MIX: M opens a strip per OUT and the master; M / S, the faders and ⌘Z; t
 test('LIBRARY: a factory group and a sample are dragged from the sidebar onto the canvas', async () => {
   const { app, page } = await launch(undefined, 'starter', libraryWithSamples());
   await page.getByRole('button', { name: 'Sidebar' }).click();
-  await page.getByRole('button', { name: 'LIBRARY' }).click();
+  await page.getByRole('tab', { name: 'Library' }).click();
   await expect(page.locator('[data-section=SAMPLES] .sr-lrow')).toHaveCount(2);
   await page
     .locator('[data-section=GROUPS]')

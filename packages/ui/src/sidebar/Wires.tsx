@@ -12,10 +12,18 @@ import { createEffect, createMemo, For, on, Show, type JSX } from 'solid-js';
 import type { PortsState } from '../store';
 import { PortList } from './PortList';
 import { fmtAtt, fmtRat, ROLE } from '../canvas/glyphs';
+import { Icon } from '../canvas/icons';
 import type { SessionApi } from '../store';
-import { wireSections, type WireRow } from './rows';
+import { SearchField, SideFooter } from './SideField';
+import { wireSections, type Row, type Section, type WireRow } from './rows';
 
 let strokes = 0;
+
+/** `OSC 1 › OUT` → the module (muted) and the port */
+const splitLabel = (label: string): [string, string] => {
+  const i = label.lastIndexOf(' › ');
+  return i < 0 ? ['', label] : [label.slice(0, i + 2), label.slice(i + 3)];
+};
 
 /** WIRES (spec §5a): the patch seen through its wires, in sections; values, ✕, normals, problems. */
 export function Wires(props: { session: SessionApi; specs: Specs; focus(id: string): void }): JSX.Element {
@@ -94,11 +102,11 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
     const title =
       ps.index === 'new'
         ? ps.end === 'from'
-          ? 'NEW WIRE: FROM…'
-          : 'NEW WIRE: TO…'
+          ? 'New wire: from…'
+          : 'New wire: to…'
         : ps.end === 'to'
-          ? 'MOVE TO…'
-          : 'MOVE FROM…';
+          ? 'Move to…'
+          : 'Move from…';
     return (
       <PortList
         ports={allPorts(st.doc, props.specs, dir)}
@@ -153,136 +161,181 @@ export function Wires(props: { session: SessionApi; specs: Specs; focus(id: stri
     setValue(row, step(row, row.value.v, e.deltaY < 0 ? 1 : -1), { key: `wires-wheel:${row.index}` });
   }
 
-  return (
-    <div class="sr-wires" ref={(el) => (box = el)}>
-      <For each={sections()}>
-        {(sec) => {
-          const closed = () => !!st.sidebar.closed[sec.key];
-          return (
-            <div class="sr-wsec" data-section={sec.key}>
-              <button
-                class="sr-wsec-head"
-                style={{ 'padding-left': 10 + sec.depth * 14 + 'px' }}
-                onClick={() => s.setState('sidebar', 'closed', sec.key, !closed())}
-              >
-                <span class="caret">{closed() ? '▸' : '▾'}</span>
-                <span class="title">{sec.title}</span>
-                <span class="count">{sec.count}</span>
-              </button>
-              <Show when={!closed()}>
-                <For each={sec.rows}>
-                  {(row) => (
-                    <Show
-                      when={row.kind === 'wire' && row}
-                      fallback={
-                        <div
-                          class="sr-wrow dim"
-                          classList={{
-                            problem: row.kind === 'problem' && !row.problem.info,
-                            clickable: row.kind === 'problem',
-                          }}
-                          style={{ 'padding-left': 24 + sec.depth * 14 + 'px' }}
-                          onClick={() => row.kind === 'problem' && props.focus(row.problem.id)}
-                        >
-                          <Show when={row.kind === 'normal' && row}>
-                            {(n) => <span class="dot" style={{ background: ROLE[n().role] }} />}
-                          </Show>
-                          <span class="text">{row.text}</span>
-                        </div>
-                      }
-                    >
-                      {(w) => (
-                        <>
-                          <div
-                            class="sr-wrow"
-                            classList={{
-                              on: st.sidebar.picked === w().index,
-                              dim: !!w().collapsed,
-                              sel: selected().has(w().cable.from[0]) || selected().has(w().cable.to[0]),
-                            }}
-                            style={{ 'padding-left': 10 + sec.depth * 14 + 'px' }}
-                            data-wire={w().index}
-                            onMouseEnter={() => s.setState('sidebar', 'hover', w().index)}
-                            onMouseLeave={() =>
-                              st.sidebar.hover === w().index && s.setState('sidebar', 'hover', null)
-                            }
-                            onClick={() => s.pickWire(w().index)}
-                          >
-                            <span class="dot" style={{ background: ROLE[w().from] }} />
-                            <span class="dot" style={{ background: ROLE[w().to] }} />
-                            <span class="text">
-                              <span
-                                class="port"
-                                data-end="from"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openPorts({ index: w().index, end: 'from', fixed: w().cable.to });
-                                }}
-                              >
-                                {w().fromLabel}
-                              </span>
-                              {'  →  '}
-                              <span
-                                class="port"
-                                data-end="to"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openPorts({ index: w().index, end: 'to', fixed: w().cable.from });
-                                }}
-                              >
-                                {w().toLabel}
-                              </span>
-                              <Show when={w().collapsed}>
-                                <span class="collapsed">{'  (collapsed)'}</span>
-                              </Show>
-                            </span>
-                            <span
-                              class="value"
-                              classList={{ off: !w().value || w().value!.v === w().value!.def }}
-                              onPointerDown={(e) => valueDown(w(), e)}
-                              onWheel={(e) => valueWheel(w(), e)}
-                              onDblClick={() => w().value && setValue(w(), null, undefined)}
-                            >
-                              {w().value
-                                ? w().value!.kind === 'att'
-                                  ? fmtAtt(w().value!.v)
-                                  : fmtRat(w().value!.v)
-                                : ''}
-                            </span>
-                            <button
-                              class="x"
-                              aria-label="Remove wire"
-                              onClick={() =>
-                                s.edit((d) => ({ ...d, cables: d.cables.filter((_, i) => i !== w().index) }))
-                              }
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <Show when={st.sidebar.ports?.index === w().index && st.sidebar.ports} keyed>
-                            {(_ps) => portList()}
-                          </Show>
-                        </>
-                      )}
-                    </Show>
-                  )}
-                </For>
-                <Show when={sec.key === 'between'}>
-                  <button
-                    class="sr-newwire"
-                    onClick={() => openPorts({ index: 'new', end: 'from', fixed: null })}
-                  >
-                    + new wire
-                  </button>
-                  <Show when={st.sidebar.ports?.index === 'new' && st.sidebar.ports} keyed>
-                    {(_ps) => portList()}
-                  </Show>
-                </Show>
-              </Show>
-            </div>
-          );
+  const isWireSection = (sec: Section) => sec.key !== 'normals' && sec.key !== 'problems';
+
+  const wireRow = (w: () => WireRow, sec: Section): JSX.Element => (
+    <>
+      <div
+        class="sr-wrow"
+        classList={{
+          on: st.sidebar.picked === w().index,
+          dim: !!w().collapsed,
+          sel: selected().has(w().cable.from[0]) || selected().has(w().cable.to[0]),
         }}
-      </For>
-    </div>
+        style={{ 'padding-left': 12 + sec.depth * 14 + 'px' }}
+        data-wire={w().index}
+        onMouseEnter={() => s.setState('sidebar', 'hover', w().index)}
+        onMouseLeave={() => st.sidebar.hover === w().index && s.setState('sidebar', 'hover', null)}
+        onClick={() => s.pickWire(w().index)}
+      >
+        <For each={['from', 'to'] as const}>
+          {(end) => {
+            const label = () => splitLabel(end === 'from' ? w().fromLabel : w().toLabel);
+            return (
+              <>
+                <Show when={end === 'to'}>
+                  <span class="arr">→</span>
+                </Show>
+                <span
+                  class="port"
+                  data-end={end}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openPorts({
+                      index: w().index,
+                      end,
+                      fixed: end === 'from' ? w().cable.to : w().cable.from,
+                    });
+                  }}
+                >
+                  <span class="dot" style={{ background: ROLE[w()[end]] }} />
+                  <span class="m">{label()[0]}</span> {label()[1]}
+                </span>
+              </>
+            );
+          }}
+        </For>
+        <Show when={w().value}>
+          {(v) => (
+            <span
+              class="value"
+              classList={{ off: v().v === v().def }}
+              onPointerDown={(e) => valueDown(w(), e)}
+              onWheel={(e) => valueWheel(w(), e)}
+              onDblClick={() => setValue(w(), null, undefined)}
+            >
+              {v().kind === 'att' ? fmtAtt(v().v) : fmtRat(v().v)}
+            </span>
+          )}
+        </Show>
+        <Show when={w().collapsed}>
+          <span class="collapsed">(collapsed)</span>
+        </Show>
+        <button
+          class="x"
+          aria-label="Remove wire"
+          onClick={(e) => {
+            e.stopPropagation();
+            s.edit((d) => ({ ...d, cables: d.cables.filter((_, i) => i !== w().index) }));
+          }}
+        >
+          <Icon name="close" size={12} />
+        </button>
+      </div>
+      <Show when={st.sidebar.ports?.index === w().index && st.sidebar.ports} keyed>
+        {(_ps) => portList()}
+      </Show>
+    </>
+  );
+
+  const plainRow = (row: Exclude<Row, WireRow>): JSX.Element =>
+    row.kind === 'normal' ? (
+      <div class="sr-nrow">
+        <span class="dot" style={{ 'border-color': ROLE[row.role] }} />
+        <div>
+          {row.text}
+          <div class="nd">{row.note}</div>
+        </div>
+      </div>
+    ) : (
+      <div
+        class="sr-prow"
+        classList={{ problem: !row.problem.info }}
+        onClick={() => props.focus(row.problem.id)}
+      >
+        {row.text}
+      </div>
+    );
+
+  const section = (sec: Section): JSX.Element => {
+    const closed = () => !!st.sidebar.closed[sec.key];
+    return (
+      <div class="sr-wsec" data-section={sec.key}>
+        <button
+          class="sr-wsec-head"
+          style={{ 'padding-left': 8 + sec.depth * 14 + 'px' }}
+          onClick={() => s.setState('sidebar', 'closed', sec.key, !closed())}
+        >
+          <Icon name={closed() ? 'chevron-right' : 'chevron-down'} size={10} />
+          <span class="title">{sec.title}</span>
+          <span class="count">{sec.count}</span>
+        </button>
+        <Show when={!closed()}>
+          <For each={sec.rows}>
+            {(row) => (
+              <Show
+                when={row.kind === 'wire' && row}
+                fallback={plainRow(row as Exclude<Row, WireRow>)}
+              >
+                {(w) => wireRow(w, sec)}
+              </Show>
+            )}
+          </For>
+        </Show>
+      </div>
+    );
+  };
+
+  const wires = () => st.doc.cables.length;
+  const modules = () => st.doc.modules.length;
+  return (
+    <>
+      <SearchField
+        value={st.sidebar.q}
+        set={(v) => s.setState('sidebar', 'q', v)}
+        placeholder="Filter by module or port"
+        label="Filter wires"
+      />
+      <div class="sr-chips">
+        <button
+          class="sr-chip"
+          classList={{ on: !st.sidebar.selOnly }}
+          aria-pressed={!st.sidebar.selOnly}
+          onClick={() => s.setState('sidebar', 'selOnly', false)}
+        >
+          All <span class="n">{wires()}</span>
+        </button>
+        <button
+          class="sr-chip"
+          classList={{ on: st.sidebar.selOnly }}
+          aria-pressed={st.sidebar.selOnly}
+          onClick={() => s.setState('sidebar', 'selOnly', true)}
+        >
+          Selection
+        </button>
+      </div>
+      <div class="sr-wires" ref={(el) => (box = el)}>
+        <For each={sections().filter(isWireSection)}>{section}</For>
+        <button class="sr-newwire" onClick={() => openPorts({ index: 'new', end: 'from', fixed: null })}>
+          <Icon name="plus" size={12} />
+          New wire
+        </button>
+        <Show when={st.sidebar.ports?.index === 'new' && st.sidebar.ports} keyed>
+          {(_ps) => portList()}
+        </Show>
+        <For each={sections().filter((x) => !isWireSection(x))}>{section}</For>
+        <Show when={!sections().some((x) => x.key === 'problems') && !st.sidebar.q.trim()}>
+          <div class="sr-ok">
+            <Icon name="check" size={14} />
+            No problems
+          </div>
+        </Show>
+      </div>
+      <SideFooter>
+        <span>
+          {wires()} {wires() === 1 ? 'wire' : 'wires'} · {modules()} {modules() === 1 ? 'module' : 'modules'}
+        </span>
+      </SideFooter>
+    </>
   );
 }

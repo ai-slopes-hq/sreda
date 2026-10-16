@@ -4,7 +4,7 @@ import { fireEvent, render } from '@solidjs/testing-library';
 import { expect, test, vi } from 'vitest';
 import type { LibraryApi, SredaBridge } from '../library';
 import type { LibEntry } from '../canvas/patching';
-import { createSession } from '../store';
+import { createSession, type Session } from '../store';
 import { Library } from './Library';
 
 const entries: LibEntry[] = [
@@ -13,8 +13,8 @@ const entries: LibEntry[] = [
   { kind: 'group', path: 'kit/drums', factory: false },
 ];
 
-function setup() {
-  const session = createSession(SPECS, starterDoc(SPECS));
+function setup(project: Session['project'] = null, files = ['kit/kick.wav', 'kit/snare.wav', 'hat.wav']) {
+  const session = createSession(SPECS, starterDoc(SPECS), null, project);
   const openProject = vi.spyOn(session, 'openProject');
   const placeGroup = vi.spyOn(session, 'placeGroup');
   const audition = vi.spyOn(session.samples, 'audition').mockResolvedValue();
@@ -28,7 +28,7 @@ function setup() {
     importSamples: vi.fn(),
   } as unknown as LibraryApi;
   const bridge = {
-    library: { samples: () => Promise.resolve(['kit/kick.wav', 'kit/snare.wav', 'hat.wav']) },
+    library: { samples: () => Promise.resolve(files) },
   } as unknown as SredaBridge;
   const fit = vi.fn();
   const r = render(() => (
@@ -43,22 +43,75 @@ function setup() {
   ));
   const rows = (sec: string) =>
     [...r.container.querySelectorAll<HTMLElement>(`[data-section=${sec}] .sr-lrow`)].map(
-      (x) => x.textContent,
+      (x) => (x.querySelector('.folder')?.textContent ?? '') + x.querySelector('.name')!.textContent,
     );
   return { ...r, session, openProject, placeGroup, audition, lib, fit, rows };
 }
 
-test('the sections list factory entries first, filtered by their own field', async () => {
+test('the sections list factory entries first, the library’s own after', async () => {
   const { rows, container } = setup();
   await vi.waitFor(() => expect(rows('SAMPLES')).toHaveLength(3));
   expect(rows('PROJECTS')[0]).toMatch(/^FACTORY · /);
+  // a long section shows its first eight rows: the library's own come last
+  for (const b of container.querySelectorAll('.sr-more')) fireEvent.click(b);
   expect(rows('PROJECTS').at(-1)).toBe('jams · zed');
   expect(rows('GROUPS').at(-1)).toBe('kit · drums');
   expect(rows('GROUPS').some((t) => t?.startsWith('FACTORY · '))).toBe(true);
-  const f = container.querySelector<HTMLInputElement>('[data-section=SAMPLES] input')!;
-  fireEvent.input(f, { target: { value: 'snare' } });
+});
+
+test('one filter narrows all three sections', async () => {
+  const { rows, container } = setup();
+  await vi.waitFor(() => expect(rows('SAMPLES')).toHaveLength(3));
+  expect(container.querySelectorAll('input')).toHaveLength(1);
+  const f = container.querySelector<HTMLInputElement>('input')!;
+  expect(f.placeholder).toBe('Filter projects, groups, samples');
+  fireEvent.input(f, { target: { value: 'k' } });
+  expect(rows('SAMPLES')).toEqual(['kit · kick.wav', 'kit · snare.wav'].filter((t) => /k/i.test(t)));
+  expect(rows('PROJECTS').every((t) => /k/i.test(t))).toBe(true);
+  expect(rows('GROUPS').every((t) => /k/i.test(t))).toBe(true);
+  expect(rows('GROUPS')).toContain('kit · drums');
+  fireEvent.input(f, { target: { value: 'kit/snare' } });
   expect(rows('SAMPLES')).toEqual(['kit · snare.wav']);
-  expect(rows('PROJECTS').at(-1)).toBe('jams · zed');
+  expect(rows('PROJECTS')).toEqual([]);
+  expect(rows('GROUPS')).toEqual([]);
+});
+
+test('the open project is marked open; no Save as or New here', async () => {
+  const { container, rows } = setup({ path: 'FACTORY/acid', factory: true });
+  await vi.waitFor(() => expect(rows('SAMPLES')).toHaveLength(3));
+  const row = container.querySelector('[data-section=PROJECTS] [data-path="FACTORY/acid"]')!;
+  expect(row.querySelector('.open')?.textContent).toBe('open');
+  expect(container.querySelectorAll('.open')).toHaveLength(1);
+  const labels = [...container.querySelectorAll('button')].map((b) => b.textContent!.trim().toLowerCase());
+  expect(labels.some((t) => t.includes('save as') || t === 'new')).toBe(false);
+});
+
+test('a group row offers a drag to the canvas', async () => {
+  const { container } = setup();
+  const row = container.querySelector('[data-section=GROUPS] .sr-lrow')!;
+  expect(row.querySelector('.drag')?.textContent).toContain('drag to canvas');
+  expect(row.querySelector('.drag svg')).not.toBeNull();
+});
+
+test('a long section shows eight rows and Show all N; a click shows them all', async () => {
+  const many = Array.from({ length: 17 }, (_, i) => `s${String(i).padStart(2, '0')}.wav`);
+  const { container, rows } = setup(null, many);
+  await vi.waitFor(() => expect(rows('SAMPLES')).toHaveLength(8));
+  const more = [...container.querySelectorAll<HTMLButtonElement>('[data-section=SAMPLES] .sr-more')];
+  expect(more.map((b) => b.textContent)).toEqual(['Show all 17']);
+  fireEvent.click(more[0]!);
+  expect(rows('SAMPLES')).toHaveLength(17);
+  expect(container.querySelector('[data-section=SAMPLES] .sr-more')).toBeNull();
+});
+
+test('an empty SAMPLES says how to add some', async () => {
+  const { container, rows } = setup(null, []);
+  await vi.waitFor(() =>
+    expect(container.querySelector('[data-section=SAMPLES] .sr-empty')?.textContent).toBe(
+      'No samples yet. Import audio files or drop them here; hover a sample to hear it.',
+    ),
+  );
+  expect(rows('SAMPLES')).toEqual([]);
 });
 
 test('a PROJECTS click opens the project and fits the view', async () => {

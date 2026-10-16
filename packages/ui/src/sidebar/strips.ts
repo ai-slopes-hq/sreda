@@ -5,6 +5,8 @@ export interface Strip {
   name: string;
   /** inside a muted frame: silent whatever the strip says */
   muted: boolean;
+  /** the module patched into the OUT's L (else its R): `from MIX 1` */
+  source: string | null;
 }
 
 /**
@@ -20,8 +22,11 @@ export function mixStrips(doc: Doc, specs: Specs): Strip[] {
     const chain = chains.get(m.id)!;
     const frame = chain[0] ? doc.groups.find((g) => g.id === chain[0]) : undefined;
     const alone = frame && outs.filter((o) => chains.get(o.id)!.includes(frame.id)).length === 1;
+    const feed = (port: string) => doc.cables.find((c) => c.to[0] === m.id && c.to[1] === port);
+    const src = feed('l') ?? feed('r');
     return {
       id: m.id,
+      source: src ? nameOf(doc, specs, src.from[0]) : null,
       name: alone ? frame.name : nameOf(doc, specs, m.id),
       muted: chain.some((g) => effectiveMuted(doc, g)),
     };

@@ -68,7 +68,7 @@ export interface Session {
   seq: { id: string | null; h: number };
 }
 
-/** The sidebar (spec §5a): docked right, WIRES, MIX and SETTINGS tabs. */
+/** The sidebar (spec §5a, §1b): floats at the right; WIRES, MIX, LIBRARY and SETTINGS tabs. */
 export interface SidebarState {
   open: boolean;
   /** the tab showing; kept for the session */

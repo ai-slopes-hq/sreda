@@ -43,7 +43,7 @@ import { magnet, type Snap } from './magnets';
 import { animateView, glideTo } from './glide';
 import { Chrome } from './Chrome';
 import { DRAG_GROUP, DRAG_SAMPLE } from '../sidebar/Library';
-import { Sidebar } from '../sidebar/Sidebar';
+import { Sidebar, SIDEBAR_GAP } from '../sidebar/Sidebar';
 import { Frame, type BlockView, type Edge } from './Frame';
 import { bez, ROLE } from './glyphs';
 import { handleKey } from './keys';
@@ -802,8 +802,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
           'hovering-wire': !!hovered(),
         }}
         style={{
-          // the canvas ends at the sidebar's edge
-          right: st.sidebar.open ? st.sidebar.width + 'px' : '0',
+          // the canvas ends at the floating sidebar's edge (its width and the gap to the window)
+          right: st.sidebar.open ? st.sidebar.width + SIDEBAR_GAP + 'px' : '0',
           // and above META-SEQ's editor drawer
           bottom: st.seq.id ? st.seq.h + 'px' : '0',
           'background-size': `${16 * st.view.z}px ${16 * st.view.z}px`,

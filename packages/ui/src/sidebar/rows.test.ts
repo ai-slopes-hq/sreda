@@ -32,19 +32,36 @@ function patch(): { doc: Doc; ids: string[] } {
 }
 const all = { q: '', selOnly: false, sel: [] as string[] };
 
-test('sections: one per frame, UNGROUPED, BETWEEN GROUPS, PROBLEMS; rows name both ends; values for CV and triggers', () => {
+test('sections: one per frame, BETWEEN GROUPS, NORMALS, PROBLEMS; rows name both ends; values for CV and triggers', () => {
   const { doc } = patch();
   const s = wireSections(doc, SPECS, all);
-  expect(s.map((x) => x.title)).toEqual(['GROUP 1', 'UNGROUPED', 'BETWEEN GROUPS', 'PROBLEMS']);
+  // UNGROUPED holds no wire here, so it is not listed
+  expect(s.map((x) => x.title)).toEqual(['GROUP 1', 'BETWEEN GROUPS', 'NORMALS', 'PROBLEMS']);
   const g = s[0]!;
-  expect(g.rows.map((r) => r.text)).toEqual(['OSC › OUT  →  OUT › L', 'OUT › R  ← L (normal)']);
+  expect(g.rows.map((r) => r.text)).toEqual(['OSC › OUT  →  OUT › L']);
   expect(g.count).toBe(1);
-  const between = s[2]!.rows[0]!;
+  const between = s[1]!.rows[0]!;
   expect(between.text).toBe('SLOPE › OUT  →  OSC › PTCH');
   expect(between.kind === 'wire' && between.value).toEqual({ kind: 'att', v: 1, def: 1 });
   expect(g.rows[0]!.kind === 'wire' && g.rows[0]!.value).toBeNull(); // audio: no value
-  // normals, dimmed, in their module's section
-  expect(s[1]!.rows.map((r) => r.text)).toContain('SLOPE › TRIG  ← EOC (normal)');
+});
+
+test('NORMALS is a section of its own: each normal is two lines, the normal and what it does', () => {
+  const { doc } = patch();
+  const normals = wireSections(doc, SPECS, all).find((x) => x.key === 'normals')!;
+  expect(normals.count).toBe(normals.rows.length);
+  const rows = normals.rows.flatMap((r) => (r.kind === 'normal' ? [[r.text, r.note]] : []));
+  expect(rows).toContainEqual(['OUT › R ← L', 'until something is patched into R']);
+  expect(rows).toContainEqual(['SLOPE › TRIG ← EOC', 'until something is patched into TRIG']);
+});
+
+test('an empty section is not listed; a patch with no problems has no PROBLEMS section', () => {
+  let doc = addModule(emptyDoc, SPECS, 'osc', 0, 0).doc;
+  doc = addModule(doc, SPECS, 'out', 400, 0).doc;
+  doc = connect(doc, SPECS, ['m1', 'out'], ['m2', 'l']);
+  const keys = wireSections(doc, SPECS, all).map((x) => x.key);
+  expect(keys).toEqual(['ungrouped', 'normals']);
+  expect(wireSections(doc, SPECS, { ...all, q: 'zzz' })).toEqual([]);
 });
 
 test('a cable into a held input has no ratio value', () => {
