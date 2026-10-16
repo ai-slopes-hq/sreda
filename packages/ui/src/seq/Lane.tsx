@@ -42,6 +42,21 @@ export interface LaneProps {
   grid?: (el: HTMLDivElement) => void;
 }
 
+/** the lock, drawn: no icon for it yet */
+function Lock(): JSX.Element {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-label="Lock">
+      <rect x="1.75" y="5.25" width="8.5" height="5.5" rx="1.5" fill="currentColor" />
+      <path
+        d="M3.75 5.25V3.75a2.25 2.25 0 0 1 4.5 0v1.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.2"
+      />
+    </svg>
+  );
+}
+
 /** ⚄ drawn: the drawer's font has no die glyph */
 function Die(): JSX.Element {
   return (
@@ -231,16 +246,20 @@ export function Lane(props: LaneProps): JSX.Element {
   }
 
   /** getters, so a params change updates the Option instead of rebuilding it (a stroke edits params every move) */
-  const optionCell = (id: () => string, value: () => number, w: number) => (
+  const optionCell = (id: () => string, value: () => number, label?: string) => (
     <Show when={option(id())}>
       {(prm) => (
-        <span class="sr-lane-opt" style={{ width: w + 'px' }}>
+        <span class="sr-chip sr-lane-opt">
+          <Show when={label}>
+            <i>{label}</i>
+          </Show>
           <Option
             param={prm()}
             value={value()}
             x={0}
             y={0}
-            w={w}
+            w={0}
+            text
             closeEpoch={0}
             scope={props.scope}
             set={(v, merge) => props.edit({ [id()]: v }, merge)}
@@ -258,49 +277,54 @@ export function Lane(props: LaneProps): JSX.Element {
   return (
     <div class="sr-lane" classList={{ up: LANES.indexOf(l()) >= 3 }} data-lane={l()}>
       <div class="sr-lane-head">
-        <span class="sr-lane-name">{LANE_NAME[l()]}</span>
-        <span
-          class="sr-lane-field"
-          data-field="len"
-          title="LEN (drag or wheel)"
-          onPointerDown={fieldDown}
-          onPointerMove={fieldMove}
-          onPointerUp={() => (lenDrag.key = '')}
-          onPointerCancel={() => (lenDrag.key = '')}
-          onWheel={lenWheel}
-        >
-          {len()}
-        </span>
-        {optionCell(() => laneParam(p(), l(), 'rate'), rate, 44)}
-        <Show when={l() === 'n'}>
-          {optionCell(
-            () => noteModeParam(p()),
-            () => noteMode(props.params, p()),
-            60,
-          )}
-        </Show>
-        <button
-          class="sr-lane-btn"
-          classList={{ on: laneLocked(props.params, p(), l()) }}
-          data-lock
-          title="Lock: DICE and MUTATE leave this lane"
-          onClick={() =>
-            props.edit(
-              { [laneParam(p(), l(), 'lock')]: laneLocked(props.params, p(), l()) ? 0 : 1 },
-              undefined,
-            )
-          }
-        >
-          🔒
-        </button>
-        <button
-          class="sr-lane-btn sr-lane-dice"
-          data-dice
-          title="DICE this lane"
-          onClick={() => props.dice?.()}
-        >
-          <Die />
-        </button>
+        <div class="sr-lane-top">
+          <span class="sr-lane-name">{LANE_NAME[l()]}</span>
+          <Show when={l() === 'n'}>
+            {optionCell(
+              () => noteModeParam(p()),
+              () => noteMode(props.params, p()),
+            )}
+          </Show>
+          <span class="sr-lane-tools">
+            <button
+              class="sr-lane-btn"
+              classList={{ on: laneLocked(props.params, p(), l()) }}
+              data-lock
+              title="Lock: Dice and Mutate leave this lane"
+              onClick={() =>
+                props.edit(
+                  { [laneParam(p(), l(), 'lock')]: laneLocked(props.params, p(), l()) ? 0 : 1 },
+                  undefined,
+                )
+              }
+            >
+              <Lock />
+            </button>
+            <button
+              class="sr-lane-btn sr-lane-dice"
+              data-dice
+              title="DICE this lane"
+              onClick={() => props.dice?.()}
+            >
+              <Die />
+            </button>
+          </span>
+        </div>
+        <div class="sr-lane-chips">
+          <span
+            class="sr-chip sr-lane-field"
+            title="LEN (drag or wheel)"
+            onPointerDown={fieldDown}
+            onPointerMove={fieldMove}
+            onPointerUp={() => (lenDrag.key = '')}
+            onPointerCancel={() => (lenDrag.key = '')}
+            onWheel={lenWheel}
+          >
+            <i>LEN</i>
+            <span data-field="len">{len()}</span>
+          </span>
+          {optionCell(() => laneParam(p(), l(), 'rate'), rate, 'RATE')}
+        </div>
       </div>
       <div class="sr-lane-grid" ref={(el) => props.grid?.(el)}>
         <svg
@@ -316,11 +340,11 @@ export function Lane(props: LaneProps): JSX.Element {
           <Index each={grid()}>
             {(c) => {
               const v = () => steps()[c().step] ?? 0;
-              const x = () => c().x + 3;
-              const w = () => Math.max(1, c().w - 6);
+              const x = () => c().x + 2;
+              const w = () => Math.max(1, c().w - 4);
               return (
                 <g classList={{ ghost: c().ghost }}>
-                  <rect class="sr-step" x={c().x + 1} y="0" width={Math.max(1, c().w - 2)} height="100%" />
+                  <rect class="sr-step" rx="4" x={x()} y="0" width={w()} height="100%" />
                   <Show when={l() === 'n'}>
                     <rect
                       class="sr-step-val"
@@ -336,20 +360,34 @@ export function Lane(props: LaneProps): JSX.Element {
                   <Show when={l() === 'v' || l() === 'c'}>
                     <rect
                       class="sr-step-val"
+                      rx="4"
                       x={x()}
                       y={`${((1 - Math.min(1, Math.max(0, v()))) * 100).toFixed(1)}%`}
                       width={w()}
                       height={`${(Math.min(1, Math.max(0, v())) * 100).toFixed(1)}%`}
                     />
                   </Show>
+                  <Show when={l() === 'c'}>
+                    <text class="sr-pct" x={x() + w() / 2} y="12" text-anchor="middle">
+                      {Math.round(Math.min(1, Math.max(0, v())) * 100)}%
+                    </text>
+                  </Show>
                   <Show when={toggles() && v() >= 0.5}>
-                    <rect class="sr-step-on" x={x()} y="20%" width={w()} height="60%" />
+                    <rect class="sr-step-on" rx="4" x={x()} y="20%" width={w()} height="60%" />
                   </Show>
                 </g>
               );
             }}
           </Index>
           <Show when={props.width > MARKER_W}>
+            <rect
+              class="sr-len-line"
+              x={Math.min(end() - 1, props.width - 2)}
+              y="0"
+              width="2"
+              height="100%"
+              rx="1"
+            />
             <rect
               class="sr-len-marker"
               data-len-marker
@@ -366,8 +404,9 @@ export function Lane(props: LaneProps): JSX.Element {
           <rect
             class="sr-lane-cur"
             visibility="hidden"
+            rx="4"
             x="0"
-            y="0"
+            y="1"
             width="1"
             height="100%"
             ref={(el) => props.cursor?.(el)}

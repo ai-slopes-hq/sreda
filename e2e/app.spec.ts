@@ -420,9 +420,9 @@ test('a double-click on META-SEQ opens the drawer and the canvas shrinks above i
     })
     .toBe(true);
   // tab B: the edited pattern
-  await drawer.locator('[data-pattern=B]').click();
+  await drawer.getByRole('tab', { name: 'B', exact: true }).click();
   expect((await fullDoc(page)).modules.find((m) => m.type === 'metaseq')!.params['edit']).toBe(1);
-  await expect(drawer.locator('[data-pattern=B]')).toHaveClass(/\bon\b/);
+  await expect(drawer.getByRole('tab', { name: 'B', exact: true })).toHaveAttribute('aria-selected', 'true');
   // another META-SEQ: dragging it keeps the drawer on the first; a click switches
   const first = await drawer.getAttribute('data-seq');
   await page.mouse.dblclick(1200, 150);
@@ -607,7 +607,7 @@ test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern',
   expect(a3).toBeGreaterThan(0.75);
   await drawer.locator('[data-act=copy]').click();
   // B: PASTE is one undo step
-  await drawer.locator('[data-pattern=B]').click();
+  await drawer.getByRole('tab', { name: 'B', exact: true }).click();
   expect(await param('bn3')).toBe(0.5);
   expect(await param('bg1')).toBe(0);
   await drawer.locator('[data-act=paste]').click();
@@ -619,7 +619,9 @@ test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern',
   await page.keyboard.press('Meta+Shift+z');
   expect(await param('bn3')).toBe(a3);
   // PAT → B (a short drag up on the knob): the playing tab follows once the GATE lane wraps
-  await expect(drawer.locator('[data-pattern=A]')).toHaveClass(/\bplay\b/, { timeout: 5000 });
+  await expect(drawer.getByRole('tab', { name: 'A', exact: true })).toHaveClass(/\bring\b/, {
+    timeout: 5000,
+  });
   const k = (await seq.locator('[data-knob=pat] .sr-knob').boundingBox())!;
   await drag(
     page,
@@ -627,7 +629,9 @@ test('PASTE into B, then PAT → B: the drawer lights B as the playing pattern',
     { x: k.x + k.width / 2, y: k.y + k.height / 2 - 40 },
   );
   await expect.poll(async () => Math.round((await param('pat'))! * 7)).toBe(1);
-  await expect(drawer.locator('[data-pattern=B]')).toHaveClass(/\bplay\b/, { timeout: 8000 });
+  await expect(drawer.getByRole('tab', { name: 'B', exact: true })).toHaveClass(/\bring\b/, {
+    timeout: 8000,
+  });
   await app.close();
 });
 

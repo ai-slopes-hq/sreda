@@ -1,8 +1,9 @@
 // META-SEQ's editor (spec §7b): a drawer docked under the canvas at the window's full width. The header (name,
-// pattern tabs, COPY / PASTE, SCALE, ROOT, GEN, DICE, MUTATE, ✕), then one row per lane on one step grid in clock time.
-// The tabs choose the edited pattern, SCALE / ROOT / GEN write, the lanes take their gestures (Lane.tsx), ✕ closes;
-// COPY / PASTE copy the edited pattern into a clip and write it back as one undo step; DICE writes the edited pattern's
-// unlocked lanes and ⚄ one lane (locked or not), each one undo step; MUTATE is drawn but inert.
+// pattern tabs, editing / playing text, Copy / Paste, Scale, Root, Gen, Dice, Mutate, undo, ✕), then one row per lane
+// on one step grid in clock time. The tabs choose the edited pattern, Scale / Root / Gen write, the lanes take their
+// gestures (Lane.tsx), ✕ closes; Copy / Paste copy the edited pattern into a clip and write it back as one undo step;
+// Dice writes the edited pattern's unlocked lanes and ⚄ one lane (locked or not), each one undo step; Mutate is drawn
+// but inert.
 import {
   copyPattern,
   fromKnob,
@@ -19,7 +20,9 @@ import {
   type Specs,
 } from '@sreda/core';
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from 'solid-js';
+import { Icon } from '../canvas/icons';
 import { Option } from '../canvas/Option';
+import { Segmented } from '../canvas/Segmented';
 import { diceChanges } from '../dice';
 import { readoutBuffer, track } from '../live';
 import type { SessionApi } from '../store';
@@ -35,6 +38,7 @@ export interface DrawerProps {
 }
 
 const MIN_H = 160;
+const PATTERNS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] as const;
 /** px of vertical drag per semitone on ROOT */
 const ROOT_PX = 10;
 
@@ -127,16 +131,19 @@ export function Drawer(props: DrawerProps): JSX.Element {
     e.stopPropagation();
     setRoot(root() + (e.deltaY < 0 ? 1 : -1), { key: `wheel:${props.id}:root` });
   }
-  const headOption = (id: string, w: number) => (
+  /** SCALE / GEN: a label and the option's name, one field button that opens the list */
+  const headOption = (id: string, label: string) => (
     <Show when={option(id)}>
       {(prm) => (
-        <span class="sr-lane-opt" style={{ width: w + 'px' }}>
+        <span class="sr-dfield" data-field={id}>
+          <span class="sr-dlabel">{label}</span>
           <Option
             param={prm()}
             value={params()[id] ?? prm().def}
             x={0}
             y={0}
-            w={w}
+            w={0}
+            text
             closeEpoch={0}
             scope={props.id}
             set={(v, merge) => edit({ [id]: v }, merge)}
@@ -171,8 +178,9 @@ export function Drawer(props: DrawerProps): JSX.Element {
         continue;
       }
       el.setAttribute('visibility', 'visible');
-      el.setAttribute('x', String(c.x));
-      el.setAttribute('width', String(Math.max(1, c.w)));
+      // the ring sits 1 px inside the cell (cells are 4 px apart)
+      el.setAttribute('x', String(c.x + 3));
+      el.setAttribute('width', String(Math.max(1, c.w - 6)));
     }
   };
   // no readout: no cursors
@@ -202,50 +210,58 @@ export function Drawer(props: DrawerProps): JSX.Element {
       <div class="sr-drawer-grip" onPointerDown={gripDown} />
       <header class="sr-drawer-head">
         <span class="sr-drawer-name">{nameOf(st.doc, props.specs, props.id)}</span>
-        <div class="sr-drawer-tabs">
-          <For each={['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']}>
-            {(t, i) => (
-              <button
-                class="sr-gbtn sr-drawer-tab"
-                classList={{ on: edited() === i(), play: playingPattern() === i() }}
-                data-pattern={t}
-                onClick={() => s.seqTab(props.id, i())}
-              >
-                {t}
-              </button>
-            )}
-          </For>
-        </div>
-        <button class="sr-gbtn" data-act="copy" onClick={() => setClip(copyPattern(params(), edited()))}>
-          COPY
+        <Segmented
+          label="Pattern"
+          items={PATTERNS.map((t) => ({ id: t, label: t }))}
+          value={PATTERNS[edited()] ?? 'A'}
+          ring={PATTERNS[playingPattern()] ?? null}
+          set={(t) => s.seqTab(props.id, PATTERNS.indexOf(t))}
+        />
+        <span class="sr-drawer-status">
+          {edited() === playingPattern()
+            ? `editing ${PATTERNS[edited()]}`
+            : `editing ${PATTERNS[edited()]} · playing ${PATTERNS[playingPattern()]}`}
+        </span>
+        <span class="sr-drawer-gap" />
+        <button class="sr-dbtn" data-act="copy" onClick={() => setClip(copyPattern(params(), edited()))}>
+          Copy
         </button>
-        <button class="sr-gbtn" data-act="paste" disabled={clip() === undefined} onClick={paste}>
-          PASTE
+        <button class="sr-dbtn" data-act="paste" disabled={clip() === undefined} onClick={paste}>
+          Paste
         </button>
-        <span class="sr-drawer-field">SCALE</span>
-        {headOption('scale', 64)}
+        {headOption('scale', 'Scale')}
         <span
-          class="sr-drawer-field sr-drawer-root"
+          class="sr-dfield sr-drawer-root"
           data-field="root"
-          title="ROOT (drag or wheel)"
+          title="Root (drag or wheel)"
           onPointerDown={rootDown}
           onPointerMove={rootMove}
           onPointerUp={() => (rootDrag.key = '')}
           onPointerCancel={() => (rootDrag.key = '')}
           onWheel={rootWheel}
         >
-          ROOT <b>{NOTES[root() % 12]}</b>
+          <span class="sr-dlabel">Root</span>
+          <b>{NOTES[root() % 12]}</b>
         </span>
-        <span class="sr-drawer-field">GEN</span>
-        {headOption('gen', 72)}
-        <button class="sr-gbtn" data-act="dice" onClick={() => dice()}>
-          DICE
+        {headOption('gen', 'Gen')}
+        <button class="sr-dbtn" data-act="dice" onClick={() => dice()}>
+          Dice
         </button>
-        <span class="sr-drawer-field">
-          MUTATE <b>{Math.round(knobValue('mut') * 100)}%</b>
+        <span class="sr-dfield" data-field="mutate">
+          <span class="sr-dlabel">Mutate</span>
+          <b>{Math.round(knobValue('mut') * 100)}%</b>
         </span>
-        <button class="sr-gbtn sr-drawer-close" title="Close (Esc)" onClick={() => s.closeSeq()}>
-          ✕
+        <button
+          class="sr-dbtn sr-dicon"
+          data-act="undo"
+          aria-label="Undo"
+          title="Undo (⌘Z)"
+          onClick={() => s.undo()}
+        >
+          <Icon name="undo" size={16} />
+        </button>
+        <button class="sr-dbtn sr-dicon" aria-label="Close" title="Close (Esc)" onClick={() => s.closeSeq()}>
+          <Icon name="close" size={16} />
         </button>
       </header>
       <div class="sr-drawer-body">

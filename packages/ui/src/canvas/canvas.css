@@ -573,6 +573,10 @@
   background: var(--raised);
   color: var(--text);
 }
+.sr-seg-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .sr-seg-item.ring {
   box-shadow: 0 0 0 1.5px var(--accent);
 }

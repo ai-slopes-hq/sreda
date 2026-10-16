@@ -11,12 +11,20 @@ function setup() {
   const s = createSession(SPECS, emptyDoc);
   s.commit(addModule(emptyDoc, SPECS, 'metaseq', 0, 0).doc);
   const r = render(() => <Drawer session={s} specs={SPECS} id="m1" />);
-  const q = (sel: string) => r.container.querySelector(sel) as HTMLElement;
+  const q = (sel: string) => {
+    // a pattern tab is a Segmented tab: `[data-pattern=C]` finds it by its letter
+    const tab = /^\[data-pattern=(\w)\]$/.exec(sel);
+    if (tab)
+      return [...r.container.querySelectorAll<HTMLElement>('[role=tab]')].find(
+        (t) => t.textContent === tab[1],
+      )!;
+    return r.container.querySelector(sel) as HTMLElement;
+  };
   const params = () => s.current().modules.find((m) => m.id === 'm1')!.params;
   return { s, r, q, params };
 }
 
-test('the lit tab follows the trace: pattern 2 plays, the edit stays on A', () => {
+test('the ringed tab follows the trace: pattern 2 plays, the edit stays on A', () => {
   const { s, q } = setup();
   const readouts = new Float32Array(4096);
   s.attach({
@@ -32,10 +40,10 @@ test('the lit tab follows the trace: pattern 2 plays, the edit stays on A', () =
   readouts[0] = 1; // the first plan sent
   readouts[at] = 2;
   frame(performance.now());
-  expect(q('[data-pattern=C]').classList.contains('play')).toBe(true);
-  expect(q('[data-pattern=A]').classList.contains('play')).toBe(false);
-  expect(q('[data-pattern=A]').classList.contains('on')).toBe(true);
-  expect(q('[data-pattern=C]').classList.contains('on')).toBe(false);
+  expect(q('[data-pattern=C]').classList.contains('ring')).toBe(true);
+  expect(q('[data-pattern=A]').classList.contains('ring')).toBe(false);
+  expect(q('[data-pattern=A]').getAttribute('aria-selected')).toBe('true');
+  expect(q('[data-pattern=C]').getAttribute('aria-selected')).toBe('false');
 });
 
 test('COPY then PASTE into B is one undo step; PASTE is disabled until a copy', () => {
@@ -72,9 +80,41 @@ test('a pattern tab is not an undo step and leaves a saved project saved; EDIT i
   s.markSaved();
   fireEvent.click(q('[data-pattern=C]'));
   expect(params()['edit']).toBe(2);
-  expect(q('[data-pattern=C]').classList.contains('on')).toBe(true);
+  expect(q('[data-pattern=C]').getAttribute('aria-selected')).toBe('true');
   expect(s.state.dirty).toBe(false);
   // ⌘Z undoes the NOTE edit, not the tab
   s.undo();
   expect(params()['an1']).toBe(note);
+});
+
+test('the pattern tabs are A…H in a Segmented; the status says what is edited and what plays', () => {
+  const { s, r, q } = setup();
+  const tabs = [...r.container.querySelectorAll('[role=tab]')].map((t) => t.textContent);
+  expect(tabs).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']);
+  expect(q('.sr-seg').getAttribute('role')).toBe('tablist');
+  // the PAT knob is the playing pattern until a readout says otherwise: A plays and is edited
+  expect(q('.sr-drawer-status').textContent).toBe('editing A');
+  fireEvent.click(q('[data-pattern=B]'));
+  expect(q('.sr-drawer-status').textContent).toBe('editing B · playing A');
+  expect(s.current().modules.find((m) => m.id === 'm1')!.params['edit']).toBe(1);
+});
+
+test('the header holds Copy, Paste, Scale, Root, Gen, Dice, Mutate, undo and close, in that order', () => {
+  const { q } = setup();
+  const head = q('.sr-drawer-head');
+  const text = head.textContent!;
+  const at = ['Copy', 'Paste', 'Scale', 'Root', 'Gen', 'Dice', 'Mutate'].map((w) => text.indexOf(w));
+  expect(at.every((i) => i >= 0)).toBe(true);
+  expect([...at].sort((a, b) => a - b)).toEqual(at);
+  const last = [...head.querySelectorAll('button')].slice(-2).map((b) => b.getAttribute('aria-label'));
+  expect(last).toEqual(['Undo', 'Close']);
+});
+
+test('the undo button undoes the last edit', () => {
+  const { q, params } = setup();
+  const was = params()['an1'];
+  fireEvent.click(q('[data-act=dice]'));
+  expect(params()['an1']).not.toBe(undefined);
+  fireEvent.click(q('[data-act=undo]'));
+  expect(params()['an1']).toBe(was);
 });

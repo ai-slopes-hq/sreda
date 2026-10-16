@@ -17,6 +17,8 @@ export interface OptionProps {
   closeEpoch: number;
   /** the module this option belongs to (wheel runs merge per module and option) */
   scope: string;
+  /** an inline text field (the META-SEQ drawer): sized by its content, the option's name instead of its glyph */
+  text?: boolean;
   set(value: number, merge?: Merge): void;
   /**
    * FILTER's response glyph follows the filter: `cut` / `res` from the knobs (0…1), and while audio runs the readout
@@ -124,13 +126,14 @@ export function Option(props: OptionProps): JSX.Element {
   return (
     <div
       class="sr-cell sr-mode"
+      classList={{ 'sr-opt-text': props.text === true }}
       data-option={p().id}
-      style={{ left: props.x + 'px', top: props.y + 'px', width: props.w + 'px' }}
+      style={props.text ? undefined : { left: props.x + 'px', top: props.y + 'px', width: props.w + 'px' }}
     >
       <button
         class="sr-opt"
         classList={{ on: toggle() && props.value === 1, open: open() }}
-        style={{ width: props.w - 8 + 'px' }}
+        style={props.text ? undefined : { width: props.w - 8 + 'px' }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={click}
         onWheel={wheel}
@@ -138,7 +141,12 @@ export function Option(props: OptionProps): JSX.Element {
         aria-label={`${p().label} ${p().options[props.value]}`}
       >
         <Show when={!toggle()} fallback={p().label}>
-          <Glyph param={p()} value={props.value} big={false} live={props.live} />
+          <Show
+            when={props.text}
+            fallback={<Glyph param={p()} value={props.value} big={false} live={props.live} />}
+          >
+            <span>{p().options[props.value]}</span>
+          </Show>
           <Show when={p().options.length > 2}>
             <span class="caret">▾</span>
           </Show>

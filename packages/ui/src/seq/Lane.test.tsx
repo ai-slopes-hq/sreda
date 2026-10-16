@@ -4,6 +4,10 @@ import { fireEvent, render } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { expect, test } from 'vitest';
 import { Lane } from './Lane';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const css = readFileSync(resolve(__dirname, 'seq.css'), 'utf8');
 
 const W = 160; // 16 clock steps of 10 px
 const H = 100;
@@ -176,4 +180,40 @@ test('🔒 toggles the lane lock', () => {
   const { container, calls } = lane('t');
   fireEvent.click(container.querySelector('[data-lock]')!);
   expect(calls[0]!.changes).toEqual({ [laneParam(0, 't', 'lock')]: 1 });
+});
+
+test('the lane head is 210 px wide and holds the name, LEN, RATE, the lock and ⚄', () => {
+  const { container } = lane('g');
+  const head = container.querySelector('.sr-lane-head') as HTMLElement;
+  // the stylesheet is not applied under happy-dom: read the rule
+  expect(/\.sr-lane-head \{[^}]*width: 210px;/.test(css)).toBe(true);
+  expect(head.querySelector('.sr-lane-name')!.textContent).toBe('GATE');
+  expect(head.querySelector('.sr-lane-field')!.textContent).toBe('LEN16');
+  expect(head.querySelector('[data-option=agrate]')).not.toBeNull();
+  expect(head.textContent).toContain('RATE');
+  expect(head.querySelector('[data-lock]')).not.toBeNull();
+  expect(head.querySelector('[data-dice]')).not.toBeNull();
+  // STEP / PLAYED belongs to NOTE alone
+  expect(head.querySelector('[data-option=anmode]')).toBeNull();
+});
+
+test("NOTE's head also holds the STEP / PLAYED option", () => {
+  const { container } = lane('n');
+  expect(container.querySelector('.sr-lane-head [data-option]:not([data-option=anrate])')).not.toBeNull();
+  expect(container.querySelectorAll('.sr-lane-head [data-option]').length).toBe(2);
+});
+
+test('a CHNC step at 0.5 shows 50%', () => {
+  const { container } = lane('c', { [stepId(0, 'c', 2)]: 0.5 });
+  const pct = [...container.querySelectorAll('.sr-pct')].map((t) => t.textContent);
+  expect(pct[1]).toBe('50%');
+  expect(pct[0]).toBe('100%');
+});
+
+test('the LEN marker sits at the end of step LEN, as a 2 px accent line', () => {
+  const { container } = lane('g', { [laneParam(0, 'g', 'len')]: 3 / 15 });
+  const line = container.querySelector('.sr-len-line') as SVGElement;
+  // four 10 px steps end at 40; the 2 px line is centred on the edge
+  expect(line.getAttribute('x')).toBe('39');
+  expect(line.getAttribute('width')).toBe('2');
 });

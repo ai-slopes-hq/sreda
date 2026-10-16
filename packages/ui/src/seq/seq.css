@@ -6,13 +6,15 @@
   bottom: 0;
   display: flex;
   flex-direction: column;
-  background: var(--panel-side);
-  border-top: 1px solid var(--line-2);
+  background: var(--popover);
+  border: 1px solid var(--line-2);
+  border-bottom: 0;
+  border-radius: var(--radius-6) var(--radius-6) 0 0;
+  box-shadow: 0 -24px 60px var(--shadow);
   box-sizing: border-box;
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.06em;
+  font-size: 11px;
   user-select: none;
   z-index: 20;
 }
@@ -21,48 +23,99 @@
   left: 0;
   right: 0;
   top: -3px;
-  height: 6px;
+  height: 14px;
   cursor: ns-resize;
+}
+.sr-drawer-grip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 40px;
+  height: 4px;
+  margin-left: -20px;
+  border-radius: 2px;
+  background: var(--line-2);
 }
 .sr-drawer-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 10px;
+  gap: 10px;
+  height: 48px;
+  padding: 8px 12px 0 16px;
   border-bottom: 1px solid var(--line);
+  box-sizing: border-box;
   flex: none;
 }
 .sr-drawer-name {
-  color: var(--heading);
-  font-weight: 600;
-  margin-right: 6px;
-}
-.sr-drawer-tabs {
-  display: flex;
-  gap: 2px;
+  color: var(--text);
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.12em;
   margin-right: 8px;
 }
-.sr-drawer-tab {
-  width: 22px;
-  padding: 0;
-}
-.sr-drawer-tab.play:not(.on) {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.sr-drawer-tab.play.on {
-  box-shadow: inset 0 -2px 0 var(--accent);
-}
-.sr-drawer-field {
+.sr-drawer-status {
+  font: 400 13px var(--font-sans);
   color: var(--muted);
+  white-space: nowrap;
 }
-.sr-drawer-field b {
+.sr-drawer-gap {
+  flex: 1;
+}
+/* a field button: a Sans label and a mono value */
+.sr-dfield,
+.sr-dbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: none;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-2);
+  color: var(--label);
+  font: 400 13px var(--font-sans);
+  white-space: nowrap;
+}
+.sr-dbtn {
   color: var(--text);
-  font-weight: 500;
+  cursor: pointer;
 }
-.sr-drawer-close {
-  margin-left: auto;
+.sr-dbtn:hover,
+.sr-dfield:hover {
+  border-color: var(--muted);
+}
+.sr-dbtn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.sr-dbtn.sr-dicon {
+  width: 28px;
+  padding: 0;
+  justify-content: center;
+  border-color: transparent;
+  color: var(--label);
+}
+.sr-dbtn.sr-dicon:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+}
+.sr-dfield b {
+  font: 500 12px var(--font-mono);
+  color: var(--text);
+}
+.sr-dfield {
+  padding-right: 4px;
+}
+.sr-dfield b {
+  padding-right: 6px;
+}
+.sr-drawer-root {
+  cursor: ns-resize;
+}
+.sr-dbtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .sr-drawer-body {
   flex: 1;
@@ -78,29 +131,73 @@
 }
 .sr-lane-head {
   flex: none;
-  width: 250px;
+  width: 210px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 12px 0 16px;
+  border-right: 1px solid var(--line);
+  color: var(--label);
+}
+.sr-lane-top {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  border-right: 1px solid var(--line);
-  color: var(--muted);
+  gap: 6px;
+  height: 18px;
+}
+.sr-lane-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sr-lane-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .sr-lane-name {
-  width: 34px;
   color: var(--text-2);
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.1em;
+}
+/* LEN and RATE: a chip of a faint label and a mono value */
+.sr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 18px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-1);
+  color: var(--text);
+  font: 500 10px var(--font-mono);
+}
+.sr-chip i {
+  font-style: normal;
+  color: var(--label);
 }
 .sr-lane-field {
-  color: var(--text);
   cursor: ns-resize;
   touch-action: none;
   user-select: none;
 }
 .sr-lane-btn {
-  opacity: 0.4;
+  opacity: 0.45;
+  color: var(--label);
+  display: inline-grid;
+  place-items: center;
+}
+.sr-lane-btn:hover {
+  opacity: 0.8;
 }
 .sr-lane-btn.on {
   opacity: 1;
+  color: var(--accent);
 }
 .sr-lane-grid {
   flex: 1;
@@ -110,9 +207,9 @@
 .sr-lane-svg {
   position: absolute;
   left: 0;
-  top: 3px;
+  top: 4px;
   /* an svg sizes itself (150 px tall) unless told */
-  height: calc(100% - 6px);
+  height: calc(100% - 8px);
   display: block;
   touch-action: none;
 }
@@ -136,10 +233,18 @@
 .sr-lane-svg .ghost {
   opacity: 0.3;
 }
+/* the current step: a 2 px accent ring (its height is geometry, so it takes a calc) */
 .sr-lane-cur {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 1.5;
+  stroke-width: 2;
+  height: calc(100% - 2px);
+  pointer-events: none;
+}
+.sr-pct {
+  fill: var(--text);
+  font: 500 9px var(--font-mono);
+  pointer-events: none;
 }
 .sr-lane-head .sr-lane-btn {
   background: none;
@@ -148,15 +253,45 @@
   font: inherit;
   cursor: pointer;
 }
-/* an option list (RATE, STEP / PLAYED, SCALE, GEN) in the drawer: the canvas's mode-strip button in a flow box */
+/* an option list (RATE, STEP / PLAYED, SCALE, GEN) in the drawer: a text field sized by its content */
 .sr-lane-opt {
   position: relative;
   flex: none;
-  height: 32px;
 }
-.sr-lane-opt .sr-cell {
-  left: 0;
-  top: 0;
+.sr-cell.sr-opt-text {
+  position: relative;
+  width: auto;
+  height: auto;
+  display: inline-flex;
+}
+.sr-opt-text .sr-opt {
+  position: static;
+  height: auto;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: 500 10px var(--font-mono);
+  padding: 0;
+  gap: 4px;
+}
+.sr-dfield .sr-opt-text .sr-opt {
+  font: 500 12px var(--font-mono);
+  padding-right: 2px;
+}
+.sr-opt-text .sr-opt.open {
+  box-shadow: none;
+}
+.sr-opt-text .sr-opt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.sr-dfield .sr-menu {
+  left: -48px;
+  top: 30px;
+}
+.sr-lane-opt .sr-menu {
+  left: -8px;
+  top: 24px;
 }
 .sr-drawer .sr-menu {
   z-index: 30;
@@ -164,25 +299,24 @@
 /* the lower lanes open their lists upwards, inside the drawer */
 .sr-lane.up .sr-menu {
   top: auto;
-  bottom: 28px;
-}
-.sr-drawer-root {
-  cursor: ns-resize;
+  bottom: 24px;
 }
 .sr-note-name {
-  fill: var(--muted);
-  font-size: 8px;
+  fill: var(--label);
+  font-size: 9px;
+  pointer-events: none;
+}
+/* LEN: a 2 px accent line; the wider, transparent rect over it is the drag handle */
+.sr-len-line {
+  fill: var(--accent);
+  opacity: 0.75;
   pointer-events: none;
 }
 .sr-len-marker {
-  fill: var(--accent);
-  fill-opacity: 0.5;
+  fill: transparent;
   cursor: ew-resize;
 }
 .sr-len-marker:hover {
-  fill-opacity: 0.9;
-}
-.sr-drawer-head .sr-gbtn:disabled {
-  opacity: 0.4;
-  pointer-events: none;
+  fill: var(--accent);
+  fill-opacity: 0.25;
 }
