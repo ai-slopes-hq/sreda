@@ -8,6 +8,7 @@ import { assemble } from './assemble';
 import { PARTS } from './parts';
 import { chance, intIn, pick, weighted } from './random';
 import { STYLE_IDS, STYLES } from './styles';
+import { TWISTS } from './twists';
 import type { DiceCtx, DiceStyleId, DiceVoice, Part, PartId, Rand, Style, TwistId } from './types';
 
 export { DRUM_PARTS } from './parts/drums';
@@ -30,7 +31,7 @@ function throwStyle(specs: Specs, style: Style, R: Rand, parts: Record<PartId, P
   const scale = pick(R, style.scales);
   const root = Math.floor(R() * 12);
   const twists: TwistId[] = [];
-  const { doc, value: voices } = buildWith(specs, (S) => {
+  const { doc, value } = buildWith(specs, (S) => {
     const c: DiceCtx = { S, R, scale, root, bpm, x: 0, y: 0 };
     const voices: DiceVoice[] = [];
     const play = (r: Style['roles'][number]) => {
@@ -42,14 +43,32 @@ function throwStyle(specs: Specs, style: Style, R: Rand, parts: Record<PartId, P
     for (const r of style.roles) if (chance(R, r.p)) play(r);
     // never silent: with no role chosen, the style's most likely role plays
     if (voices.length === 0) play(mainRole(style));
-    assemble(c, style, voices, []);
-    return voices;
+    const kept = voices.map((v) => v.part);
+    const extras: { ids: string[]; clocks: [string, string, number][] }[] = [];
+    // the twists: a few from the style's pool (no repeats), each applied if the voices allow it
+    const pool = [...style.twists];
+    const n = intIn(R, style.twistCount[0], style.twistCount[1]);
+    for (let k = 0; k < n && pool.length; k++) {
+      const id = weighted(R, pool);
+      pool.splice(
+        pool.findIndex(([t]) => t === id),
+        1,
+      );
+      const t = TWISTS[id]({ ...c, y: voices.length * ROOM }, voices);
+      if (!t) continue;
+      twists.push(id);
+      extras.push(t);
+      if (t.extraVoice) voices.push(t.extraVoice);
+    }
+    assemble(c, style, voices, extras);
+    return { voices, kept };
   });
+  const { voices, kept } = value;
   return {
     doc,
     style: style.id,
     label: style.label,
-    parts: voices.flatMap((v) => [v.part, ...(v.members ?? [])]),
+    parts: voices.flatMap((v) => (kept.includes(v.part) ? [v.part, ...(v.members ?? [])] : [])),
     twists,
   };
 }

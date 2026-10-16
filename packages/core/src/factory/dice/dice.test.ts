@@ -9,6 +9,7 @@ import { dicePatch, dicePatchIn } from './index';
 import { drumKit } from './parts/drums';
 import { PARTS } from './parts';
 import { STYLES } from './styles';
+import { TWISTS } from './twists';
 import { STYLE_IDS } from './styles';
 import { toKnob, type KnobParam } from '../../spec';
 import type { DiceCtx, DiceVoice, Part, Style } from './types';
@@ -291,4 +292,88 @@ test('every voice field names a real port of its module, in the right direction'
     }
   }
   expect(comb, 'the COMB bells branch was hit').toBeGreaterThan(0);
+});
+
+const TWIST_IDS = ['chance', 'feedback', 'fm', 'grains', 'polymeter', 'shaper', 'snh', 'switch'];
+
+test('every twist comes up and every throw stays valid', () => {
+  const seen = new Set<string>();
+  for (let seed = 1; seed <= 500; seed++) {
+    const { doc, style, twists } = dicePatch(SPECS, seed);
+    for (const t of twists) seen.add(t);
+    expect(new Set(twists).size, `seed ${seed}: no repeats`).toBe(twists.length);
+    expect(twists.length).toBeLessThanOrEqual(3);
+    expect(validateDoc(JSON.parse(JSON.stringify(doc)), SPECS), `seed ${seed}`).toEqual(doc);
+    expect(
+      wireProblems(doc, SPECS)
+        .filter((p) => !p.info)
+        .map((p) => p.text),
+      `seed ${seed} (${style}, ${twists})`,
+    ).toEqual([]);
+    expect(doc.modules.filter((m) => m.type === 'out')).toHaveLength(1);
+    expect(() => compile(doc, SPECS, 1)).not.toThrow();
+  }
+  expect([...seen].sort()).toEqual(TWIST_IDS);
+});
+
+test('every twist applies or returns null, and leaves nothing unconnected, on a drums-only throw', () => {
+  expect(Object.keys(TWISTS).sort()).toEqual(TWIST_IDS);
+  for (const id of TWIST_IDS) {
+    for (const part of ['drums-techno', 'drums-acid', 'drums-dub', 'drums-industrial']) {
+      for (let seed = 1; seed <= 10; seed++) {
+        const doc = build(SPECS, (S) => {
+          let s = seed;
+          const R = () => (s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+          const c: DiceCtx = { S, R, scale: 2, root: 0, bpm: 120, x: 0, y: 0 };
+          const voices = [PARTS[part]!(c)];
+          const t = TWISTS[id as keyof typeof TWISTS]!(c, voices);
+          assemble(c, STYLES.techno!, voices, t ? [t] : []);
+        });
+        expect(
+          wireProblems(doc, SPECS)
+            .filter((p) => !p.info)
+            .map((p) => p.text),
+          `${id} on ${part} (seed ${seed})`,
+        ).toEqual([]);
+      }
+    }
+  }
+});
+
+test('throws of one style are not near-copies', () => {
+  for (const id of STYLE_IDS) {
+    const sigs = Array.from({ length: 10 }, (_, i) => {
+      const { doc } = dicePatchIn(SPECS, STYLES[id]!, 1000 + i);
+      return {
+        types: doc.modules
+          .map((m) => m.type)
+          .sort()
+          .join(),
+        cables: JSON.stringify(doc.cables),
+      };
+    });
+    let differ = 0;
+    let pairs = 0;
+    for (let i = 0; i < 10; i++)
+      for (let j = i + 1; j < 10; j++) {
+        pairs++;
+        if (sigs[i]!.types !== sigs[j]!.types || sigs[i]!.cables !== sigs[j]!.cables) differ++;
+      }
+    expect(differ / pairs, id).toBeGreaterThanOrEqual(0.8);
+  }
+});
+
+test('twists build what they say', () => {
+  const kinds = (doc: ReturnType<typeof build>) => doc.modules.map((m) => m.type);
+  const counts: Record<string, number> = {};
+  for (let seed = 1; seed <= 500; seed++) {
+    const { doc, twists } = dicePatch(SPECS, seed);
+    const k = kinds(doc);
+    const has = (t: string) => k.includes(t);
+    for (const t of twists) counts[t] = (counts[t] ?? 0) + 1;
+    if (twists.includes('snh')) expect(has('snh') && has('noise'), `seed ${seed}`).toBe(true);
+    if (twists.includes('switch')) expect(has('spread'), `seed ${seed}`).toBe(true);
+    if (twists.includes('grains')) expect(has('grains'), `seed ${seed}`).toBe(true);
+  }
+  for (const t of TWIST_IDS) expect(counts[t], t).toBeGreaterThan(5);
 });

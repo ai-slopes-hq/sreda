@@ -1,5 +1,5 @@
 // The styles (spec §6, revision 36). Each says its tempo, scales, which roles play (and with which parts), its effect
-// chains and its twist pool. The twists themselves are built in a later task; `dicePatch` ignores the pool for now.
+// chains and its twist pool (the twists themselves are in `twists.ts`).
 import { SCALES } from '../../generators';
 import {
   acidEcho,

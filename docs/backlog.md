@@ -190,6 +190,16 @@ Ideas kept for later. Not in the first build (`docs/superpowers/specs/2026-10-07
 - **Migration:** cable dedup reaches beyond the remapped cables; the notice is cleared by the audio-start click; a
   free-running STAGES' SLOPE runs at the default rate (STAGES t{k} dropped).
 
+## From Plan 18
+
+- **DICE fx:** the echo is capped at 2 s (DELAY's `time` maximum), so the drone style's long echoes are shorter than
+  its beat picks suggest; a longer DELAY or a chained pair would lift it.
+- **DICE electro:** its four drum roles are single parts rather than a kit; they share one DRUMS frame but cannot be
+  thinned or switched as one voice.
+- **DICE twists:** `feedback` always makes its own DELAY on one voice (the style's effect DELAY is built later, in
+  `assemble`, out of the twist's reach); letting a twist reshape the style's chain would need `assemble` to take the
+  twists. `switch` needs three gated voices, so it is rare in two-voice styles.
+
 ## From Plan 16
 
 - **Plan 17 (decided, spec §1b):** STACK stretch to the right with a wider display; 2U displays for MIX / SPREAD /

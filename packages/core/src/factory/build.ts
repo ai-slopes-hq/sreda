@@ -8,6 +8,12 @@ export interface Builder {
   /** a module; `values` are knob values in real units or option indices */
   add(type: string, x: number, y: number, values?: Record<string, number>): string;
   wire(a: string, ap: string, b: string, bp: string): void;
+  /** more knob values on an existing module, in the same units as `add` */
+  set(id: string, values: Record<string, number>): void;
+  /** a module's type */
+  typeOf(id: string): string;
+  /** every cable leaving output `from` leaves output `to` instead (a twist that reroutes a gate) */
+  retarget(from: [string, string], to: [string, string]): void;
   att(id: string, port: string, v: number): void;
   rat(id: string, port: string, r: number): void;
   /** a META-SEQ; `params` in the document's units (knob positions, option indices), as `seqParams` gives them */
@@ -81,13 +87,24 @@ export function buildWith<T>(specs: Specs, f: (b: Builder) => T): { doc: Doc; va
     add(type, x, y, values = {}) {
       const id = `m${n++}`;
       const m = blankModule(specs, type, id, snap((x * 7) / 6), snap((y * 9) / 7));
+      doc = { ...doc, modules: [...doc.modules, m] };
+      b.set(id, values);
+      return id;
+    },
+    set(id, values) {
+      const m = mod(id);
       for (const [k, v] of Object.entries(values)) {
-        const p = specs[type]!.params.find((q) => q.id === k);
-        if (!p || p.kind === 'action') throw new Error(`no param ${k} on ${type}`);
+        const p = specs[m.type]!.params.find((q) => q.id === k);
+        if (!p || p.kind === 'action') throw new Error(`no param ${k} on ${m.type}`);
         m.params[k] = p.kind === 'knob' ? toKnob(p, v) : v;
       }
-      doc = { ...doc, modules: [...doc.modules, m] };
-      return id;
+    },
+    typeOf: (id) => mod(id).type,
+    retarget(from, to) {
+      doc = {
+        ...doc,
+        cables: doc.cables.map((w) => (w.from[0] === from[0] && w.from[1] === from[1] ? { ...w, from: to } : w)),
+      };
     },
     wire(a, ap, bb, bp) {
       doc = { ...doc, cables: [...doc.cables, { from: [a, ap], to: [bb, bp] }] };
