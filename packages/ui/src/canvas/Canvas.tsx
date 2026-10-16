@@ -668,7 +668,7 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
         screen: p,
         at: toCanvas(p),
         from: d.from,
-        fromName: `${nameOf(st.doc, specs, d.from.id)} › ${portLabel(st.doc, specs, d.from.id, d.from.port)}`,
+        fromName: portLabel(st.doc, specs, d.from.id, d.from.port),
         tab: 'ALL',
       });
   }

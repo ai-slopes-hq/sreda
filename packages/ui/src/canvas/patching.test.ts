@@ -1,4 +1,4 @@
-import { SPECS } from '@sreda/core';
+import { frameSelection, portLabel, SPECS, starterDoc } from '@sreda/core';
 import { expect, test } from 'vitest';
 import { TEST_SPECS as S } from '../../../core/src/testspecs';
 import { fitInside, pickerItems, placeFor, targetPort, TABS, type LibEntry, type PickerTab } from './patching';
@@ -88,4 +88,11 @@ test('from a jack a module item carries the port it will be wired by; without on
   const end = { dir: 'out', role: 'trigger' } as const;
   const port = targetPort(SPECS, 'lpg', end)!;
   expect(placeFor(SPECS, 'lpg', end, { x: 0, y: 0 }).port).toBe(port.id);
+});
+
+test('the picker\'s from line is the cable tag name: a frame CLK out `<FRAME> › CLK`, a module output `<MODULE> › <PORT>`', () => {
+  const doc = starterDoc(SPECS);
+  const g = frameSelection(doc, SPECS, ['m1']);
+  expect(portLabel(g.doc, SPECS, g.id, 'clkOut')).toBe('GROUP 1 › CLK');
+  expect(portLabel(doc, SPECS, 'm1', 'out')).toBe('OSC › OUT');
 });

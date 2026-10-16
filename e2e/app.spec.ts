@@ -961,6 +961,7 @@ test('picker: a factory project replaces the canvas (⌘Z returns); a group drop
   await page.keyboard.press('Enter');
   const eoc = await center(page, jack(page, 'slope', 'eoc'));
   await drag(page, eoc, { x: eoc.x + 200, y: eoc.y + 150 });
+  await expect(page.locator('.sr-pfrom')).toHaveText(/^from SLOPE › EOC\s*trigger$/);
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab'); // ALL → MODULES → GROUPS
   await page.keyboard.type('vca');
