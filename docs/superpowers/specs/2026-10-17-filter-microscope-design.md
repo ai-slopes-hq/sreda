@@ -177,8 +177,9 @@ sine; "loud" is −6 dBFS.
 
 ### 4.1 RES
 
-- **Peak.** A small sine at the cutoff peaks +7 ± 2 dB at RES 0.5 and +20 ± 3 dB at RES 0.9, against RES 0, on
-  every model and every cutoff. The RES → `k` law is analytic per model (no tables).
+- **Peak.** For a small sine, the highest level near the cutoff (0.5…2× the cutoff, in 1/12-octave steps) over
+  the passband level (the same sine at 0.1× the cutoff) is +7 ± 2 dB at RES 0.5 and +20 ± 3 dB at RES 0.9, on every
+  model and every cutoff (revision 28's measure). The RES → `k` law is a formula per model, with no tables.
 - **Self-oscillation.** None at RES 0.95. At RES 1 every model self-oscillates, SVF included.
 - **Self-oscillation as an oscillator.** With no input, after a click:
   - amplitude −6 ± 3 dBFS peak;
