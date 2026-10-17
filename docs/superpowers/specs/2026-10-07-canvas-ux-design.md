@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 36 (§6: DICE in eleven styles) · Status: approved
+Date: 2026-10-07 · Revision 37 (§7a: FILTER under the microscope) · Status: approved
 
 ## Why
 
@@ -663,7 +663,7 @@ Stereo outputs are two mono outputs (cables stay mono).
 
 | Module | Size | Inputs | Knobs | Mode strip | Outputs |
 |---|---|---|---|---|---|
-| **FILTER** (upgrade) | 5×1 | in (audio), pitch (pitch: tracks the cutoff; COMB's tuning) | CUT, RES, DRV (gain into the nonlinear models) | MODEL ▾ SVF / LADDER / DIODE / SK / COMB / VOWEL, drawn as a response glyph | lp, bp, hp |
+| **FILTER** (upgrade) | 5×1 | in (audio), pitch (pitch: tracks the cutoff; COMB's tuning) | CUT, RES, DRV (gain into each resonant model's saturation; revision 37) | MODEL ▾ SVF / LADDER / DIODE / SK / COMB / VOWEL, drawn as a response glyph | lp, bp, hp |
 | **DRIVE** | 6×1 | in (audio) | GAIN (to +36 dB), BIAS, TONE, MIX | MODEL ▾ SOFT / TUBE / OD / DIST / FUZZ / RECT / DIGI | out |
 | **DELAY** (upgrade) | 6×1 | in (audio), clk (trigger) | TIME, FB, MIX, CHAR | TYPE ▾ DIGI / TAPE / SPRING · PING | l, r |
 | **REVERB** | 6×2, display 2 lanes | in (audio) | SIZE, DECAY, DAMP, PRE, MOD, MIX | TYPE ▾ ROOM / PLATE / HALL · FREEZE | l, r |
@@ -674,7 +674,7 @@ Stereo outputs are two mono outputs (cables stay mono).
   responses: SVF 12 dB; LADDER 24 dB lowpass with 2-pole band and the complementary highpass; DIODE the 18 dB TB-303
   ladder; SK the MS-20's Sallen-Key pair; COMB tuned by CUT + PITCH, LP = positive feedback, BP = negative, HP = comb
   minus dry; VOWEL formants morphing A-E-I-O-U on CUT, LP = all formants, BP = the first, HP = the upper ones.
-  DRV drives the nonlinear models (ADAA, 2× oversampling); NOTCH is dropped (four outputs do not fit 1U).
+  DRV drives the nonlinear models (2× oversampling); NOTCH is dropped (four outputs do not fit 1U).
   - **Revision 28, after listening against Ableton's Auto Filter (SVF, PRD, DFM, MS2 renders in
     `projects/refs/filter/`):** RES means the same on every model — a +7 dB peak at RES 0.5 and about +20 dB at 0.9
     (measured at 1 kHz on white noise), self-oscillation only at the very end of the knob; the passband holds its level
@@ -685,6 +685,15 @@ Stereo outputs are two mono outputs (cables stay mono).
     feedback path so the 3rd grows with RES (to about −61 dB at 0.9) with a faint 2nd near −75 dB.
   - **The response glyph moves:** it draws the live cutoff (knob, modulation and PTCH) and resonance, schematically,
     from a readout of the engine.
+  - **Revision 37, measured against references** (`docs/superpowers/specs/2026-10-17-filter-microscope-design.md`):
+    SVF, LADDER, DIODE and SK are zero-delay-feedback cores with their saturation inside the resonance loop (SVF after
+    Cytomic / Vital, LADDER and DIODE after Zavalishin, SK the Korg35), all at 2×. SVF is no longer linear: DRV drives
+    it like the others. Every one of the four self-oscillates at RES 1 (none at 0.95), at −6 ± 3 dBFS and within
+    ±20 cents of CUT, so PTCH plays it. Revision 28's RES meaning (+7 dB at 0.5, about +20 at 0.9) and passband
+    (±1 dB) now hold at every cutoff from 50 Hz to 10 kHz, not only at 1 kHz; the passband is kept inside the loop,
+    never by an output multiplier, so a loud sine at the cutoff runs into the saturation (at most +6 dB over the
+    input) while a quiet one gets the full peak. DRV is 0…+20 dB into the saturation, loudness-matched within ±3 dB,
+    its THD rising steadily to −20 dB or more. Revision 28's harmonic targets at DRV 0 stay.
 - **DRIVE** (revision 26, after listening: the three old modes sounded alike). Seven models with distinct
   characters, references Ableton's Saturator, Pedal and Roar:
   - **SOFT** — a soft sine curve: warm, rounded, almost no grit (Saturator Soft Sine).
