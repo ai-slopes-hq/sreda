@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron } from '@playwright/test';
 
-const SKINS = ['DEFAULT', 'ANNABIOSIS', 'KANAGAWA', 'TOUCH', 'NORD', 'TOKYO NIGHT'];
+const SKINS = ['DEFAULT', 'ANNABIOSIS', 'KANAGAWA', 'TOUCH', 'NORD', 'TOKYO NIGHT', 'ORCA'];
 const OUT = 'screens';
 const SCREENS = 14;
 const exactly = (name) => new RegExp(`^${name}$`, 'i');

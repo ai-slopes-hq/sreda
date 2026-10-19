@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 37 (§7a: FILTER under the microscope) · Status: approved
+Date: 2026-10-07 · Revision 38 (§1a: the ORCA skin) · Status: approved
 
 ## Why
 
@@ -48,47 +48,47 @@ geometry, type (IBM Plex Mono and Sans, §1b), the panel grammar and the meaning
 every skin. A document does not store a skin, and a frame's tint is stored as an index (0 neutral, 1–6 hues), so a
 patch looks right in any skin.
 
-**Choosing a skin** (revision 22): the sidebar's SETTINGS tab (§5a) lists the six skins, each row its name and a
-strip of swatches (`ground`, `panel`, `text` and the four role colours). Hovering a row tries the skin on the whole
+**Choosing a skin** (revision 22): the sidebar's SETTINGS tab (§5a) lists the skins (seven since revision 38), each
+row its name and a strip of swatches (`ground`, `panel`, `text` and the four role colours). Hovering a row tries the skin on the whole
 app; a click chooses it; leaving the list without a click returns to the chosen one. The skin is app-wide, kept in
 `<userData>/settings.json` beside the library folder, never in a document; a new install starts on DEFAULT. Candidates
 were compared on one small patch: https://claude.ai/artifact/U5d9RCXf13k7nkraC3VGgq.
 
-| Token | Used for | DEFAULT | ANNABIOSIS | KANAGAWA | TOUCH | NORD | TOKYO NIGHT |
-|---|---|---|---|---|---|---|---|
-| `ground` | canvas background, display insets, jack centres | `#121210` | `#18211f` | `#1f1f28` | `#1c1c1c` | `#2e3440` | `#1a1b26` |
-| `dot` | canvas grid dots | `#24231f` | `#273533` | `#2a2a37` | `#2a2a2a` | `#3b4252` | `#24283b` |
-| `panel` | module and frame-header body, sidebar, picker, menus | `#1b1b18` | `#212d2b` | `#2a2a37` | `#333333` | `#3b4252` | `#24283b` |
-| `panel-side` | a module's port columns | `#171715` | `#1c2725` | `#252530` | `#2d2d2d` | `#353c4a` | `#1f2231` |
-| `raised` | hover fill, field hover, off pads, panel heads | `#2a2924` | `#283735` | `#363646` | `#444444` | `#434c5e` | `#292e42` |
-| `line` | inner borders, dividers | `#2e2d28` | `#344543` | `#363646` | `#444444` | `#434c5e` | `#343a55` |
-| `line-2` | panel and button borders | `#3a3933` | `#465957` | `#54546d` | `#575757` | `#4c566a` | `#414868` |
-| `text` | values, names, active text | `#e9e4d8` | `#d4ddd7` | `#dcd7ba` | `#e0e0e0` | `#eceff4` | `#c0caf5` |
-| `text-2` | frame names, ties | `#b9b3a6` | `#b3c2bc` | `#c8c093` | `#c4c4c4` | `#e5e9f0` | `#a9b1d6` |
-| `muted` | secondary text, hints, selected outline | `#8f897c` | `#8fa29d` | `#a6a69c` | `#a0a0a0` | `#d8dee9` | `#737aa2` |
-| `quiet` | quiet secondary marks (revision 35: port and knob labels moved to `label`, §1b) | `#6f6a5f` | `#6f827d` | `#727169` | `#7a7a7a` | `#8a93a5` | `#565f89` |
-| `faint` | default-valued fields, off glyph parts | `#5d594f` | `#5c6f6b` | `#54546d` | `#5e5e5e` | `#616e88` | `#3b4261` |
-| `heading` | module names, section heads | = `text` | `#42fea2` | = `text` | = `text` | = `text` | = `text` |
-| `on` | a pressed toggle, the current menu item, a picked row | `#e9e4d8` | `#0c7970` | `#2d4f67` | `#5a5a5a` | `#5e81ac` | `#3d59a1` |
-| `on-text` | text on `on` | `#121210` | `#eafff5` | `#dcd7ba` | `#ffffff` | `#eceff4` | `#c0caf5` |
-| `accent` | "where we are now" and focus: current step, hover outlines, guides, BPM, LISTEN flash | `#f5a524` | `#42fea2` | `#e6c384` | `#e8c547` | `#ebcb8b` | `#ff9e64` |
-| `destructive` | delete, problems | `#e5484d` | `#db3323` | `#e82424` | `#e5484d` | `#bf616a` | `#db4b4b` |
-| `role-audio` | audio jacks and cables | `#e9e4d8` | `#30da98` | `#7fb4ca` | `#63b35b` | `#88c0d0` | `#7dcfff` |
-| `role-mod` | mod jacks and cables, modulated values | `#6cb4ee` | `#1e7fff` | `#957fb8` | `#8e5fc7` | `#b48ead` | `#bb9af7` |
-| `role-pitch` | pitch jacks and cables | `#9ad18b` | `#fcdd14` | `#98bb6c` | `#4f8fd6` | `#a3be8c` | `#9ece6a` |
-| `role-trigger` | trigger / gate jacks and cables | `#f5a524` | `#ff5230` | `#ff9e3b` | `#d0508f` | `#d08770` | `#f7768e` |
+| Token | Used for | DEFAULT | ANNABIOSIS | KANAGAWA | TOUCH | NORD | TOKYO NIGHT | ORCA |
+|---|---|---|---|---|---|---|---|---|
+| `ground` | canvas background, display insets, jack centres | `#121210` | `#18211f` | `#1f1f28` | `#1c1c1c` | `#2e3440` | `#1a1b26` | `#000000` |
+| `dot` | canvas grid dots | `#24231f` | `#273533` | `#2a2a37` | `#2a2a2a` | `#3b4252` | `#24283b` | `#222222` |
+| `panel` | module and frame-header body, sidebar, picker, menus | `#1b1b18` | `#212d2b` | `#2a2a37` | `#333333` | `#3b4252` | `#24283b` | `#111111` |
+| `panel-side` | a module's port columns | `#171715` | `#1c2725` | `#252530` | `#2d2d2d` | `#353c4a` | `#1f2231` | `#0b0b0b` |
+| `raised` | hover fill, field hover, off pads, panel heads | `#2a2924` | `#283735` | `#363646` | `#444444` | `#434c5e` | `#292e42` | `#1f1f1f` |
+| `line` | inner borders, dividers | `#2e2d28` | `#344543` | `#363646` | `#444444` | `#434c5e` | `#343a55` | `#262626` |
+| `line-2` | panel and button borders | `#3a3933` | `#465957` | `#54546d` | `#575757` | `#4c566a` | `#414868` | `#3a3a3a` |
+| `text` | values, names, active text | `#e9e4d8` | `#d4ddd7` | `#dcd7ba` | `#e0e0e0` | `#eceff4` | `#c0caf5` | `#ffffff` |
+| `text-2` | frame names, ties | `#b9b3a6` | `#b3c2bc` | `#c8c093` | `#c4c4c4` | `#e5e9f0` | `#a9b1d6` | `#cccccc` |
+| `muted` | secondary text, hints, selected outline | `#8f897c` | `#8fa29d` | `#a6a69c` | `#a0a0a0` | `#d8dee9` | `#737aa2` | `#9a9a9a` |
+| `quiet` | quiet secondary marks (revision 35: port and knob labels moved to `label`, §1b) | `#6f6a5f` | `#6f827d` | `#727169` | `#7a7a7a` | `#8a93a5` | `#565f89` | `#777777` |
+| `faint` | default-valued fields, off glyph parts | `#5d594f` | `#5c6f6b` | `#54546d` | `#5e5e5e` | `#616e88` | `#3b4261` | `#555555` |
+| `heading` | module names, section heads | = `text` | `#42fea2` | = `text` | = `text` | = `text` | = `text` | = `text` |
+| `on` | a pressed toggle, the current menu item, a picked row | `#e9e4d8` | `#0c7970` | `#2d4f67` | `#5a5a5a` | `#5e81ac` | `#3d59a1` | `#ffffff` |
+| `on-text` | text on `on` | `#121210` | `#eafff5` | `#dcd7ba` | `#ffffff` | `#eceff4` | `#c0caf5` | `#000000` |
+| `accent` | "where we are now" and focus: current step, hover outlines, guides, BPM, LISTEN flash | `#f5a524` | `#42fea2` | `#e6c384` | `#e8c547` | `#ebcb8b` | `#ff9e64` | `#ffffff` |
+| `destructive` | delete, problems | `#e5484d` | `#db3323` | `#e82424` | `#e5484d` | `#bf616a` | `#db4b4b` | `#e5484d` |
+| `role-audio` | audio jacks and cables | `#e9e4d8` | `#30da98` | `#7fb4ca` | `#63b35b` | `#88c0d0` | `#7dcfff` | `#ffffff` |
+| `role-mod` | mod jacks and cables, modulated values | `#6cb4ee` | `#1e7fff` | `#957fb8` | `#8e5fc7` | `#b48ead` | `#bb9af7` | `#7a7a7a` |
+| `role-pitch` | pitch jacks and cables | `#9ad18b` | `#fcdd14` | `#98bb6c` | `#4f8fd6` | `#a3be8c` | `#9ece6a` | `#a6a6a6` |
+| `role-trigger` | trigger / gate jacks and cables | `#f5a524` | `#ff5230` | `#ff9e3b` | `#d0508f` | `#d08770` | `#f7768e` | `#d0d0d0` |
 
 Frame tints (index 0 is neutral; fills: tint 0 at ≈ 4 %, hues at ≈ 8 %):
 
-| Tint | DEFAULT | ANNABIOSIS | KANAGAWA | TOUCH | NORD | TOKYO NIGHT |
-|---|---|---|---|---|---|---|
-| 0 neutral | `#8f897c` | `#8fa29d` | `#727169` | `#7a7a7a` | `#4c566a` | `#565f89` |
-| 1 red | `#d97757` | `#d8a08b` | `#e46876` | `#d0508f` | `#bf616a` | `#f7768e` |
-| 2 yellow | `#d8b25e` | `#d7ce82` | `#e6c384` | `#e8c547` | `#ebcb8b` | `#e0af68` |
-| 3 green | `#8fbf80` | `#aac699` | `#98bb6c` | `#63b35b` | `#a3be8c` | `#9ece6a` |
-| 4 teal | `#62b3a8` | `#9ad9b0` | `#7aa89f` | `#4fb3b0` | `#8fbcbb` | `#73daca` |
-| 5 blue | `#6cb4ee` | `#8eafcf` | `#7e9cd8` | `#4f8fd6` | `#81a1c1` | `#7aa2f7` |
-| 6 violet | `#b98ad0` | `#d89bc9` | `#957fb8` | `#8e5fc7` | `#b48ead` | `#bb9af7` |
+| Tint | DEFAULT | ANNABIOSIS | KANAGAWA | TOUCH | NORD | TOKYO NIGHT | ORCA |
+|---|---|---|---|---|---|---|---|
+| 0 neutral | `#8f897c` | `#8fa29d` | `#727169` | `#7a7a7a` | `#4c566a` | `#565f89` | `#5a5a5a` |
+| 1 red | `#d97757` | `#d8a08b` | `#e46876` | `#d0508f` | `#bf616a` | `#f7768e` | `#6e6e6e` |
+| 2 yellow | `#d8b25e` | `#d7ce82` | `#e6c384` | `#e8c547` | `#ebcb8b` | `#e0af68` | `#888888` |
+| 3 green | `#8fbf80` | `#aac699` | `#98bb6c` | `#63b35b` | `#a3be8c` | `#9ece6a` | `#a2a2a2` |
+| 4 teal | `#62b3a8` | `#9ad9b0` | `#7aa89f` | `#4fb3b0` | `#8fbcbb` | `#73daca` | `#bcbcbc` |
+| 5 blue | `#6cb4ee` | `#8eafcf` | `#7e9cd8` | `#4f8fd6` | `#81a1c1` | `#7aa2f7` | `#d6d6d6` |
+| 6 violet | `#b98ad0` | `#d89bc9` | `#957fb8` | `#8e5fc7` | `#b48ead` | `#bb9af7` | `#f0f0f0` |
 
 - **DEFAULT** is the look the first build was designed in: warm near-black panels, a cream text colour that is
   also the audio role, amber for "now" and for triggers.
@@ -103,6 +103,12 @@ Frame tints (index 0 is neutral; fills: tint 0 at ≈ 4 %, hues at ≈ 8 %):
   like operator families (audio = CHOP green, mod = TOP violet, pitch = SOP blue, trigger = DAT pink), yellow "now".
 - **NORD** (after nordtheme.com): arctic blue-grey, frost blue audio, pastel aurora hues for the other roles.
 - **TOKYO NIGHT** (after tokyonight.nvim "night"): deep navy, periwinkle text, near-neon cyan / violet / green / pink.
+- **ORCA** (revision 38, after Hundred Rabbits' Orca; its `#fff` / `#777` / `#444` greys): pure black, white
+  text, no hue anywhere but `destructive` (`#e5484d`, so problems still read as problems). Roles are told apart by
+  brightness, stepping down by ≈ 1.5–1.75 × in contrast: audio white, trigger `#d0d0d0`, pitch `#a6a6a6`, mod
+  `#7a7a7a` (the dimmest, so many mod cables stay calm; ≈ 4.4 : 1 on `panel`, so modulated values still read). `on`
+  and `accent` are white, `on-text` black: a pick is an inverted block, as Orca's cursor. Frame tints are a grey
+  ladder (the index keeps its meaning; the hue names do not apply).
 - Where a source palette has no value for a token (`panel-side`, `quiet`, `faint`, `on` …) it was chosen to fit.
 
 The ANNABIOSIS palette: seven hues, each a pastel and five steps from bright to dark (swatch ground `#c5c6b8`).
@@ -151,6 +157,7 @@ mixed 4 % toward `text`), `label` and `shadow`; three existing values change:
 | TOUCH | `#3a3a3a` | `#a5a5a5` (5.1 : 1) | `rgba(0,0,0,.5)` | `muted` `#a0a0a0` → `#a3a3a3` (4.35 : 1 on `popover`) |
 | NORD | `#424958` | `#b3bac6` (5.2 : 1) | `rgba(22,26,34,.5)` | `muted` `#d8dee9` → `#bac0cc` (hints competed with values) |
 | TOKYO NIGHT | `#2a2e42` | `#8c96c0` (5.0 : 1) | `rgba(6,7,14,.6)` | `muted` `#737aa2` → `#8c94bd` (failed on `panel`) |
+| ORCA (revision 38) | `#1b1b1b` | `#8c8c8c` (5.6 : 1) | `rgba(0,0,0,.6)` | — |
 
 **Scales** (CSS custom properties, built from tokens so they follow the skin):
 - Radii: `radius-1` 2 px (level bars, meters), `radius-2` 6 px (fields, options, frame buttons, value chips, displays),

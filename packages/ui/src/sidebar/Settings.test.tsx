@@ -17,10 +17,10 @@ function setup() {
   return { ...r, session, setSkin, row };
 }
 
-test('six rows, each a tile (ground, panel, text, four roles), its name and its line', () => {
+test('seven rows, each a tile (ground, panel, text, four roles), its name and its line', () => {
   const { container, row } = setup();
   const rows = container.querySelectorAll('.sr-skin');
-  expect(rows).toHaveLength(6);
+  expect(rows).toHaveLength(7);
   for (const r of rows) {
     expect(r.querySelectorAll('.tile')).toHaveLength(1);
     expect(r.querySelectorAll('.tile .rd')).toHaveLength(4);
@@ -33,6 +33,7 @@ test('six rows, each a tile (ground, panel, text, four roles), its name and its 
     'Neutral grey',
     'Cool slate',
     'Indigo night',
+    'Monochrome',
   ]);
   expect(row('NORD').querySelector('.name')?.textContent).toBe('NORD');
   expect(row('NORD').querySelector<HTMLElement>('.tile')!.style.background).toBe('#2e3440');

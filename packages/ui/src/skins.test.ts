@@ -42,6 +42,20 @@ describe('skins', () => {
     expect(set.size).toBe(TOKENS.length);
   });
 
+  it('ORCA is grey but for destructive, and its roles step down in brightness', () => {
+    const orca = SKINS.ORCA;
+    const grey = (hex: string) => hex.slice(1, 3) === hex.slice(3, 5) && hex.slice(3, 5) === hex.slice(5, 7);
+    for (const t of TOKENS) {
+      if (t === 'shadow' || t === 'destructive') continue;
+      expect(grey(orca[t]), t).toBe(true);
+    }
+    expect(grey(orca.destructive)).toBe(false);
+    const level = (t: 'role-audio' | 'role-trigger' | 'role-pitch' | 'role-mod') => parseInt(orca[t].slice(1, 3), 16);
+    expect(level('role-audio')).toBeGreaterThan(level('role-trigger'));
+    expect(level('role-trigger')).toBeGreaterThan(level('role-pitch'));
+    expect(level('role-pitch')).toBeGreaterThan(level('role-mod'));
+  });
+
   it('no colour literal outside skins.ts and the :root block', () => {
     const literal = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgba?\(|hsla?\(|\b(?:black|white)\b(?!-space)/;
     const bad: string[] = [];

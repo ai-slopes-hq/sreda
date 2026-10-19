@@ -1,9 +1,17 @@
 // Colour skins (spec §1a): one full set of tokens per skin. The UI reads them as CSS custom properties
 // (`var(--ground)` …); `canvas.css`'s `:root` holds DEFAULT's values so the page is right before any script runs.
 
-export type SkinName = 'DEFAULT' | 'ANNABIOSIS' | 'KANAGAWA' | 'TOUCH' | 'NORD' | 'TOKYO NIGHT';
+export type SkinName = 'DEFAULT' | 'ANNABIOSIS' | 'KANAGAWA' | 'TOUCH' | 'NORD' | 'TOKYO NIGHT' | 'ORCA';
 
-export const SKIN_NAMES: readonly SkinName[] = ['DEFAULT', 'ANNABIOSIS', 'KANAGAWA', 'TOUCH', 'NORD', 'TOKYO NIGHT'];
+export const SKIN_NAMES: readonly SkinName[] = [
+  'DEFAULT',
+  'ANNABIOSIS',
+  'KANAGAWA',
+  'TOUCH',
+  'NORD',
+  'TOKYO NIGHT',
+  'ORCA',
+];
 
 export const TOKENS = [
   'ground',
@@ -239,6 +247,39 @@ export const SKINS: Record<SkinName, Record<Token, string>> = {
     'tint-4': '#73daca',
     'tint-5': '#7aa2f7',
     'tint-6': '#bb9af7',
+  },
+  'ORCA': {
+    'ground': '#000000',
+    'dot': '#222222',
+    'panel': '#111111',
+    'panel-side': '#0b0b0b',
+    'raised': '#1f1f1f',
+    'popover': '#1b1b1b',
+    'line': '#262626',
+    'line-2': '#3a3a3a',
+    'text': '#ffffff',
+    'text-2': '#cccccc',
+    'muted': '#9a9a9a',
+    'quiet': '#777777',
+    'label': '#8c8c8c',
+    'faint': '#555555',
+    'heading': '#ffffff',
+    'on': '#ffffff',
+    'on-text': '#000000',
+    'accent': '#ffffff',
+    'destructive': '#e5484d',
+    'shadow': 'rgba(0,0,0,.6)',
+    'role-audio': '#ffffff',
+    'role-mod': '#7a7a7a',
+    'role-pitch': '#a6a6a6',
+    'role-trigger': '#d0d0d0',
+    'tint-0': '#5a5a5a',
+    'tint-1': '#6e6e6e',
+    'tint-2': '#888888',
+    'tint-3': '#a2a2a2',
+    'tint-4': '#bcbcbc',
+    'tint-5': '#d6d6d6',
+    'tint-6': '#f0f0f0',
   },
 };
 

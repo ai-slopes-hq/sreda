@@ -146,6 +146,10 @@ of a creative tool; nothing of its UI is ported.
   self-oscillation, stability) run on ours and on the reference; short A / B renders for the user to listen to; then
   fix the implementation, update the spec where behaviour changes, and pin the numbers in tests. **First: FILTER**
   (`docs/backlog.md`, "From listening": it misbehaves on a sine, DRV and RES).
+- **ORCA skin** (2026-10-19, branch `skin-orca`, spec revision 38, §1a): a seventh skin after Hundred Rabbits' Orca —
+  pure black, white text, greys only (`destructive` stays red), roles told apart by brightness (audio white, trigger
+  `#d0d0d0`, pitch `#a6a6a6`, mod `#7a7a7a`), picks as inverted white blocks. `skins.test.ts` pins it grey with the
+  roles stepping down; `pnpm screens` now captures seven skins.
 
 ## The road (vertical slices: something to hear at every stage)
 

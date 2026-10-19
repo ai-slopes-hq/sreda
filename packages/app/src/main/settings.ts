@@ -2,7 +2,7 @@
 import { readFile, rename, writeFile } from 'node:fs/promises';
 
 /** the skin names of packages/ui/src/skins.ts (the main process does not import the UI) */
-export const SKIN_NAMES = ['DEFAULT', 'ANNABIOSIS', 'KANAGAWA', 'TOUCH', 'NORD', 'TOKYO NIGHT'] as const;
+export const SKIN_NAMES = ['DEFAULT', 'ANNABIOSIS', 'KANAGAWA', 'TOUCH', 'NORD', 'TOKYO NIGHT', 'ORCA'] as const;
 
 export async function readSettings(file: string): Promise<Record<string, unknown>> {
   try {

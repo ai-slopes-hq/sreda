@@ -13,6 +13,7 @@ export const SKIN_LINE: Record<SkinName, string> = {
   TOUCH: 'Neutral grey',
   NORD: 'Cool slate',
   'TOKYO NIGHT': 'Indigo night',
+  ORCA: 'Monochrome',
 };
 
 /** the four role dots on a tile */
