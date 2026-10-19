@@ -26,8 +26,10 @@ import {
   RATIOS,
   RuleError,
   TINTS,
+  toKnob,
   type Cable,
   type Doc,
+  type KnobParam,
   type Rect,
   type Role,
   type Specs,
@@ -54,6 +56,7 @@ import { Picker } from './Picker';
 import { Drawer } from '../seq/Drawer';
 import { writeBack } from '../seq/mutate';
 import { panned } from './wheel';
+import { createTapper } from './tap';
 import './canvas.css';
 import '../fonts';
 
@@ -93,6 +96,8 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
   const s = props.session;
   const st = s.state;
   const specs = props.specs;
+  /** CLOCK's TAP, one tap history per module */
+  const tapper = createTapper();
   const [closeEpoch, setCloseEpoch] = createSignal(0);
   const [ghost, setGhost] = createSignal<{ a: Pt; b: Pt; role: Role } | null>(null);
   const [box, setBox] = createSignal<{ a: Pt; b: Pt } | null>(null);
@@ -937,6 +942,14 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                         replace: m.id,
                       }),
                     action: (param) => {
+                      if (param === 'tap') {
+                        const bpm = tapper(m.id, performance.now() / 1000);
+                        const knob = specs[m.type]?.params.find((p) => p.id === 'bpm') as KnobParam | undefined;
+                        // a run of taps is one undo step, as a frame's Tap
+                        if (bpm !== null && knob)
+                          s.params(m.id, { bpm: toKnob(knob, bpm) }, { key: `tap:${m.id}`, stroke: true });
+                        return;
+                      }
                       if (param !== 'dice') return;
                       const changes = diced(m.id);
                       // every lane locked: no empty undo step

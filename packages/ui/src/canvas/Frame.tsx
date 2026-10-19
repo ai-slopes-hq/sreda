@@ -10,6 +10,7 @@ import {
 import { createSignal, Index, Show, type JSX } from 'solid-js';
 import { track } from '../live';
 import { fmtRat } from './glyphs';
+import { tapTempo } from './tap';
 import { Icon } from './icons';
 import { Jack } from './Jack';
 
@@ -81,14 +82,6 @@ export interface FrameProps {
   /** where this frame's meter is in the readouts, once audio runs */
   meter?: number | undefined;
   act: FrameActions;
-}
-
-/** BPM from the last taps (up to 4, within 2.5 s; at least 2) — null until there are two */
-export function tapTempo(taps: number[], now: number): { taps: number[]; bpm: number | null } {
-  const recent = [...taps.filter((t) => now - t < 2.5), now].slice(-4);
-  if (recent.length < 2) return { taps: recent, bpm: null };
-  const interval = (recent[recent.length - 1]! - recent[0]!) / (recent.length - 1);
-  return { taps: recent, bpm: Math.round(Math.min(300, Math.max(20, 60 / interval))) };
 }
 
 const HANDLES: Record<Edge, JSX.CSSProperties> = {

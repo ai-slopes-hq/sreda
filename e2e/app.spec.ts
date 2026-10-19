@@ -1652,3 +1652,23 @@ test('DICE throws a random patch that sounds; ⌘Z returns the one before', asyn
   await expect.poll(async () => (await doc(page)).modules.map((m) => m.type)).toEqual(['osc', 'out']);
   await app.close();
 });
+
+test('TAP on a CLOCK sets its BPM from the taps; one ⌘Z undoes the run', async () => {
+  const { app, page } = await launch();
+  await page.mouse.move(700, 650);
+  await page.keyboard.press('/');
+  await page.keyboard.type('clock');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-type=clk]')).toHaveCount(1);
+  const bpm = async () => (await doc(page)).modules.find((m) => m.type === 'clk')!.params['bpm'];
+  const before = await bpm();
+  for (let i = 0; i < 3; i++) {
+    if (i > 0) await page.waitForTimeout(300);
+    await page.locator('[data-type=clk] [data-action=tap]').click();
+  }
+  // 300 ms waits plus each click's own time: 150–210 BPM, as knob positions (bpm − 20) / 280 (the default 120 is not)
+  await expect.poll(async () => (await bpm())! > (150 - 20) / 280 && (await bpm())! < (210 - 20) / 280).toBe(true);
+  await page.keyboard.press('Meta+z');
+  expect(await bpm()).toBe(before);
+  await app.close();
+});

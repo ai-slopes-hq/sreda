@@ -1,5 +1,15 @@
 // @vitest-environment happy-dom
-import { addModule, emptyDoc, frameSelection, hiddenIn, SPECS, starterDoc, type Plan } from '@sreda/core';
+import {
+  addModule,
+  emptyDoc,
+  frameSelection,
+  hiddenIn,
+  SPECS,
+  starterDoc,
+  toKnob,
+  type KnobParam,
+  type Plan,
+} from '@sreda/core';
 import type { FromEngine, ToEngine } from '@sreda/protocol';
 import { afterEach, expect, test, vi } from 'vitest';
 import { FakeAccess } from './midi/fakes';
@@ -65,6 +75,18 @@ test('param edits go as knob / fixed messages; one an own-normal condition reads
   sent.length = 0;
   s.undo();
   expect(sent.map((m) => m.t)).toContain('plan');
+});
+
+test('a run of taps on a CLOCK is one undo step', () => {
+  const bpm = SPECS['clk']!.params.find((p) => p.id === 'bpm') as KnobParam;
+  const s = createSession(SPECS, addModule(emptyDoc, SPECS, 'clk', 0, 0).doc);
+  const at = () => s.current().modules[0]!.params['bpm'];
+  const before = at();
+  s.params('m1', { bpm: toKnob(bpm, 100) }, { key: 'tap:m1', stroke: true });
+  s.params('m1', { bpm: toKnob(bpm, 140) }, { key: 'tap:m1', stroke: true });
+  expect(at()).toBeCloseTo(toKnob(bpm, 140));
+  s.undo();
+  expect(at()).toBe(before);
 });
 
 test('frame clock edits go as messages to its clock node; undo restores through a plan', async () => {

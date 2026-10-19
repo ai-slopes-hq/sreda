@@ -150,6 +150,12 @@ of a creative tool; nothing of its UI is ported.
   pure black, white text, greys only (`destructive` stays red), roles told apart by brightness (audio white, trigger
   `#d0d0d0`, pitch `#a6a6a6`, mod `#7a7a7a`), picks as inverted white blocks. `skins.test.ts` pins it grey with the
   roles stepping down; `pnpm screens` now captures seven skins.
+- **Plan 20 — CLOCK** (2026-10-19, branch `clock-module`, `docs/superpowers/plans/2026-10-19-20-clock.md`, spec
+  revision 39, §7c), out of the microscope phase by the owner's request: a tempo module without a frame (type `clk`,
+  3 × 1): CLK in (passes through while patched, so it also divides / multiplies), BPM 20–300 with its mod jack (a
+  modulated tempo bends without a lost beat), TAP (one undo step a run), CLK out. The frame clock's beat is shared
+  (`Beat` in `clock.rs`); frames, factory patches and DICE are unchanged. Checkpoint pending: the owner listens in
+  `pnpm dev`.
 
 ## The road (vertical slices: something to hear at every stage)
 
