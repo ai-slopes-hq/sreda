@@ -1,6 +1,6 @@
 # SREDA 2 — canvas UX/UI design
 
-Date: 2026-10-07 · Revision 38 (§1a: the ORCA skin) · Status: approved
+Date: 2026-10-07 · Revision 39 (§7c: the CLOCK module) · Status: approved
 
 ## Why
 
@@ -912,6 +912,35 @@ allocation in `process`, the 200-module benchmark with META-SEQ. Core: the three
 generators and ⚄, DICE leaves locked lanes, LEN and RATE alone, the factory sounds and nothing overlaps. UI: the
 ghost grid geometry, lane gestures and undo. e2e: a double-click opens the editor, a note drawn, ⌘Z, a pattern
 switched, the canvas shrinks above the editor.
+
+## 7c. CLOCK: a tempo without a frame (revision 39)
+
+A frame's own clock (§5) needs a frame around the modules it drives. **CLOCK** is the same clock as a module, placed
+anywhere and patched like any trigger source. It adds no global clock (the rule in Goals stands): it is one more
+periodic source. Frame clocks, factory patches and DICE are unchanged.
+
+| Family | Module | Inputs | Knobs and options | Outputs | Normals |
+|---|---|---|---|---|---|
+| Time & logic | **CLOCK** | clk (trigger) | BPM (20–300, linear, default 120, with its mod jack); TAP button | clk (trigger) | — |
+
+- **Size 3 × 1** (one HP each for IN, the control area and OUT): BPM's knob in the two-lane knob row, TAP alone in the
+  mode strip. Its document type is `clk` (`clock` is the frame's hidden node, §8). In the picker under Time & logic.
+- **What CLK out carries**, as a frame's CLK out (§5): while a cable is in CLK in, that input after its ratio
+  (÷16…×8), and the own clock does not run, so CLOCK is also a divider / multiplier of another clock; otherwise one
+  1 ms pulse per beat at BPM. The first beat comes at once when the module enters the patch (added, pasted, a
+  document opened) and when CLK in is unpatched.
+- **BPM is modulated** like any knob (§2: the mod jack, its attenuverter at the param's `modDepth`); the beat follows
+  the modulated value from sample to sample (a phase that runs at BPM / 60 per second), so a modulated tempo bends
+  without a jump or a lost beat. The knob's value shows by the quiet-panel rule (§2.9); on a modulated BPM it shows
+  always, in the mod colour.
+- **TAP** sets BPM from the last taps exactly as a frame's Tap (up to four taps within 2.5 s, at least two;
+  20–300). A run of taps on one module is one undo step.
+- CLK out flashes on each beat, and CLK in on each event, as every trigger port does (§2).
+
+**Tests.** Engine: 120 BPM gives 20 beats in 10 s and the first at sample 0; a cable in CLK in replaces the own clock
+and its ratio applies; a BPM modulated from 60 to 240 speeds the beats with no beat lost or doubled at the change; no
+allocation in `process`. Core / UI: CLOCK is in the picker and its spec fits 3 × 1 under the panel grammar; TAP sets
+BPM and a run of taps is one undo step.
 
 ## 8. Technology and architecture
 
