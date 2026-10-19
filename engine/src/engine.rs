@@ -1648,6 +1648,36 @@ mod tests {
     }
 
     #[test]
+    fn a_clock_module_divides_a_clock_through_its_ratio() {
+        // node 0: a CLOCK at 120 BPM (knob position); node 1: a CLOCK fed by it at ÷2 (the Cv slot is BPM's mod jack)
+        let bpm = (120.0 - 20.0) / 280.0;
+        let a = node(
+            "c1",
+            "clk",
+            &[bpm],
+            &[],
+            vec![none(Kind::Trigger), none(Kind::Cv)],
+        );
+        let mut clk = input(vec![src(0, false)], Kind::Trigger);
+        clk.ratio = -2;
+        let b = node("c2", "clk", &[bpm], &[], vec![clk, none(Kind::Cv)]);
+        let mut e = Engine::new(SR, 1);
+        e.apply(plan(1, vec![a, b], chain(2))).unwrap();
+        let mut out = Vec::new();
+        for _ in 0..1600 {
+            e.process();
+            out.extend_from_slice(e.output(1, 0));
+        }
+        let r: Vec<usize> = (1..out.len())
+            .filter(|&i| out[i] > 0.5 && out[i - 1] <= 0.5)
+            .collect();
+        assert!(r.len() >= 3, "{r:?}");
+        for w in r.windows(2) {
+            assert!((w[1] - w[0]).abs_diff(48_000) <= 2, "{r:?}");
+        }
+    }
+
+    #[test]
     fn a_cable_carries_samples() {
         let mut e = Engine::new(SR, 1);
         let gain = node(

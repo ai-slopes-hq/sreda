@@ -921,7 +921,7 @@ periodic source. Frame clocks, factory patches and DICE are unchanged.
 
 | Family | Module | Inputs | Knobs and options | Outputs | Normals |
 |---|---|---|---|---|---|
-| Time & logic | **CLOCK** | clk (trigger) | BPM (20–300, linear, default 120, with its mod jack); TAP button | clk (trigger) | — |
+| Time & logic | **CLOCK** | clk (trigger) | BPM (20–300, linear, default 120, with its mod jack); TAP button | out (trigger, labelled CLK) | — |
 
 - **Size 3 × 1** (one HP each for IN, the control area and OUT): BPM's knob in the two-lane knob row, TAP alone in the
   mode strip. Its document type is `clk` (`clock` is the frame's hidden node, §8). R throws BPM within 80–160.

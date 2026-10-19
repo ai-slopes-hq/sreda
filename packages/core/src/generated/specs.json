@@ -428,6 +428,50 @@
     "normals": []
   },
   {
+    "type": "clk",
+    "label": "CLOCK",
+    "desc": "a tempo: one beat per BPM",
+    "size": [
+      3,
+      1
+    ],
+    "inputs": [
+      {
+        "id": "clk",
+        "label": "CLK",
+        "role": "trigger"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "label": "CLK",
+        "role": "trigger"
+      }
+    ],
+    "params": [
+      {
+        "kind": "knob",
+        "id": "bpm",
+        "label": "BPM",
+        "min": 20.0,
+        "max": 300.0,
+        "def": 120.0,
+        "taper": "lin",
+        "randomRange": [
+          80.0,
+          160.0
+        ]
+      },
+      {
+        "kind": "action",
+        "id": "tap",
+        "label": "TAP"
+      }
+    ],
+    "normals": []
+  },
+  {
     "type": "clock",
     "label": "CLOCK",
     "desc": "a frame's clock",

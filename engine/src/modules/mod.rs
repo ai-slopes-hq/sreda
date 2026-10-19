@@ -4,6 +4,7 @@ pub mod a4clk;
 pub mod abc;
 pub mod att;
 pub mod chance;
+pub mod clk;
 pub mod clock;
 pub mod compare;
 pub mod complex;

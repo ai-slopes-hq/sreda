@@ -23,13 +23,54 @@ pub fn spec() -> ModuleSpec {
     }
 }
 
-pub struct Clock {
-    sample_rate: f64,
+/// The beat both clocks share (a frame's and CLOCK's): one 1 ms pulse per beat, the first as soon as it runs.
+pub(crate) struct Beat {
     pulse: u32,
     /// 0…1 through the beat; a tick when it reaches 1
     phase: f64,
     left: u32,
     was_on: bool,
+}
+
+impl Beat {
+    pub(crate) fn new(sample_rate: f64) -> Beat {
+        Beat {
+            pulse: ((0.001 * sample_rate).round() as u32).max(1),
+            phase: 0.0,
+            left: 0,
+            was_on: false,
+        }
+    }
+
+    /// One sample: 1.0 while a pulse is high, else 0.0. `step` is beats per sample; while `run` is false the beat
+    /// rests (0.0), and the next sample it runs starts a beat.
+    pub(crate) fn next(&mut self, run: bool, step: f64) -> f32 {
+        if !run {
+            self.was_on = false;
+            return 0.0;
+        }
+        if !self.was_on {
+            self.phase = 1.0; // the first tick comes at once
+            self.was_on = true;
+        }
+        if self.phase >= 1.0 {
+            self.phase -= 1.0;
+            self.left = self.pulse;
+        }
+        self.phase += step;
+        let high = self.left > 0;
+        self.left = self.left.saturating_sub(1);
+        if high {
+            1.0
+        } else {
+            0.0
+        }
+    }
+}
+
+pub struct Clock {
+    sample_rate: f64,
+    beat: Beat,
     out_high: bool,
     ticks: u32,
 }
@@ -38,10 +79,7 @@ impl Clock {
     pub fn new(sample_rate: f64) -> Self {
         Clock {
             sample_rate,
-            pulse: ((0.001 * sample_rate).round() as u32).max(1),
-            phase: 0.0,
-            left: 0,
-            was_on: false,
+            beat: Beat::new(sample_rate),
             out_high: false,
             ticks: 0,
         }
@@ -55,26 +93,8 @@ impl Dsp for Clock {
         // a cable in CLK IN stops the own clock; without one, the own clock runs while ON
         let own = on && !io.connected_in[0];
         for i in from..to {
-            let v = if own {
-                if !self.was_on {
-                    self.phase = 1.0; // the first tick comes at once
-                }
-                if self.phase >= 1.0 {
-                    self.phase -= 1.0;
-                    self.left = self.pulse;
-                }
-                self.phase += step;
-                let high = self.left > 0;
-                self.left = self.left.saturating_sub(1);
-                if high {
-                    1.0
-                } else {
-                    0.0
-                }
-            } else {
-                io.inp[0][i]
-            };
-            self.was_on = own;
+            let beat = self.beat.next(own, step);
+            let v = if own { beat } else { io.inp[0][i] };
             let high = v > 0.5;
             if high && !self.out_high {
                 self.ticks = (self.ticks + 1) & 0xFF_FFFF;
