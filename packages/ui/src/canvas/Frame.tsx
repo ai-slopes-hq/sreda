@@ -10,7 +10,7 @@ import {
 import { createSignal, Index, Show, type JSX } from 'solid-js';
 import { track } from '../live';
 import { fmtRat } from './glyphs';
-import { tapTempo } from './tap';
+import { createTapper } from './tap';
 import { Icon } from './icons';
 import { Jack } from './Jack';
 
@@ -100,12 +100,11 @@ export function Frame(props: FrameProps): JSX.Element {
   const block = () => (g().collapsed ? props.block : undefined);
   const tools = () => hot() || props.selected;
   let draft = '';
-  let taps: number[] = [];
+  const tapper = createTapper();
 
   function tap(): void {
-    const t = tapTempo(taps, performance.now() / 1000);
-    taps = t.taps;
-    if (t.bpm !== null) props.act.clock({ on: true, bpm: t.bpm }, { key: `tap:${g().id}`, stroke: true });
+    const t = tapper(g().id, performance.now() / 1000);
+    if (t.bpm !== null) props.act.clock({ on: true, bpm: t.bpm }, { key: `tap:${g().id}:${t.run}`, stroke: true });
   }
 
   /** drag the BPM vertically: 1 per 4 px, Shift 1 per 10 px */

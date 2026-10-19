@@ -8,12 +8,18 @@ export function tapTempo(taps: number[], now: number): { taps: number[]; bpm: nu
   return { taps: recent, bpm: Math.round(Math.min(300, Math.max(20, 60 / interval))) };
 }
 
-/** Tap tempo kept per id (one CLOCK's taps never count for another): a tap at `now` seconds → its BPM, or null. */
-export function createTapper(): (id: string, now: number) => number | null {
-  const taps = new Map<string, number[]>();
+/**
+ * Tap tempo kept per id (one module's taps never count for another): a tap at `now` seconds → its BPM (null until
+ * there are two taps) and its run — a tap with none of its id's taps in the window starts a new run. A run is one
+ * undo step: merge with `tap:<id>:<run>`.
+ */
+export function createTapper(): (id: string, now: number) => { bpm: number | null; run: number } {
+  const taps = new Map<string, { taps: number[]; run: number }>();
+  let runs = 0;
   return (id, now) => {
-    const t = tapTempo(taps.get(id) ?? [], now);
-    taps.set(id, t.taps);
-    return t.bpm;
+    const t = tapTempo(taps.get(id)?.taps ?? [], now);
+    const run = t.taps.length === 1 ? ++runs : taps.get(id)!.run;
+    taps.set(id, { taps: t.taps, run });
+    return { bpm: t.bpm, run };
   };
 }

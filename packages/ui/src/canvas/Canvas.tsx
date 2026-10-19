@@ -943,11 +943,11 @@ export function Canvas(props: { session: SessionApi; specs: Specs }): JSX.Elemen
                       }),
                     action: (param) => {
                       if (param === 'tap') {
-                        const bpm = tapper(m.id, performance.now() / 1000);
+                        const t = tapper(m.id, performance.now() / 1000);
                         const knob = specs[m.type]?.params.find((p) => p.id === 'bpm') as KnobParam | undefined;
                         // a run of taps is one undo step, as a frame's Tap
-                        if (bpm !== null && knob)
-                          s.params(m.id, { bpm: toKnob(knob, bpm) }, { key: `tap:${m.id}`, stroke: true });
+                        if (t.bpm !== null && knob)
+                          s.params(m.id, { bpm: toKnob(knob, t.bpm) }, { key: `tap:${m.id}:${t.run}`, stroke: true });
                         return;
                       }
                       if (param !== 'dice') return;

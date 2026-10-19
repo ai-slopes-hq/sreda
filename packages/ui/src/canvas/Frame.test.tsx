@@ -160,7 +160,19 @@ test('Tap sets the BPM from the last taps', () => {
     now.mockReturnValue(t);
     fireEvent.click(getByText('Tap'));
   }
-  expect(calls).toEqual(['clock true 120 tap:g1', 'clock true 120 tap:g1']);
+  expect(calls).toEqual(['clock true 120 tap:g1:1', 'clock true 120 tap:g1:1']);
+  now.mockRestore();
+});
+
+test('a second run of taps after a pause is its own undo step', () => {
+  const now = vi.spyOn(performance, 'now');
+  const { getByText, calls, container } = frame({ clock: { on: true, bpm: 128 } });
+  fireEvent.pointerEnter(container.querySelector('.sr-ghead')!);
+  for (const t of [1000, 1500, 60_000, 60_250]) {
+    now.mockReturnValue(t);
+    fireEvent.click(getByText('Tap'));
+  }
+  expect(calls).toEqual(['clock true 120 tap:g1:1', 'clock true 240 tap:g1:2']);
   now.mockRestore();
 });
 

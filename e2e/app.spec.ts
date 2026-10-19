@@ -1669,6 +1669,6 @@ test('TAP on a CLOCK sets its BPM from the taps; one ⌘Z undoes the run', async
   // 300 ms waits plus each click's own time: 150–210 BPM, as knob positions (bpm − 20) / 280 (the default 120 is not)
   await expect.poll(async () => (await bpm())! > (150 - 20) / 280 && (await bpm())! < (210 - 20) / 280).toBe(true);
   await page.keyboard.press('Meta+z');
-  expect(await bpm()).toBe(before);
+  await expect.poll(bpm).toBe(before);
   await app.close();
 });
